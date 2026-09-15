@@ -1,32 +1,60 @@
-# React + TypeScript + Vite
+# Yabot Jobs
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+**You shouldn't have to pay to get a job.**
 
-Currently, two official plugins are available:
+Yabot Jobs scans job postings, tracks your applications, and helps you tailor
+resumes and cover letters — free, and hosted at
+[yabot.jobs](https://yabot.jobs).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+This repo is the frontend: a React + TypeScript single-page app that talks to
+the [yabot.jobs-backend](https://github.com/davicho01/yabot.jobs-backend) API.
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Job board** — scans a posting URL and extracts title, company, location,
+  work type, and pay from the raw page.
+- **Applications tracker** — one place to see everything you've saved,
+  applied to, or archived.
+- **Resume tools** — upload a resume (PDF/DOCX), preview it, and get an
+  AI fitness report against a specific posting.
+- **Bring your own AI API key** — Anthropic, OpenAI, or DeepSeek; used only
+  for your own resume review, scoring, and generation requests.
+- **Light/dark/system theme**, remembered across visits.
 
-## Expanding the Oxlint configuration
+## Tech stack
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+- [React 19](https://react.dev) + [TypeScript](https://www.typescriptlang.org)
+- [Vite](https://vite.dev) for dev server and bundling
+- [React Router](https://reactrouter.com) for routing
+- [TanStack Query](https://tanstack.com/query) for server state
+- [Oxlint](https://oxc.rs) for linting
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## Getting started
+
+```bash
+npm install
+cp .env.example .env   # point VITE_API_BASE_URL at your backend
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+The dev server runs at `http://localhost:3000` and expects a running
+[yabot.jobs-backend](https://github.com/davicho01/yabot.jobs-backend) instance
+at the URL set in `VITE_API_BASE_URL` (defaults to `http://localhost:8000`).
+
+### Other scripts
+
+| Command           | What it does                          |
+| ------------------ | -------------------------------------- |
+| `npm run build`    | Type-checks, then builds to `dist/`   |
+| `npm run preview`  | Serves the production build locally    |
+| `npm run lint`     | Runs Oxlint                             |
+
+## Deployment
+
+Pushes to `main` deploy automatically via GitHub Actions: the app is built
+and synced to an S3 bucket fronted by CloudFront, authenticating to AWS via
+OIDC (no long-lived credentials). See `.github/workflows/deploy.yml`.
+
+## License
+
+MIT — see [LICENSE](./LICENSE).

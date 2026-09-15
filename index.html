@@ -3,15 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <script>
-      // Applies a saved light/dark override before first paint, so there's
-      // no flash of the wrong theme while React boots. Mirrors the same
-      // "yabot-theme" localStorage key read in src/hooks/useTheme.ts —
-      // "system" (or nothing stored) means no override, letting CSS's own
-      // prefers-color-scheme media query decide.
+      // Applies the effective theme before first paint, so there's no flash
+      // of the wrong theme while React boots. Mirrors the same "yabot-theme"
+      // localStorage key and default read in src/hooks/useTheme.ts: an
+      // explicit "system" choice means no override (CSS's own
+      // prefers-color-scheme media query decides), but no choice at all
+      // defaults to light rather than following the OS.
       (function () {
         var stored = localStorage.getItem("yabot-theme");
-        if (stored === "light" || stored === "dark") {
-          document.documentElement.setAttribute("data-theme", stored);
+        if (stored === "dark") {
+          document.documentElement.setAttribute("data-theme", "dark");
+        } else if (stored !== "system") {
+          document.documentElement.setAttribute("data-theme", "light");
         }
       })();
     </script>

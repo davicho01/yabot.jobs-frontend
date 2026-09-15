@@ -8,6 +8,7 @@ import { ApiKeysPage } from "./pages/ApiKeysPage";
 import { ApplicationsPage } from "./pages/ApplicationsPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Header } from "./components/Header";
+import { Footer } from "./components/Footer";
 import { PageShell } from "./components/PageShell";
 
 // Rendered once for every route (via the layout Route below) rather than
@@ -19,6 +20,7 @@ function RootLayout() {
     <PageShell>
       <Header />
       <Outlet />
+      <Footer />
     </PageShell>
   );
 }

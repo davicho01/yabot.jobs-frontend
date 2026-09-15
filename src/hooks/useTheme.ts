@@ -6,7 +6,11 @@ const STORAGE_KEY = "yabot-theme";
 
 function readStoredTheme(): ThemeMode {
   const stored = localStorage.getItem(STORAGE_KEY);
-  return stored === "light" || stored === "dark" ? stored : "system";
+  if (stored === "light" || stored === "dark" || stored === "system") return stored;
+  // No choice made yet — default to light rather than following the OS,
+  // so a visitor with system dark mode doesn't land on a dark page before
+  // ever having picked anything.
+  return "light";
 }
 
 // "system" means no explicit choice — CSS's own prefers-color-scheme media

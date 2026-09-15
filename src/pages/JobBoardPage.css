@@ -1,7 +1,15 @@
 .board {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 4rem);
+  /* flex:1, not a calc(100vh - Nrem) height — this sits between Header and
+     Footer in PageShell's flex column, so a hardcoded viewport height here
+     doesn't know about the footer's height and pushes it a full screen
+     below the fold. flex:1 fills whatever space actually remains;
+     min-height:0 is the usual flex fix that lets this shrink below its
+     content's natural size so the internal list keeps its own scrollbar
+     instead of growing the whole page. */
+  flex: 1;
+  min-height: 0;
 }
 
 .board__layout {
@@ -270,10 +278,6 @@
 }
 
 @media (max-width: 760px) {
-  .board {
-    height: calc(100vh - 7.5rem);
-  }
-
   .board__layout {
     grid-template-columns: 1fr;
     grid-template-rows: 40% 1fr;

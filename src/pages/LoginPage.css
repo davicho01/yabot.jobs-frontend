@@ -1,5 +1,9 @@
 .login-page {
-  min-height: 100vh;
+  /* flex:1, not min-height:100vh — this sits between Header and Footer in
+     PageShell's flex column, so forcing a full extra viewport here would
+     push the footer a whole screen-height below the fold instead of right
+     after the card. flex:1 fills whatever space actually remains. */
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
