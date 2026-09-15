@@ -12,18 +12,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.4rem 0.75rem;
+  padding: 0.4rem 0.85rem;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 2px;
+  border-radius: var(--radius-pill);
   color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.04em;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0;
   line-height: 1;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
 .apply-page__nav-button:hover {
@@ -84,7 +85,7 @@
 }
 
 .apply-page__title-block h1 {
-  font-size: 1.6rem;
+  font-size: 1.9rem;
 }
 
 .apply-page__tags {
@@ -160,17 +161,18 @@
   border: 1px solid var(--line);
   color: var(--ink);
   text-decoration: none;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 0.65rem 1.1rem;
-  border-radius: 2px;
-  transition: background 0.15s ease;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.88rem;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 0.65rem 1.2rem;
+  border-radius: var(--radius-pill);
+  transition: background-color 0.15s ease;
 }
 
 .apply-page__view-applications-button:hover {
-  background: var(--line);
+  background: var(--surface);
 }
 
 .apply-page__company {
@@ -181,20 +183,21 @@
 .apply-page__apply-button {
   display: inline-flex;
   align-items: center;
-  background: var(--accent-deep);
-  color: var(--surface);
+  background: var(--accent);
+  color: #fff;
   text-decoration: none;
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 0.7rem 1.3rem;
-  border-radius: 2px;
-  transition: opacity 0.15s ease;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.92rem;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-pill);
+  transition: background-color 0.15s ease;
 }
 
 .apply-page__apply-button:hover {
-  opacity: 0.85;
+  background: var(--accent-deep);
 }
 
 @media (max-width: 900px) {
@@ -226,14 +229,15 @@
 }
 
 .apply-page__status-select {
-  padding: 0.4rem 0.6rem;
+  padding: 0.45rem 0.7rem;
   border: 1px solid var(--line);
-  border-radius: 2px;
+  border-radius: var(--radius-pill);
   background: var(--paper);
   color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: none;
   flex-shrink: 0;
 }
 
@@ -241,9 +245,9 @@
   width: 100%;
   min-height: 90px;
   resize: vertical;
-  padding: 0.65rem 0.8rem;
+  padding: 0.7rem 0.9rem;
   border: 1px solid var(--line);
-  border-radius: 2px;
+  border-radius: var(--radius-field);
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
@@ -263,20 +267,21 @@
   background: none;
   border: 1px solid var(--line);
   color: var(--ink-soft);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  padding: 0.6rem 1rem;
-  border-radius: 2px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 0.6rem 1.1rem;
+  border-radius: var(--radius-pill);
   cursor: pointer;
   transition:
-    background 0.15s ease,
+    background-color 0.15s ease,
     color 0.15s ease;
 }
 
 .apply-page__archive-button:hover:not(:disabled) {
-  background: var(--line);
+  background: var(--surface);
   color: var(--ink);
 }
 
@@ -304,15 +309,16 @@
 }
 
 .dossier-action__button {
-  background: var(--ink);
-  color: var(--surface);
+  background: var(--accent);
+  color: #fff;
   border: none;
-  padding: 0.65rem 1.1rem;
-  border-radius: 2px;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  padding: 0.65rem 1.2rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.88rem;
+  letter-spacing: 0;
+  text-transform: none;
   cursor: pointer;
   margin-right: 0.75rem;
 }
@@ -365,10 +371,11 @@
 }
 
 .fitness-result__number {
-  font-family: var(--font-mono);
-  font-size: 2.2rem;
-  font-weight: 600;
-  color: var(--accent-deep);
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--accent);
 }
 
 .keyword-row {
@@ -379,10 +386,11 @@
 }
 
 .keyword-row__label {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--ink-soft);
   margin-right: 0.3rem;
 }

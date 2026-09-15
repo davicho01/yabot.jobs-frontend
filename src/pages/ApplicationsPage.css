@@ -85,17 +85,18 @@
   background: none;
   border: 1px solid var(--line);
   color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  padding: 0.35rem 0.7rem;
-  border-radius: 2px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0;
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
 .application-row__action:hover {
-  background: var(--line);
+  background: var(--surface);
 }
 
 /* Fixed (not flex-grow) so this column lines up at the same x-position on
@@ -118,7 +119,7 @@
 
 .application-row__title {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: none;
   color: var(--ink);
   overflow: hidden;
@@ -129,14 +130,16 @@
 
 .application-row__archived-badge {
   flex-shrink: 0;
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--ink-soft);
-  border: 1px solid var(--line);
-  border-radius: 2px;
-  padding: 0.1rem 0.35rem;
+  border: none;
+  background: var(--surface);
+  border-radius: var(--radius-pill);
+  padding: 0.15rem 0.55rem;
 }
 
 .application-row__meta {
@@ -164,10 +167,11 @@
 }
 
 .application-row__pay {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  color: var(--accent-deep);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0;
+  color: var(--accent);
   white-space: nowrap;
 }
 
@@ -175,20 +179,21 @@
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  background: var(--accent-deep);
-  color: var(--surface);
+  background: var(--accent);
+  color: #fff;
   text-decoration: none;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 0.35rem 0.7rem;
-  border-radius: 2px;
-  transition: opacity 0.15s ease;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-pill);
+  transition: background-color 0.15s ease;
 }
 
 .application-row__apply-button:hover {
-  opacity: 0.85;
+  background: var(--accent-deep);
 }
 
 /* Shared dropdown-trigger look for both the row-level Download menu and the
@@ -210,10 +215,11 @@
   display: flex;
   flex-direction: column;
   min-width: 170px;
-  background: var(--surface);
+  background: var(--paper);
   border: 1px solid var(--line);
-  border-radius: 2px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-field);
+  box-shadow: 0 20px 40px -16px rgba(0, 0, 0, 0.28);
+  padding: 0.35rem;
   z-index: 10;
   overflow: hidden;
 }
@@ -222,16 +228,18 @@
   background: none;
   border: none;
   color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.03em;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.88rem;
+  letter-spacing: 0;
   text-align: left;
-  padding: 0.55rem 0.8rem;
+  border-radius: calc(var(--radius-field) - 4px);
+  padding: 0.55rem 0.7rem;
   cursor: pointer;
 }
 
 .action-dropdown-menu button:hover:not(:disabled) {
-  background: var(--line);
+  background: var(--surface);
 }
 
 .action-dropdown-menu button:disabled {

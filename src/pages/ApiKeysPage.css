@@ -48,10 +48,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--ink-soft);
 }
 
@@ -65,9 +66,9 @@
 
 .settings-key-form input,
 .settings-key-form select {
-  padding: 0.6rem 0.7rem;
+  padding: 0.65rem 0.9rem;
   border: 1px solid var(--line);
-  border-radius: 2px;
+  border-radius: var(--radius-field);
   background: var(--paper);
   color: var(--ink);
   font-size: 0.9rem;
