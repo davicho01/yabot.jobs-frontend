@@ -165,6 +165,22 @@
   max-width: 720px;
 }
 
+.case-file__admin-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+.rescan-button--danger {
+  color: var(--rose);
+  border-color: var(--rose);
+}
+
+.rescan-button--danger:hover:not(:disabled) {
+  background: var(--rose);
+  color: var(--paper);
+}
+
 .case-file__header {
   display: flex;
   justify-content: space-between;

@@ -3,6 +3,7 @@ export interface User {
   email: string;
   display_name: string | null;
   status: string;
+  role: string;
   created_at: string;
   last_login_at: string | null;
 }
@@ -99,6 +100,45 @@ export interface CoverLetter {
   content: { greeting: string; body_paragraphs: string[]; closing: string };
   filename: string;
   created_at: string;
+}
+
+export interface CrawlSource {
+  id: string;
+  name: string;
+  ats_type: string | null;
+  board_token: string | null;
+  detected_domain: string | null;
+  status: string;
+  is_active: boolean;
+  last_crawled_at: string | null;
+  last_job_count: number | null;
+  last_error: string | null;
+  created_at: string;
+}
+
+export interface WindowCounts {
+  last_24h: number;
+  last_7d: number;
+  last_30d: number;
+  last_90d: number;
+}
+
+export interface AdminDashboard {
+  totals: {
+    job_listings: number;
+    crawl_sources: number;
+    users: number;
+  };
+  users_joined: WindowCounts;
+  user_activity: WindowCounts;
+  application_scans: WindowCounts;
+}
+
+export interface CrawlSourceStats {
+  source: CrawlSource;
+  total_listings: number;
+  listings_added: WindowCounts;
+  scans: WindowCounts;
 }
 
 export interface ApiKey {

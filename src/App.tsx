@@ -6,7 +6,10 @@ import { ApplyPage } from "./pages/ApplyPage";
 import { ResumePage } from "./pages/ResumePage";
 import { ApiKeysPage } from "./pages/ApiKeysPage";
 import { ApplicationsPage } from "./pages/ApplicationsPage";
+import { AdminDashboardPage } from "./pages/AdminDashboardPage";
+import { AdminCrawlSourceStatsPage } from "./pages/AdminCrawlSourceStatsPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { AdminRoute } from "./components/AdminRoute";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { PageShell } from "./components/PageShell";
@@ -62,6 +65,22 @@ export default function App() {
             <ProtectedRoute>
               <ApplicationsPage />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboardPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/crawl-sources/:sourceId"
+          element={
+            <AdminRoute>
+              <AdminCrawlSourceStatsPage />
+            </AdminRoute>
           }
         />
       </Route>

@@ -1,0 +1,124 @@
+.admin-page {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+.admin-page h1 {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-page__hint {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.admin-back-link {
+  display: inline-block;
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.admin-back-link:hover {
+  color: var(--ink);
+}
+
+.admin-section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-section__title {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-totals__tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 1.25rem 1.5rem;
+}
+
+.admin-totals__value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.admin-totals__label {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.admin-table th {
+  text-align: left;
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  padding: 0 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-table td {
+  padding: 0.65rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table__link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.admin-table__link:hover {
+  text-decoration: underline;
+}
+
+.admin-source-header {
+  margin-bottom: 1.5rem;
+}
+
+.admin-source-header__meta {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  margin: 0.3rem 0 0;
+}
+
+.admin-source-header__error {
+  color: var(--rose);
+  font-size: 0.85rem;
+  margin: 0.5rem 0 0;
+}

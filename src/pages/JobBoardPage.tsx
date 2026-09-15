@@ -4,6 +4,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "../auth/AuthContext";
 import { jobsApi } from "../api/jobs";
+import { adminApi } from "../api/admin";
 import type { JobDetail, JobPosting } from "../api/types";
 import "./JobBoardPage.css";
 
@@ -123,8 +124,22 @@ export function JobBoardPage() {
   const isRescanning = rescanMutation.isPending && rescanMutation.variables === selected?.url.id;
   const rescanFailed = rescanMutation.isError && rescanMutation.variables === selected?.url.id;
 
+  const deleteListingMutation = useMutation({
+    mutationFn: (urlId: string) => adminApi.deleteListing(urlId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      updateParams((next) => next.delete("jobId"));
+    },
+  });
+
   function selectJob(id: string) {
     updateParams((next) => next.set("jobId", id));
+  }
+
+  function deleteListing(urlId: string) {
+    if (window.confirm("Permanently delete this listing? This can't be undone.")) {
+      deleteListingMutation.mutate(urlId);
+    }
   }
 
   return (
@@ -175,6 +190,18 @@ export function JobBoardPage() {
             )}
             {selected && (
               <article className="case-file">
+                {user?.role === "admin" && (
+                  <div className="case-file__admin-bar">
+                    <button
+                      type="button"
+                      className="rescan-button rescan-button--danger"
+                      disabled={deleteListingMutation.isPending}
+                      onClick={() => deleteListing(selected.url.id)}
+                    >
+                      {deleteListingMutation.isPending ? "Deleting…" : "Delete listing"}
+                    </button>
+                  </div>
+                )}
                 {(() => {
                   const posting = scannedPosting(selected);
                   const scanFailed = selected.url.scan_status === "failed";
