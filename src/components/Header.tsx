@@ -2,12 +2,14 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
+import { useTheme } from "../hooks/useTheme";
 import { jobsApi } from "../api/jobs";
 import { ApiError } from "../api/client";
 import "./Header.css";
 
 export function Header() {
   const { user, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
@@ -227,6 +229,51 @@ export function Header() {
                 >
                   Log out
                 </button>
+                <div className="theme-toggle" role="group" aria-label="Theme">
+                  <button
+                    type="button"
+                    className={theme === "light" ? "is-active" : ""}
+                    aria-pressed={theme === "light"}
+                    title="Light"
+                    onClick={() => setTheme("light")}
+                  >
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none">
+                      <circle cx="12" cy="12" r="4.5" stroke="currentColor" strokeWidth="1.8" />
+                      <path
+                        d="M12 2.5v2.5M12 19v2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12H5M19 12h2.5M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    className={theme === "system" ? "is-active" : ""}
+                    aria-pressed={theme === "system"}
+                    title="Match device"
+                    onClick={() => setTheme("system")}
+                  >
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none">
+                      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.8" />
+                      <path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    className={theme === "dark" ? "is-active" : ""}
+                    aria-pressed={theme === "dark"}
+                    title="Dark"
+                    onClick={() => setTheme("dark")}
+                  >
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none">
+                      <path
+                        d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </div>
             )}
           </div>

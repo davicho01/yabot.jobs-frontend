@@ -2,6 +2,19 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Applies a saved light/dark override before first paint, so there's
+      // no flash of the wrong theme while React boots. Mirrors the same
+      // "yabot-theme" localStorage key read in src/hooks/useTheme.ts —
+      // "system" (or nothing stored) means no override, letting CSS's own
+      // prefers-color-scheme media query decide.
+      (function () {
+        var stored = localStorage.getItem("yabot-theme");
+        if (stored === "light" || stored === "dark") {
+          document.documentElement.setAttribute("data-theme", stored);
+        }
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
