@@ -231,9 +231,13 @@ export function JobBoardPage() {
                           <div className="case-file__header-title">
                             <h1>{posting.title ?? "Untitled role"}</h1>
                             <p className="case-file__company">
-                              {posting.company_name ?? selected.url.domain}
-                              {posting.location ? ` — ${posting.location}` : ""}
-                              {formatPostedAt(selected) ? ` · ${formatPostedAt(selected)}` : ""}
+                              <span>
+                                {posting.company_name ?? selected.url.domain}
+                                {posting.location ? ` — ${posting.location}` : ""}
+                              </span>
+                              {formatPostedAt(selected) && (
+                                <span className="case-file__posted">{formatPostedAt(selected)}</span>
+                              )}
                             </p>
                           </div>
 

@@ -176,8 +176,17 @@
 }
 
 .apply-page__company {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
   color: var(--ink-soft);
   margin: 0.3rem 0 0;
+}
+
+.apply-page__posted {
+  flex-shrink: 0;
+  font-size: 0.85rem;
 }
 
 .apply-page__apply-button {

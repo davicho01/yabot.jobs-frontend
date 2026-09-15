@@ -199,8 +199,17 @@
 }
 
 .case-file__company {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
   color: var(--ink-soft);
   margin: 0.3rem 0 0;
+}
+
+.case-file__posted {
+  flex-shrink: 0;
+  font-size: 0.85rem;
 }
 
 .case-file__tags {

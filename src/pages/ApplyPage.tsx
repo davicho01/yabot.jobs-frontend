@@ -345,9 +345,11 @@ function ApplyPageContent({
             <div className="apply-page__title-block">
               <h1>{posting.title ?? "Untitled role"}</h1>
               <p className="apply-page__company">
-                {posting.company_name ?? job.url.domain}
-                {posting.location ? ` — ${posting.location}` : ""}
-                {formatPostedAt(job) ? ` · ${formatPostedAt(job)}` : ""}
+                <span>
+                  {posting.company_name ?? job.url.domain}
+                  {posting.location ? ` — ${posting.location}` : ""}
+                </span>
+                {formatPostedAt(job) && <span className="apply-page__posted">{formatPostedAt(job)}</span>}
               </p>
             </div>
 
