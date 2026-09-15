@@ -23,6 +23,16 @@ function formatSalary(job: JobDetail): string | null {
   return `${currency} ${(p.salary_min ?? p.salary_max)?.toLocaleString()}`;
 }
 
+function formatPostedAt(job: JobDetail): string | null {
+  const p = scannedPosting(job);
+  if (!p?.posted_at) return null;
+  // posted_at is a date-only string (YYYY-MM-DD) — parsing it as UTC and
+  // formatting with the same zone keeps the displayed day from shifting
+  // backward for anyone west of UTC.
+  const date = new Date(`${p.posted_at}T00:00:00Z`);
+  return `Posted ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`;
+}
+
 function JobCard({ job, active, onSelect }: { job: JobDetail; active: boolean; onSelect: () => void }) {
   const posting = scannedPosting(job);
   return (
@@ -223,6 +233,7 @@ export function JobBoardPage() {
                             <p className="case-file__company">
                               {posting.company_name ?? selected.url.domain}
                               {posting.location ? ` — ${posting.location}` : ""}
+                              {formatPostedAt(selected) ? ` · ${formatPostedAt(selected)}` : ""}
                             </p>
                           </div>
 

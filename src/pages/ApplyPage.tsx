@@ -37,6 +37,16 @@ function formatSalary(job: JobDetail): string | null {
   return `${currency} ${(p.salary_min ?? p.salary_max)?.toLocaleString()}`;
 }
 
+function formatPostedAt(job: JobDetail): string | null {
+  const p = scannedPosting(job);
+  if (!p?.posted_at) return null;
+  // posted_at is a date-only string (YYYY-MM-DD) — parsing it as UTC and
+  // formatting with the same zone keeps the displayed day from shifting
+  // backward for anyone west of UTC.
+  const date = new Date(`${p.posted_at}T00:00:00Z`);
+  return `Posted ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`;
+}
+
 function prerequisiteMessage(err: unknown): string | null {
   if (err instanceof ApiError && err.status === 422) return err.message;
   return null;
@@ -337,6 +347,7 @@ function ApplyPageContent({
               <p className="apply-page__company">
                 {posting.company_name ?? job.url.domain}
                 {posting.location ? ` — ${posting.location}` : ""}
+                {formatPostedAt(job) ? ` · ${formatPostedAt(job)}` : ""}
               </p>
             </div>
 
