@@ -28,7 +28,7 @@ export function LoginPage() {
     <main className="login-page">
       <div className="login-card">
         <div className="login-card__tab">Sign-in slip</div>
-        <h1 className="login-card__title">Find your next case</h1>
+        <h1 className="login-card__title">Find your next job.</h1>
         <p className="login-card__subtitle">
           No password to remember — we email you a one-time link to sign in.
         </p>
