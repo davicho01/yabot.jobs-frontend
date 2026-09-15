@@ -60,6 +60,11 @@ export function ApiKeysPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["api-keys"] }),
   });
 
+  const setDefaultMutation = useMutation({
+    mutationFn: (id: string) => apiKeysApi.update(id, { is_default: true }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["api-keys"] }),
+  });
+
   function handleCreateKey(event: FormEvent) {
     event.preventDefault();
     createKeyMutation.mutate();
@@ -142,7 +147,20 @@ export function ApiKeysPage() {
               <span>
                 {key.provider} · {modelLabelFor(key)} · {key.masked_key}
               </span>
-              {key.is_default && <span className="stamp stamp--positive">Default</span>}
+              {key.is_default ? (
+                <span className="stamp stamp--positive">Default</span>
+              ) : (
+                <button
+                  type="button"
+                  className="record-list__make-default"
+                  onClick={() => setDefaultMutation.mutate(key.id)}
+                  disabled={setDefaultMutation.isPending && setDefaultMutation.variables === key.id}
+                >
+                  {setDefaultMutation.isPending && setDefaultMutation.variables === key.id
+                    ? "Setting…"
+                    : "Make default"}
+                </button>
+              )}
               <button type="button" className="record-list__remove" onClick={() => deleteKeyMutation.mutate(key.id)}>
                 Remove
               </button>

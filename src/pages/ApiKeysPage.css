@@ -147,11 +147,31 @@
   font-size: 0.68rem;
 }
 
+/* Pushes the trailing action pair (this-or-the-"Default"-stamp, then
+   Remove) to the row's right edge — scoped to this list so it doesn't
+   affect .stamp usage elsewhere. */
+.record-list__item .stamp,
+.record-list__make-default {
+  margin-left: auto;
+}
+
+.record-list__make-default {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.record-list__make-default:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
 .record-list__remove {
   background: transparent;
   color: var(--rose);
   border: 1px solid var(--rose);
-  margin-left: auto;
 }
 
 .record-list__remove:hover {
