@@ -51,6 +51,7 @@ function JobCard({ job, active, onSelect }: { job: JobDetail; active: boolean; o
           </div>
         )}
       </div>
+      {formatPostedAt(job) && <span className="job-card__posted">{formatPostedAt(job)}</span>}
     </button>
   );
 }
@@ -233,7 +234,7 @@ export function JobBoardPage() {
                             <p className="case-file__company">
                               <span>
                                 {posting.company_name ?? selected.url.domain}
-                                {posting.location ? ` — ${posting.location}` : ""}
+                                {posting.location ? ` · ${posting.location}` : ""}
                               </span>
                               {formatPostedAt(selected) && (
                                 <span className="case-file__posted">{formatPostedAt(selected)}</span>

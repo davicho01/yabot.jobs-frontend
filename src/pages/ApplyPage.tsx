@@ -347,7 +347,7 @@ function ApplyPageContent({
               <p className="apply-page__company">
                 <span>
                   {posting.company_name ?? job.url.domain}
-                  {posting.location ? ` — ${posting.location}` : ""}
+                  {posting.location ? ` · ${posting.location}` : ""}
                 </span>
                 {formatPostedAt(job) && <span className="apply-page__posted">{formatPostedAt(job)}</span>}
               </p>
