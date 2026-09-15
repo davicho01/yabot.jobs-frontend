@@ -165,10 +165,10 @@
   max-width: 720px;
 }
 
-.case-file__admin-bar {
+.case-file__header-left-group {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 0.75rem;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .rescan-button--danger {

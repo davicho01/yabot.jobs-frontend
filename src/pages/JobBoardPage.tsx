@@ -190,18 +190,6 @@ export function JobBoardPage() {
             )}
             {selected && (
               <article className="case-file">
-                {user?.role === "admin" && (
-                  <div className="case-file__admin-bar">
-                    <button
-                      type="button"
-                      className="rescan-button rescan-button--danger"
-                      disabled={deleteListingMutation.isPending}
-                      onClick={() => deleteListing(selected.url.id)}
-                    >
-                      {deleteListingMutation.isPending ? "Deleting…" : "Delete listing"}
-                    </button>
-                  </div>
-                )}
                 {(() => {
                   const posting = scannedPosting(selected);
                   const scanFailed = selected.url.scan_status === "failed";
@@ -209,7 +197,19 @@ export function JobBoardPage() {
                     <>
                       {(!posting || scanFailed) && (
                         <div className="case-file__header">
-                          <span className="stamp stamp--neutral">{scanFailed ? "Scan failed" : "Scanning…"}</span>
+                          <div className="case-file__header-left-group">
+                            <span className="stamp stamp--neutral">{scanFailed ? "Scan failed" : "Scanning…"}</span>
+                            {user?.role === "admin" && (
+                              <button
+                                type="button"
+                                className="rescan-button rescan-button--danger"
+                                disabled={deleteListingMutation.isPending}
+                                onClick={() => deleteListing(selected.url.id)}
+                              >
+                                {deleteListingMutation.isPending ? "Deleting…" : "Delete listing"}
+                              </button>
+                            )}
+                          </div>
                           {user && (
                             <button
                               type="button"
@@ -242,6 +242,16 @@ export function JobBoardPage() {
                               )}
                             </div>
                             <div className="case-file__header-actions">
+                              {user?.role === "admin" && (
+                                <button
+                                  type="button"
+                                  className="rescan-button rescan-button--danger"
+                                  disabled={deleteListingMutation.isPending}
+                                  onClick={() => deleteListing(selected.url.id)}
+                                >
+                                  {deleteListingMutation.isPending ? "Deleting…" : "Delete listing"}
+                                </button>
+                              )}
                               <a
                                 href={selected.url.url}
                                 target="_blank"
