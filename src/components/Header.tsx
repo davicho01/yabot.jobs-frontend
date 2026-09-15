@@ -141,7 +141,17 @@ export function Header() {
     <header className="site-header" ref={headerRef}>
       <div className="site-header__row">
         <Link to="/" className="site-header__brand">
-          <span className="site-header__mark">YJ</span>
+          <span className="site-header__mark" aria-hidden="true">
+            <svg viewBox="0 0 48 48" fill="none" width="20" height="20">
+              <path
+                d="M9 24h6l4-10 6 20 4-10h10"
+                stroke="var(--accent)"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
           <span className="site-header__title">Yabot Jobs</span>
         </Link>
 

@@ -29,9 +29,7 @@
   background: var(--ink);
   color: var(--paper);
   border-radius: 8px;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.85rem;
+  flex-shrink: 0;
 }
 
 .site-header__title {
