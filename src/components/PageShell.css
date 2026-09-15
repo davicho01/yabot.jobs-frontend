@@ -1,0 +1,28 @@
+.page-shell {
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--paper);
+}
+
+.page-shell__rail {
+  flex: 1;
+  min-width: 0;
+}
+
+.page-shell__content {
+  flex: 0 1 var(--content-max-width);
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+}
+
+/* Must match --content-max-width in index.css — @media can't read custom
+   properties, so this is the one place that value has to be duplicated. */
+@media (max-width: 1200px) {
+  .page-shell__rail {
+    display: none;
+  }
+}

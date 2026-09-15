@@ -1,0 +1,237 @@
+.settings-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+/* Compound selector (two classes) so this reliably outranks the plain
+   ".settings-page" rule above regardless of which page's stylesheet
+   happens to have been injected into the document more recently — both
+   ResumePage.css and ApiKeysPage.css define ".settings-page", and Vite
+   dev's per-component <style> injection order isn't guaranteed to match
+   source order once both pages have been visited in a session. */
+.settings-page.resume-page {
+  max-width: none;
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(320px, 480px) 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.resume-page__col {
+  min-width: 0;
+}
+
+.resume-page__preview-col {
+  position: sticky;
+  top: 1.5rem;
+  height: calc(100vh - 6rem);
+  min-width: 0;
+}
+
+.resume-preview {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.resume-preview--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 2rem;
+}
+
+.resume-preview--docx {
+  overflow: auto;
+  padding: 1.5rem;
+}
+
+.resume-preview__status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 2rem;
+}
+
+.docx-preview-container :first-child {
+  /* docx-preview's own wrapper defaults to margin:0 auto with a fixed page
+     width — drop its top margin so the page starts flush with our panel's
+     padding instead of doubling up on space. */
+  margin-top: 0 !important;
+}
+
+/* docx-preview's own stylesheet centers the page with
+   `display:flex; align-items:center`, which — when the page is wider than
+   our scrollable panel — clips its start side and makes that part
+   unreachable by scrolling (a well-known flex-centering-overflow trap).
+   Block-level auto-margin centering doesn't have that problem, so override
+   it; these selectors out-specificity docx-preview's own (2/3 classes vs.
+   its 1/2), so this wins regardless of which <style> tag loaded later. */
+.docx-preview-container .docx-wrapper {
+  display: block;
+}
+
+.docx-preview-container .docx-wrapper > section.docx {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 900px) {
+  .settings-page.resume-page {
+    grid-template-columns: 1fr;
+  }
+
+  .resume-page__preview-col {
+    position: static;
+    height: 70vh;
+  }
+}
+
+.settings-page h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.4rem;
+}
+
+.settings-page__intro {
+  color: var(--ink-soft);
+  margin: 0 0 2rem;
+}
+
+.settings-page__error {
+  color: var(--rose);
+  font-size: 0.85rem;
+}
+
+.settings-section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.settings-section__hint {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
+}
+
+.resume-dropzone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  text-align: center;
+  padding: 2.75rem 1.5rem;
+  margin-bottom: 1.25rem;
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-card);
+  background: var(--paper);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.resume-dropzone:hover,
+.resume-dropzone:focus-visible {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.resume-dropzone--active {
+  border-color: var(--accent-deep);
+  border-style: solid;
+  background: var(--surface);
+}
+
+.resume-dropzone--busy {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.resume-dropzone__input {
+  /* Visually hidden but still focusable/functional — the dropzone itself
+     is the click target (see its onClick), this just supplies the native
+     file picker. */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.resume-dropzone__icon {
+  font-size: 2rem;
+  color: var(--accent-deep);
+  line-height: 1;
+}
+
+.resume-dropzone__label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 0;
+}
+
+.resume-dropzone__hint {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.record-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.record-list__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.88rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.record-list__item--active {
+  background: var(--paper);
+}
+
+.record-list__item button {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.68rem;
+}
+
+.record-list__remove {
+  background: transparent;
+  color: var(--rose);
+  border: 1px solid var(--rose);
+  margin-left: auto;
+}
+
+.record-list__remove:hover {
+  background: var(--rose);
+  color: var(--surface);
+}

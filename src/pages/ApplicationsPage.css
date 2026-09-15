@@ -1,0 +1,241 @@
+.applications-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+@media (min-width: 800px) {
+  .applications-page {
+    min-width: 800px;
+  }
+}
+
+.applications-page h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.4rem;
+}
+
+.applications-page__intro {
+  color: var(--ink-soft);
+  margin: 0 0 2rem;
+}
+
+.applications-page__empty {
+  color: var(--ink-soft);
+}
+
+.applications-page__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.applications-page__archive-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.application-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.application-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 0.9rem 1.1rem;
+}
+
+/* Shared by both the Score stamp and the Evaluate-button wrapper so the
+   two states take up the same footprint and don't shift row alignment
+   depending on which one a given row happens to be in. */
+.application-row__score {
+  flex-shrink: 0;
+  width: 100px;
+  display: flex;
+  justify-content: center;
+}
+
+.application-row__details-hint {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.application-row__details-error {
+  font-size: 0.78rem;
+  color: var(--rose);
+}
+
+.application-row__action {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  padding: 0.35rem 0.7rem;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.application-row__action:hover {
+  background: var(--line);
+}
+
+/* Fixed (not flex-grow) so this column lines up at the same x-position on
+   every row regardless of title length — everything after it (download,
+   score) then sits at a consistent spot instead of drifting per row. */
+.application-row__main {
+  flex: 0 0 520px;
+  width: 520px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.application-row__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.application-row__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.application-row__archived-badge {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0.1rem 0.35rem;
+}
+
+.application-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.application-row__added {
+  flex-shrink: 0;
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  opacity: 0.8;
+}
+
+.application-row__company {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.application-row__pay {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--accent-deep);
+  white-space: nowrap;
+}
+
+.application-row__apply-button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  background: var(--accent-deep);
+  color: var(--surface);
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.7rem;
+  border-radius: 2px;
+  transition: opacity 0.15s ease;
+}
+
+.application-row__apply-button:hover {
+  opacity: 0.85;
+}
+
+/* Shared dropdown-trigger look for both the row-level Download menu and the
+   toolbar's Sort menu, so they behave and read the same way. */
+.action-dropdown {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.application-row__download {
+  margin-left: auto;
+}
+
+.action-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 170px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 10;
+  overflow: hidden;
+}
+
+.action-dropdown-menu button {
+  background: none;
+  border: none;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  text-align: left;
+  padding: 0.55rem 0.8rem;
+  cursor: pointer;
+}
+
+.action-dropdown-menu button:hover:not(:disabled) {
+  background: var(--line);
+}
+
+.action-dropdown-menu button:disabled {
+  color: var(--ink-soft);
+  cursor: default;
+}
+

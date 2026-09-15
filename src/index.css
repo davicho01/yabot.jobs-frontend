@@ -1,0 +1,201 @@
+:root {
+  --paper: #e7e4da;
+  --surface: #f4f2ea;
+  --ink: #20241f;
+  --ink-soft: #4b5147;
+  --accent: #c97a2b;
+  --accent-deep: #8f4e1b;
+  --teal: #3e6259;
+  --rose: #9b3a2e;
+  --line: #c8c2b2;
+
+  --font-display: "IBM Plex Serif", Georgia, serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  --radius-card: 3px;
+  --shadow-card: 0 1px 0 var(--line), 0 6px 14px -10px rgba(32, 36, 31, 0.35);
+
+  /* Width of the centered content column shared by every page (see
+     <PageShell>) — the leftover space on either side is reserved for
+     future ad placements. PageShell.css's media query breakpoint must
+     match this value (CSS custom properties can't be used in @media). */
+  --content-max-width: 1200px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #181a16;
+    --surface: #202219;
+    --ink: #ede9df;
+    --ink-soft: #b7b2a2;
+    --accent: #e3a44a;
+    --accent-deep: #f0b868;
+    --teal: #7fb0a3;
+    --rose: #d97a69;
+    --line: #3a3d33;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #181a16;
+  --surface: #202219;
+  --ink: #ede9df;
+  --ink-soft: #b7b2a2;
+  --accent: #e3a44a;
+  --accent-deep: #f0b868;
+  --teal: #7fb0a3;
+  --rose: #d97a69;
+  --line: #3a3d33;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: var(--teal);
+}
+
+button {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--ink);
+  color: var(--surface);
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: var(--accent-deep);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+input,
+select,
+textarea {
+  font-family: var(--font-body);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}
+
+/* Signature element: an ink-stamp badge used for statuses & verdicts
+   (SAVED/APPLIED, QUALIFIED/NOT A MATCH) — evokes a case-file rubber stamp. */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.3em 0.7em;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+  transform: rotate(-2.5deg);
+  color: var(--accent-deep);
+  background: transparent;
+  white-space: nowrap;
+}
+
+.stamp--positive {
+  color: var(--teal);
+}
+
+.stamp--negative {
+  color: var(--rose);
+}
+
+.stamp--neutral {
+  color: var(--ink-soft);
+}
+
+/* Shared UI atoms used across pages (job board, apply page, ...) — kept
+   global rather than in one page's stylesheet so they're styled correctly
+   regardless of which page is entered first/directly. */
+.tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0.15rem 0.4rem;
+}
+
+.tag--accent {
+  color: var(--accent-deep);
+  border-color: var(--accent-deep);
+}
+
+.rescan-button {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0.4rem 0.65rem;
+  cursor: pointer;
+}
+
+.rescan-button:disabled {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
