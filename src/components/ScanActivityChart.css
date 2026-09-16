@@ -79,6 +79,7 @@
 
 .scan-chart__bar {
   fill: var(--accent);
+  pointer-events: none;
 }
 
 .scan-chart__bar--hovered {

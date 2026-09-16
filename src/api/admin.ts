@@ -1,5 +1,6 @@
 import { api } from "./client";
-import type { AdminDashboard, CrawlSource, CrawlSourceStats, ScanDayCount } from "./types";
+import { PAGE_SIZE } from "./jobs";
+import type { AdminDashboard, CrawlSource, CrawlSourceStats, JobList, ScanDayCount } from "./types";
 
 export interface CrawlSourceUpdatePayload {
   name?: string;
@@ -11,6 +12,8 @@ export const adminApi = {
   dashboard: () => api.get<AdminDashboard>("/admin/dashboard"),
   crawlSources: () => api.get<CrawlSource[]>("/admin/crawl-sources"),
   crawlSourceStats: (sourceId: string) => api.get<CrawlSourceStats>(`/admin/crawl-sources/${sourceId}/stats`),
+  crawlSourceJobs: (sourceId: string, page = 1) =>
+    api.get<JobList>(`/admin/crawl-sources/${sourceId}/jobs`, { page, page_size: PAGE_SIZE }),
   deleteListing: (urlId: string) => api.delete<void>(`/admin/listings/${urlId}`),
   deleteCrawlSource: (sourceId: string) => api.delete<void>(`/admin/crawl-sources/${sourceId}`),
   updateCrawlSource: (sourceId: string, payload: CrawlSourceUpdatePayload) =>
