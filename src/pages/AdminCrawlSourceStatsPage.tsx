@@ -4,6 +4,23 @@ import { adminApi } from "../api/admin";
 import { AdminWindowStats } from "../components/AdminWindowStats";
 import "./AdminCommon.css";
 
+function statusStampClass(status: string): string {
+  if (status === "active") return "stamp stamp--positive";
+  if (status === "rejected") return "stamp stamp--negative";
+  return "stamp stamp--neutral";
+}
+
+function formatDate(value: string | null): string {
+  if (!value) return "Never";
+  return new Date(value).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 export function AdminCrawlSourceStatsPage() {
   const { sourceId } = useParams<{ sourceId: string }>();
   const statsQuery = useQuery({
@@ -14,7 +31,7 @@ export function AdminCrawlSourceStatsPage() {
   const stats = statsQuery.data;
 
   return (
-    <main className="admin-page">
+    <main className="admin-page admin-page--source-stats">
       <Link to="/admin" className="admin-back-link">
         ‹ Back to dashboard
       </Link>
@@ -26,19 +43,44 @@ export function AdminCrawlSourceStatsPage() {
         <>
           <div className="admin-source-header">
             <h1>{stats.source.name}</h1>
-            <p className="admin-source-header__meta">
-              {stats.source.ats_type ?? "Unrecognized platform"}
-              {" · "}
-              <a href={stats.source.board_url} target="_blank" rel="noopener noreferrer">
-                {stats.source.board_url}
-              </a>
-              {" · "}
-              <span className="stamp stamp--neutral">{stats.source.status}</span>
-            </p>
             {stats.source.last_error && (
               <p className="admin-source-header__error">Last crawl error: {stats.source.last_error}</p>
             )}
           </div>
+
+          <section className="admin-section">
+            <div className="admin-section__header">
+              <h2 className="admin-section__title">Source details</h2>
+              <div className="admin-section__header-row">
+                <a href={stats.source.board_url} target="_blank" rel="noopener noreferrer" title={stats.source.board_url}>
+                  {stats.source.board_url}
+                </a>
+                <span className={statusStampClass(stats.source.status)}>{stats.source.status}</span>
+              </div>
+            </div>
+            <dl className="admin-detail-grid">
+              <div className="admin-detail-grid__item">
+                <dt>ATS type</dt>
+                <dd>{stats.source.ats_type ?? "Unrecognized platform"}</dd>
+              </div>
+              <div className="admin-detail-grid__item">
+                <dt>Active</dt>
+                <dd>{stats.source.is_active ? "Yes" : "No"}</dd>
+              </div>
+              <div className="admin-detail-grid__item">
+                <dt>Last crawled</dt>
+                <dd>{formatDate(stats.source.last_crawled_at)}</dd>
+              </div>
+              <div className="admin-detail-grid__item">
+                <dt>Last job count</dt>
+                <dd>{stats.source.last_job_count?.toLocaleString() ?? "—"}</dd>
+              </div>
+              <div className="admin-detail-grid__item">
+                <dt>Created</dt>
+                <dd>{formatDate(stats.source.created_at)}</dd>
+              </div>
+            </dl>
+          </section>
 
           <section className="admin-totals">
             <div className="admin-totals__tile">

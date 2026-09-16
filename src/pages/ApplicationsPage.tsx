@@ -13,8 +13,12 @@ function errorMessage(err: unknown, fallback: string): string {
   return err instanceof ApiError ? err.message : fallback;
 }
 
-function formatAddedDate(createdAt: string): string {
-  return new Date(createdAt).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+// posted_at is a date-only string (YYYY-MM-DD) — parsing it as UTC and
+// formatting with the same zone keeps the displayed day from shifting
+// backward for anyone west of UTC.
+function formatPostedDate(postedAt: string): string {
+  const date = new Date(`${postedAt}T00:00:00Z`);
+  return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
 }
 
 function formatSalary(posting: JobPosting): string | null {
@@ -26,20 +30,20 @@ function formatSalary(posting: JobPosting): string | null {
   return `${currency} ${(posting.salary_min ?? posting.salary_max)?.toLocaleString()}`;
 }
 
-type SortableField = "score" | "pay" | "added";
+type SortableField = "score" | "pay" | "posted";
 type SortDirection = "asc" | "desc";
 type ActiveSort = { field: SortableField; direction: SortDirection };
 
 const SORT_FIELD_LABELS: Record<SortableField, string> = {
   score: "Score",
   pay: "Pay range",
-  added: "Added date",
+  posted: "Posted date",
 };
 
 const SORT_FIELDS = Object.keys(SORT_FIELD_LABELS) as SortableField[];
 
 function isSortField(value: string): value is SortableField {
-  return value === "score" || value === "pay" || value === "added";
+  return value === "score" || value === "pay" || value === "posted";
 }
 
 // "sort=score:desc,pay:asc" — order in the list is sort priority (first
@@ -66,8 +70,8 @@ function sortValue(application: Application, field: SortableField): number | nul
       return application.latest_score?.overall_score ?? null;
     case "pay":
       return application.job_posting.salary_max ?? application.job_posting.salary_min ?? null;
-    case "added":
-      return new Date(application.created_at).getTime();
+    case "posted":
+      return application.job_posting.posted_at ? new Date(`${application.job_posting.posted_at}T00:00:00Z`).getTime() : null;
   }
 }
 
@@ -360,7 +364,9 @@ export function ApplicationsPage() {
                   ) : (
                     <span className="application-row__details-hint">Pay not listed</span>
                   )}
-                  <span className="application-row__added">Added {formatAddedDate(application.created_at)}</span>
+                  {application.job_posting.posted_at && (
+                    <span className="application-row__added">Posted {formatPostedDate(application.job_posting.posted_at)}</span>
+                  )}
                 </div>
               </div>
               <DownloadMenu application={application} />
