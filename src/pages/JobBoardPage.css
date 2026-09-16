@@ -4,31 +4,31 @@
   /* flex:1, not a calc(100vh - Nrem) height — this sits between Header and
      Footer in PageShell's flex column, so a hardcoded viewport height here
      doesn't know about the footer's height and pushes it a full screen
-     below the fold. flex:1 fills whatever space actually remains;
-     min-height:0 is the usual flex fix that lets this shrink below its
-     content's natural size so the internal list keeps its own scrollbar
-     instead of growing the whole page. */
+     below the fold. flex:1 fills whatever space actually remains when the
+     job list is short; no min-height:0 here, so a long list is free to
+     grow this taller than that reserved space and the page scrolls to it
+     (see .board__detail below for why the right pane doesn't follow suit). */
   flex: 1;
-  min-height: 0;
 }
 
 .board__layout {
   flex: 1;
   display: grid;
   grid-template-columns: minmax(260px, 340px) 1fr;
-  min-height: 0;
+  /* align-items: start (not the grid default stretch) so each column sizes
+     to its own content instead of both being forced to match the taller
+     one — required for .board__detail's position:sticky to actually cap
+     its height instead of being stretched to the list's full length. */
+  align-items: start;
 }
 
 .board__list {
   display: flex;
   flex-direction: column;
-  min-height: 0;
   border-right: 1px solid var(--line);
 }
 
 .board__list-scroll {
-  flex: 1;
-  overflow-y: auto;
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
@@ -73,6 +73,13 @@
 }
 
 .board__detail {
+  /* Pinned to the viewport (not the grid row) and capped at its height, so
+     this pane scrolls its own overflow independently while the list beside
+     it grows the page instead of scrolling internally. */
+  position: sticky;
+  top: 0;
+  align-self: start;
+  max-height: 100vh;
   overflow-y: auto;
   padding: 2rem 2.5rem;
 }
@@ -314,7 +321,6 @@
 @media (max-width: 760px) {
   .board__layout {
     grid-template-columns: 1fr;
-    grid-template-rows: 40% 1fr;
   }
 
   .board__list {

@@ -1,7 +1,14 @@
 .page-shell {
   display: flex;
   justify-content: center;
-  min-height: 100vh;
+  /* A definite height (not min-height) so flex:1 descendants like .board
+     (see JobBoardPage.css) fill the viewport when their content is short.
+     Pages whose content exceeds the viewport are unaffected — children
+     keep the default overflow:visible, so they spill past this box and
+     the document scrolls exactly as before; only elements that opt in
+     with their own position:sticky (the job board's detail pane) pin
+     themselves within that scroll instead. */
+  height: 100vh;
   background: var(--paper);
 }
 

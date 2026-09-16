@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "../auth/AuthContext";
-import { jobsApi } from "../api/jobs";
+import { jobsApi, type WorkplaceTypeFilter } from "../api/jobs";
 import { adminApi } from "../api/admin";
 import type { JobDetail, JobPosting } from "../api/types";
 import { useConfirm } from "../components/ConfirmDialog";
@@ -70,7 +70,9 @@ export function JobBoardPage() {
   const selectedId = searchParams.get("jobId");
   const query = searchParams.get("q") ?? "";
   const location = searchParams.get("location") ?? "";
-  const remoteOnly = searchParams.get("remote") === "true";
+  const company = searchParams.get("company") ?? "";
+  const postedWithinDays = Number(searchParams.get("posted")) || undefined;
+  const workplaceType = (searchParams.get("workplace") as WorkplaceTypeFilter | null) ?? undefined;
   const page = Number(searchParams.get("page")) || 1;
 
   const updateParams = useCallback(
@@ -96,8 +98,16 @@ export function JobBoardPage() {
   }
 
   const { data, isLoading } = useQuery({
-    queryKey: ["jobs", query, location, remoteOnly, page],
-    queryFn: () => jobsApi.list({ q: query || undefined, location: location || undefined, remoteOnly, page }),
+    queryKey: ["jobs", query, location, company, postedWithinDays, workplaceType, page],
+    queryFn: () =>
+      jobsApi.list({
+        q: query || undefined,
+        location: location || undefined,
+        company: company || undefined,
+        postedWithinDays,
+        workplaceType,
+        page,
+      }),
   });
 
   const jobs = data?.items;
