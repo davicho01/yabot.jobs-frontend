@@ -75,6 +75,14 @@
   flex-shrink: 0;
 }
 
+.admin-section__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
 .admin-totals {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));

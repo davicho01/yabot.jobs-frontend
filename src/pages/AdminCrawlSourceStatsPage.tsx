@@ -44,6 +44,10 @@ export function AdminCrawlSourceStatsPage() {
     onSuccess: () => navigate("/admin"),
   });
 
+  const runCrawlMutation = useMutation({
+    mutationFn: () => adminApi.runCrawlSource(sourceId!),
+  });
+
   async function deleteSource() {
     if (await confirm("Permanently delete this crawl source? This can't be undone.")) {
       deleteSourceMutation.mutate();
@@ -104,6 +108,18 @@ export function AdminCrawlSourceStatsPage() {
                 <dd>{formatDate(stats.source.created_at)}</dd>
               </div>
             </dl>
+            <div className="admin-section__footer">
+              {runCrawlMutation.isSuccess && <p className="admin-page__hint">Crawl queued.</p>}
+              {runCrawlMutation.isError && <p className="admin-source-header__error">Couldn't queue a crawl.</p>}
+              <button
+                type="button"
+                className="rescan-button"
+                disabled={stats.source.status !== "active" || runCrawlMutation.isPending}
+                onClick={() => runCrawlMutation.mutate()}
+              >
+                {runCrawlMutation.isPending ? "Queuing…" : "Run crawl"}
+              </button>
+            </div>
           </section>
 
           <ScanActivityChart title="Listings scanned" data={scansByDayQuery.data} isLoading={scansByDayQuery.isLoading} />
