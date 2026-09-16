@@ -124,6 +124,10 @@ export function AdminCrawlSourceStatsPage() {
     mutationFn: () => adminApi.runCrawlSource(sourceId!),
   });
 
+  const rescanMutation = useMutation({
+    mutationFn: () => adminApi.rescanCrawlSource(sourceId!),
+  });
+
   async function deleteSource() {
     if (await confirm("Permanently delete this crawl source? This can't be undone.")) {
       deleteSourceMutation.mutate();
@@ -188,19 +192,31 @@ export function AdminCrawlSourceStatsPage() {
               </div>
             </dl>
             <div className="admin-section__footer">
-              {runCrawlMutation.isSuccess && <p className="admin-page__hint">Crawl queued.</p>}
-              {runCrawlMutation.isError && <p className="admin-source-header__error">Couldn't queue a crawl.</p>}
               <button type="button" className="rescan-button" onClick={() => setIsEditing(true)}>
                 Edit
               </button>
-              <button
-                type="button"
-                className="rescan-button"
-                disabled={stats.source.status !== "active" || runCrawlMutation.isPending}
-                onClick={() => runCrawlMutation.mutate()}
-              >
-                {runCrawlMutation.isPending ? "Queuing…" : "Run crawl"}
-              </button>
+              <div className="admin-section__footer-actions">
+                {rescanMutation.isSuccess && <p className="admin-page__hint">Rescan queued.</p>}
+                {rescanMutation.isError && <p className="admin-source-header__error">Couldn't queue a rescan.</p>}
+                {runCrawlMutation.isSuccess && <p className="admin-page__hint">Crawl queued.</p>}
+                {runCrawlMutation.isError && <p className="admin-source-header__error">Couldn't queue a crawl.</p>}
+                <button
+                  type="button"
+                  className="rescan-button"
+                  disabled={rescanMutation.isPending}
+                  onClick={() => rescanMutation.mutate()}
+                >
+                  {rescanMutation.isPending ? "Queuing…" : "Rescan postings"}
+                </button>
+                <button
+                  type="button"
+                  className="rescan-button"
+                  disabled={stats.source.status !== "active" || runCrawlMutation.isPending}
+                  onClick={() => runCrawlMutation.mutate()}
+                >
+                  {runCrawlMutation.isPending ? "Queuing…" : "Run crawl"}
+                </button>
+              </div>
             </div>
           </section>
 

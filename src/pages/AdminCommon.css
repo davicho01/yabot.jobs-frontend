@@ -78,9 +78,15 @@
 .admin-section__footer {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 0.75rem;
   margin-top: 1.25rem;
+}
+
+.admin-section__footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .admin-totals {

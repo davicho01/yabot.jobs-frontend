@@ -46,14 +46,15 @@ function JobCard({ job, active, onSelect }: { job: JobDetail; active: boolean; o
           {posting?.company_name ?? job.url.domain}
           {posting?.location ? ` · ${posting.location}` : ""}
         </div>
+        {formatSalary(job) && <div className="job-card__salary">{formatSalary(job)}</div>}
         {posting && (
           <div className="job-card__tags">
             <span className="tag">{posting.workplace_type}</span>
             <span className="tag">{posting.employment_type.replace("_", " ")}</span>
+            {formatPostedAt(job) && <span className="job-card__posted">{formatPostedAt(job)}</span>}
           </div>
         )}
       </div>
-      {formatPostedAt(job) && <span className="job-card__posted">{formatPostedAt(job)}</span>}
     </button>
   );
 }

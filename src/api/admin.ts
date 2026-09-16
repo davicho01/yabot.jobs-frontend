@@ -16,6 +16,7 @@ export const adminApi = {
   updateCrawlSource: (sourceId: string, payload: CrawlSourceUpdatePayload) =>
     api.patch<CrawlSource>(`/admin/crawl-sources/${sourceId}`, payload),
   runCrawlSource: (sourceId: string) => api.post<{ queued: boolean }>(`/admin/crawl-sources/${sourceId}/crawl`),
+  rescanCrawlSource: (sourceId: string) => api.post<{ queued: number }>(`/admin/crawl-sources/${sourceId}/rescan`),
   scansByDay: (days = 180) => api.get<ScanDayCount[]>(`/admin/scans-by-day?days=${days}`),
   crawlSourceScansByDay: (sourceId: string, days = 180) =>
     api.get<ScanDayCount[]>(`/admin/crawl-sources/${sourceId}/scans-by-day?days=${days}`),
