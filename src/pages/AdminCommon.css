@@ -135,6 +135,19 @@
   border-bottom: 1px solid var(--line);
 }
 
+.admin-table__th--sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.admin-table__th--sortable:hover {
+  color: var(--ink);
+}
+
+.admin-table__sort-indicator {
+  font-size: 0.6rem;
+}
+
 .admin-table td {
   padding: 0.65rem 0.5rem;
   border-bottom: 1px solid var(--line);

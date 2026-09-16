@@ -1,9 +1,32 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { adminApi } from "../api/admin";
 import { AdminWindowStats } from "../components/AdminWindowStats";
 import { ScanActivityChart } from "../components/ScanActivityChart";
+import type { CrawlSource } from "../api/types";
 import "./AdminCommon.css";
+
+type SortKey = "name" | "ats_type" | "status" | "last_crawled_at";
+type SortDirection = "asc" | "desc";
+
+const SOURCE_COLUMNS: { key: SortKey; label: string }[] = [
+  { key: "name", label: "Name" },
+  { key: "ats_type", label: "ATS Type" },
+  { key: "status", label: "Status" },
+  { key: "last_crawled_at", label: "Last crawled" },
+];
+
+function compareValues(a: CrawlSource, b: CrawlSource, key: SortKey): number {
+  if (key === "last_crawled_at") {
+    const aTime = a.last_crawled_at ? new Date(a.last_crawled_at).getTime() : -Infinity;
+    const bTime = b.last_crawled_at ? new Date(b.last_crawled_at).getTime() : -Infinity;
+    return aTime - bTime;
+  }
+  const aValue = (a[key] ?? "").toString().toLowerCase();
+  const bValue = (b[key] ?? "").toString().toLowerCase();
+  return aValue.localeCompare(bValue);
+}
 
 function formatDate(value: string | null): string {
   if (!value) return "Never";
@@ -26,6 +49,24 @@ export function AdminDashboardPage() {
   const sourcesQuery = useQuery({ queryKey: ["admin", "crawl-sources"], queryFn: adminApi.crawlSources });
   const scansByDayQuery = useQuery({ queryKey: ["admin", "scans-by-day"], queryFn: () => adminApi.scansByDay(180) });
   const dashboard = dashboardQuery.data;
+
+  const [sortKey, setSortKey] = useState<SortKey>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+  const sortedSources = useMemo(() => {
+    const sources = sourcesQuery.data ?? [];
+    const sorted = [...sources].sort((a, b) => compareValues(a, b, sortKey));
+    return sortDirection === "asc" ? sorted : sorted.reverse();
+  }, [sourcesQuery.data, sortKey, sortDirection]);
+
+  function handleSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDirection((direction) => (direction === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDirection("asc");
+    }
+  }
 
   return (
     <main className="admin-page">
@@ -61,23 +102,35 @@ export function AdminDashboardPage() {
       <ScanActivityChart title="Listings scanned" data={scansByDayQuery.data} isLoading={scansByDayQuery.isLoading} />
 
       <section className="admin-section">
-        <h2 className="admin-section__title">Crawl sources</h2>
+        <h2 className="admin-section__title">Source List</h2>
         {sourcesQuery.isLoading && <p className="admin-page__hint">Loading…</p>}
         {sourcesQuery.data?.length === 0 && <p className="admin-page__hint">No crawl sources yet.</p>}
         {sourcesQuery.data && sourcesQuery.data.length > 0 && (
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Status</th>
-                <th>Last crawled</th>
+                {SOURCE_COLUMNS.map((column) => (
+                  <th
+                    key={column.key}
+                    className="admin-table__th--sortable"
+                    onClick={() => handleSort(column.key)}
+                  >
+                    {column.label}
+                    {sortKey === column.key && (
+                      <span className="admin-table__sort-indicator">
+                        {sortDirection === "asc" ? " ▲" : " ▼"}
+                      </span>
+                    )}
+                  </th>
+                ))}
                 <th />
               </tr>
             </thead>
             <tbody>
-              {sourcesQuery.data.map((source) => (
+              {sortedSources.map((source) => (
                 <tr key={source.id}>
                   <td>{source.name}</td>
+                  <td>{source.ats_type ?? "—"}</td>
                   <td>
                     <span className={statusStampClass(source.status)}>{source.status}</span>
                   </td>
