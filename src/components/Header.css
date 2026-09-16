@@ -62,18 +62,126 @@
   font-size: 0.9rem;
 }
 
-.site-header__remote-toggle {
-  display: flex;
+.site-header__filter-dropdown {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.site-header__filter-dropdown-trigger {
+  display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.85rem;
-  color: var(--ink-soft);
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.83rem;
   white-space: nowrap;
   cursor: pointer;
 }
 
-.site-header__remote-toggle input {
+.site-header__filter-dropdown-trigger:hover {
+  background: var(--paper);
+  border-color: var(--ink-soft);
+}
+
+.site-header__filter-dropdown .site-header__dropdown {
+  left: 0;
+  right: auto;
+  min-width: 160px;
+}
+
+.site-header__filter-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink-soft);
   cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.site-header__filter-toggle svg {
+  /* Without this, the SVG child collapses to 0 width in this flex
+     button — its width/height attributes alone aren't enough here to
+     size it as a flex item. */
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.site-header__filter-toggle:hover {
+  background: var(--paper);
+  border-color: var(--ink-soft);
+  color: var(--ink);
+}
+
+.site-header__filter-toggle--active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.site-header__filter-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.site-header__filters-expand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.site-header__filter-input {
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.83rem;
+  min-width: 130px;
+}
+
+.site-header__filter-reset {
+  border: none;
+  background: none;
+  color: var(--ink-soft);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0.45rem 0.25rem;
+  white-space: nowrap;
+}
+
+.site-header__filter-reset:hover {
+  color: var(--accent);
 }
 
 .site-header__add-job-toggle {

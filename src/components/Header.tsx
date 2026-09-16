@@ -6,6 +6,84 @@ import { jobsApi } from "../api/jobs";
 import { ApiError } from "../api/client";
 import "./Header.css";
 
+const WORKPLACE_OPTIONS: { value: string; label: string }[] = [
+  { value: "", label: "Any workplace" },
+  { value: "remote", label: "Remote only" },
+  { value: "hybrid", label: "Hybrid" },
+  { value: "onsite", label: "On-site" },
+];
+
+const POSTED_WITHIN_OPTIONS: { value: string; label: string }[] = [
+  { value: "", label: "Any time posted" },
+  { value: "1", label: "Last 24 hours" },
+  { value: "7", label: "Last 7 days" },
+  { value: "30", label: "Last 30 days" },
+];
+
+function FilterDropdown({
+  options,
+  value,
+  onChange,
+  defaultLabel,
+  ariaLabel,
+}: {
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (value: string) => void;
+  defaultLabel: string;
+  ariaLabel: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [open]);
+
+  const activeLabel = options.find((option) => option.value === value)?.label ?? defaultLabel;
+
+  return (
+    <div className="site-header__filter-dropdown" ref={containerRef}>
+      <button
+        type="button"
+        className="site-header__filter-dropdown-trigger"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="true"
+        aria-expanded={open}
+        aria-label={ariaLabel}
+      >
+        {activeLabel}
+        <svg viewBox="0 0 12 8" width="10" height="7" fill="none" aria-hidden="true">
+          <path d="M1 1.5 6 6.5 11 1.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <div className="site-header__dropdown" role="menu">
+          {options.map((option) => (
+            <button
+              key={option.value || "any"}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                onChange(option.value);
+                setOpen(false);
+              }}
+            >
+              {option.label}
+              {option.value === value ? " ✓" : ""}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Header() {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -18,26 +96,33 @@ export function Header() {
 
   const [addJobOpen, setAddJobOpen] = useState(false);
   const [jobUrl, setJobUrl] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // These search/filter controls live in the header so they're always
-  // visible, but the board state (q/location/remote/page/jobId) only makes
-  // sense on "/" — everywhere else, using them starts a fresh search there
-  // instead of trying to merge into whatever unrelated params the current
-  // route has (or doesn't have).
+  // visible, but the board state (q/location/company/posted/remote/page/jobId)
+  // only makes sense on "/" — everywhere else, using them starts a fresh
+  // search there instead of trying to merge into whatever unrelated params
+  // the current route has (or doesn't have).
   const onBoard = routerLocation.pathname === "/";
   const query = onBoard ? (searchParams.get("q") ?? "") : "";
   const locationFilter = onBoard ? (searchParams.get("location") ?? "") : "";
-  const remoteOnly = onBoard ? searchParams.get("remote") === "true" : false;
+  const companyFilter = onBoard ? (searchParams.get("company") ?? "") : "";
+  const postedWithin = onBoard ? (searchParams.get("posted") ?? "") : "";
+  const workplaceType = onBoard ? (searchParams.get("workplace") ?? "") : "";
+  const activeFilterCount = [!!workplaceType, !!companyFilter, !!postedWithin].filter(Boolean).length;
 
   const [searchInput, setSearchInput] = useState(query);
   const [locationInput, setLocationInput] = useState(locationFilter);
+  const [companyInput, setCompanyInput] = useState(companyFilter);
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const locationDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const companyDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
       if (searchDebounce.current) clearTimeout(searchDebounce.current);
       if (locationDebounce.current) clearTimeout(locationDebounce.current);
+      if (companyDebounce.current) clearTimeout(companyDebounce.current);
     };
   }, []);
 
@@ -91,10 +176,42 @@ export function Header() {
     }, 300);
   }
 
-  function setRemoteOnly(value: boolean) {
+  function handleCompanyInputChange(value: string) {
+    setCompanyInput(value);
+    if (companyDebounce.current) clearTimeout(companyDebounce.current);
+    companyDebounce.current = setTimeout(() => {
+      updateBoardParams((next) => {
+        if ((next.get("company") ?? "") === value) return;
+        if (value) next.set("company", value);
+        else next.delete("company");
+        next.delete("page");
+      });
+    }, 300);
+  }
+
+  function setPostedWithin(value: string) {
     updateBoardParams((next) => {
-      if (value) next.set("remote", "true");
-      else next.delete("remote");
+      if (value) next.set("posted", value);
+      else next.delete("posted");
+      next.delete("page");
+    });
+  }
+
+  function setWorkplaceType(value: string) {
+    updateBoardParams((next) => {
+      if (value) next.set("workplace", value);
+      else next.delete("workplace");
+      next.delete("page");
+    });
+  }
+
+  function resetFilters() {
+    if (companyDebounce.current) clearTimeout(companyDebounce.current);
+    setCompanyInput("");
+    updateBoardParams((next) => {
+      next.delete("company");
+      next.delete("workplace");
+      next.delete("posted");
       next.delete("page");
     });
   }
@@ -134,6 +251,27 @@ export function Header() {
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [addJobOpen]);
+
+  useEffect(() => {
+    if (!filtersOpen) return;
+    function onClickOutside(event: MouseEvent) {
+      if (headerRef.current && !headerRef.current.contains(event.target as Node)) {
+        setFiltersOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [filtersOpen]);
+
+  function toggleAddJob() {
+    setFiltersOpen(false);
+    setAddJobOpen((o) => !o);
+  }
+
+  function toggleFilters() {
+    setAddJobOpen(false);
+    setFiltersOpen((o) => !o);
+  }
 
   const initial = user?.email?.[0]?.toUpperCase() ?? "?";
 
@@ -176,15 +314,30 @@ export function Header() {
               <option key={loc} value={loc} />
             ))}
           </datalist>
-          <label className="site-header__remote-toggle">
-            <input type="checkbox" checked={remoteOnly} onChange={(e) => setRemoteOnly(e.target.checked)} />
-            Remote only
-          </label>
+          <button
+            type="button"
+            className={`site-header__filter-toggle${activeFilterCount > 0 ? " site-header__filter-toggle--active" : ""}`}
+            onClick={toggleFilters}
+            aria-haspopup="true"
+            aria-expanded={filtersOpen}
+            aria-label="More filters"
+          >
+            <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+              <path
+                d="M3 4.5h14l-5.5 6.25V16l-3 1.5v-6.75L3 4.5z"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            {activeFilterCount > 0 && <span className="site-header__filter-badge">{activeFilterCount}</span>}
+          </button>
           {user && (
             <button
               type="button"
               className="site-header__add-job-toggle"
-              onClick={() => setAddJobOpen((o) => !o)}
+              onClick={toggleAddJob}
               aria-haspopup="true"
               aria-expanded={addJobOpen}
             >
@@ -271,6 +424,37 @@ export function Header() {
             </p>
           )}
         </form>
+      )}
+
+      {filtersOpen && (
+        <div className="site-header__filters-expand">
+          <FilterDropdown
+            options={WORKPLACE_OPTIONS}
+            value={workplaceType}
+            onChange={setWorkplaceType}
+            defaultLabel="Any workplace"
+            ariaLabel="Workplace type"
+          />
+          <input
+            className="site-header__filter-input"
+            type="text"
+            placeholder="Company"
+            value={companyInput}
+            onChange={(e) => handleCompanyInputChange(e.target.value)}
+          />
+          <FilterDropdown
+            options={POSTED_WITHIN_OPTIONS}
+            value={postedWithin}
+            onChange={setPostedWithin}
+            defaultLabel="Any time posted"
+            ariaLabel="Posted date"
+          />
+          {activeFilterCount > 0 && (
+            <button type="button" className="site-header__filter-reset" onClick={resetFilters}>
+              Reset filters
+            </button>
+          )}
+        </div>
       )}
     </header>
   );
