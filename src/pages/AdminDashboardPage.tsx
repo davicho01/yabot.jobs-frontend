@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { adminApi } from "../api/admin";
 import { AdminWindowStats } from "../components/AdminWindowStats";
+import { ScanActivityChart } from "../components/ScanActivityChart";
 import "./AdminCommon.css";
 
 function formatDate(value: string | null): string {
@@ -23,6 +24,7 @@ function statusStampClass(status: string): string {
 export function AdminDashboardPage() {
   const dashboardQuery = useQuery({ queryKey: ["admin", "dashboard"], queryFn: adminApi.dashboard });
   const sourcesQuery = useQuery({ queryKey: ["admin", "crawl-sources"], queryFn: adminApi.crawlSources });
+  const scansByDayQuery = useQuery({ queryKey: ["admin", "scans-by-day"], queryFn: () => adminApi.scansByDay(180) });
   const dashboard = dashboardQuery.data;
 
   return (
@@ -56,6 +58,8 @@ export function AdminDashboardPage() {
         </>
       )}
 
+      <ScanActivityChart title="Listings scanned" data={scansByDayQuery.data} isLoading={scansByDayQuery.isLoading} />
+
       <section className="admin-section">
         <h2 className="admin-section__title">Crawl sources</h2>
         {sourcesQuery.isLoading && <p className="admin-page__hint">Loading…</p>}
@@ -67,7 +71,6 @@ export function AdminDashboardPage() {
                 <th>Name</th>
                 <th>Status</th>
                 <th>Last crawled</th>
-                <th>Last job count</th>
                 <th />
               </tr>
             </thead>
@@ -79,7 +82,6 @@ export function AdminDashboardPage() {
                     <span className={statusStampClass(source.status)}>{source.status}</span>
                   </td>
                   <td>{formatDate(source.last_crawled_at)}</td>
-                  <td>{source.last_job_count ?? "—"}</td>
                   <td>
                     <Link to={`/admin/crawl-sources/${source.id}`} className="admin-table__link">
                       View stats →

@@ -140,6 +140,11 @@ export interface CrawlSourceStats {
   scans: WindowCounts;
 }
 
+export interface ScanDayCount {
+  date: string;
+  count: number;
+}
+
 export interface ApiKey {
   id: string;
   provider: string;

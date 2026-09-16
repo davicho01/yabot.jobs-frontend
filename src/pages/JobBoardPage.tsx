@@ -6,6 +6,7 @@ import { useAuth } from "../auth/AuthContext";
 import { jobsApi } from "../api/jobs";
 import { adminApi } from "../api/admin";
 import type { JobDetail, JobPosting } from "../api/types";
+import { useConfirm } from "../components/ConfirmDialog";
 import "./JobBoardPage.css";
 
 // A JobPosting row exists from the moment its URL is submitted (see
@@ -132,18 +133,21 @@ export function JobBoardPage() {
     },
   });
 
+  const { confirm, dialog } = useConfirm();
+
   function selectJob(id: string) {
     updateParams((next) => next.set("jobId", id));
   }
 
-  function deleteListing(urlId: string) {
-    if (window.confirm("Permanently delete this listing? This can't be undone.")) {
+  async function deleteListing(urlId: string) {
+    if (await confirm("Permanently delete this listing? This can't be undone.")) {
       deleteListingMutation.mutate(urlId);
     }
   }
 
   return (
     <div className="board">
+      {dialog}
       <div className="board__layout">
         <div className="board__list">
           <div className="board__list-scroll">

@@ -1,0 +1,118 @@
+.scan-chart__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.scan-chart__granularity {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.scan-chart__granularity-btn {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: transparent;
+  border: none;
+  padding: 0.4rem 0.85rem;
+  cursor: pointer;
+}
+
+.scan-chart__granularity-btn:not(:last-child) {
+  border-right: 1px solid var(--line);
+}
+
+.scan-chart__granularity-btn:hover {
+  background: var(--surface);
+}
+
+.scan-chart__granularity-btn--active {
+  color: var(--paper);
+  background: var(--accent);
+}
+
+.scan-chart__granularity-btn--active:hover {
+  background: var(--accent);
+}
+
+.scan-chart__table-toggle {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.scan-chart__table-toggle:hover {
+  text-decoration: underline;
+}
+
+.scan-chart {
+  position: relative;
+}
+
+.scan-chart__svg {
+  width: 100%;
+  height: 220px;
+  display: block;
+  overflow: visible;
+}
+
+.scan-chart__gridline {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.scan-chart__tick-label {
+  fill: var(--ink-soft);
+  font-family: var(--font-body);
+  font-size: 11px;
+}
+
+.scan-chart__bar {
+  fill: var(--accent);
+}
+
+.scan-chart__bar--hovered {
+  fill: var(--accent-deep);
+}
+
+.scan-chart__tooltip {
+  position: absolute;
+  top: 0;
+  transform: translate(-50%, -100%);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  padding: 0.4rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.scan-chart__tooltip-value {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.scan-chart__tooltip-label {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.scan-chart__table-wrap {
+  max-height: 320px;
+  overflow-y: auto;
+}

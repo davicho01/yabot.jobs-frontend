@@ -16,6 +16,7 @@ import type {
   ResumeScore,
   TailoredResume,
 } from "../api/types";
+import { useConfirm } from "../components/ConfirmDialog";
 import "./ApplyPage.css";
 
 const QUALIFY_THRESHOLD = 70;
@@ -182,6 +183,14 @@ function ApplyPageContent({
     },
   });
 
+  const { confirm, dialog } = useConfirm();
+
+  async function removeApplication(id: string) {
+    if (await confirm("Remove this application? This can't be undone.")) {
+      removeApplicationMutation.mutate(id);
+    }
+  }
+
   const recordApplication = useMutation({
     mutationFn: (url: string) => applicationsApi.create(url),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
@@ -268,6 +277,7 @@ function ApplyPageContent({
   if (job.url.scan_status === "failed") {
     return (
       <main className="apply-page">
+        {dialog}
         <span className="stamp stamp--neutral">Scan failed</span>
         <p>{job.url.scan_error ?? "This posting couldn't be scanned."}</p>
         <div className="apply-page__failed-actions">
@@ -286,7 +296,7 @@ function ApplyPageContent({
               type="button"
               className="rescan-button delete-button"
               disabled={removeApplicationMutation.isPending}
-              onClick={() => removeApplicationMutation.mutate(currentApplication.id)}
+              onClick={() => removeApplication(currentApplication.id)}
             >
               {removeApplicationMutation.isPending ? "Removing…" : "Delete ✕"}
             </button>
