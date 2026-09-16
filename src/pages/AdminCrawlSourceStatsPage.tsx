@@ -28,7 +28,10 @@ export function AdminCrawlSourceStatsPage() {
             <h1>{stats.source.name}</h1>
             <p className="admin-source-header__meta">
               {stats.source.ats_type ?? "Unrecognized platform"}
-              {stats.source.board_token ? ` · ${stats.source.board_token}` : ""}
+              {" · "}
+              <a href={stats.source.board_url} target="_blank" rel="noopener noreferrer">
+                {stats.source.board_url}
+              </a>
               {" · "}
               <span className="stamp stamp--neutral">{stats.source.status}</span>
             </p>

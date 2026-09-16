@@ -106,8 +106,7 @@ export interface CrawlSource {
   id: string;
   name: string;
   ats_type: string | null;
-  board_token: string | null;
-  detected_domain: string | null;
+  board_url: string;
   status: string;
   is_active: boolean;
   last_crawled_at: string | null;
