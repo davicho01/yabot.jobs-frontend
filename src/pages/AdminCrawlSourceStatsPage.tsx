@@ -200,7 +200,12 @@ export function AdminCrawlSourceStatsPage() {
                 {rescanMutation.isError && <p className="admin-source-header__error">Couldn't queue a rescan.</p>}
                 {runCrawlMutation.isSuccess && <p className="admin-page__hint">Crawl queued.</p>}
                 {runCrawlMutation.isError && <p className="admin-source-header__error">Couldn't queue a crawl.</p>}
-                <Link to={`/admin/crawl-sources/${sourceId}/jobs`} className="rescan-button">
+                <Link
+                  to={`/admin/crawl-sources/${sourceId}/jobs`}
+                  className="rescan-button"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   View jobs
                 </Link>
                 <button
