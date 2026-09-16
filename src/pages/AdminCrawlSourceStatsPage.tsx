@@ -1,10 +1,85 @@
+import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from "../api/admin";
+import { ApiError } from "../api/client";
+import type { CrawlSource } from "../api/types";
 import { AdminWindowStats } from "../components/AdminWindowStats";
 import { ScanActivityChart } from "../components/ScanActivityChart";
 import { useConfirm } from "../components/ConfirmDialog";
 import "./AdminCommon.css";
+
+const CRAWL_SOURCE_STATUSES = ["pending", "active", "rejected", "delete"];
+
+function EditCrawlSourceDialog({ source, onClose }: { source: CrawlSource; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [name, setName] = useState(source.name);
+  const [boardUrl, setBoardUrl] = useState(source.board_url);
+  const [sourceStatus, setSourceStatus] = useState(source.status);
+
+  const updateMutation = useMutation({
+    mutationFn: () =>
+      adminApi.updateCrawlSource(source.id, { name, board_url: boardUrl, status: sourceStatus }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "crawl-source-stats", source.id] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "crawl-sources"] });
+      onClose();
+    },
+  });
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    updateMutation.mutate();
+  }
+
+  return (
+    <div className="confirm-dialog__overlay" onClick={onClose}>
+      <div
+        className="confirm-dialog edit-crawl-source-dialog"
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="confirm-dialog__title">Edit crawl source</h2>
+        <form onSubmit={handleSubmit} className="edit-crawl-source-dialog__form">
+          <label>
+            Name
+            <input value={name} onChange={(e) => setName(e.target.value)} required />
+          </label>
+          <label>
+            Board URL
+            <input value={boardUrl} onChange={(e) => setBoardUrl(e.target.value)} required />
+          </label>
+          <label>
+            Status
+            <div className="select-field">
+              <select value={sourceStatus} onChange={(e) => setSourceStatus(e.target.value)}>
+                {CRAWL_SOURCE_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </label>
+          {updateMutation.isError && (
+            <p className="admin-source-header__error">
+              {updateMutation.error instanceof ApiError ? updateMutation.error.message : "Couldn't save changes."}
+            </p>
+          )}
+          <div className="confirm-dialog__actions">
+            <button type="button" className="confirm-dialog__button" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="confirm-dialog__button confirm-dialog__button--primary" disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 function statusStampClass(status: string): string {
   if (status === "active") return "stamp stamp--positive";
@@ -33,6 +108,7 @@ export function AdminCrawlSourceStatsPage() {
   });
   const stats = statsQuery.data;
   const { confirm, dialog } = useConfirm();
+  const [isEditing, setIsEditing] = useState(false);
   const scansByDayQuery = useQuery({
     queryKey: ["admin", "crawl-source-scans-by-day", sourceId],
     queryFn: () => adminApi.crawlSourceScansByDay(sourceId!, 180),
@@ -57,6 +133,9 @@ export function AdminCrawlSourceStatsPage() {
   return (
     <main className="admin-page admin-page--source-stats">
       {dialog}
+      {isEditing && stats && (
+        <EditCrawlSourceDialog source={stats.source} onClose={() => setIsEditing(false)} />
+      )}
       <Link to="/admin" className="admin-back-link">
         ‹ Back to dashboard
       </Link>
@@ -111,6 +190,9 @@ export function AdminCrawlSourceStatsPage() {
             <div className="admin-section__footer">
               {runCrawlMutation.isSuccess && <p className="admin-page__hint">Crawl queued.</p>}
               {runCrawlMutation.isError && <p className="admin-source-header__error">Couldn't queue a crawl.</p>}
+              <button type="button" className="rescan-button" onClick={() => setIsEditing(true)}>
+                Edit
+              </button>
               <button
                 type="button"
                 className="rescan-button"

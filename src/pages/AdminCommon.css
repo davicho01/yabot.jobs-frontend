@@ -223,3 +223,76 @@
   font-size: 0.9rem;
   word-break: break-all;
 }
+
+.edit-crawl-source-dialog {
+  max-width: 420px;
+}
+
+.edit-crawl-source-dialog__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.edit-crawl-source-dialog__form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.edit-crawl-source-dialog__form input,
+.edit-crawl-source-dialog__form select {
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+}
+
+.edit-crawl-source-dialog__form .select-field {
+  position: relative;
+}
+
+.edit-crawl-source-dialog__form select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 100%;
+  padding-right: 2.2rem;
+  cursor: pointer;
+}
+
+.edit-crawl-source-dialog__form .select-field::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0.85rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--ink-soft);
+  border-bottom: 2px solid var(--ink-soft);
+  transform: translateY(-65%) rotate(45deg);
+  pointer-events: none;
+}
+
+.confirm-dialog__button--primary {
+  color: var(--paper);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.confirm-dialog__button--primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.confirm-dialog__button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
