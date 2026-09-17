@@ -84,6 +84,12 @@
   padding: 2rem 2.5rem;
 }
 
+.board__detail--standalone {
+  position: static;
+  max-height: none;
+  margin: 0 auto;
+}
+
 .board__empty {
   color: var(--ink-soft);
   font-size: 0.9rem;

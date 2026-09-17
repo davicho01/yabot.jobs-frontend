@@ -1,12 +1,12 @@
 import { useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useSearchParams } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { jobsApi, type WorkplaceTypeFilter } from "../api/jobs";
 import { adminApi } from "../api/admin";
 import type { JobDetail, JobPosting } from "../api/types";
 import { useConfirm } from "../components/ConfirmDialog";
+import { JobCaseFile } from "../components/JobCaseFile";
 import "./JobBoardPage.css";
 
 // A JobPosting row exists from the moment its URL is submitted (see
@@ -204,117 +204,15 @@ export function JobBoardPage() {
               <p className="board__empty">Select a posting to open its case file.</p>
             )}
             {selected && (
-              <article className="case-file">
-                {(() => {
-                  const posting = scannedPosting(selected);
-                  const scanFailed = selected.url.scan_status === "failed";
-                  return (
-                    <>
-                      {(!posting || scanFailed) && (
-                        <div className="case-file__header">
-                          <div className="case-file__header-left-group">
-                            <span className="stamp stamp--neutral">{scanFailed ? "Scan failed" : "Scanning…"}</span>
-                            {user?.role === "admin" && (
-                              <button
-                                type="button"
-                                className="rescan-button rescan-button--danger"
-                                disabled={deleteListingMutation.isPending}
-                                onClick={() => deleteListing(selected.url.id)}
-                              >
-                                {deleteListingMutation.isPending ? "Deleting…" : "Delete listing"}
-                              </button>
-                            )}
-                          </div>
-                          {user && (
-                            <button
-                              type="button"
-                              className="rescan-button"
-                              disabled={isRescanning}
-                              onClick={() => rescanMutation.mutate(selected.url.id)}
-                            >
-                              {isRescanning ? "Rescanning…" : "Rescan ↻"}
-                            </button>
-                          )}
-                        </div>
-                      )}
-                      {scanFailed && selected.url.scan_error && (
-                        <p className="rescan-error">{selected.url.scan_error}</p>
-                      )}
-                      {rescanFailed && <p className="rescan-error">Rescan failed — try again in a moment.</p>}
-                      {posting && !scanFailed && (
-                        <>
-                          <div className="case-file__toolbar">
-                            <div className="case-file__header-left">
-                              {user && (
-                                <button
-                                  type="button"
-                                  className="rescan-button"
-                                  disabled={isRescanning}
-                                  onClick={() => rescanMutation.mutate(selected.url.id)}
-                                >
-                                  {isRescanning ? "Rescanning…" : "Rescan ↻"}
-                                </button>
-                              )}
-                            </div>
-                            <div className="case-file__header-actions">
-                              {user?.role === "admin" && (
-                                <button
-                                  type="button"
-                                  className="rescan-button rescan-button--danger"
-                                  disabled={deleteListingMutation.isPending}
-                                  onClick={() => deleteListing(selected.url.id)}
-                                >
-                                  {deleteListingMutation.isPending ? "Deleting…" : "Delete listing"}
-                                </button>
-                              )}
-                              <a
-                                href={selected.url.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="rescan-button"
-                              >
-                                View Posting
-                              </a>
-                              <Link to={`/jobs/${selected.url.id}/apply`} className="apply-button">
-                                Evaluate Job →
-                              </Link>
-                            </div>
-                          </div>
-
-                          <div className="case-file__header-title">
-                            <h1>{posting.title ?? "Untitled role"}</h1>
-                            <p className="case-file__company">
-                              <span>
-                                {posting.company_name ?? selected.url.domain}
-                                {posting.location ? ` · ${posting.location}` : ""}
-                              </span>
-                              {formatPostedAt(selected) && (
-                                <span className="case-file__posted">{formatPostedAt(selected)}</span>
-                              )}
-                            </p>
-                          </div>
-
-                          <div className="case-file__tags">
-                            <span className="tag">{posting.workplace_type}</span>
-                            <span className="tag">{posting.employment_type.replace("_", " ")}</span>
-                            {formatSalary(selected) && (
-                              <span className="tag tag--accent">{formatSalary(selected)}</span>
-                            )}
-                          </div>
-
-                          <div className="case-file__description">
-                            {posting.description ? (
-                              <ReactMarkdown>{posting.description}</ReactMarkdown>
-                            ) : (
-                              "No description was extracted for this posting."
-                            )}
-                          </div>
-                        </>
-                      )}
-                    </>
-                  );
-                })()}
-              </article>
+              <JobCaseFile
+                job={selected}
+                user={user}
+                isRescanning={isRescanning}
+                rescanFailed={rescanFailed}
+                onRescan={() => rescanMutation.mutate(selected.url.id)}
+                onDelete={() => deleteListing(selected.url.id)}
+                isDeleting={deleteListingMutation.isPending}
+              />
             )}
         </div>
       </div>

@@ -2,6 +2,7 @@ import { Routes, Route, Outlet } from "react-router-dom";
 import { LoginPage } from "./pages/LoginPage";
 import { AuthCallbackPage } from "./pages/AuthCallbackPage";
 import { JobBoardPage } from "./pages/JobBoardPage";
+import { JobDetailPage } from "./pages/JobDetailPage";
 import { ApplyPage } from "./pages/ApplyPage";
 import { ResumePage } from "./pages/ResumePage";
 import { ApiKeysPage } from "./pages/ApiKeysPage";
@@ -34,6 +35,7 @@ export default function App() {
     <Routes>
       <Route element={<RootLayout />}>
         <Route path="/" element={<JobBoardPage />} />
+        <Route path="/jobs/:urlId" element={<JobDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route
