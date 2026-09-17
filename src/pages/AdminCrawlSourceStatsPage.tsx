@@ -208,8 +208,6 @@ export function AdminCrawlSourceStatsPage() {
                 <Link
                   to={`/admin/jobs?sourceId=${sourceId}`}
                   className="rescan-button"
-                  target="_blank"
-                  rel="noopener noreferrer"
                 >
                   View jobs
                 </Link>
