@@ -114,6 +114,11 @@ export function AdminCrawlSourceStatsPage() {
     queryFn: () => adminApi.crawlSourceScansByDay(sourceId!, 180),
     enabled: !!sourceId,
   });
+  const scansByHourQuery = useQuery({
+    queryKey: ["admin", "crawl-source-scans-by-hour", sourceId],
+    queryFn: () => adminApi.crawlSourceScansByHour(sourceId!, 24),
+    enabled: !!sourceId,
+  });
 
   const deleteSourceMutation = useMutation({
     mutationFn: () => adminApi.deleteCrawlSource(sourceId!),
@@ -201,7 +206,7 @@ export function AdminCrawlSourceStatsPage() {
                 {runCrawlMutation.isSuccess && <p className="admin-page__hint">Crawl queued.</p>}
                 {runCrawlMutation.isError && <p className="admin-source-header__error">Couldn't queue a crawl.</p>}
                 <Link
-                  to={`/admin/crawl-sources/${sourceId}/jobs`}
+                  to={`/admin/jobs?sourceId=${sourceId}`}
                   className="rescan-button"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -228,7 +233,14 @@ export function AdminCrawlSourceStatsPage() {
             </div>
           </section>
 
-          <ScanActivityChart title="Listings scanned" data={scansByDayQuery.data} isLoading={scansByDayQuery.isLoading} />
+          <ScanActivityChart
+            title="Listings scanned"
+            data={scansByDayQuery.data}
+            isLoading={scansByDayQuery.isLoading}
+            hourlyData={scansByHourQuery.data}
+            isHourlyLoading={scansByHourQuery.isLoading}
+            sourceId={sourceId}
+          />
 
           <section className="admin-section">
             <AdminWindowStats title="Listings added" counts={stats.listings_added} />

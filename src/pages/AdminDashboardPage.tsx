@@ -48,6 +48,7 @@ export function AdminDashboardPage() {
   const dashboardQuery = useQuery({ queryKey: ["admin", "dashboard"], queryFn: adminApi.dashboard });
   const sourcesQuery = useQuery({ queryKey: ["admin", "crawl-sources"], queryFn: adminApi.crawlSources });
   const scansByDayQuery = useQuery({ queryKey: ["admin", "scans-by-day"], queryFn: () => adminApi.scansByDay(180) });
+  const scansByHourQuery = useQuery({ queryKey: ["admin", "scans-by-hour"], queryFn: () => adminApi.scansByHour(24) });
   const dashboard = dashboardQuery.data;
 
   const [sortKey, setSortKey] = useState<SortKey>("name");
@@ -99,7 +100,13 @@ export function AdminDashboardPage() {
         </>
       )}
 
-      <ScanActivityChart title="Listings scanned" data={scansByDayQuery.data} isLoading={scansByDayQuery.isLoading} />
+      <ScanActivityChart
+        title="Listings scanned"
+        data={scansByDayQuery.data}
+        isLoading={scansByDayQuery.isLoading}
+        hourlyData={scansByHourQuery.data}
+        isHourlyLoading={scansByHourQuery.isLoading}
+      />
 
       <section className="admin-section">
         <h2 className="admin-section__title">Source List</h2>

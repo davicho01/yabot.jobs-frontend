@@ -33,6 +33,7 @@ export interface JobPostingUrl {
   domain: string;
   scan_status: string;
   scan_error: string | null;
+  crawl_source_id: string | null;
   last_scanned_at: string | null;
   created_at: string;
 }
@@ -142,6 +143,11 @@ export interface CrawlSourceStats {
 
 export interface ScanDayCount {
   date: string;
+  count: number;
+}
+
+export interface ScanHourCount {
+  hour: string;
   count: number;
 }
 

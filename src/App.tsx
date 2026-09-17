@@ -8,7 +8,7 @@ import { ApiKeysPage } from "./pages/ApiKeysPage";
 import { ApplicationsPage } from "./pages/ApplicationsPage";
 import { AdminDashboardPage } from "./pages/AdminDashboardPage";
 import { AdminCrawlSourceStatsPage } from "./pages/AdminCrawlSourceStatsPage";
-import { AdminCrawlSourceJobsPage } from "./pages/AdminCrawlSourceJobsPage";
+import { AdminJobsPage } from "./pages/AdminJobsPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 import { Header } from "./components/Header";
@@ -85,10 +85,10 @@ export default function App() {
           }
         />
         <Route
-          path="/admin/crawl-sources/:sourceId/jobs"
+          path="/admin/jobs"
           element={
             <AdminRoute>
-              <AdminCrawlSourceJobsPage />
+              <AdminJobsPage />
             </AdminRoute>
           }
         />

@@ -1,20 +1,23 @@
 import { useMemo, useState } from "react";
-import type { ScanDayCount } from "../api/types";
+import { useNavigate } from "react-router-dom";
+import type { ScanDayCount, ScanHourCount } from "../api/types";
 import "./ScanActivityChart.css";
 
-type Granularity = "day" | "week" | "month";
+type Granularity = "hr" | "day" | "week" | "month";
 
 const GRANULARITIES: { key: Granularity; label: string }[] = [
+  { key: "hr", label: "Hr" },
   { key: "day", label: "Day" },
   { key: "week", label: "Week" },
   { key: "month", label: "Month" },
 ];
 
-// How many trailing buckets each granularity shows — daily stays a 30-bar
-// window (180 would be unreadable), week/month use everything fetched.
-const VISIBLE_COUNT: Record<Granularity, number> = { day: 30, week: 26, month: 6 };
+// How many trailing buckets each granularity shows — hourly is a fixed 24h
+// window, daily stays a 30-bar window (180 would be unreadable), week/month
+// use everything fetched.
+const VISIBLE_COUNT: Record<Granularity, number> = { hr: 24, day: 30, week: 26, month: 6 };
 
-type Bucket = { key: string; label: string; rangeLabel: string; count: number };
+type Bucket = { key: string; label: string; rangeLabel: string; count: number; from: string; to: string };
 
 function parseDay(dateStr: string): Date {
   return new Date(`${dateStr}T00:00:00Z`);
@@ -30,13 +33,31 @@ function isoWeekStart(date: Date): Date {
 
 const DAY_FMT: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", timeZone: "UTC" };
 const MONTH_FMT: Intl.DateTimeFormatOptions = { month: "short", year: "numeric", timeZone: "UTC" };
+const HOUR_FMT: Intl.DateTimeFormatOptions = { hour: "numeric" };
+const HOUR_RANGE_FMT: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" };
+
+function bucketHourlyData(data: ScanHourCount[]): Bucket[] {
+  return data.map((d) => {
+    const date = new Date(d.hour);
+    const to = new Date(date.getTime() + 60 * 60 * 1000);
+    return {
+      key: d.hour,
+      label: date.toLocaleTimeString("en-US", HOUR_FMT),
+      rangeLabel: date.toLocaleString("en-US", HOUR_RANGE_FMT),
+      count: d.count,
+      from: date.toISOString(),
+      to: to.toISOString(),
+    };
+  });
+}
 
 function bucketData(data: ScanDayCount[], granularity: Granularity): Bucket[] {
   if (granularity === "day") {
     return data.map((d) => {
       const date = parseDay(d.date);
+      const to = new Date(date.getTime() + 24 * 60 * 60 * 1000);
       const label = date.toLocaleDateString("en-US", DAY_FMT);
-      return { key: d.date, label, rangeLabel: label, count: d.count };
+      return { key: d.date, label, rangeLabel: label, count: d.count, from: date.toISOString(), to: to.toISOString() };
     });
   }
 
@@ -50,11 +71,14 @@ function bucketData(data: ScanDayCount[], granularity: Granularity): Bucket[] {
       if (existing) {
         existing.count += d.count;
       } else {
+        const to = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
         buckets.set(key, {
           key,
           label: start.toLocaleDateString("en-US", DAY_FMT),
           rangeLabel: `Week of ${start.toLocaleDateString("en-US", DAY_FMT)}`,
           count: d.count,
+          from: start.toISOString(),
+          to: to.toISOString(),
         });
       }
     } else {
@@ -63,8 +87,10 @@ function bucketData(data: ScanDayCount[], granularity: Granularity): Bucket[] {
       if (existing) {
         existing.count += d.count;
       } else {
+        const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
+        const to = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1));
         const label = date.toLocaleDateString("en-US", MONTH_FMT);
-        buckets.set(key, { key, label, rangeLabel: label, count: d.count });
+        buckets.set(key, { key, label, rangeLabel: label, count: d.count, from: start.toISOString(), to: to.toISOString() });
       }
     }
   }
@@ -103,20 +129,41 @@ export function ScanActivityChart({
   title,
   data,
   isLoading,
+  hourlyData,
+  isHourlyLoading,
+  sourceId,
 }: {
   title: string;
   data: ScanDayCount[] | undefined;
   isLoading: boolean;
+  hourlyData?: ScanHourCount[] | undefined;
+  isHourlyLoading?: boolean;
+  sourceId?: string;
 }) {
+  const navigate = useNavigate();
   const [granularity, setGranularity] = useState<Granularity>("day");
   const [showTable, setShowTable] = useState(false);
   const [hovered, setHovered] = useState<number | null>(null);
 
+  function goToJobs(bucket: Bucket) {
+    const params = new URLSearchParams();
+    if (sourceId) params.set("sourceId", sourceId);
+    params.set("scanFrom", bucket.from);
+    params.set("scanTo", bucket.to);
+    navigate(`/admin/jobs?${params.toString()}`);
+  }
+
+  const loading = granularity === "hr" ? Boolean(isHourlyLoading) : isLoading;
+
   const buckets = useMemo(() => {
+    if (granularity === "hr") {
+      if (!hourlyData) return [];
+      return bucketHourlyData(hourlyData).slice(-VISIBLE_COUNT.hr);
+    }
     if (!data) return [];
     const all = bucketData(data, granularity);
     return all.slice(-VISIBLE_COUNT[granularity]);
-  }, [data, granularity]);
+  }, [data, hourlyData, granularity]);
 
   const maxCount = Math.max(0, ...buckets.map((b) => b.count));
   const ticks = niceTicks(maxCount);
@@ -157,11 +204,11 @@ export function ScanActivityChart({
         </div>
       </div>
 
-      {isLoading && <p className="admin-page__hint">Loading…</p>}
+      {loading && <p className="admin-page__hint">Loading…</p>}
 
-      {!isLoading && buckets.length === 0 && <p className="admin-page__hint">No scan activity yet.</p>}
+      {!loading && buckets.length === 0 && <p className="admin-page__hint">No scan activity yet.</p>}
 
-      {!isLoading && buckets.length > 0 && showTable && (
+      {!loading && buckets.length > 0 && showTable && (
         <div className="scan-chart__table-wrap">
           <table className="admin-table">
             <thead>
@@ -182,7 +229,7 @@ export function ScanActivityChart({
         </div>
       )}
 
-      {!isLoading && buckets.length > 0 && !showTable && (
+      {!loading && buckets.length > 0 && !showTable && (
         <div className="scan-chart">
           <svg
             className="scan-chart__svg"
@@ -223,13 +270,21 @@ export function ScanActivityChart({
                     width={slot}
                     height={plotHeight}
                     fill="transparent"
+                    className="scan-chart__hit-target"
                     tabIndex={0}
-                    role="img"
-                    aria-label={`${bucket.rangeLabel}: ${bucket.count.toLocaleString()} scanned`}
+                    role="button"
+                    aria-label={`${bucket.rangeLabel}: ${bucket.count.toLocaleString()} scanned. View listings.`}
                     onPointerEnter={() => setHovered(i)}
                     onPointerLeave={() => setHovered(null)}
                     onFocus={() => setHovered(i)}
                     onBlur={() => setHovered(null)}
+                    onClick={() => goToJobs(bucket)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        goToJobs(bucket);
+                      }
+                    }}
                   />
                   {bucket.count > 0 && (
                     <path
@@ -247,15 +302,16 @@ export function ScanActivityChart({
             })}
           </svg>
 
-          {hovered !== null && buckets[hovered] && (
-            <div
-              className="scan-chart__tooltip"
-              style={{ left: `${Math.min(92, Math.max(8, ((hovered + 0.5) / buckets.length) * 100))}%` }}
-            >
-              <span className="scan-chart__tooltip-value">{buckets[hovered].count.toLocaleString()}</span>
-              <span className="scan-chart__tooltip-label">{buckets[hovered].rangeLabel}</span>
-            </div>
-          )}
+          {hovered !== null && buckets[hovered] && (() => {
+            const barCenterX = PADDING_LEFT + (hovered + 0.5) * slot;
+            const leftPercent = (barCenterX / CHART_WIDTH) * 100;
+            return (
+              <div className="scan-chart__tooltip" style={{ left: `${leftPercent}%` }}>
+                <span className="scan-chart__tooltip-value">{buckets[hovered].count.toLocaleString()}</span>
+                <span className="scan-chart__tooltip-label">{buckets[hovered].rangeLabel}</span>
+              </div>
+            );
+          })()}
         </div>
       )}
     </section>

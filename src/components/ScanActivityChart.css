@@ -77,6 +77,10 @@
   font-size: 11px;
 }
 
+.scan-chart__hit-target {
+  cursor: pointer;
+}
+
 .scan-chart__bar {
   fill: var(--accent);
   pointer-events: none;
