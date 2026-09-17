@@ -317,6 +317,7 @@ function ApplyPageContent({
 
   return (
     <main className="apply-page">
+      {dialog}
       <div className="apply-page__layout">
           <div className="apply-page__description-col">
             <div className="apply-page__description-header">
@@ -599,6 +600,16 @@ function ApplyPageContent({
                 >
                   {currentApplication?.is_archived ? "Unarchive application" : "Archive application"}
                 </button>
+                {currentApplication && (
+                  <button
+                    type="button"
+                    className="apply-page__archive-button delete-button"
+                    disabled={removeApplicationMutation.isPending}
+                    onClick={() => removeApplication(currentApplication.id)}
+                  >
+                    {removeApplicationMutation.isPending ? "Removing…" : "Remove application"}
+                  </button>
+                )}
               </div>
             </div>
           </div>

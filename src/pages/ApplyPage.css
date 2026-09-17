@@ -270,6 +270,7 @@
 
 .apply-page__archive-row {
   display: flex;
+  justify-content: space-between;
 }
 
 .apply-page__archive-button {
