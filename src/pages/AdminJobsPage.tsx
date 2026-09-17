@@ -213,7 +213,7 @@ export function AdminJobsPage() {
                           >
                             {isRescanning ? "Rescanning…" : "Rescan ↻"}
                           </button>
-                          <Link to={`/?jobId=${job.url.id}`} className="rescan-button">
+                          <Link to={`/jobs/${job.url.id}`} className="rescan-button">
                             View job
                           </Link>
                         </div>
