@@ -321,9 +321,6 @@ function ApplyPageContent({
       <div className="apply-page__layout">
           <div className="apply-page__description-col">
             <div className="apply-page__description-header">
-              <Link to={`/jobs/${job.url.id}`} className="rescan-button">
-                View job posting
-              </Link>
               {user && (
                 <button
                   type="button"
@@ -354,6 +351,9 @@ function ApplyPageContent({
                   </span>
                 )}
               </div>
+              <Link to={`/jobs/${job.url.id}`} className="rescan-button apply-page__view-link">
+                View ↑
+              </Link>
             </div>
 
             <div className="apply-page__title-block">

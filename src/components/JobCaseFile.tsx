@@ -85,18 +85,8 @@ export function JobCaseFile({
               )}
             </div>
             <div className="case-file__header-actions">
-              {user?.role === "admin" && onDelete && (
-                <button
-                  type="button"
-                  className="rescan-button rescan-button--danger"
-                  disabled={isDeleting}
-                  onClick={onDelete}
-                >
-                  {isDeleting ? "Deleting…" : "Delete listing"}
-                </button>
-              )}
               <a href={job.url.url} target="_blank" rel="noopener noreferrer" className="rescan-button">
-                View Posting
+                Original ↗
               </a>
               <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
                 Evaluate Job →
@@ -128,6 +118,19 @@ export function JobCaseFile({
               "No description was extracted for this posting."
             )}
           </div>
+
+          {user?.role === "admin" && onDelete && (
+            <div className="case-file__footer">
+              <button
+                type="button"
+                className="rescan-button rescan-button--danger"
+                disabled={isDeleting}
+                onClick={onDelete}
+              >
+                {isDeleting ? "Deleting…" : "Delete listing"}
+              </button>
+            </div>
+          )}
         </>
       )}
     </article>

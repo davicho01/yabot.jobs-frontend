@@ -193,6 +193,7 @@ textarea {
   font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
+  text-decoration: none;
   color: var(--accent);
   background: transparent;
   border: 1px solid var(--line);
