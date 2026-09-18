@@ -26,6 +26,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
   padding: 0.85rem 1.5rem;
 }
 
@@ -170,6 +173,9 @@
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
   padding: 0.6rem 1.5rem;
   border-top: 1px solid var(--line);
 }
@@ -226,6 +232,9 @@
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
   padding: 0.85rem 1.5rem;
   border-top: 1px solid var(--line);
 }
