@@ -159,7 +159,7 @@ function ApplyPageContent({
   const navigate = useNavigate();
   const appliedRef = useRef(false);
 
-  const { data: job, isLoading } = useQuery({
+  const { data: job, isLoading, isFetching, isRefetchError, refetch } = useQuery({
     queryKey: ["job", urlId],
     queryFn: () => jobsApi.get(urlId!),
     enabled: !!urlId,
@@ -306,15 +306,6 @@ function ApplyPageContent({
     );
   }
 
-  if (!posting) {
-    return (
-      <main className="apply-page">
-        <span className="stamp stamp--neutral">Still scanning</span>
-        <p>This posting hasn't finished being scanned yet — check back shortly.</p>
-      </main>
-    );
-  }
-
   return (
     <main className="apply-page">
       {dialog}
@@ -356,30 +347,50 @@ function ApplyPageContent({
               </Link>
             </div>
 
-            <div className="apply-page__title-block">
-              <h1>{posting.title ?? "Untitled role"}</h1>
-              <p className="apply-page__company">
-                <span>
-                  {posting.company_name ?? job.url.domain}
-                  {posting.location ? ` · ${posting.location}` : ""}
-                </span>
-                {formatPostedAt(job) && <span className="apply-page__posted">{formatPostedAt(job)}</span>}
-              </p>
-            </div>
+            {!posting ? (
+              <div className="apply-page__description" aria-live="polite">
+                <span className="stamp stamp--neutral">Still scanning</span>
+                <p>This posting hasn't finished being scanned yet — check back shortly.</p>
+                <button
+                  type="button"
+                  className="rescan-button"
+                  disabled={isFetching}
+                  onClick={() => void refetch()}
+                >
+                  {isFetching ? "Refreshing…" : "Refresh job content ↻"}
+                </button>
+                {isRefetchError && (
+                  <p className="dossier-action__error">Couldn't refresh this posting. Try again.</p>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="apply-page__title-block">
+                  <h1>{posting.title ?? "Untitled role"}</h1>
+                  <p className="apply-page__company">
+                    <span>
+                      {posting.company_name ?? job.url.domain}
+                      {posting.location ? ` · ${posting.location}` : ""}
+                    </span>
+                    {formatPostedAt(job) && <span className="apply-page__posted">{formatPostedAt(job)}</span>}
+                  </p>
+                </div>
 
-            <div className="apply-page__tags">
-              <span className="tag">{posting.workplace_type}</span>
-              <span className="tag">{posting.employment_type.replace("_", " ")}</span>
-              {formatSalary(job) && <span className="tag tag--accent">{formatSalary(job)}</span>}
-            </div>
+                <div className="apply-page__tags">
+                  <span className="tag">{posting.workplace_type}</span>
+                  <span className="tag">{posting.employment_type.replace("_", " ")}</span>
+                  {formatSalary(job) && <span className="tag tag--accent">{formatSalary(job)}</span>}
+                </div>
 
-            <div className="apply-page__description">
-              {posting.description ? (
-                <ReactMarkdown>{posting.description}</ReactMarkdown>
-              ) : (
-                "No description was extracted for this posting."
-              )}
-            </div>
+                <div className="apply-page__description">
+                  {posting.description ? (
+                    <ReactMarkdown>{posting.description}</ReactMarkdown>
+                  ) : (
+                    "No description was extracted for this posting."
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           <div className="apply-page__main-col">
@@ -432,7 +443,7 @@ function ApplyPageContent({
                     type="button"
                     className="dossier-action__button"
                     onClick={() => scoreMutation.mutate()}
-                    disabled={scoreMutation.isPending}
+                    disabled={!jobPostingId || scoreMutation.isPending}
                   >
                     {scoreMutation.isPending ? "Evaluating…" : "Check if I qualify"}
                   </button>
@@ -494,7 +505,7 @@ function ApplyPageContent({
                     type="button"
                     className="dossier-action__button"
                     onClick={() => tailorMutation.mutate()}
-                    disabled={tailorMutation.isPending}
+                    disabled={!jobPostingId || tailorMutation.isPending}
                   >
                     {tailorMutation.isPending ? "Tailoring…" : "Tailor my resume"}
                   </button>
@@ -542,7 +553,7 @@ function ApplyPageContent({
                     type="button"
                     className="dossier-action__button"
                     onClick={() => coverLetterMutation.mutate()}
-                    disabled={coverLetterMutation.isPending}
+                    disabled={!jobPostingId || coverLetterMutation.isPending}
                   >
                     {coverLetterMutation.isPending ? "Drafting…" : "Generate cover letter"}
                   </button>
