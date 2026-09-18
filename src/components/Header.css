@@ -3,6 +3,9 @@
   flex-direction: column;
   background: var(--paper);
   border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 30;
 }
 
 .site-header__row {
