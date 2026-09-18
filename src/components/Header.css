@@ -3,9 +3,23 @@
   flex-direction: column;
   background: var(--paper);
   border-bottom: 1px solid var(--line);
-  position: sticky;
+  /* Fixed (not sticky) so the slide transform is always relative to the
+     viewport — sticky's containing block shifts as it (re)pins itself
+     while scrolling, which made the reveal-on-scroll-up animation start
+     from wherever the header happened to be instead of the very top. The
+     PageShell reserves space for it via --header-height (see PageShell.css)
+     since a fixed element no longer occupies room in normal flow. */
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 30;
+  transform: translateY(0);
+  transition: transform 0.2s ease;
+}
+
+.site-header--hidden {
+  transform: translateY(-100%);
 }
 
 .site-header__row {

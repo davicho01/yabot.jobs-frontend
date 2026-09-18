@@ -10,6 +10,12 @@
      themselves within that scroll instead. */
   height: 100vh;
   background: var(--paper);
+  /* Header is position:fixed (see Header.css) and out of normal flow, so
+     this reserves its place; --header-height is kept in sync with the
+     header's actual rendered height (it changes when the filters/add-job
+     panels open) from Header.tsx. box-sizing:border-box (index.css) keeps
+     the total height at 100vh rather than 100vh + padding. */
+  padding-top: var(--header-height, 0px);
 }
 
 .page-shell__rail {

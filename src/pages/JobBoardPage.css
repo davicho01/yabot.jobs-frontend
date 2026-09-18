@@ -75,11 +75,14 @@
 .board__detail {
   /* Pinned to the viewport (not the grid row) and capped at its height, so
      this pane scrolls its own overflow independently while the list beside
-     it grows the page instead of scrolling internally. */
+     it grows the page instead of scrolling internally. Offset by
+     --header-height (set from Header.tsx) since the header is
+     position:fixed and would otherwise sit on top of this pane once it
+     sticks to the top of the scrollport. */
   position: sticky;
-  top: 0;
+  top: var(--header-height, 0px);
   align-self: start;
-  max-height: 100vh;
+  max-height: calc(100vh - var(--header-height, 0px));
   overflow-y: auto;
   padding: 2rem 2.5rem;
 }

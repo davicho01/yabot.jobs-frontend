@@ -97,6 +97,42 @@ export function Header() {
   const [addJobOpen, setAddJobOpen] = useState(false);
   const [jobUrl, setJobUrl] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    lastScrollY.current = window.scrollY;
+    function onScroll() {
+      const y = window.scrollY;
+      // Any upward movement reveals the header immediately; only sustained
+      // downward movement past the header's own height hides it, so a tiny
+      // wobble near the top doesn't flicker it away.
+      if (y < lastScrollY.current) {
+        setHidden(false);
+      } else if (y > lastScrollY.current && y > 80) {
+        setHidden(true);
+      }
+      lastScrollY.current = y;
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // The header is position:fixed (see Header.css) so it no longer reserves
+  // its own space in the document flow; PageShell reads this custom
+  // property to pad the content below by exactly the header's current
+  // height, which changes when the filters/add-job panels open.
+  useEffect(() => {
+    const node = headerRef.current;
+    if (!node) return;
+    const setHeightVar = () => {
+      document.documentElement.style.setProperty("--header-height", `${node.offsetHeight}px`);
+    };
+    setHeightVar();
+    const observer = new ResizeObserver(setHeightVar);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   // These search/filter controls live in the header so they're always
   // visible, but the board state (q/location/company/posted/remote/page/jobId)
@@ -276,7 +312,7 @@ export function Header() {
   const initial = user?.email?.[0]?.toUpperCase() ?? "?";
 
   return (
-    <header className="site-header" ref={headerRef}>
+    <header className={`site-header${hidden ? " site-header--hidden" : ""}`} ref={headerRef}>
       <div className="site-header__row">
         <Link to="/" className="site-header__brand">
           <span className="site-header__mark" aria-hidden="true">
