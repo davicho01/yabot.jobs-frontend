@@ -1,5 +1,5 @@
 import { api, downloadFile, fetchBlob, fileUrl } from "./client";
-import type { CoverLetter, Resume, ResumeScore, TailoredResume } from "./types";
+import type { CoverLetter, Resume, ResumeScore, TailoredResume, TailoredResumeScore } from "./types";
 
 export const resumesApi = {
   list: () => api.get<Resume[]>("/resumes"),
@@ -22,6 +22,11 @@ export const resumesApi = {
   generateTailored: (jobPostingId: string) =>
     api.post<TailoredResume>("/resumes/main/tailored", undefined, { job_posting_id: jobPostingId }),
   downloadTailored: (id: string, filename: string) => downloadFile(`/resumes/tailored/${id}/download`, filename),
+
+  getTailoredScore: (tailoredResumeId: string) =>
+    api.get<TailoredResumeScore>(`/resumes/tailored/${tailoredResumeId}/score`),
+  generateTailoredScore: (tailoredResumeId: string) =>
+    api.post<TailoredResumeScore>(`/resumes/tailored/${tailoredResumeId}/score`),
 
   getCoverLetter: (jobPostingId: string) =>
     api.get<CoverLetter>("/resumes/main/cover-letter", { job_posting_id: jobPostingId }),

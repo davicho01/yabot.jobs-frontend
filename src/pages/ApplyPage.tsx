@@ -15,12 +15,20 @@ import type {
   JobPosting,
   ResumeScore,
   TailoredResume,
+  TailoredResumeScore,
 } from "../api/types";
 import { useConfirm } from "../components/ConfirmDialog";
 import "./ApplyPage.css";
 
-const QUALIFY_THRESHOLD = 70;
+const QUALIFY_THRESHOLD = 85;
+const MAYBE_THRESHOLD = 70;
 const STATUSES: ApplicationStatus[] = ["saved", "applied", "interviewing", "offer", "rejected", "withdrawn"];
+
+function fitLabel(score: number): { text: string; stampClass: string } {
+  if (score >= QUALIFY_THRESHOLD) return { text: "Qualified", stampClass: "stamp--positive" };
+  if (score >= MAYBE_THRESHOLD) return { text: "Maybe", stampClass: "stamp--warning" };
+  return { text: "Not a match", stampClass: "stamp--negative" };
+}
 
 // A JobPosting row exists from the moment its URL is submitted (see
 // get_or_create_job_posting) so job_posting_id is available right away —
@@ -83,6 +91,69 @@ function NotesEditor({
         if (notes !== initialNotes) onSave(notes);
       }}
     />
+  );
+}
+
+// Mirrors DownloadMenu on the applications list page: the button doubles as
+// the dropdown's trigger, and closing on outside-click keeps it from
+// lingering open while the user works elsewhere on the page.
+function TailoredDownloadMenu({
+  tailoredResume,
+  onRegenerate,
+  isRegenerating,
+}: {
+  tailoredResume: TailoredResume;
+  onRegenerate: () => void;
+  isRegenerating: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  return (
+    <div className="action-dropdown" ref={containerRef}>
+      <button type="button" className="rescan-button" onClick={() => setOpen((o) => !o)}>
+        Download .docx ↓
+      </button>
+      {open && (
+        <div className="action-dropdown-menu">
+          <button
+            type="button"
+            onClick={async () => {
+              setOpen(false);
+              setError(null);
+              try {
+                await resumesApi.downloadTailored(tailoredResume.id, tailoredResume.filename);
+              } catch {
+                setError("Couldn't download the file. Try again.");
+              }
+            }}
+          >
+            Download .docx
+          </button>
+          <button
+            type="button"
+            disabled={isRegenerating}
+            onClick={() => {
+              setOpen(false);
+              onRegenerate();
+            }}
+          >
+            {isRegenerating ? "Regenerating…" : "Regenerate"}
+          </button>
+        </div>
+      )}
+      {error && <p className="dossier-action__error">{error}</p>}
+    </div>
   );
 }
 
@@ -237,6 +308,23 @@ function ApplyPageContent({
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tailored", jobPostingId] }),
   });
 
+  const displayedTailored = tailorMutation.data ?? tailoredQuery.data;
+
+  const tailoredScoreQuery = useQuery<TailoredResumeScore, ApiError>({
+    queryKey: ["tailored-score", displayedTailored?.id],
+    queryFn: () => resumesApi.getTailoredScore(displayedTailored!.id),
+    enabled: !!displayedTailored?.id,
+    retry: false,
+  });
+
+  const tailoredScoreMutation = useMutation<TailoredResumeScore, ApiError>({
+    mutationFn: () => resumesApi.generateTailoredScore(displayedTailored!.id),
+  });
+
+  const displayedTailoredScoreRaw = tailoredScoreMutation.data ?? tailoredScoreQuery.data;
+  const displayedTailoredScore =
+    displayedTailoredScoreRaw?.tailored_resume_id === displayedTailored?.id ? displayedTailoredScoreRaw : undefined;
+
   const coverLetterQuery = useQuery<CoverLetter, ApiError>({
     queryKey: ["cover-letter", jobPostingId],
     queryFn: () => resumesApi.getCoverLetter(jobPostingId!),
@@ -252,7 +340,6 @@ function ApplyPageContent({
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const displayedScore = scoreMutation.data ?? scoreQuery.data;
-  const displayedTailored = tailorMutation.data ?? tailoredQuery.data;
   const displayedCoverLetter = coverLetterMutation.data ?? coverLetterQuery.data;
 
   if (isLoading) {
@@ -404,6 +491,34 @@ function ApplyPageContent({
             </div>
             <div className="dossier">
               <section className="dossier-action">
+                <div className="score-summary-row">
+                  <div className="score-summary-item">
+                    {displayedScore && (
+                      <span
+                        className={`stamp score-summary-item__stamp ${fitLabel(displayedScore.overall_score).stampClass}`}
+                      >
+                        {fitLabel(displayedScore.overall_score).text}
+                      </span>
+                    )}
+                    <span className="keyword-row__label score-summary-item__label">Fitness score</span>
+                    <span className="fitness-result__number">{displayedScore?.overall_score ?? "—"}</span>
+                  </div>
+                  <div className="score-summary-divider" />
+                  <div className="score-summary-item">
+                    {displayedTailoredScore && (
+                      <span
+                        className={`stamp score-summary-item__stamp ${fitLabel(displayedTailoredScore.overall_score).stampClass}`}
+                      >
+                        {fitLabel(displayedTailoredScore.overall_score).text}
+                      </span>
+                    )}
+                    <span className="keyword-row__label score-summary-item__label">Tailored score</span>
+                    <span className="fitness-result__number">{displayedTailoredScore?.overall_score ?? "—"}</span>
+                  </div>
+                </div>
+              </section>
+
+              <section className="dossier-action">
                 <div className="dossier-action__header apply-page__notes-header">
                   <div>
                     <h2>Notes</h2>
@@ -433,6 +548,11 @@ function ApplyPageContent({
               </section>
 
               <section className="dossier-action">
+                {displayedScore && (
+                  <span className={`stamp dossier-action__corner-stamp ${fitLabel(displayedScore.overall_score).stampClass}`}>
+                    {fitLabel(displayedScore.overall_score).text}
+                  </span>
+                )}
                 <div className="dossier-action__header">
                   <h2>Fitness report</h2>
                   <p>See how your resume stacks up against this posting's requirements.</p>
@@ -451,15 +571,10 @@ function ApplyPageContent({
 
                 {displayedScore && (
                   <div className="fitness-result">
-                    <div className="fitness-result__score">
-                      <span className="fitness-result__number">{displayedScore.overall_score}</span>
-                      <span
-                        className={`stamp ${displayedScore.overall_score >= QUALIFY_THRESHOLD ? "stamp--positive" : "stamp--negative"}`}
-                      >
-                        {displayedScore.overall_score >= QUALIFY_THRESHOLD ? "Qualified" : "Not a match"}
-                      </span>
+                    <div className="fitness-result__summary">
+                      <span className="fitness-result_section_number">{displayedScore.overall_score}</span>
+                      <p>{displayedScore.summary}</p>
                     </div>
-                    <p>{displayedScore.summary}</p>
                     {displayedScore.matched_keywords.length > 0 && (
                       <div className="keyword-row">
                         <span className="keyword-row__label">Matched</span>
@@ -474,13 +589,13 @@ function ApplyPageContent({
                       <div className="keyword-row">
                         <span className="keyword-row__label">Missing</span>
                         {displayedScore.missing_keywords.map((k) => (
-                          <span key={k} className="tag">
+                          <span key={k} className="tag tag--secondary">
                             {k}
                           </span>
                         ))}
                       </div>
                     )}
-                    <button type="button" className="dossier-action__link" onClick={() => scoreMutation.mutate()}>
+                    <button type="button" className="rescan-button" onClick={() => scoreMutation.mutate()}>
                       Re-evaluate
                     </button>
                   </div>
@@ -495,10 +610,19 @@ function ApplyPageContent({
               </section>
 
               <section className="dossier-action">
-                <div className="dossier-action__header">
-                  <h2>Tailor my resume</h2>
-                  <p>Generate an ATS-friendly version of your resume rewritten for this role.</p>
-                </div>
+                {displayedTailoredScore && (
+                  <span
+                    className={`stamp dossier-action__corner-stamp ${fitLabel(displayedTailoredScore.overall_score).stampClass}`}
+                  >
+                    {fitLabel(displayedTailoredScore.overall_score).text}
+                  </span>
+                )}
+                {!displayedTailored && (
+                  <div className="dossier-action__header">
+                    <h2>Tailor my resume</h2>
+                    <p>Generate an ATS-friendly version of your resume rewritten for this role.</p>
+                  </div>
+                )}
 
                 {!displayedTailored && (
                   <button
@@ -513,24 +637,67 @@ function ApplyPageContent({
 
                 {displayedTailored && (
                   <div className="fitness-result">
-                    <p>{displayedTailored.content.summary}</p>
-                    <button
-                      type="button"
-                      className="dossier-action__button"
-                      onClick={async () => {
-                        setDownloadError(null);
-                        try {
-                          await resumesApi.downloadTailored(displayedTailored.id, displayedTailored.filename);
-                        } catch {
-                          setDownloadError("Couldn't download the file. Try again.");
-                        }
-                      }}
-                    >
-                      Download .docx
-                    </button>
-                    <button type="button" className="dossier-action__link" onClick={() => tailorMutation.mutate()}>
-                      Regenerate
-                    </button>
+                    <div className="dossier-action__header">
+                      <h2>Fitness report for this version</h2>
+                      <p>See how this tailored resume stacks up against this posting's requirements.</p>
+                    </div>
+
+                    {displayedTailoredScore && (
+                      <div className="fitness-result">
+                        <div className="fitness-result__summary">
+                          <span className="fitness-result_section_number">{displayedTailoredScore.overall_score}</span>
+                          <p>{displayedTailoredScore.summary}</p>
+                        </div>
+                        {displayedTailoredScore.matched_keywords.length > 0 && (
+                          <div className="keyword-row">
+                            <span className="keyword-row__label">Matched</span>
+                            {displayedTailoredScore.matched_keywords.map((k) => (
+                              <span key={k} className="tag tag--accent">
+                                {k}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {displayedTailoredScore.missing_keywords.length > 0 && (
+                          <div className="keyword-row">
+                            <span className="keyword-row__label">Missing</span>
+                            {displayedTailoredScore.missing_keywords.map((k) => (
+                              <span key={k} className="tag tag--secondary">
+                                {k}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {prerequisiteMessage(tailoredScoreMutation.error) && (
+                      <PrerequisiteNotice message={prerequisiteMessage(tailoredScoreMutation.error)!} />
+                    )}
+                    {genericErrorMessage(tailoredScoreMutation.error) &&
+                      !prerequisiteMessage(tailoredScoreMutation.error) && (
+                        <p className="dossier-action__error">{genericErrorMessage(tailoredScoreMutation.error)}</p>
+                      )}
+
+                    <div className="dossier-action__action-row">
+                      <button
+                        type="button"
+                        className={displayedTailoredScore ? "rescan-button" : "dossier-action__button"}
+                        onClick={() => tailoredScoreMutation.mutate()}
+                        disabled={tailoredScoreMutation.isPending}
+                      >
+                        {tailoredScoreMutation.isPending
+                          ? "Evaluating…"
+                          : displayedTailoredScore
+                            ? "Re-check tailored fit"
+                            : "Check tailored fit"}
+                      </button>
+                      <TailoredDownloadMenu
+                        tailoredResume={displayedTailored}
+                        onRegenerate={() => tailorMutation.mutate()}
+                        isRegenerating={tailorMutation.isPending}
+                      />
+                    </div>
                   </div>
                 )}
 

@@ -52,18 +52,36 @@ export interface JobList {
 
 export type ApplicationStatus = "saved" | "applied" | "interviewing" | "offer" | "rejected" | "withdrawn";
 
+// Trimmed to what the applications list/apply page actually read — the
+// backend's ApplicationRead (app/schemas/application.py) only sends these
+// fields, not the full JobPosting/TailoredResume/CoverLetter shapes.
+export interface ApplicationJobPosting {
+  id: string;
+  url_id: string;
+  apply_url: string;
+  title: string | null;
+  company_name: string | null;
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string | null;
+  posted_at: string | null;
+}
+
+export interface ApplicationDocument {
+  id: string;
+  filename: string;
+}
+
 export interface Application {
   id: string;
   status: string;
-  applied_at: string | null;
   notes: string | null;
   is_archived: boolean;
-  created_at: string;
-  updated_at: string;
-  job_posting: JobPosting;
-  latest_score: ResumeScore | null;
-  latest_tailored_resume: TailoredResume | null;
-  latest_cover_letter: CoverLetter | null;
+  job_posting: ApplicationJobPosting;
+  // Max of the fitness score and the tailored-resume score, whichever is set.
+  best_score: number | null;
+  latest_tailored_resume: ApplicationDocument | null;
+  latest_cover_letter: ApplicationDocument | null;
 }
 
 export interface Resume {
@@ -91,6 +109,17 @@ export interface TailoredResume {
   job_posting_id: string;
   content: { summary: string; sections: { heading: string; bullets: string[] }[] };
   filename: string;
+  created_at: string;
+}
+
+export interface TailoredResumeScore {
+  id: string;
+  tailored_resume_id: string;
+  job_posting_id: string;
+  overall_score: number;
+  matched_keywords: string[];
+  missing_keywords: string[];
+  summary: string;
   created_at: string;
 }
 

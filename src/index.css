@@ -7,6 +7,7 @@
   --accent-deep: #0058b0;
   --teal: #248a3d;
   --rose: #d70015;
+  --amber: #b36500;
   --line: #e8e8ed;
 
   --font-display: "Outfit", system-ui, -apple-system, sans-serif;
@@ -37,6 +38,7 @@
     --accent-deep: #6cb4ff;
     --teal: #30d158;
     --rose: #ff453a;
+    --amber: #ff9f0a;
     --line: #2c2c2e;
     color-scheme: dark;
   }
@@ -161,6 +163,11 @@ textarea {
   background: color-mix(in srgb, var(--rose) 14%, transparent);
 }
 
+.stamp--warning {
+  color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 14%, transparent);
+}
+
 .stamp--neutral {
   color: var(--ink-soft);
   background: var(--surface);
@@ -185,6 +192,11 @@ textarea {
 .tag--accent {
   color: var(--accent-deep);
   background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.tag--secondary {
+  color: var(--rose);
+  background: color-mix(in srgb, var(--rose) 14%, transparent);
 }
 
 .rescan-button {

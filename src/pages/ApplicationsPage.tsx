@@ -4,7 +4,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { applicationsApi } from "../api/applications";
 import { resumesApi } from "../api/resumes";
 import { ApiError } from "../api/client";
-import type { Application, JobPosting } from "../api/types";
+import type { Application, ApplicationJobPosting } from "../api/types";
 import "./ApplicationsPage.css";
 
 const QUALIFY_THRESHOLD = 70;
@@ -21,7 +21,7 @@ function formatPostedDate(postedAt: string): string {
   return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
 }
 
-function formatSalary(posting: JobPosting): string | null {
+function formatSalary(posting: ApplicationJobPosting): string | null {
   if (!posting.salary_min && !posting.salary_max) return null;
   const currency = posting.salary_currency ?? "";
   if (posting.salary_min && posting.salary_max) {
@@ -67,7 +67,7 @@ function serializeActiveSorts(sorts: ActiveSort[]): string {
 function sortValue(application: Application, field: SortableField): number | null {
   switch (field) {
     case "score":
-      return application.latest_score?.overall_score ?? null;
+      return application.best_score;
     case "pay":
       return application.job_posting.salary_max ?? application.job_posting.salary_min ?? null;
     case "posted":
@@ -370,13 +370,13 @@ export function ApplicationsPage() {
                 </div>
               </div>
               <DownloadMenu application={application} />
-              {application.latest_score ? (
+              {application.best_score !== null ? (
                 <span
                   className={`stamp application-row__score ${
-                    application.latest_score.overall_score >= QUALIFY_THRESHOLD ? "stamp--positive" : "stamp--negative"
+                    application.best_score >= QUALIFY_THRESHOLD ? "stamp--positive" : "stamp--negative"
                   }`}
                 >
-                  Score {application.latest_score.overall_score}
+                  Score {application.best_score}
                 </span>
               ) : (
                 <EvaluateButton jobPostingId={application.job_posting.id} />
