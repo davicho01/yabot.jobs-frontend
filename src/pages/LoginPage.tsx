@@ -16,6 +16,11 @@ export function LoginPage() {
     setStatus("sending");
     setError(null);
     try {
+      // The magic-link email always points at /auth/callback with no
+      // `next` (see backend's POST /auth/request-link) — stash it here so
+      // AuthCallbackPage can still return the user where they started.
+      const next = searchParams.get("next");
+      if (next) sessionStorage.setItem("post_login_next", next);
       await requestLink(email);
       setStatus("sent");
     } catch (err) {
