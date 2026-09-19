@@ -354,14 +354,31 @@
   z-index: 20;
 }
 
+.site-header__dropdown-profile {
+  padding: 0.5rem 0.6rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0.4rem;
+}
+
+.site-header__dropdown-name {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.site-header__dropdown-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .site-header__dropdown-email {
   font-family: var(--font-body);
   font-size: 0.78rem;
   color: var(--ink-soft);
-  padding: 0.5rem 0.6rem 0.6rem;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 0.4rem;
   word-break: break-all;
+  margin-top: 0.2rem;
 }
 
 .site-header__dropdown a,

@@ -5,6 +5,7 @@ import { OAuthAuthorizePage } from "./pages/OAuthAuthorizePage";
 import { JobBoardPage } from "./pages/JobBoardPage";
 import { JobDetailPage } from "./pages/JobDetailPage";
 import { ApplyPage } from "./pages/ApplyPage";
+import { ProfilePage } from "./pages/ProfilePage";
 import { ResumePage } from "./pages/ResumePage";
 import { ApiKeysPage } from "./pages/ApiKeysPage";
 import { ApplicationsPage } from "./pages/ApplicationsPage";
@@ -52,6 +53,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ApplyPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
             </ProtectedRoute>
           }
         />

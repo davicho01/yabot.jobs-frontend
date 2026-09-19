@@ -309,7 +309,7 @@ export function Header() {
     setFiltersOpen((o) => !o);
   }
 
-  const initial = user?.email?.[0]?.toUpperCase() ?? "?";
+  const initial = (user?.display_name?.trim()?.[0] ?? user?.email?.[0])?.toUpperCase() ?? "?";
 
   return (
     <header className={`site-header${hidden ? " site-header--hidden" : ""}`} ref={headerRef}>
@@ -395,7 +395,15 @@ export function Header() {
             </button>
             {menuOpen && (
               <div className="site-header__dropdown" role="menu">
-                <div className="site-header__dropdown-email">{user.email}</div>
+                <div className="site-header__dropdown-profile">
+                  <div className="site-header__dropdown-name">
+                    <span>{user.display_name || "Missing name"}</span>
+                  </div>
+                  <div className="site-header__dropdown-email">{user.email}</div>
+                </div>
+                <Link to="/profile" role="menuitem" onClick={() => setMenuOpen(false)}>
+                  Profile
+                </Link>
                 <Link to="/applications" role="menuitem" onClick={() => setMenuOpen(false)}>
                   My applications
                 </Link>

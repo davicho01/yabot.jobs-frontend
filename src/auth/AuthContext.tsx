@@ -9,6 +9,7 @@ interface AuthContextValue {
   requestLink: (email: string) => Promise<void>;
   verify: (token: string) => Promise<User>;
   logout: () => Promise<void>;
+  updateDisplayName: (displayName: string | null) => Promise<User>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -44,8 +45,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const updateDisplayName = useCallback(async (displayName: string | null) => {
+    const updatedUser = await authApi.updateMe(displayName);
+    setUser(updatedUser);
+    return updatedUser;
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, requestLink, verify, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, isLoading, requestLink, verify, logout, updateDisplayName }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
 
