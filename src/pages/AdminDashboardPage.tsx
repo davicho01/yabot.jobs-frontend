@@ -8,7 +8,7 @@ import { ScanActivityChart } from "../components/ScanActivityChart";
 import type { CrawlSource } from "../api/types";
 import "./AdminCommon.css";
 
-const DEFAULT_PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 50;
 
 type SortKey = "name" | "ats_type" | "status" | "last_crawled_at";
 type SortDirection = "asc" | "desc";

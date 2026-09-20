@@ -7,7 +7,7 @@ import { AdminPagination } from "../components/AdminPagination";
 import type { JobSortKey } from "../api/admin";
 import "./AdminCommon.css";
 
-const DEFAULT_PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 50;
 
 type SortDirection = "asc" | "desc";
 
