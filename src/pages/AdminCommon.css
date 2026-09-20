@@ -191,6 +191,23 @@
   white-space: nowrap;
 }
 
+.admin-source-search {
+  flex: 0 1 280px;
+  min-width: 0;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+}
+
+/* Phone-only under-the-name summary; the desktop table has real columns. */
+.admin-table__sub {
+  display: none;
+}
+
 .admin-pagination {
   display: flex;
   flex-wrap: wrap;
@@ -450,5 +467,86 @@
 
   .admin-section__header-row a {
     max-width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-source-search {
+    flex-basis: 100%;
+  }
+
+  /* Compact source rows: name (with ATS type and last crawl underneath) |
+     status | arrow — instead of a five-column table that has to scroll. The
+     ATS type and last-crawled columns are hidden; the same info is in
+     .admin-table__sub. */
+  .admin-table--sources th:nth-child(2),
+  .admin-table--sources td:nth-child(2),
+  .admin-table--sources th:nth-child(4),
+  .admin-table--sources td:nth-child(4) {
+    display: none;
+  }
+
+  .admin-table--sources th,
+  .admin-table--sources td {
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
+  }
+
+  .admin-table--sources td {
+    padding-top: 0.55rem;
+    padding-bottom: 0.55rem;
+  }
+
+  .admin-table__sub {
+    display: block;
+    margin-top: 0.1rem;
+    color: var(--ink-soft);
+    font-size: 0.74rem;
+  }
+
+  .admin-table__link-label {
+    display: none;
+  }
+
+  .admin-table--sources .admin-table__link {
+    display: inline-block;
+    padding: 0.3rem 0.4rem;
+    font-size: 1.05rem;
+  }
+
+  /* Compact pagination: page status + rows-per-page on one line, and just
+     prev/next (no first/last or numbered pages) filling the line below. */
+  .admin-pagination {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.6rem 0.75rem;
+  }
+
+  .admin-pagination__status {
+    grid-column: 1;
+    grid-row: 1;
+    white-space: normal;
+  }
+
+  .admin-pagination__size {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .admin-pagination__controls {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    flex-wrap: nowrap;
+    gap: 0.75rem;
+  }
+
+  .admin-pagination__pages,
+  .admin-pagination__nav--edge {
+    display: none;
+  }
+
+  .admin-pagination__nav {
+    flex: 1;
   }
 }

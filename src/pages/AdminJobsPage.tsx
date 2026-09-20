@@ -3,10 +3,10 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from "../api/admin";
 import { jobsApi } from "../api/jobs";
+import { AdminPagination } from "../components/AdminPagination";
 import type { JobSortKey } from "../api/admin";
 import "./AdminCommon.css";
 
-const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 const DEFAULT_PAGE_SIZE = 20;
 
 type SortDirection = "asc" | "desc";
@@ -32,27 +32,6 @@ function formatDate(value: string): string {
     hour: "numeric",
     minute: "2-digit",
   });
-}
-
-function getPageNumbers(current: number, total: number): (number | "ellipsis")[] {
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
-  const delta = 1;
-  const pages = new Set<number>([1, total, current]);
-  for (let i = 1; i <= delta; i++) {
-    if (current - i >= 1) pages.add(current - i);
-    if (current + i <= total) pages.add(current + i);
-  }
-  const sorted = Array.from(pages).sort((a, b) => a - b);
-  const result: (number | "ellipsis")[] = [];
-  let prev = 0;
-  for (const p of sorted) {
-    if (prev && p - prev > 1) result.push("ellipsis");
-    result.push(p);
-    prev = p;
-  }
-  return result;
 }
 
 export function AdminJobsPage() {
@@ -95,7 +74,6 @@ export function AdminJobsPage() {
   const data = jobsQuery.data;
   const sourceName = statsQuery.data?.source.name;
   const totalPages = data ? Math.max(1, Math.ceil(data.total / (data.page_size || pageSize))) : 1;
-  const pageNumbers = getPageNumbers(page, totalPages);
 
   function handleSort(key: JobSortKey) {
     updateParams((next) => {
@@ -227,97 +205,20 @@ export function AdminJobsPage() {
             </div>
           )}
           {data.total > 0 && (
-            <div className="admin-pagination">
-              <div className="admin-pagination__size">
-                <label htmlFor="page-size-select">Rows per page</label>
-                <select
-                  id="page-size-select"
-                  value={pageSize}
-                  onChange={(event) => {
-                    const newSize = Number(event.target.value);
-                    updateParams((next) => {
-                      if (newSize === DEFAULT_PAGE_SIZE) next.delete("pageSize");
-                      else next.set("pageSize", String(newSize));
-                      next.delete("page");
-                    });
-                  }}
-                >
-                  {PAGE_SIZE_OPTIONS.map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="admin-pagination__controls">
-                <button
-                  type="button"
-                  className="rescan-button admin-pagination__nav"
-                  disabled={page <= 1}
-                  onClick={() => goToPage(1)}
-                  aria-label="First page"
-                >
-                  « First
-                </button>
-                <button
-                  type="button"
-                  className="rescan-button admin-pagination__nav"
-                  disabled={page <= 1}
-                  onClick={() => goToPage(page - 1)}
-                  aria-label="Previous page"
-                >
-                  ‹ Prev
-                </button>
-
-                <div className="admin-pagination__pages">
-                  {pageNumbers.map((entry, index) =>
-                    entry === "ellipsis" ? (
-                      <span key={`ellipsis-${index}`} className="admin-pagination__ellipsis">
-                        …
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        key={entry}
-                        className={
-                          entry === page
-                            ? "admin-pagination__page-button admin-pagination__page-button--active"
-                            : "admin-pagination__page-button"
-                        }
-                        onClick={() => goToPage(entry)}
-                        aria-current={entry === page ? "page" : undefined}
-                      >
-                        {entry}
-                      </button>
-                    ),
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  className="rescan-button admin-pagination__nav"
-                  disabled={page >= totalPages}
-                  onClick={() => goToPage(page + 1)}
-                  aria-label="Next page"
-                >
-                  Next ›
-                </button>
-                <button
-                  type="button"
-                  className="rescan-button admin-pagination__nav"
-                  disabled={page >= totalPages}
-                  onClick={() => goToPage(totalPages)}
-                  aria-label="Last page"
-                >
-                  Last »
-                </button>
-              </div>
-
-              <span className="admin-pagination__status">
-                Page {page} of {totalPages} · {data.total} total
-              </span>
-            </div>
+            <AdminPagination
+              page={page}
+              totalPages={totalPages}
+              total={data.total}
+              pageSize={pageSize}
+              onPageChange={goToPage}
+              onPageSizeChange={(newSize) =>
+                updateParams((next) => {
+                  if (newSize === DEFAULT_PAGE_SIZE) next.delete("pageSize");
+                  else next.set("pageSize", String(newSize));
+                  next.delete("page");
+                })
+              }
+            />
           )}
         </section>
       )}

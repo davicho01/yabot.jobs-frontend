@@ -1,11 +1,14 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { adminApi } from "../api/admin";
+import { AdminPagination } from "../components/AdminPagination";
 import { AdminWindowStats } from "../components/AdminWindowStats";
 import { ScanActivityChart } from "../components/ScanActivityChart";
 import type { CrawlSource } from "../api/types";
 import "./AdminCommon.css";
+
+const DEFAULT_PAGE_SIZE = 20;
 
 type SortKey = "name" | "ats_type" | "status" | "last_crawled_at";
 type SortDirection = "asc" | "desc";
@@ -54,11 +57,60 @@ export function AdminDashboardPage() {
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
+  // Search/page/page size live in the URL (not component state) so a refresh,
+  // or sharing the link, reproduces the same view — same as the job listings
+  // page. The full source list is already loaded, so this is all client-side.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get("q") ?? "";
+  const requestedPage = Number(searchParams.get("page")) || 1;
+  const pageSize = Number(searchParams.get("pageSize")) || DEFAULT_PAGE_SIZE;
+
+  const updateParams = useCallback(
+    (update: (next: URLSearchParams) => void) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          update(next);
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
   const sortedSources = useMemo(() => {
     const sources = sourcesQuery.data ?? [];
     const sorted = [...sources].sort((a, b) => compareValues(a, b, sortKey));
     return sortDirection === "asc" ? sorted : sorted.reverse();
   }, [sourcesQuery.data, sortKey, sortDirection]);
+
+  const filteredSources = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    if (!needle) return sortedSources;
+    return sortedSources.filter((source) => source.name.toLowerCase().includes(needle));
+  }, [sortedSources, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredSources.length / pageSize));
+  // Clamped so a stale ?page= (e.g. after a narrower search) shows the last
+  // page rather than an empty one.
+  const page = Math.min(requestedPage, totalPages);
+  const pageSources = filteredSources.slice((page - 1) * pageSize, page * pageSize);
+
+  function goToPage(target: number) {
+    updateParams((next) => {
+      if (target <= 1) next.delete("page");
+      else next.set("page", String(target));
+    });
+  }
+
+  function handleSearchChange(value: string) {
+    updateParams((next) => {
+      if (value) next.set("q", value);
+      else next.delete("q");
+      next.delete("page");
+    });
+  }
 
   function handleSort(key: SortKey) {
     if (key === sortKey) {
@@ -67,6 +119,7 @@ export function AdminDashboardPage() {
       setSortKey(key);
       setSortDirection("asc");
     }
+    updateParams((next) => next.delete("page"));
   }
 
   return (
@@ -109,12 +162,25 @@ export function AdminDashboardPage() {
       />
 
       <section className="admin-section">
-        <h2 className="admin-section__title">Source List</h2>
+        <div className="admin-section__header">
+          <h2 className="admin-section__title">Source List</h2>
+          <input
+            type="search"
+            className="admin-source-search"
+            placeholder="Search sources by name…"
+            aria-label="Search sources by name"
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+          />
+        </div>
         {sourcesQuery.isLoading && <p className="admin-page__hint">Loading…</p>}
         {sourcesQuery.data?.length === 0 && <p className="admin-page__hint">No crawl sources yet.</p>}
-        {sourcesQuery.data && sourcesQuery.data.length > 0 && (
+        {sourcesQuery.data && sourcesQuery.data.length > 0 && filteredSources.length === 0 && (
+          <p className="admin-page__hint">No sources match “{search.trim()}”.</p>
+        )}
+        {filteredSources.length > 0 && (
           <div className="admin-table-wrap">
-            <table className="admin-table">
+            <table className="admin-table admin-table--sources">
               <thead>
                 <tr>
                   {SOURCE_COLUMNS.map((column) => (
@@ -135,9 +201,15 @@ export function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {sortedSources.map((source) => (
+                {pageSources.map((source) => (
                   <tr key={source.id}>
-                    <td>{source.name}</td>
+                    <td>
+                      {source.name}
+                      {/* Phones drop the ATS/last-crawled columns (see AdminCommon.css) — this keeps that info, compactly, under the name. */}
+                      <span className="admin-table__sub">
+                        {source.ats_type ?? "—"} · {formatDate(source.last_crawled_at)}
+                      </span>
+                    </td>
                     <td>{source.ats_type ?? "—"}</td>
                     <td>
                       <span className={statusStampClass(source.status)}>{source.status}</span>
@@ -145,7 +217,7 @@ export function AdminDashboardPage() {
                     <td>{formatDate(source.last_crawled_at)}</td>
                     <td>
                       <Link to={`/admin/crawl-sources/${source.id}`} className="admin-table__link">
-                        View stats →
+                        <span className="admin-table__link-label">View stats </span>→
                       </Link>
                     </td>
                   </tr>
@@ -153,6 +225,22 @@ export function AdminDashboardPage() {
               </tbody>
             </table>
           </div>
+        )}
+        {filteredSources.length > 0 && (
+          <AdminPagination
+            page={page}
+            totalPages={totalPages}
+            total={filteredSources.length}
+            pageSize={pageSize}
+            onPageChange={goToPage}
+            onPageSizeChange={(newSize) =>
+              updateParams((next) => {
+                if (newSize === DEFAULT_PAGE_SIZE) next.delete("pageSize");
+                else next.set("pageSize", String(newSize));
+                next.delete("page");
+              })
+            }
+          />
         )}
       </section>
     </main>
