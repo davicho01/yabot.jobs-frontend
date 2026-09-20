@@ -191,6 +191,30 @@
   white-space: nowrap;
 }
 
+.admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+/* The shared dropdown menu is absolutely positioned inside a button-sized
+   wrapper, so it would otherwise shrink-wrap to that width and wrap its
+   labels onto two lines. */
+.admin-sort__menu {
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+}
+
+.admin-sort__menu button {
+  white-space: nowrap;
+}
+
+.admin-toolbar--above-table {
+  margin-bottom: 0.75rem;
+}
+
 .admin-source-search {
   flex: 0 1 280px;
   min-width: 0;
@@ -471,8 +495,19 @@
 }
 
 @media (max-width: 640px) {
+  /* Heading on its own line, then search (growing) with Sort beside it. */
+  .admin-section__header > .admin-toolbar {
+    flex: 1 1 100%;
+  }
+
   .admin-source-search {
-    flex-basis: 100%;
+    flex: 1 1 0;
+  }
+
+  /* The current sort name is spelled out on desktop only — the button is
+     just "Sort ↓" here to leave room for the search field. */
+  .admin-sort__current {
+    display: none;
   }
 
   /* Compact source rows: name (with ATS type and last crawl underneath) |

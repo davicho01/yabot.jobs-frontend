@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from "../api/admin";
 import { jobsApi } from "../api/jobs";
 import { AdminPagination } from "../components/AdminPagination";
+import { AdminSortMenu } from "../components/AdminSortMenu";
 import type { JobSortKey } from "../api/admin";
 import "./AdminCommon.css";
 
@@ -16,6 +17,13 @@ const JOB_COLUMNS: { key: JobSortKey; label: string }[] = [
   { key: "title", label: "Title" },
   { key: "status", label: "Status" },
   { key: "discovered", label: "Scanned" },
+];
+
+const SORT_OPTIONS: { key: JobSortKey; label: string; ascLabel: string; descLabel: string }[] = [
+  { key: "company", label: "Company", ascLabel: "A → Z", descLabel: "Z → A" },
+  { key: "title", label: "Title", ascLabel: "A → Z", descLabel: "Z → A" },
+  { key: "status", label: "Status", ascLabel: "A → Z", descLabel: "Z → A" },
+  { key: "discovered", label: "Scan date", ascLabel: "Oldest first", descLabel: "Newest first" },
 ];
 
 function statusStampClass(status: string): string {
@@ -75,15 +83,18 @@ export function AdminJobsPage() {
   const sourceName = statsQuery.data?.source.name;
   const totalPages = data ? Math.max(1, Math.ceil(data.total / (data.page_size || pageSize))) : 1;
 
-  function handleSort(key: JobSortKey) {
+  function applySort(key: JobSortKey, direction: SortDirection) {
     updateParams((next) => {
-      const newDirection = key === sortKey && sortDirection === "asc" ? "desc" : "asc";
       if (key === "discovered") next.delete("sortKey");
       else next.set("sortKey", key);
-      if (newDirection === "desc") next.delete("sortDirection");
-      else next.set("sortDirection", newDirection);
+      if (direction === "desc") next.delete("sortDirection");
+      else next.set("sortDirection", direction);
       next.delete("page");
     });
+  }
+
+  function handleSort(key: JobSortKey) {
+    applySort(key, key === sortKey && sortDirection === "asc" ? "desc" : "asc");
   }
 
   const rescanMutation = useMutation({
@@ -143,6 +154,11 @@ export function AdminJobsPage() {
       {data && (
         <section className="admin-section">
           {data.items.length === 0 && <p className="admin-page__hint">No listings match these filters.</p>}
+          {data.items.length > 0 && (
+            <div className="admin-toolbar admin-toolbar--above-table">
+              <AdminSortMenu options={SORT_OPTIONS} sortKey={sortKey} sortDirection={sortDirection} onChange={applySort} />
+            </div>
+          )}
           {data.items.length > 0 && (
             <div className="admin-table-wrap">
               <table className="admin-table">

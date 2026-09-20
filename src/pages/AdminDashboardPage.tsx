@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { adminApi } from "../api/admin";
 import { AdminPagination } from "../components/AdminPagination";
+import { AdminSortMenu } from "../components/AdminSortMenu";
 import { AdminWindowStats } from "../components/AdminWindowStats";
 import { ScanActivityChart } from "../components/ScanActivityChart";
 import type { CrawlSource } from "../api/types";
@@ -18,6 +19,15 @@ const SOURCE_COLUMNS: { key: SortKey; label: string }[] = [
   { key: "ats_type", label: "ATS Type" },
   { key: "status", label: "Status" },
   { key: "last_crawled_at", label: "Last crawled" },
+];
+
+const TEXT_SORT_LABELS = { ascLabel: "A → Z", descLabel: "Z → A" };
+
+const SORT_OPTIONS: { key: SortKey; label: string; ascLabel: string; descLabel: string }[] = [
+  { key: "name", label: "Name", ...TEXT_SORT_LABELS },
+  { key: "ats_type", label: "ATS type", ...TEXT_SORT_LABELS },
+  { key: "status", label: "Status", ...TEXT_SORT_LABELS },
+  { key: "last_crawled_at", label: "Last crawled", ascLabel: "Oldest first", descLabel: "Newest first" },
 ];
 
 function compareValues(a: CrawlSource, b: CrawlSource, key: SortKey): number {
@@ -112,6 +122,12 @@ export function AdminDashboardPage() {
     });
   }
 
+  function handleSortChange(key: SortKey, direction: SortDirection) {
+    setSortKey(key);
+    setSortDirection(direction);
+    updateParams((next) => next.delete("page"));
+  }
+
   function handleSort(key: SortKey) {
     if (key === sortKey) {
       setSortDirection((direction) => (direction === "asc" ? "desc" : "asc"));
@@ -164,14 +180,22 @@ export function AdminDashboardPage() {
       <section className="admin-section">
         <div className="admin-section__header">
           <h2 className="admin-section__title">Source List</h2>
-          <input
-            type="search"
-            className="admin-source-search"
-            placeholder="Search sources by name…"
-            aria-label="Search sources by name"
-            value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
-          />
+          <div className="admin-toolbar">
+            <input
+              type="search"
+              className="admin-source-search"
+              placeholder="Search by name…"
+              aria-label="Search sources by name"
+              value={search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+            />
+            <AdminSortMenu
+              options={SORT_OPTIONS}
+              sortKey={sortKey}
+              sortDirection={sortDirection}
+              onChange={handleSortChange}
+            />
+          </div>
         </div>
         {sourcesQuery.isLoading && <p className="admin-page__hint">Loading…</p>}
         {sourcesQuery.data?.length === 0 && <p className="admin-page__hint">No crawl sources yet.</p>}
