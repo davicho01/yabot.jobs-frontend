@@ -1,13 +1,8 @@
 .applications-page {
+  width: 100%;
   max-width: 960px;
   margin: 0 auto;
   padding: 2.5rem 1.5rem 4rem;
-}
-
-@media (min-width: 800px) {
-  .applications-page {
-    min-width: 800px;
-  }
 }
 
 .applications-page h1 {
@@ -27,8 +22,9 @@
 .applications-page__toolbar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 1rem;
+  gap: 0.75rem 1rem;
   margin-bottom: 1.25rem;
 }
 
@@ -99,12 +95,12 @@
   background: var(--surface);
 }
 
-/* Fixed (not flex-grow) so this column lines up at the same x-position on
-   every row regardless of title length — everything after it (download,
-   score) then sits at a consistent spot instead of drifting per row. */
+/* Takes whatever the row has left after the fixed-width actions to its
+   right, so those actions line up at the same x-position on every row
+   regardless of title length. The 320px basis is where the row gives up and
+   wraps them onto a second line beneath it. */
 .application-row__main {
-  flex: 0 0 520px;
-  width: 520px;
+  flex: 1 1 320px;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -247,3 +243,43 @@
   cursor: default;
 }
 
+@media (max-width: 640px) {
+  .applications-page {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .application-row {
+    padding: 0.85rem 0.9rem;
+  }
+
+  /* Title/company/pay get the full row; the actions sit below it, left to
+     right, with Apply pushed to the far edge. */
+  .application-row__main {
+    flex-basis: 100%;
+  }
+
+  .application-row__download {
+    margin-left: 0;
+  }
+
+  .application-row__apply-button {
+    margin-left: auto;
+  }
+
+  /* The Download button is now at the row's left edge, so its menu can't be
+     right-anchored to it (it would open off the left of the screen). The
+     toolbar's Sort menu, which is at the right edge, keeps its anchoring. */
+  .application-row__download .action-dropdown-menu {
+    left: 0;
+    right: auto;
+  }
+
+  .application-row__meta {
+    flex-wrap: wrap;
+    row-gap: 0.1rem;
+  }
+
+  .application-row__added {
+    margin-left: 0;
+  }
+}

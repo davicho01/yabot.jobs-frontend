@@ -1,4 +1,5 @@
 .settings-page {
+  width: 100%;
   max-width: 640px;
   margin: 0 auto;
   padding: 2.5rem 1.5rem 4rem;
@@ -135,11 +136,21 @@
 
 .record-list__item {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem 0.75rem;
   font-size: 0.88rem;
   padding: 0.5rem 0;
   border-top: 1px solid var(--line);
+}
+
+/* The label (provider · model · masked key, or a filename) takes the row's
+   free space and wraps, so on a narrow screen the action buttons drop to
+   their own line instead of squeezing the text or overflowing. */
+.record-list__item > span:first-child {
+  flex: 1 1 10rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .record-list__item button {
@@ -177,4 +188,16 @@
 .record-list__remove:hover {
   background: var(--rose);
   color: var(--surface);
+}
+
+/* Compound selectors: ResumePage.css defines the same base classes, and
+   which of the two stylesheets lands later in the document isn't guaranteed. */
+@media (max-width: 640px) {
+  main.settings-page {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .settings-page .settings-section {
+    padding: 1.1rem;
+  }
 }

@@ -166,63 +166,65 @@ export function AdminJobsPage() {
         <section className="admin-section">
           {data.items.length === 0 && <p className="admin-page__hint">No listings match these filters.</p>}
           {data.items.length > 0 && (
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  {JOB_COLUMNS.map((column) => (
-                    <th key={column.key} className="admin-table__th--sortable" onClick={() => handleSort(column.key)}>
-                      {column.label}
-                      {sortKey === column.key && (
-                        <span className="admin-table__sort-indicator">{sortDirection === "asc" ? " ▲" : " ▼"}</span>
-                      )}
-                    </th>
-                  ))}
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {data.items.map((job) => {
-                  const isRescanning =
-                    rescanListingMutation.isPending && rescanListingMutation.variables === job.url.id;
-                  const rescanFailed =
-                    rescanListingMutation.isError && rescanListingMutation.variables === job.url.id;
-                  return (
-                    <tr key={job.url.id}>
-                      <td>
-                        {job.posting?.company_name && job.url.crawl_source_id ? (
-                          <Link to={`/admin/crawl-sources/${job.url.crawl_source_id}`}>
-                            {job.posting.company_name}
-                          </Link>
-                        ) : (
-                          (job.posting?.company_name ?? "—")
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    {JOB_COLUMNS.map((column) => (
+                      <th key={column.key} className="admin-table__th--sortable" onClick={() => handleSort(column.key)}>
+                        {column.label}
+                        {sortKey === column.key && (
+                          <span className="admin-table__sort-indicator">{sortDirection === "asc" ? " ▲" : " ▼"}</span>
                         )}
-                      </td>
-                      <td>{job.posting?.title ?? "—"}</td>
-                      <td>
-                        <span className={statusStampClass(job.url.scan_status)}>{job.url.scan_status}</span>
-                        {rescanFailed && <p className="rescan-error">Rescan failed.</p>}
-                      </td>
-                      <td className="admin-table__nowrap">{formatDate(job.url.created_at)}</td>
-                      <td>
-                        <div className="admin-table__actions">
-                          <button
-                            type="button"
-                            className="rescan-button"
-                            disabled={isRescanning}
-                            onClick={() => rescanListingMutation.mutate(job.url.id)}
-                          >
-                            {isRescanning ? "Rescanning…" : "Rescan ↻"}
-                          </button>
-                          <Link to={`/jobs/${job.url.id}`} className="rescan-button">
-                            View job
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      </th>
+                    ))}
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.items.map((job) => {
+                    const isRescanning =
+                      rescanListingMutation.isPending && rescanListingMutation.variables === job.url.id;
+                    const rescanFailed =
+                      rescanListingMutation.isError && rescanListingMutation.variables === job.url.id;
+                    return (
+                      <tr key={job.url.id}>
+                        <td>
+                          {job.posting?.company_name && job.url.crawl_source_id ? (
+                            <Link to={`/admin/crawl-sources/${job.url.crawl_source_id}`}>
+                              {job.posting.company_name}
+                            </Link>
+                          ) : (
+                            (job.posting?.company_name ?? "—")
+                          )}
+                        </td>
+                        <td>{job.posting?.title ?? "—"}</td>
+                        <td>
+                          <span className={statusStampClass(job.url.scan_status)}>{job.url.scan_status}</span>
+                          {rescanFailed && <p className="rescan-error">Rescan failed.</p>}
+                        </td>
+                        <td className="admin-table__nowrap">{formatDate(job.url.created_at)}</td>
+                        <td>
+                          <div className="admin-table__actions">
+                            <button
+                              type="button"
+                              className="rescan-button"
+                              disabled={isRescanning}
+                              onClick={() => rescanListingMutation.mutate(job.url.id)}
+                            >
+                              {isRescanning ? "Rescanning…" : "Rescan ↻"}
+                            </button>
+                            <Link to={`/jobs/${job.url.id}`} className="rescan-button">
+                              View job
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
           {data.total > 0 && (
             <div className="admin-pagination">

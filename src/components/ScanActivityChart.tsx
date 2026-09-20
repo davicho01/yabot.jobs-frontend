@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { ScanDayCount, ScanHourCount } from "../api/types";
 import "./ScanActivityChart.css";
@@ -119,11 +119,16 @@ function roundedTopBarPath(x: number, width: number, top: number, bottom: number
   );
 }
 
-const CHART_WIDTH = 800;
+// Width used until the chart's container has been measured (first paint).
+const DEFAULT_CHART_WIDTH = 800;
 const CHART_HEIGHT = 220;
 const PADDING_LEFT = 40;
 const PADDING_BOTTOM = 24;
 const PADDING_TOP = 12;
+// Rough horizontal room one x-axis label needs, used to decide how many to
+// skip so they don't run into each other.
+const MIN_LABEL_SPACING = 56;
+const TOOLTIP_EDGE_INSET = 64;
 
 export function ScanActivityChart({
   title,
@@ -144,6 +149,21 @@ export function ScanActivityChart({
   const [granularity, setGranularity] = useState<Granularity>("day");
   const [showTable, setShowTable] = useState(false);
   const [hovered, setHovered] = useState<number | null>(null);
+
+  // The SVG is drawn at the container's real pixel width (rather than a fixed
+  // viewBox stretched to fit) so text and bars keep their proportions on a
+  // phone. A state-held node, not a ref, because the chart div only mounts
+  // once data has loaded and the table view isn't showing.
+  const [chartNode, setChartNode] = useState<HTMLDivElement | null>(null);
+  const [chartWidth, setChartWidth] = useState(DEFAULT_CHART_WIDTH);
+  useEffect(() => {
+    if (!chartNode) return;
+    const measure = () => setChartWidth(Math.max(1, Math.round(chartNode.clientWidth)));
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(chartNode);
+    return () => observer.disconnect();
+  }, [chartNode]);
 
   function goToJobs(bucket: Bucket) {
     const params = new URLSearchParams();
@@ -169,13 +189,14 @@ export function ScanActivityChart({
   const ticks = niceTicks(maxCount);
   const niceMax = ticks[ticks.length - 1] || 1;
 
-  const plotWidth = CHART_WIDTH - PADDING_LEFT;
+  const plotWidth = Math.max(1, chartWidth - PADDING_LEFT);
   const plotHeight = CHART_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
   const slot = buckets.length > 0 ? plotWidth / buckets.length : plotWidth;
   const barWidth = Math.min(24, slot * 0.6);
 
   // Skip labels once bars get dense enough that every tick would collide.
-  const labelStride = Math.max(1, Math.ceil(buckets.length / 8));
+  const maxLabels = Math.max(1, Math.floor(plotWidth / MIN_LABEL_SPACING));
+  const labelStride = Math.max(1, Math.ceil(buckets.length / maxLabels));
 
   function yFor(count: number): number {
     return PADDING_TOP + plotHeight * (1 - count / niceMax);
@@ -209,7 +230,7 @@ export function ScanActivityChart({
       {!loading && buckets.length === 0 && <p className="admin-page__hint">No scan activity yet.</p>}
 
       {!loading && buckets.length > 0 && showTable && (
-        <div className="scan-chart__table-wrap">
+        <div className="scan-chart__table-wrap admin-table-wrap">
           <table className="admin-table">
             <thead>
               <tr>
@@ -230,11 +251,10 @@ export function ScanActivityChart({
       )}
 
       {!loading && buckets.length > 0 && !showTable && (
-        <div className="scan-chart">
+        <div className="scan-chart" ref={setChartNode}>
           <svg
             className="scan-chart__svg"
-            viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
-            preserveAspectRatio="none"
+            viewBox={`0 0 ${chartWidth} ${CHART_HEIGHT}`}
             role="img"
             aria-label={`${title}, ${granularity}ly`}
           >
@@ -244,7 +264,7 @@ export function ScanActivityChart({
                 <g key={tick}>
                   <line
                     x1={PADDING_LEFT}
-                    x2={CHART_WIDTH}
+                    x2={chartWidth}
                     y1={y}
                     y2={y}
                     className="scan-chart__gridline"
@@ -304,9 +324,11 @@ export function ScanActivityChart({
 
           {hovered !== null && buckets[hovered] && (() => {
             const barCenterX = PADDING_LEFT + (hovered + 0.5) * slot;
-            const leftPercent = (barCenterX / CHART_WIDTH) * 100;
+            // Clamped so the tooltip (centered on the bar) can't spill past
+            // either edge of the chart on a narrow screen.
+            const left = Math.min(Math.max(barCenterX, TOOLTIP_EDGE_INSET), Math.max(TOOLTIP_EDGE_INSET, chartWidth - TOOLTIP_EDGE_INSET));
             return (
-              <div className="scan-chart__tooltip" style={{ left: `${leftPercent}%` }}>
+              <div className="scan-chart__tooltip" style={{ left: `${left}px` }}>
                 <span className="scan-chart__tooltip-value">{buckets[hovered].count.toLocaleString()}</span>
                 <span className="scan-chart__tooltip-label">{buckets[hovered].rangeLabel}</span>
               </div>

@@ -113,44 +113,46 @@ export function AdminDashboardPage() {
         {sourcesQuery.isLoading && <p className="admin-page__hint">Loading…</p>}
         {sourcesQuery.data?.length === 0 && <p className="admin-page__hint">No crawl sources yet.</p>}
         {sourcesQuery.data && sourcesQuery.data.length > 0 && (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                {SOURCE_COLUMNS.map((column) => (
-                  <th
-                    key={column.key}
-                    className="admin-table__th--sortable"
-                    onClick={() => handleSort(column.key)}
-                  >
-                    {column.label}
-                    {sortKey === column.key && (
-                      <span className="admin-table__sort-indicator">
-                        {sortDirection === "asc" ? " ▲" : " ▼"}
-                      </span>
-                    )}
-                  </th>
-                ))}
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {sortedSources.map((source) => (
-                <tr key={source.id}>
-                  <td>{source.name}</td>
-                  <td>{source.ats_type ?? "—"}</td>
-                  <td>
-                    <span className={statusStampClass(source.status)}>{source.status}</span>
-                  </td>
-                  <td>{formatDate(source.last_crawled_at)}</td>
-                  <td>
-                    <Link to={`/admin/crawl-sources/${source.id}`} className="admin-table__link">
-                      View stats →
-                    </Link>
-                  </td>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  {SOURCE_COLUMNS.map((column) => (
+                    <th
+                      key={column.key}
+                      className="admin-table__th--sortable"
+                      onClick={() => handleSort(column.key)}
+                    >
+                      {column.label}
+                      {sortKey === column.key && (
+                        <span className="admin-table__sort-indicator">
+                          {sortDirection === "asc" ? " ▲" : " ▼"}
+                        </span>
+                      )}
+                    </th>
+                  ))}
+                  <th />
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {sortedSources.map((source) => (
+                  <tr key={source.id}>
+                    <td>{source.name}</td>
+                    <td>{source.ats_type ?? "—"}</td>
+                    <td>
+                      <span className={statusStampClass(source.status)}>{source.status}</span>
+                    </td>
+                    <td>{formatDate(source.last_crawled_at)}</td>
+                    <td>
+                      <Link to={`/admin/crawl-sources/${source.id}`} className="admin-table__link">
+                        View stats →
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </main>

@@ -120,3 +120,22 @@
   font-size: 0.8rem;
   color: var(--ink-soft);
 }
+
+@media (max-width: 480px) {
+  .login-page {
+    align-items: flex-start;
+    padding: 2rem 1rem;
+  }
+
+  .login-card {
+    padding: 2rem 1.25rem 1.5rem;
+  }
+
+  .login-card__tab {
+    left: 1.25rem;
+  }
+
+  .login-card__title {
+    font-size: 1.6rem;
+  }
+}

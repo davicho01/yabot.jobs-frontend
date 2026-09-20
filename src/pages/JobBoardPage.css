@@ -14,7 +14,7 @@
 .board__layout {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(260px, 340px) 1fr;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
   /* align-items: start (not the grid default stretch) so each column sizes
      to its own content instead of both being forced to match the taller
      one — required for .board__detail's position:sticky to actually cap
@@ -83,14 +83,23 @@
   top: var(--header-height, 0px);
   align-self: start;
   max-height: calc(100vh - var(--header-height, 0px));
+  max-height: calc(100dvh - var(--header-height, 0px));
   overflow-y: auto;
   padding: 2rem 2.5rem;
+  min-width: 0;
 }
 
 .board__detail--standalone {
   position: static;
   max-height: none;
+  width: 100%;
   margin: 0 auto;
+}
+
+/* Only shown on phones (see the media query below), where the list and the
+   detail take turns filling the screen. */
+.board__back {
+  display: none;
 }
 
 .board__empty {
@@ -182,6 +191,7 @@
 
 .job-card__tags {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.35rem;
   margin-top: auto;
@@ -219,9 +229,10 @@
 
 .case-file__toolbar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem 1rem;
   padding-bottom: 1rem;
   margin-bottom: 1.25rem;
   border-bottom: 1px solid var(--line);
@@ -229,6 +240,7 @@
 
 .case-file__header-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.6rem;
 }
@@ -253,9 +265,10 @@
 
 .case-file__company {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.25rem 1rem;
   color: var(--ink-soft);
   margin: 0.3rem 0 0;
 }
@@ -267,6 +280,7 @@
 
 .case-file__tags {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
   margin-bottom: 1.5rem;
 }
@@ -274,6 +288,22 @@
 .case-file__description {
   line-height: 1.65;
   color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* Scraped descriptions can contain anything — keep wide media/tables/code
+   from stretching the pane past the viewport. */
+.case-file__description img,
+.case-file__description video {
+  max-width: 100%;
+  height: auto;
+}
+
+.case-file__description table,
+.case-file__description pre {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .case-file__description > :first-child {
@@ -347,15 +377,53 @@
 
 @media (max-width: 760px) {
   .board__layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .board__list {
     border-right: none;
-    border-bottom: 1px solid var(--line);
   }
 
+  /* No sticky/internally-scrolling pane on a phone — the detail is just the
+     rest of the page, so it scrolls with everything else instead of trapping
+     the touch scroll in a nested container. */
   .board__detail {
-    padding: 1.5rem;
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+    padding: 1.25rem 1rem 2rem;
+  }
+
+  .board__back {
+    display: inline-flex;
+    margin-bottom: 1rem;
+  }
+
+  /* Master/detail: with both stacked, tapping a card would change a pane
+     that's off-screen below the whole list. Instead the list and the detail
+     take turns — a selected job (?jobId=) shows the detail and hides the
+     list, and the Back button clears it. Scoped to .board--split so the
+     standalone /jobs/:id page, which is only ever a detail, is unaffected. */
+  .board--split.board--detail-open .board__list,
+  .board--split:not(.board--detail-open) .board__detail {
+    display: none;
+  }
+
+  .case-file__header-title h1 {
+    font-size: 1.5rem;
+  }
+
+  /* Scraped descriptions carry their own headings, which default to larger
+     than the page's own job title — scale them down on a phone. */
+  .case-file__description h1 {
+    font-size: 1.35rem;
+  }
+
+  .case-file__description h2 {
+    font-size: 1.2rem;
+  }
+
+  .case-file__description h3 {
+    font-size: 1.05rem;
   }
 }

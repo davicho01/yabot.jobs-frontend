@@ -17,6 +17,10 @@
   padding: 1.5rem;
   max-width: 360px;
   width: 100%;
+  /* Scrolls inside the overlay instead of running off-screen on a short
+     viewport (phone in landscape, on-screen keyboard open). */
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 .confirm-dialog__title {

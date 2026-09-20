@@ -67,12 +67,21 @@ body {
   padding: 0;
 }
 
+html {
+  /* Stops iOS Safari from inflating text when the phone is rotated. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.55;
+  /* Safety net so a long unbroken string (URL, email, token) wraps instead
+     of forcing the whole page to scroll sideways on a narrow screen. */
+  overflow-wrap: break-word;
 }
 
 #root {
@@ -211,6 +220,7 @@ textarea {
   border: 1px solid var(--line);
   border-radius: var(--radius-pill);
   padding: 0.45rem 0.9rem;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -218,6 +228,18 @@ textarea {
   color: var(--ink-soft);
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+/* iOS Safari zooms the page in when a focused field's font is smaller than
+   16px, and doesn't zoom back out — so on phone-sized screens every text
+   control is pinned to 16px. !important because component styles set their
+   own (smaller) sizes at higher specificity than an element selector. */
+@media (max-width: 760px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

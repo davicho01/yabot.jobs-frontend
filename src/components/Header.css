@@ -291,15 +291,62 @@
   margin: 0;
 }
 
+/* Just above the phone layout, the brand + two search fields + filter +
+   Add Job only fit on one row if the gaps around them are tightened. */
+@media (max-width: 900px) {
+  .site-header__center {
+    gap: 0.5rem;
+    padding: 0 1rem;
+  }
+
+  .site-header__search {
+    min-width: 140px;
+  }
+}
+
 @media (max-width: 760px) {
   .site-header__row {
     flex-wrap: wrap;
+    padding: 0.7rem 1rem;
   }
 
   .site-header__center {
     order: 3;
     flex-basis: 100%;
     padding: 0.6rem 0 0;
+  }
+
+  .site-header__filters-expand,
+  .site-header__add-job-expand {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (max-width: 520px) {
+  /* Two side-by-side search fields would each be too narrow to read their
+     placeholder — give each its own row, with the filter/add-job buttons
+     sharing the last one. */
+  .site-header__search {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .site-header__add-job-toggle {
+    flex: 1;
+  }
+
+  .site-header__add-job-label {
+    flex-basis: 100%;
+  }
+
+  .site-header__add-job-expand input {
+    min-width: 0;
+  }
+
+  .site-header__filter-input {
+    flex: 1 1 8rem;
+    min-width: 0;
   }
 }
 
@@ -352,6 +399,7 @@
   flex-direction: column;
   padding: 0.4rem;
   z-index: 20;
+  max-width: calc(100vw - 2rem);
 }
 
 .site-header__dropdown-profile {

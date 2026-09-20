@@ -93,4 +93,21 @@
 .profile-details__row dd {
   margin: 0;
   text-align: right;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .profile-page {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .profile-section {
+    padding: 1.1rem;
+  }
+
+  .profile-details__row {
+    flex-wrap: wrap;
+    gap: 0.15rem 1rem;
+  }
 }

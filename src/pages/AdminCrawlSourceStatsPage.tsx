@@ -140,7 +140,7 @@ export function AdminCrawlSourceStatsPage() {
   }
 
   return (
-    <main className="admin-page admin-page--source-stats">
+    <main className="admin-page">
       {dialog}
       {isEditing && stats && (
         <EditCrawlSourceDialog source={stats.source} onClose={() => setIsEditing(false)} />

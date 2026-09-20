@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useLayoutEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
@@ -8,6 +8,10 @@ import type { JobDetail, JobPosting } from "../api/types";
 import { useConfirm } from "../components/ConfirmDialog";
 import { JobCaseFile } from "../components/JobCaseFile";
 import "./JobBoardPage.css";
+
+// Must match the max-width of the phone breakpoint in JobBoardPage.css, where
+// the list and detail panes stop sitting side by side and take turns instead.
+const SPLIT_COLLAPSED_QUERY = "(max-width: 760px)";
 
 // A JobPosting row exists from the moment its URL is submitted (see
 // get_or_create_job_posting) so job_posting_id is available right away —
@@ -146,8 +150,27 @@ export function JobBoardPage() {
 
   const { confirm, dialog } = useConfirm();
 
+  // Where the list was scrolled to when a job was opened, so backing out of
+  // the detail on a phone drops the user back on the card they tapped
+  // instead of at the top of the list.
+  const listScrollY = useRef(0);
+  const hadSelection = useRef(!!selectedId);
+  useLayoutEffect(() => {
+    const hasSelection = !!selectedId;
+    if (hasSelection === hadSelection.current) return;
+    hadSelection.current = hasSelection;
+    // On desktop both panes stay put and the page shouldn't jump.
+    if (!window.matchMedia(SPLIT_COLLAPSED_QUERY).matches) return;
+    window.scrollTo(0, hasSelection ? 0 : listScrollY.current);
+  }, [selectedId]);
+
   function selectJob(id: string) {
+    listScrollY.current = window.scrollY;
     updateParams((next) => next.set("jobId", id));
+  }
+
+  function closeDetail() {
+    updateParams((next) => next.delete("jobId"));
   }
 
   async function deleteListing(urlId: string) {
@@ -157,7 +180,7 @@ export function JobBoardPage() {
   }
 
   return (
-    <div className="board">
+    <div className={`board board--split${selectedId ? " board--detail-open" : ""}`}>
       {dialog}
       <div className="board__layout">
         <div className="board__list">
@@ -199,6 +222,9 @@ export function JobBoardPage() {
           </div>
 
           <div className="board__detail">
+            <button type="button" className="rescan-button board__back" onClick={closeDetail}>
+              ‹ All postings
+            </button>
             {!selected && selectedJobLoading && <p className="board__empty">Loading posting…</p>}
             {!selected && !selectedJobLoading && (
               <p className="board__empty">Select a posting to open its case file.</p>

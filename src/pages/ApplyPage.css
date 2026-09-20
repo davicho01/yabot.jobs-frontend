@@ -23,6 +23,7 @@
   letter-spacing: 0;
   line-height: 1;
   text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
@@ -45,6 +46,10 @@
 }
 
 .apply-page__description-col {
+  /* The header inside adapts to this column's own width, which is only ~360px
+     on a mid-size desktop but the full screen on a phone. */
+  container: description-col / inline-size;
+  min-width: 0;
   position: sticky;
   top: 1.5rem;
   background: var(--surface);
@@ -96,6 +101,7 @@
 
 .apply-page__tags {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
   margin-bottom: 1.5rem;
 }
@@ -103,6 +109,22 @@
 .apply-page__description {
   line-height: 1.65;
   color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* Scraped descriptions can contain anything — keep wide media/tables/code
+   from stretching the column past the viewport. */
+.apply-page__description img,
+.apply-page__description video {
+  max-width: 100%;
+  height: auto;
+}
+
+.apply-page__description table,
+.apply-page__description pre {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .apply-page__description > :first-child {
@@ -154,6 +176,7 @@
 
 .apply-page__main-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
@@ -183,9 +206,10 @@
 
 .apply-page__company {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.25rem 1rem;
   color: var(--ink-soft);
   margin: 0.3rem 0 0;
 }
@@ -217,7 +241,8 @@
 
 @media (max-width: 900px) {
   .apply-page__layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
   }
 
   .apply-page__description-col {
@@ -234,6 +259,10 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  /* Lets the cards below adapt to the width of this column rather than the
+     viewport — it's ~360–500px on a desktop split layout but the full
+     screen width once the page collapses to one column. */
+  container: dossier / inline-size;
 }
 
 .apply-page__notes-header {
@@ -276,7 +305,9 @@
 
 .apply-page__archive-row {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .apply-page__archive-button {
@@ -389,6 +420,7 @@
 
 .dossier-action__action-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   align-self: stretch;
@@ -546,8 +578,10 @@
 
 .apply-page__failed-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
   margin-top: 1.25rem;
 }
 
@@ -560,4 +594,112 @@
 .delete-button:hover:not(:disabled) {
   background: var(--rose);
   color: var(--surface);
+}
+
+@media (max-width: 640px) {
+  .apply-page {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .apply-page__description-col {
+    padding: 1.25rem;
+  }
+
+  .apply-page__title-block h1 {
+    font-size: 1.5rem;
+  }
+
+  /* Scraped descriptions carry their own headings, which default to larger
+     than the page's own job title — scale them down on a phone. */
+  .apply-page__description h1 {
+    font-size: 1.35rem;
+  }
+
+  .apply-page__description h2 {
+    font-size: 1.2rem;
+  }
+
+  .apply-page__description h3 {
+    font-size: 1.05rem;
+  }
+}
+
+/* The desktop header is a fixed 3-column grid (rescan | prev/next | view),
+   which needs ~340px — let it wrap when the column is narrower, with
+   prev/next centered on a row of its own. */
+@container description-col (max-width: 360px) {
+  .apply-page__description-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.6rem 1rem;
+  }
+
+  .apply-page__description-header .apply-page__job-nav {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: center;
+  }
+
+  .apply-page__description-header .apply-page__view-link {
+    margin-left: auto;
+  }
+}
+
+/* Narrow-column layout for the fitness/notes/tailor/cover-letter cards. The
+   score tiles pin their label and verdict stamp to opposite top corners with
+   position:absolute, which collides once a tile is under ~200px wide. */
+@container dossier (max-width: 480px) {
+  .dossier-action {
+    padding: 1.1rem;
+  }
+
+  .dossier-action__corner-stamp {
+    top: 1.1rem;
+    right: 1.1rem;
+  }
+
+  /* Keep a wrapping heading from running under the corner stamp. */
+  .dossier-action__corner-stamp + .dossier-action__header h2,
+  .dossier-action__corner-stamp + .fitness-result > .dossier-action__header h2 {
+    padding-right: 6.5rem;
+  }
+
+  .score-summary-row {
+    gap: 0.75rem;
+  }
+
+  .score-summary-item {
+    padding-top: 0;
+  }
+
+  .score-summary-item__label,
+  .score-summary-item__stamp {
+    position: static;
+  }
+
+  .score-summary-item__label {
+    order: -1;
+  }
+
+  .score-summary-item__stamp {
+    order: 1;
+  }
+
+  .fitness-result__number {
+    font-size: 3.4rem;
+  }
+
+  .fitness-result_section_number {
+    margin: 0 1rem 0.25rem 0;
+    font-size: 3rem;
+  }
+
+  .apply-page__notes-header {
+    flex-wrap: wrap;
+  }
+
+  .apply-page__notes-header > div {
+    flex: 1 1 12rem;
+  }
 }

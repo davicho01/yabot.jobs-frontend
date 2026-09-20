@@ -130,6 +130,10 @@
 }
 
 @media (max-width: 640px) {
+  .site-footer {
+    padding: 1.25rem 1rem 1rem;
+  }
+
   .site-footer__bottom {
     flex-direction: column;
     align-items: flex-start;
