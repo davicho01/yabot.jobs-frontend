@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
 import { jobsApi } from "../api/jobs";
 import { ApiError } from "../api/client";
 import "./Header.css";
+
+const LOCATION_SUGGESTION_LIMIT = 10;
 
 const WORKPLACE_OPTIONS: { value: string; label: string }[] = [
   { value: "", label: "Any workplace" },
@@ -252,9 +254,15 @@ export function Header() {
     });
   }
 
+  // Suggestions follow what's been typed. Keyed on the URL's location filter
+  // (not the raw input) so it only refetches once the 300ms debounce above has
+  // settled — and keeps showing the previous options meanwhile so the list
+  // doesn't flicker empty between keystrokes.
   const { data: locationOptions } = useQuery({
-    queryKey: ["job-locations"],
-    queryFn: () => jobsApi.locations(),
+    queryKey: ["job-locations", locationFilter],
+    queryFn: () => jobsApi.locations(locationFilter, LOCATION_SUGGESTION_LIMIT),
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60_000,
   });
 
   const submitJobMutation = useMutation({

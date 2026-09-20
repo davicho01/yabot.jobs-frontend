@@ -25,7 +25,9 @@ export const jobsApi = {
       page,
       page_size: PAGE_SIZE,
     }),
-  locations: () => api.get<string[]>("/jobs/locations"),
+  // Individual locations (one per place, even for multi-location postings),
+  // most-used first; `q` narrows to ones containing it, for a typeahead.
+  locations: (q?: string, limit?: number) => api.get<string[]>("/jobs/locations", { q: q || undefined, limit }),
   get: (urlId: string) => api.get<JobDetail>(`/jobs/${urlId}`),
   rescan: (urlId: string) => api.post<JobDetail>(`/jobs/${urlId}/rescan`),
   submit: (url: string) => api.post<JobDetail>("/jobs", { url }),
