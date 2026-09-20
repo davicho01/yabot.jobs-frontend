@@ -96,6 +96,10 @@
   font-size: 0.82rem;
 }
 
+.site-footer__bottom a {
+  color: inherit;
+}
+
 /* Shared compact segmented control — used here for light/dark/system so
    it's visible whether or not the visitor is logged in (the account menu
    it used to live in only exists once signed in). */

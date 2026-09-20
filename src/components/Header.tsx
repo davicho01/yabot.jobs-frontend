@@ -4,9 +4,17 @@ import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tansta
 import { useAuth } from "../auth/AuthContext";
 import { jobsApi } from "../api/jobs";
 import { ApiError } from "../api/client";
+import type { Metro } from "../api/types";
 import "./Header.css";
 
 const LOCATION_SUGGESTION_LIMIT = 10;
+const METRO_SUGGESTION_LIMIT = 8;
+
+// What a metro area reads as in the search box — and how a pick from the
+// suggestion list is recognized (it arrives as exactly this text).
+function metroLabel(metro: Metro): string {
+  return `${metro.name} area`;
+}
 
 const WORKPLACE_OPTIONS: { value: string; label: string }[] = [
   { value: "", label: "Any workplace" },
@@ -144,6 +152,7 @@ export function Header() {
   const onBoard = routerLocation.pathname === "/";
   const query = onBoard ? (searchParams.get("q") ?? "") : "";
   const locationFilter = onBoard ? (searchParams.get("location") ?? "") : "";
+  const metroSlug = onBoard ? (searchParams.get("metro") ?? "") : "";
   const companyFilter = onBoard ? (searchParams.get("company") ?? "") : "";
   const postedWithin = onBoard ? (searchParams.get("posted") ?? "") : "";
   const workplaceType = onBoard ? (searchParams.get("workplace") ?? "") : "";
@@ -202,8 +211,31 @@ export function Header() {
   }
 
   function handleLocationInputChange(value: string) {
-    setLocationInput(value);
     if (locationDebounce.current) clearTimeout(locationDebounce.current);
+
+    // An area picked from the suggestion list arrives as its exact label: filter
+    // by the whole metro (?metro=) rather than searching the text.
+    const picked = metroOptions?.find((metro) => metroLabel(metro) === value);
+    if (picked) {
+      setLocationInput("");
+      updateBoardParams((next) => {
+        next.set("metro", picked.slug);
+        next.delete("location");
+        next.delete("page");
+      });
+      return;
+    }
+
+    setLocationInput(value);
+    // Editing away from a selected area's label turns the box back into a text
+    // search straight away (not after the debounce) — otherwise the box would
+    // keep showing the label and swallow the keystroke.
+    if (metroSlug) {
+      updateBoardParams((next) => {
+        next.delete("metro");
+        next.delete("page");
+      });
+    }
     locationDebounce.current = setTimeout(() => {
       updateBoardParams((next) => {
         if ((next.get("location") ?? "") === value) return;
@@ -260,8 +292,23 @@ export function Header() {
   // doesn't flicker empty between keystrokes.
   const { data: locationOptions } = useQuery({
     queryKey: ["job-locations", locationFilter],
-    queryFn: () => jobsApi.locations(locationFilter, LOCATION_SUGGESTION_LIMIT),
+    // Only places that aren't part of a metro area: the areas below already
+    // cover every spelling of those.
+    queryFn: () => jobsApi.locations(locationFilter, LOCATION_SUGGESTION_LIMIT, true),
     placeholderData: keepPreviousData,
+    staleTime: 5 * 60_000,
+  });
+  const { data: metroOptions } = useQuery({
+    queryKey: ["job-metros", locationFilter],
+    queryFn: () => jobsApi.metros(locationFilter, METRO_SUGGESTION_LIMIT),
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60_000,
+  });
+  // The area named in the URL (?metro=), so the box can show its name.
+  const { data: selectedMetro } = useQuery({
+    queryKey: ["job-metro", metroSlug],
+    queryFn: () => jobsApi.metro(metroSlug),
+    enabled: !!metroSlug,
     staleTime: 5 * 60_000,
   });
 
@@ -349,11 +396,14 @@ export function Header() {
             className="site-header__search"
             type="search"
             list="job-location-options"
-            placeholder="Search by location…"
-            value={locationInput}
+            placeholder="Search by city or area…"
+            value={metroSlug && selectedMetro ? metroLabel(selectedMetro) : locationInput}
             onChange={(e) => handleLocationInputChange(e.target.value)}
           />
           <datalist id="job-location-options">
+            {metroOptions?.map((metro) => (
+              <option key={`metro-${metro.slug}`} value={metroLabel(metro)} label={`${metro.count.toLocaleString()} jobs`} />
+            ))}
             {locationOptions?.map((loc) => (
               <option key={loc} value={loc} />
             ))}

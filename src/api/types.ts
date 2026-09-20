@@ -43,6 +43,13 @@ export interface JobDetail {
   posting: JobPosting | null;
 }
 
+// A Census metro/micro area and how many postings fall in it.
+export interface Metro {
+  slug: string;
+  name: string;
+  count: number;
+}
+
 export interface JobList {
   items: JobDetail[];
   total: number;

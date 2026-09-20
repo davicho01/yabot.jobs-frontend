@@ -49,7 +49,13 @@ export function Footer() {
       </div>
 
       <div className="site-footer__bottom">
-        <span>© {year} Yabot Jobs</span>
+        <span>
+          © {year} Yabot Jobs · Location data:{" "}
+          <a href="https://www.geonames.org" target="_blank" rel="noopener noreferrer">
+            GeoNames
+          </a>{" "}
+          (CC BY 4.0), U.S. Census Bureau
+        </span>
         <div className="theme-toggle" role="group" aria-label="Theme">
           <button
             type="button"
