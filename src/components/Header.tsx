@@ -230,6 +230,7 @@ export function Header() {
         if ((next.get("location") ?? "") === value) return;
         if (value) next.set("location", value);
         else next.delete("location");
+        next.delete("radius"); // a widened search belongs to the place it was widened for
         next.delete("page");
       });
     }, 300);
@@ -245,6 +246,7 @@ export function Header() {
     updateBoardParams((next) => {
       next.delete("metro");
       next.set("location", place);
+      next.delete("radius");
       next.delete("page");
     });
   }

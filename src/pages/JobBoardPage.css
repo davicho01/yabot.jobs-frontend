@@ -108,6 +108,28 @@
   padding: 1rem;
 }
 
+/* Which city and how far the search reached, above the results, with the way to widen it. */
+.board__search-area {
+  margin: 0;
+  padding: 0.6rem 1rem 0.2rem;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+}
+
+.board__widen {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.board__widen:hover {
+  text-decoration: underline;
+}
+
 .job-card {
   position: relative;
   display: flex;

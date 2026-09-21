@@ -12,6 +12,9 @@ import "./JobBoardPage.css";
 // Must match the max-width of the phone breakpoint in JobBoardPage.css, where
 // the list and detail panes stop sitting side by side and take turns instead.
 const SPLIT_COLLAPSED_QUERY = "(max-width: 760px)";
+// A city search can be widened in steps up to the server's limit.
+const RADIUS_STEP = 25;
+const MAX_RADIUS = 100;
 
 // A JobPosting row exists from the moment its URL is submitted (see
 // get_or_create_job_posting) so job_posting_id is available right away —
@@ -76,6 +79,8 @@ export function JobBoardPage() {
   const query = searchParams.get("q") ?? "";
   const location = searchParams.get("location") ?? "";
   const metro = searchParams.get("metro") ?? "";
+  // How far around a searched city to look, once someone has widened it; unset means the server's default.
+  const radius = Number(searchParams.get("radius")) || undefined;
   const company = searchParams.get("company") ?? "";
   const postedWithinDays = Number(searchParams.get("posted")) || undefined;
   const workplaceType = (searchParams.get("workplace") as WorkplaceTypeFilter | null) ?? undefined;
@@ -104,12 +109,13 @@ export function JobBoardPage() {
   }
 
   const { data, isLoading } = useQuery({
-    queryKey: ["jobs", query, location, metro, company, postedWithinDays, workplaceType, page],
+    queryKey: ["jobs", query, location, metro, radius, company, postedWithinDays, workplaceType, page],
     queryFn: () =>
       jobsApi.list({
         q: query || undefined,
         location: location || undefined,
         metro: metro || undefined,
+        radius,
         company: company || undefined,
         postedWithinDays,
         workplaceType,
@@ -118,6 +124,15 @@ export function JobBoardPage() {
   });
 
   const jobs = data?.items;
+  const searchArea = data?.search_area;
+  const widerRadius = searchArea ? searchArea.radius_miles + RADIUS_STEP : 0;
+
+  function widenSearch() {
+    updateParams((next) => {
+      next.set("radius", String(widerRadius));
+      next.delete("page");
+    });
+  }
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.page_size)) : 1;
 
   // Fetched directly by id (not just looked up in the current page's
@@ -187,6 +202,19 @@ export function JobBoardPage() {
       <div className="board__layout">
         <div className="board__list">
           <div className="board__list-scroll">
+              {searchArea && (
+                <p className="board__search-area">
+                  Nearest first, within {searchArea.radius_miles} miles of {searchArea.label}
+                  {widerRadius <= MAX_RADIUS && (
+                    <>
+                      {" · "}
+                      <button type="button" className="board__widen" onClick={widenSearch}>
+                        Search {widerRadius} miles
+                      </button>
+                    </>
+                  )}
+                </p>
+              )}
               {isLoading && <p className="board__empty">Loading postings…</p>}
               {!isLoading && jobs?.length === 0 && <p className="board__empty">No postings match your filters.</p>}
               {jobs?.map((job) => (

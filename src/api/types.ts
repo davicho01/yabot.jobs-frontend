@@ -52,11 +52,19 @@ export interface Metro {
   count: number;
 }
 
+// What a city search covered: the city and how far around it was looked.
+export interface SearchArea {
+  label: string;
+  radius_miles: number;
+}
+
 export interface JobList {
   items: JobDetail[];
   total: number;
   page: number;
   page_size: number;
+  // Set when the location search was a city, searched by distance.
+  search_area?: SearchArea | null;
 }
 
 export type ApplicationStatus = "saved" | "applied" | "interviewing" | "offer" | "rejected" | "withdrawn";
