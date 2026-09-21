@@ -121,15 +121,27 @@ function roundedTopBarPath(x: number, width: number, top: number, bottom: number
 
 // Width used until the chart's container has been measured (first paint).
 const DEFAULT_CHART_WIDTH = 800;
-const CHART_HEIGHT = 220;
-const PADDING_LEFT = 40;
+// The top padding leaves room above the tallest bar for its tooltip (~52px
+// tall plus TOOLTIP_GAP), so the tooltip never has to cover the header.
+const PADDING_TOP = 64;
+const PLOT_HEIGHT = 184;
 const PADDING_BOTTOM = 24;
-const PADDING_TOP = 12;
+const CHART_HEIGHT = PADDING_TOP + PLOT_HEIGHT + PADDING_BOTTOM;
+const PADDING_LEFT = 40;
+// Room right of the last bar so its tooltip can stay centered on it. Skipped
+// on phones, where every pixel goes to the bars (the tooltip then falls back
+// to shifting left, with its caret still pointing at the bar).
+const PADDING_RIGHT_WIDE = 40;
+const WIDE_CHART_MIN_WIDTH = 480;
+// Space between the top of a bar and the tip of the tooltip's caret.
+const TOOLTIP_GAP = 8;
 // Rough horizontal room one x-axis label needs, used to decide how many to
 // skip so they don't run into each other.
 const MIN_LABEL_SPACING = 56;
-// Breathing room kept between the tooltip and the chart edge when it has to shift.
-const TOOLTIP_EDGE_MARGIN = 4;
+// How far the tooltip may hang past the chart's right edge (into the card's
+// padding) so the last bar's tooltip stays centered on it instead of sliding
+// left over its neighbor.
+const TOOLTIP_OVERHANG = 12;
 
 export function ScanActivityChart({
   title,
@@ -198,8 +210,9 @@ export function ScanActivityChart({
   const ticks = niceTicks(maxCount);
   const niceMax = ticks[ticks.length - 1] || 1;
 
-  const plotWidth = Math.max(1, chartWidth - PADDING_LEFT);
-  const plotHeight = CHART_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
+  const paddingRight = chartWidth >= WIDE_CHART_MIN_WIDTH ? PADDING_RIGHT_WIDE : 0;
+  const plotWidth = Math.max(1, chartWidth - PADDING_LEFT - paddingRight);
+  const plotHeight = PLOT_HEIGHT;
   const slot = buckets.length > 0 ? plotWidth / buckets.length : plotWidth;
   const barWidth = Math.min(24, slot * 0.6);
 
@@ -263,6 +276,7 @@ export function ScanActivityChart({
         <div className="scan-chart" ref={setChartNode}>
           <svg
             className="scan-chart__svg"
+            style={{ height: CHART_HEIGHT }}
             viewBox={`0 0 ${chartWidth} ${CHART_HEIGHT}`}
             role="img"
             aria-label={`${title}, ${granularity}ly`}
@@ -273,7 +287,7 @@ export function ScanActivityChart({
                 <g key={tick}>
                   <line
                     x1={PADDING_LEFT}
-                    x2={chartWidth}
+                    x2={chartWidth - paddingRight}
                     y1={y}
                     y2={y}
                     className="scan-chart__gridline"
@@ -333,16 +347,17 @@ export function ScanActivityChart({
 
           {hovered !== null && buckets[hovered] && (() => {
             const barCenterX = PADDING_LEFT + (hovered + 0.5) * slot;
+            const barTopY = yFor(buckets[hovered].count);
             // Centered on the bar; shifted only when it would spill past an
             // edge of the chart. The caret is offset by the same amount so it
             // keeps pointing at the hovered bar.
-            const halfWidth = tooltipWidth / 2 + TOOLTIP_EDGE_MARGIN;
-            const left = Math.min(Math.max(barCenterX, halfWidth), Math.max(halfWidth, chartWidth - halfWidth));
+            const halfWidth = tooltipWidth / 2;
+            const left = Math.min(Math.max(barCenterX, halfWidth), Math.max(halfWidth, chartWidth + TOOLTIP_OVERHANG - halfWidth));
             return (
               <div
                 ref={setTooltipNode}
                 className="scan-chart__tooltip"
-                style={{ left: `${left}px`, "--caret-shift": `${barCenterX - left}px` } as CSSProperties}
+                style={{ left: `${left}px`, top: `${barTopY - TOOLTIP_GAP}px`, "--caret-shift": `${barCenterX - left}px` } as CSSProperties}
               >
                 <span className="scan-chart__tooltip-value">{buckets[hovered].count.toLocaleString()}</span>
                 <span className="scan-chart__tooltip-label">{buckets[hovered].rangeLabel}</span>
