@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
 import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
@@ -158,6 +158,8 @@ export function Header() {
 
   const [searchInput, setSearchInput] = useState(query);
   const [locationInput, setLocationInput] = useState(locationFilter);
+  const [placesOpen, setPlacesOpen] = useState(false);
+  const [activePlace, setActivePlace] = useState(-1);
   const [companyInput, setCompanyInput] = useState(companyFilter);
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const locationDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -212,6 +214,8 @@ export function Header() {
     if (locationDebounce.current) clearTimeout(locationDebounce.current);
 
     setLocationInput(value);
+    setPlacesOpen(true);
+    setActivePlace(-1);
     // Editing away from a selected area's label turns the box back into a text
     // search straight away (not after the debounce) — otherwise the box would
     // keep showing the label and swallow the keystroke.
@@ -229,6 +233,45 @@ export function Header() {
         next.delete("page");
       });
     }, 300);
+  }
+
+  // A suggestion is applied at once (no debounce — it's a finished answer, not
+  // a keystroke) and closes the list.
+  function selectPlace(place: string) {
+    if (locationDebounce.current) clearTimeout(locationDebounce.current);
+    setLocationInput(place);
+    setPlacesOpen(false);
+    setActivePlace(-1);
+    updateBoardParams((next) => {
+      next.delete("metro");
+      next.set("location", place);
+      next.delete("page");
+    });
+  }
+
+  function handleLocationKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    const count = placeOptions?.length ?? 0;
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      if (count === 0) return;
+      event.preventDefault();
+      setPlacesOpen(true);
+      const step = event.key === "ArrowDown" ? 1 : -1;
+      setActivePlace((index) => (index === -1 ? (step === 1 ? 0 : count - 1) : (index + step + count) % count));
+    } else if (event.key === "Enter") {
+      if (placesOpen && activePlace >= 0 && placeOptions?.[activePlace]) {
+        event.preventDefault();
+        selectPlace(placeOptions[activePlace]);
+      } else {
+        setPlacesOpen(false);
+      }
+    } else if (event.key === "Escape" && showPlaces) {
+      // First Escape closes the list; without this the search field's own
+      // Escape (clear the text) would also fire, and its change event would
+      // reopen the list. A second Escape, with the list shut, clears as usual.
+      event.preventDefault();
+      setPlacesOpen(false);
+      setActivePlace(-1);
+    }
   }
 
   function handleCompanyInputChange(value: string) {
@@ -271,13 +314,12 @@ export function Header() {
     });
   }
 
-  // Suggestions follow what's been typed. Keyed on the URL's location filter
-  // (not the raw input) so it only refetches once the 300ms debounce above has
-  // settled — and keeps showing the previous options meanwhile so the list
-  // doesn't flicker empty between keystrokes.
+  // Suggestions follow what's been typed, keystroke by keystroke (they come from
+  // an in-memory list on the server, so it's cheap), and keep showing the
+  // previous options meanwhile so the list doesn't flicker empty in between.
   const { data: placeOptions } = useQuery({
-    queryKey: ["job-places", locationFilter],
-    queryFn: () => jobsApi.places(locationFilter, PLACE_SUGGESTION_LIMIT),
+    queryKey: ["job-places", locationInput],
+    queryFn: () => jobsApi.places(locationInput, PLACE_SUGGESTION_LIMIT),
     placeholderData: keepPreviousData,
     staleTime: 5 * 60_000,
   });
@@ -288,6 +330,8 @@ export function Header() {
     enabled: !!metroSlug,
     staleTime: 5 * 60_000,
   });
+
+  const showPlaces = placesOpen && !!placeOptions?.length && !(metroSlug && selectedMetro);
 
   const submitJobMutation = useMutation({
     mutationFn: (url: string) => jobsApi.submit(url),
@@ -369,19 +413,51 @@ export function Header() {
             value={searchInput}
             onChange={(e) => handleSearchInputChange(e.target.value)}
           />
-          <input
-            className="site-header__search"
-            type="search"
-            list="job-location-options"
-            placeholder="Search by city or state…"
-            value={metroSlug && selectedMetro ? metroLabel(selectedMetro) : locationInput}
-            onChange={(e) => handleLocationInputChange(e.target.value)}
-          />
-          <datalist id="job-location-options">
-            {placeOptions?.map((place) => (
-              <option key={place} value={place} />
-            ))}
-          </datalist>
+          <div className="site-header__combobox">
+            <input
+              className="site-header__search"
+              type="search"
+              role="combobox"
+              aria-expanded={showPlaces}
+              aria-controls="job-location-options"
+              aria-autocomplete="list"
+              aria-activedescendant={showPlaces && activePlace >= 0 ? `job-location-option-${activePlace}` : undefined}
+              autoComplete="off"
+              placeholder="Search by city or state…"
+              value={metroSlug && selectedMetro ? metroLabel(selectedMetro) : locationInput}
+              onChange={(e) => handleLocationInputChange(e.target.value)}
+              onFocus={() => setPlacesOpen(true)}
+              onBlur={() => setPlacesOpen(false)}
+              onKeyDown={handleLocationKeyDown}
+            />
+            {showPlaces && (
+              <ul className="site-header__combobox-list" id="job-location-options" role="listbox">
+                {placeOptions?.map((place, index) => {
+                  // "Bountiful, Utah, United States": the place stands out, the
+                  // state and country after it are context.
+                  const [name, ...rest] = place.split(", ");
+                  return (
+                    <li
+                      key={place}
+                      id={`job-location-option-${index}`}
+                      role="option"
+                      aria-selected={index === activePlace}
+                      className={`site-header__combobox-option${index === activePlace ? " site-header__combobox-option--active" : ""}`}
+                      // mousedown, not click: it fires before the input's blur closes the list.
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        selectPlace(place);
+                      }}
+                      onMouseEnter={() => setActivePlace(index)}
+                    >
+                      <span>{name}</span>
+                      {rest.length > 0 && <span className="site-header__combobox-context">, {rest.join(", ")}</span>}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
           <button
             type="button"
             className={`site-header__filter-toggle${activeFilterCount > 0 ? " site-header__filter-toggle--active" : ""}`}

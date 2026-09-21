@@ -82,6 +82,61 @@
   font-size: 0.9rem;
 }
 
+/* The location field and its suggestion list, which hangs directly under it
+   (not the browser's native datalist popup, which can't be styled or anchored). */
+.site-header__combobox {
+  position: relative;
+  flex: 1;
+  min-width: 160px;
+  max-width: 340px;
+}
+
+.site-header__combobox .site-header__search {
+  flex: none;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.site-header__combobox-list {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: min(380px, calc(100vw - 2rem));
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card), 0 20px 40px -16px rgba(0, 0, 0, 0.28);
+  z-index: 20;
+}
+
+.site-header__combobox-option {
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.site-header__combobox-option--active {
+  background: var(--surface);
+}
+
+.site-header__combobox-context {
+  color: var(--ink-soft);
+}
+
 .site-header__filter-dropdown {
   position: relative;
   flex-shrink: 0;
@@ -299,7 +354,8 @@
     padding: 0 1rem;
   }
 
-  .site-header__search {
+  .site-header__search,
+  .site-header__combobox {
     min-width: 140px;
   }
 }
@@ -327,7 +383,8 @@
   /* Two side-by-side search fields would each be too narrow to read their
      placeholder — give each its own row, with the filter/add-job buttons
      sharing the last one. */
-  .site-header__search {
+  .site-header__search,
+  .site-header__combobox {
     flex: 1 1 100%;
     max-width: none;
   }
