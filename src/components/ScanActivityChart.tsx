@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import type { ScanDayCount, ScanHourCount } from "../api/types";
 import "./ScanActivityChart.css";
@@ -128,7 +128,8 @@ const PADDING_TOP = 12;
 // Rough horizontal room one x-axis label needs, used to decide how many to
 // skip so they don't run into each other.
 const MIN_LABEL_SPACING = 56;
-const TOOLTIP_EDGE_INSET = 64;
+// Breathing room kept between the tooltip and the chart edge when it has to shift.
+const TOOLTIP_EDGE_MARGIN = 4;
 
 export function ScanActivityChart({
   title,
@@ -164,6 +165,14 @@ export function ScanActivityChart({
     observer.observe(chartNode);
     return () => observer.disconnect();
   }, [chartNode]);
+
+  // The tooltip is centered on its bar and only shifted by however much it
+  // would overflow the chart, so its real width is measured (before paint).
+  const [tooltipNode, setTooltipNode] = useState<HTMLDivElement | null>(null);
+  const [tooltipWidth, setTooltipWidth] = useState(0);
+  useLayoutEffect(() => {
+    if (tooltipNode) setTooltipWidth(tooltipNode.offsetWidth);
+  }, [tooltipNode, hovered]);
 
   function goToJobs(bucket: Bucket) {
     const params = new URLSearchParams();
@@ -324,11 +333,17 @@ export function ScanActivityChart({
 
           {hovered !== null && buckets[hovered] && (() => {
             const barCenterX = PADDING_LEFT + (hovered + 0.5) * slot;
-            // Clamped so the tooltip (centered on the bar) can't spill past
-            // either edge of the chart on a narrow screen.
-            const left = Math.min(Math.max(barCenterX, TOOLTIP_EDGE_INSET), Math.max(TOOLTIP_EDGE_INSET, chartWidth - TOOLTIP_EDGE_INSET));
+            // Centered on the bar; shifted only when it would spill past an
+            // edge of the chart. The caret is offset by the same amount so it
+            // keeps pointing at the hovered bar.
+            const halfWidth = tooltipWidth / 2 + TOOLTIP_EDGE_MARGIN;
+            const left = Math.min(Math.max(barCenterX, halfWidth), Math.max(halfWidth, chartWidth - halfWidth));
             return (
-              <div className="scan-chart__tooltip" style={{ left: `${left}px` }}>
+              <div
+                ref={setTooltipNode}
+                className="scan-chart__tooltip"
+                style={{ left: `${left}px`, "--caret-shift": `${barCenterX - left}px` } as CSSProperties}
+              >
                 <span className="scan-chart__tooltip-value">{buckets[hovered].count.toLocaleString()}</span>
                 <span className="scan-chart__tooltip-label">{buckets[hovered].rangeLabel}</span>
               </div>

@@ -106,6 +106,20 @@
   white-space: nowrap;
 }
 
+/* Points at the hovered bar even when the bubble is clamped away from it. */
+.scan-chart__tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: calc(50% + var(--caret-shift, 0px));
+  width: 8px;
+  height: 8px;
+  background: var(--paper);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
 .scan-chart__tooltip-value {
   font-weight: 700;
   font-size: 0.95rem;
