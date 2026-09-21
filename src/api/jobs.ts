@@ -27,14 +27,10 @@ export const jobsApi = {
       page,
       page_size: PAGE_SIZE,
     }),
-  // Individual locations (one per place, even for multi-location postings),
-  // most-used first; `q` narrows to ones containing it, for a typeahead.
-  // `unresolvedOnly` leaves out places that belong to a metro area — those are
-  // suggested by `metros` instead, not as a dozen spellings of the same city.
-  locations: (q?: string, limit?: number, unresolvedOnly?: boolean) =>
-    api.get<string[]>("/jobs/locations", { q: q || undefined, limit, unresolved_only: unresolvedOnly || undefined }),
-  // Metro/micro areas that have postings, most postings first, for a typeahead.
-  metros: (q?: string, limit?: number) => api.get<Metro[]>("/jobs/metros", { q: q || undefined, limit }),
+  // Places to suggest as the location box is typed: "City, State, United States",
+  // "State, United States" or "United States". Searching one covers the city and
+  // 25 miles around it (or the whole state).
+  places: (q?: string, limit?: number) => api.get<string[]>("/jobs/places", { q: q || undefined, limit }),
   // One area by its URL slug (null if unknown) — labels a shared ?metro= link.
   metro: (slug: string) => api.get<Metro[]>("/jobs/metros", { slug }).then((found) => found[0] ?? null),
   get: (urlId: string) => api.get<JobDetail>(`/jobs/${urlId}`),

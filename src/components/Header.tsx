@@ -7,11 +7,9 @@ import { ApiError } from "../api/client";
 import type { Metro } from "../api/types";
 import "./Header.css";
 
-const LOCATION_SUGGESTION_LIMIT = 10;
-const METRO_SUGGESTION_LIMIT = 8;
+const PLACE_SUGGESTION_LIMIT = 10;
 
-// What an area reads as in the search box — and how a pick from the suggestion
-// list is recognized (it arrives as exactly this text).
+// What an area named by an old shared ?metro= link reads as in the search box.
 function metroLabel(metro: Metro): string {
   return metro.kind === "state" ? `${metro.name} (statewide)` : `${metro.name} area`;
 }
@@ -213,19 +211,6 @@ export function Header() {
   function handleLocationInputChange(value: string) {
     if (locationDebounce.current) clearTimeout(locationDebounce.current);
 
-    // An area picked from the suggestion list arrives as its exact label: filter
-    // by the whole metro (?metro=) rather than searching the text.
-    const picked = metroOptions?.find((metro) => metroLabel(metro) === value);
-    if (picked) {
-      setLocationInput("");
-      updateBoardParams((next) => {
-        next.set("metro", picked.slug);
-        next.delete("location");
-        next.delete("page");
-      });
-      return;
-    }
-
     setLocationInput(value);
     // Editing away from a selected area's label turns the box back into a text
     // search straight away (not after the debounce) — otherwise the box would
@@ -290,17 +275,9 @@ export function Header() {
   // (not the raw input) so it only refetches once the 300ms debounce above has
   // settled — and keeps showing the previous options meanwhile so the list
   // doesn't flicker empty between keystrokes.
-  const { data: locationOptions } = useQuery({
-    queryKey: ["job-locations", locationFilter],
-    // Only places that aren't part of a metro area: the areas below already
-    // cover every spelling of those.
-    queryFn: () => jobsApi.locations(locationFilter, LOCATION_SUGGESTION_LIMIT, true),
-    placeholderData: keepPreviousData,
-    staleTime: 5 * 60_000,
-  });
-  const { data: metroOptions } = useQuery({
-    queryKey: ["job-metros", locationFilter],
-    queryFn: () => jobsApi.metros(locationFilter, METRO_SUGGESTION_LIMIT),
+  const { data: placeOptions } = useQuery({
+    queryKey: ["job-places", locationFilter],
+    queryFn: () => jobsApi.places(locationFilter, PLACE_SUGGESTION_LIMIT),
     placeholderData: keepPreviousData,
     staleTime: 5 * 60_000,
   });
@@ -396,16 +373,13 @@ export function Header() {
             className="site-header__search"
             type="search"
             list="job-location-options"
-            placeholder="Search by city, area or state…"
+            placeholder="Search by city or state…"
             value={metroSlug && selectedMetro ? metroLabel(selectedMetro) : locationInput}
             onChange={(e) => handleLocationInputChange(e.target.value)}
           />
           <datalist id="job-location-options">
-            {metroOptions?.map((metro) => (
-              <option key={`metro-${metro.slug}`} value={metroLabel(metro)} label={`${metro.count.toLocaleString()} jobs`} />
-            ))}
-            {locationOptions?.map((loc) => (
-              <option key={loc} value={loc} />
+            {placeOptions?.map((place) => (
+              <option key={place} value={place} />
             ))}
           </datalist>
           <button
