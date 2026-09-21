@@ -10,10 +10,10 @@ import "./Header.css";
 const LOCATION_SUGGESTION_LIMIT = 10;
 const METRO_SUGGESTION_LIMIT = 8;
 
-// What a metro area reads as in the search box — and how a pick from the
-// suggestion list is recognized (it arrives as exactly this text).
+// What an area reads as in the search box — and how a pick from the suggestion
+// list is recognized (it arrives as exactly this text).
 function metroLabel(metro: Metro): string {
-  return `${metro.name} area`;
+  return metro.kind === "state" ? `${metro.name} (statewide)` : `${metro.name} area`;
 }
 
 const WORKPLACE_OPTIONS: { value: string; label: string }[] = [
@@ -396,7 +396,7 @@ export function Header() {
             className="site-header__search"
             type="search"
             list="job-location-options"
-            placeholder="Search by city or area…"
+            placeholder="Search by city, area or state…"
             value={metroSlug && selectedMetro ? metroLabel(selectedMetro) : locationInput}
             onChange={(e) => handleLocationInputChange(e.target.value)}
           />
