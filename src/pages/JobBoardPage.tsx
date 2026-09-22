@@ -7,6 +7,7 @@ import { adminApi } from "../api/admin";
 import type { JobDetail, JobPosting } from "../api/types";
 import { useConfirm } from "../components/ConfirmDialog";
 import { JobCaseFile } from "../components/JobCaseFile";
+import { highlightQuery } from "../utils/searchHighlight";
 import "./JobBoardPage.css";
 
 // Must match the max-width of the phone breakpoint in JobBoardPage.css, where
@@ -42,13 +43,25 @@ function formatPostedAt(job: JobDetail): string | null {
   return `Posted ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`;
 }
 
-function JobCard({ job, active, onSelect }: { job: JobDetail; active: boolean; onSelect: () => void }) {
+function JobCard({
+  job,
+  active,
+  query,
+  onSelect,
+}: {
+  job: JobDetail;
+  active: boolean;
+  query: string;
+  onSelect: () => void;
+}) {
   const posting = scannedPosting(job);
   return (
     <button type="button" className={`job-card${active ? " job-card--active" : ""}`} onClick={onSelect}>
       <span className="job-card__edge" data-type={posting?.workplace_type ?? "unknown"} />
       <div className="job-card__body">
-        <div className="job-card__title">{posting?.title ?? "Scanning posting…"}</div>
+        <div className="job-card__title">
+          {posting?.title ? highlightQuery(posting.title, query) : "Scanning posting…"}
+        </div>
         <div className="job-card__meta">
           {posting?.company_name ?? job.url.domain}
           {posting?.location ? ` · ${posting.location}` : ""}
@@ -242,6 +255,7 @@ export function JobBoardPage() {
                   key={job.url.id}
                   job={job}
                   active={job.url.id === (selected?.url.id ?? "")}
+                  query={query}
                   onSelect={() => selectJob(job.url.id)}
                 />
               ))}
@@ -288,6 +302,7 @@ export function JobBoardPage() {
                 onRescan={() => rescanMutation.mutate(selected.url.id)}
                 onDelete={() => deleteListing(selected.url.id)}
                 isDeleting={deleteListingMutation.isPending}
+                titleHighlightQuery={query}
               />
             )}
         </div>

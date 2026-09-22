@@ -101,6 +101,17 @@ a {
   color: var(--accent);
 }
 
+/* Marks a search match inside job titles (see utils/searchHighlight) — same
+   amber-tint-on-amber-text treatment as .stamp--warning below, so it reads
+   as "flagged" using a color already established in this palette rather
+   than introducing a new one. */
+mark {
+  background: color-mix(in srgb, var(--amber) 20%, transparent);
+  color: var(--amber);
+  border-radius: 3px;
+  padding: 0 0.05em;
+}
+
 button {
   appearance: none;
   -webkit-appearance: none;

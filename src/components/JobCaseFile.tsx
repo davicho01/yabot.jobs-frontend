@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import { applicationsApi } from "../api/applications";
 import type { Application, JobDetail, JobPosting, User } from "../api/types";
+import { highlightQuery } from "../utils/searchHighlight";
 
 // A JobPosting row exists from the moment its URL is submitted (see
 // get_or_create_job_posting) so job_posting_id is available right away —
@@ -45,6 +46,7 @@ export function JobCaseFile({
   onRescan,
   onDelete,
   isDeleting,
+  titleHighlightQuery,
 }: {
   job: JobDetail;
   user: User | null;
@@ -53,6 +55,11 @@ export function JobCaseFile({
   onRescan: () => void;
   onDelete?: () => void;
   isDeleting?: boolean;
+  // The board's current search text (only set from JobBoardPage, which has
+  // one) — highlights the matched phrase in the title so it's obvious why
+  // this posting is in the results. Unset everywhere else (e.g.
+  // JobDetailPage's standalone deep link, which has no search context).
+  titleHighlightQuery?: string;
 }) {
   const posting = scannedPosting(job);
   const scanFailed = job.url.scan_status === "failed";
@@ -118,7 +125,7 @@ export function JobCaseFile({
           </div>
 
           <div className="case-file__header-title">
-            <h1>{posting.title ?? "Untitled role"}</h1>
+            <h1>{posting.title ? highlightQuery(posting.title, titleHighlightQuery) : "Untitled role"}</h1>
             <p className="case-file__company">
               <span>
                 {posting.company_name ?? job.url.domain}

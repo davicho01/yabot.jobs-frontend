@@ -585,6 +585,7 @@ export function Header() {
               type="search"
               aria-label="Job title or keyword"
               placeholder="Search postings by title…"
+              title="Add a word starting with - to exclude it, e.g. -senior"
               value={searchInput}
               onChange={(e) => handleSearchInputChange(e.target.value)}
             />
