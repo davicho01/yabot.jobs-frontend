@@ -575,8 +575,16 @@
 }
 
 .site-header__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
+  /* Resets the global button rule's padding/line-height (index.css) —
+     without this the letter sits off-center, pushed by padding sized for
+     a pill-shaped label button, not a round single-character avatar. */
+  padding: 0;
+  line-height: 1;
   border-radius: 50%;
   border: none;
   background: var(--accent);
