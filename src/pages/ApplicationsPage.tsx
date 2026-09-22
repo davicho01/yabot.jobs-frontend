@@ -4,11 +4,14 @@ import { Link, useSearchParams } from "react-router-dom";
 import { applicationsApi } from "../api/applications";
 import { resumesApi } from "../api/resumes";
 import { ApiError } from "../api/client";
-import type { Application, ApplicationJobPosting } from "../api/types";
+import type { Application, ApplicationJobPosting, ApplicationStatus } from "../api/types";
 import "./ApplicationsPage.css";
 import { BOARD_PATH } from "../routes";
 
 const QUALIFY_THRESHOLD = 70;
+// Matches ApplyPage's STATUSES — kept as its own copy since the two pages
+// don't otherwise share a components/constants module.
+const STATUSES: ApplicationStatus[] = ["saved", "applied", "interviewing", "offer", "rejected", "withdrawn"];
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof ApiError ? err.message : fallback;
@@ -118,6 +121,41 @@ function SortMenu({
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+// Same status set ApplyPage's dossier panel edits — moving it here too means
+// a status can be changed straight from the list, without opening each job.
+function StatusSelect({ application }: { application: Application }) {
+  const queryClient = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: (status: ApplicationStatus) => applicationsApi.update(application.id, { status }),
+    onSuccess: () => {
+      setError(null);
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+    },
+    onError: (err) => setError(errorMessage(err, "Couldn't update status.")),
+  });
+
+  return (
+    <div className="application-row__status">
+      <select
+        className="application-row__status-select"
+        aria-label="Application status"
+        value={application.status}
+        disabled={mutation.isPending}
+        onChange={(e) => mutation.mutate(e.target.value as ApplicationStatus)}
+      >
+        {STATUSES.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
+      {error && <span className="application-row__details-error">{error}</span>}
     </div>
   );
 }
@@ -370,6 +408,7 @@ export function ApplicationsPage() {
                   )}
                 </div>
               </div>
+              <StatusSelect application={application} />
               <DownloadMenu application={application} />
               {application.best_score !== null ? (
                 <span

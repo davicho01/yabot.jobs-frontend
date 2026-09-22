@@ -77,6 +77,26 @@
   color: var(--rose);
 }
 
+.application-row__status {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.application-row__status-select {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: none;
+  cursor: pointer;
+}
+
 .application-row__action {
   background: none;
   border: 1px solid var(--line);
