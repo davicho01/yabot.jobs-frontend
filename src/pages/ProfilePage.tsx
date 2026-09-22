@@ -10,7 +10,7 @@ function formatDateTime(value: string | null): string {
 }
 
 export function ProfilePage() {
-  const { user, updateDisplayName } = useAuth();
+  const { user, updateDisplayName, updateEmailAlertsEnabled } = useAuth();
   const [displayName, setDisplayName] = useState(user?.display_name ?? "");
 
   useEffect(() => {
@@ -19,6 +19,10 @@ export function ProfilePage() {
 
   const updateMutation = useMutation({
     mutationFn: (name: string) => updateDisplayName(name.trim() || null),
+  });
+
+  const emailAlertsMutation = useMutation({
+    mutationFn: (enabled: boolean) => updateEmailAlertsEnabled(enabled),
   });
 
   function handleSubmit(event: FormEvent) {
@@ -54,6 +58,26 @@ export function ProfilePage() {
             </p>
           )}
         </form>
+      </section>
+
+      <section className="profile-section">
+        <h2 className="profile-section__title">Notifications</h2>
+        <label className="profile-checkbox">
+          <input
+            type="checkbox"
+            checked={user.email_alerts_enabled}
+            disabled={emailAlertsMutation.isPending}
+            onChange={(e) => emailAlertsMutation.mutate(e.target.checked)}
+          />
+          Email me when a saved search finds a new match
+        </label>
+        {emailAlertsMutation.isError && (
+          <p className="profile-page__error">
+            {emailAlertsMutation.error instanceof ApiError
+              ? emailAlertsMutation.error.message
+              : "Couldn't save that."}
+          </p>
+        )}
       </section>
 
       <section className="profile-section">

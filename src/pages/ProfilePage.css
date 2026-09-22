@@ -56,6 +56,24 @@
   color: var(--ink-soft);
 }
 
+.profile-section__title {
+  font-size: 1rem;
+  margin: 0 0 0.9rem;
+}
+
+.profile-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.profile-checkbox input {
+  width: auto;
+}
+
 .profile-form input {
   padding: 0.65rem 0.9rem;
   border: 1px solid var(--line);

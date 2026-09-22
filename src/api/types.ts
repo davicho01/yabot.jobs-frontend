@@ -6,6 +6,7 @@ export interface User {
   role: string;
   created_at: string;
   last_login_at: string | null;
+  email_alerts_enabled: boolean;
 }
 
 export interface JobPosting {

@@ -10,6 +10,7 @@ interface AuthContextValue {
   verify: (token: string) => Promise<User>;
   logout: () => Promise<void>;
   updateDisplayName: (displayName: string | null) => Promise<User>;
+  updateEmailAlertsEnabled: (enabled: boolean) => Promise<User>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -46,13 +47,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateDisplayName = useCallback(async (displayName: string | null) => {
-    const updatedUser = await authApi.updateMe(displayName);
+    const updatedUser = await authApi.updateMe({ display_name: displayName });
+    setUser(updatedUser);
+    return updatedUser;
+  }, []);
+
+  const updateEmailAlertsEnabled = useCallback(async (enabled: boolean) => {
+    const updatedUser = await authApi.updateMe({ email_alerts_enabled: enabled });
     setUser(updatedUser);
     return updatedUser;
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, requestLink, verify, logout, updateDisplayName }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, requestLink, verify, logout, updateDisplayName, updateEmailAlertsEnabled }}
+    >
       {children}
     </AuthContext.Provider>
   );
