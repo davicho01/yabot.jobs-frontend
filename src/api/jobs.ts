@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { JobDetail, JobList, Metro } from "./types";
+import type { JobDetail, JobList, Metro, SimilarJobs } from "./types";
 
 export const PAGE_SIZE = 20;
 
@@ -54,6 +54,7 @@ export const jobsApi = {
   // One area by its URL slug (null if unknown) — labels a shared ?metro= link.
   metro: (slug: string) => api.get<Metro[]>("/jobs/metros", { slug }).then((found) => found[0] ?? null),
   get: (urlId: string) => api.get<JobDetail>(`/jobs/${urlId}`),
+  similar: (urlId: string) => api.get<SimilarJobs>(`/jobs/${urlId}/similar`),
   rescan: (urlId: string) => api.post<JobDetail>(`/jobs/${urlId}/rescan`),
   submit: (url: string) => api.post<JobDetail>("/jobs", { url }),
 };

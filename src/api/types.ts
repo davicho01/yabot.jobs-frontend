@@ -68,6 +68,12 @@ export interface JobList {
   search_area?: SearchArea | null;
 }
 
+// Other postings related to one job — see GET /jobs/{url_id}/similar.
+export interface SimilarJobs {
+  same_company: JobDetail[];
+  similar_title: JobDetail[];
+}
+
 export type ApplicationStatus = "saved" | "applied" | "interviewing" | "offer" | "rejected" | "withdrawn";
 
 // Trimmed to what the applications list/apply page actually read — the

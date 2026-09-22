@@ -380,6 +380,56 @@
   color: var(--accent-deep);
 }
 
+.case-file__similar {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.case-file__similar-group h2 {
+  font-size: 0.95rem;
+  margin-bottom: 0.6rem;
+}
+
+.case-file__similar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.case-file__similar-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.case-file__similar-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent-deep);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.case-file__similar-link:hover {
+  text-decoration: underline;
+}
+
+.case-file__similar-meta {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
 .case-file__footer {
   margin-top: 1.5rem;
   padding-top: 1.25rem;

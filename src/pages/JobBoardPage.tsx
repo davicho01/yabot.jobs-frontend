@@ -303,6 +303,7 @@ export function JobBoardPage() {
                 onDelete={() => deleteListing(selected.url.id)}
                 isDeleting={deleteListingMutation.isPending}
                 titleHighlightQuery={query}
+                onSelectSimilar={selectJob}
               />
             )}
         </div>
