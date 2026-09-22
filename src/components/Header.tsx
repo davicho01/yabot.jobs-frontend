@@ -727,6 +727,9 @@ export function Header() {
                 <Link to="/api-keys" role="menuitem" onClick={() => setMenuOpen(false)}>
                   AI API Keys
                 </Link>
+                <Link to="/access-tokens" role="menuitem" onClick={() => setMenuOpen(false)}>
+                  Access tokens
+                </Link>
                 {user.role === "admin" && (
                   <Link to="/admin" role="menuitem" onClick={() => setMenuOpen(false)}>
                     Admin dashboard

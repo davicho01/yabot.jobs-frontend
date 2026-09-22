@@ -1,0 +1,209 @@
+/* Compound selectors throughout: ApiKeysPage.css/ResumePage.css define the
+   same base classes, and which of the pages' stylesheets lands later in
+   the document isn't guaranteed. */
+.settings-page {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+.settings-page h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.4rem;
+}
+
+.settings-page__intro {
+  color: var(--ink-soft);
+  margin: 0 0 2rem;
+}
+
+.settings-page__error {
+  color: var(--rose);
+  font-size: 0.85rem;
+}
+
+.settings-section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.settings-section__hint {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
+}
+
+.access-tokens-page__section-heading {
+  font-size: 1.05rem;
+  margin: 0 0 0.6rem;
+}
+
+.settings-key-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.settings-key-form button {
+  align-self: flex-start;
+}
+
+.settings-key-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-soft);
+}
+
+.settings-key-form input,
+.settings-key-form select {
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.select-field {
+  position: relative;
+}
+
+.settings-key-form select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 100%;
+  padding-right: 2.2rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.settings-key-form select:hover {
+  border-color: var(--accent);
+}
+
+.settings-key-form select:focus-visible {
+  border-color: var(--accent-deep);
+}
+
+.select-field::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0.85rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--ink-soft);
+  border-bottom: 2px solid var(--ink-soft);
+  transform: translateY(-65%) rotate(45deg);
+  pointer-events: none;
+}
+
+.record-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.record-list__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  font-size: 0.88rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.record-list__item > span:first-child {
+  flex: 1 1 10rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.record-list__item button {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.68rem;
+  margin-left: auto;
+}
+
+.record-list__remove {
+  background: transparent;
+  color: var(--rose);
+  border: 1px solid var(--rose);
+}
+
+.record-list__remove:hover:not(:disabled) {
+  background: var(--rose);
+  color: var(--surface);
+}
+
+/* The one-time reveal — visually distinct (amber) from the rest of the
+   page, since it's the one section on this page holding a live secret. */
+.access-token-reveal {
+  border-color: var(--amber);
+}
+
+.access-token-reveal__label {
+  font-weight: 700;
+  color: var(--amber);
+  margin: 0 0 0.75rem;
+}
+
+.access-token-reveal__row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.access-token-reveal__value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  padding: 0.6rem 0.8rem;
+  user-select: all;
+}
+
+.access-token-reveal__dismiss {
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+}
+
+@media (max-width: 640px) {
+  main.settings-page {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .settings-page .settings-section {
+    padding: 1.1rem;
+  }
+
+  .access-token-reveal__row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
