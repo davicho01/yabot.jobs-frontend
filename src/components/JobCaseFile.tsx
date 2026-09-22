@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
+import { applicationsApi } from "../api/applications";
 import type { JobDetail, JobPosting, User } from "../api/types";
 
 // A JobPosting row exists from the moment its URL is submitted (see
@@ -48,6 +50,17 @@ export function JobCaseFile({
   const posting = scannedPosting(job);
   const scanFailed = job.url.scan_status === "failed";
 
+  // Same list ApplyPage/ApplicationsPage query (same ["applications"] cache
+  // key), just to answer one question here: has this posting already been
+  // saved/applied to? (Visiting ApplyPage auto-saves it — see its own
+  // effect — so "Evaluate Job" is the wrong label the moment that's true.)
+  const { data: applications } = useQuery({
+    queryKey: ["applications"],
+    queryFn: applicationsApi.list,
+    enabled: !!user,
+  });
+  const currentApplication = applications?.find((a) => a.job_posting.url_id === job.url.id) ?? null;
+
   return (
     <article className="case-file">
       {(!posting || scanFailed) && (
@@ -89,7 +102,7 @@ export function JobCaseFile({
                 Original ↗
               </a>
               <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
-                Evaluate Job →
+                {currentApplication ? "View application →" : "Evaluate Job →"}
               </Link>
             </div>
           </div>
