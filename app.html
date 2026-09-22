@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      // Applies the effective theme before first paint, so there's no flash
+      // of the wrong theme while React boots. Mirrors the same "yabot-theme"
+      // localStorage key and default read in src/hooks/useTheme.ts: an
+      // explicit "system" choice means no override (CSS's own
+      // prefers-color-scheme media query decides), but no choice at all
+      // defaults to light rather than following the OS.
+      (function () {
+        var stored = localStorage.getItem("yabot-theme");
+        if (stored === "dark") {
+          document.documentElement.setAttribute("data-theme", "dark");
+        } else if (stored !== "system") {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+      })();
+    </script>
+    <script>
+      // The app's deep links (/login, /jobs/<id>, …) are often answered with the
+      // landing page (index.html) by the host's SPA fallback; that page saves the
+      // path and sends the visitor here. Put it back before the router starts.
+      (function () {
+        try {
+          var path = sessionStorage.getItem("yabot-restore-path");
+          if (path) {
+            sessionStorage.removeItem("yabot-restore-path");
+            if (path.charAt(0) === "/" && path.charAt(1) !== "/") history.replaceState(null, "", path);
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="alternate icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#1d1d1f" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yabot Jobs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

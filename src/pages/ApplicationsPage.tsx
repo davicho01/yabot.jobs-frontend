@@ -6,6 +6,7 @@ import { resumesApi } from "../api/resumes";
 import { ApiError } from "../api/client";
 import type { Application, ApplicationJobPosting } from "../api/types";
 import "./ApplicationsPage.css";
+import { BOARD_PATH } from "../routes";
 
 const QUALIFY_THRESHOLD = 70;
 
@@ -341,7 +342,7 @@ export function ApplicationsPage() {
         {isLoading && <p>Loading…</p>}
         {!isLoading && applications?.length === 0 && (
           <p className="applications-page__empty">
-            Nothing here yet — <Link to="/">browse postings</Link> and hit Apply on one that fits.
+            Nothing here yet — <Link to={BOARD_PATH}>browse postings</Link> and hit Apply on one that fits.
           </p>
         )}
 

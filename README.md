@@ -49,6 +49,25 @@ at the URL set in `VITE_API_BASE_URL` (defaults to `http://localhost:8000`).
 | `npm run preview`  | Serves the production build locally    |
 | `npm run lint`     | Runs Oxlint                             |
 
+## Pages and routes
+
+The site is two pages, both built by Vite (`vite.config.ts`):
+
+| File | Served at | What it is |
+| ---- | --------- | ---------- |
+| `index.html` | `/` | The static landing page: plain HTML/CSS with its own SEO tags and structured data, no app JavaScript. |
+| `app.html` | everything else | The React app. The job board is at `/jobs`; job pages are `/jobs/:id`; the rest (`/login`, `/profile`, `/applications`, …) keep their paths. |
+
+`src/routes.ts` holds the board's path. Backend and MCP links only ever point at
+`/auth/callback` and `/oauth/authorize`, so they are unaffected.
+
+Two things keep old links working: `index.html` forwards old shared board links
+(`/?q=…&jobId=…`) to `/jobs`, and forwards any other path it is served for (a host's
+SPA fallback answers unknown paths with `index.html`) to `app.html`, which puts the path
+back for the router. `npm run dev` does the same routing itself. Hosts that can serve
+`/app.html` for unknown paths directly (for CloudFront, point the 403/404 custom error
+response at `/app.html`) skip that extra hop.
+
 ## Deployment
 
 Pushes to `main` deploy automatically via GitHub Actions: the app is built

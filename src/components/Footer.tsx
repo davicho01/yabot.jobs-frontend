@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTheme } from "../hooks/useTheme";
 import "./Footer.css";
+import { BOARD_PATH } from "../routes";
 
 export function Footer() {
   const { theme, setTheme } = useTheme();
@@ -10,7 +11,7 @@ export function Footer() {
     <footer className="site-footer">
       <div className="site-footer__top">
         <div className="site-footer__brand">
-          <Link to="/" className="site-footer__brand-link">
+          <Link to={BOARD_PATH} className="site-footer__brand-link">
             <span className="site-footer__mark" aria-hidden="true">
               <svg viewBox="0 0 48 48" fill="none" width="18" height="18">
                 <path

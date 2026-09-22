@@ -1,13 +1,23 @@
-import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
+import { useState, useRef, useEffect, useCallback, type FormEvent, type KeyboardEvent } from "react";
 import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
 import { jobsApi } from "../api/jobs";
 import { ApiError } from "../api/client";
 import type { Metro } from "../api/types";
+import { BOARD_PATH } from "../routes";
 import "./Header.css";
 
 const PLACE_SUGGESTION_LIMIT = 10;
+
+// On a phone the header is tall and covers a lot of the screen, so once it has
+// slid away it only comes back after this many pixels of continuous scrolling
+// up (or at the very top), not at the first flick of the thumb. Must match the
+// phone breakpoint in Header.css.
+const PHONE_QUERY = "(max-width: 760px)";
+const PHONE_REVEAL_SCROLL_UP_PX = 700;
+// Scrolled down past this, the header can hide; above it, it's always shown.
+const HIDE_AFTER_SCROLL_PX = 80;
 
 // What an area named by an old shared ?metro= link reads as in the search box.
 function metroLabel(metro: Metro): string {
@@ -110,17 +120,27 @@ export function Header() {
 
   useEffect(() => {
     lastScrollY.current = window.scrollY;
+    // How far the page has been scrolled up in one go; a change of direction starts it over.
+    let scrolledUp = 0;
     function onScroll() {
       const y = window.scrollY;
-      // Any upward movement reveals the header immediately; only sustained
-      // downward movement past the header's own height hides it, so a tiny
-      // wobble near the top doesn't flicker it away.
-      if (y < lastScrollY.current) {
-        setHidden(false);
-      } else if (y > lastScrollY.current && y > 80) {
-        setHidden(true);
-      }
+      const delta = y - lastScrollY.current;
       lastScrollY.current = y;
+
+      if (y <= HIDE_AFTER_SCROLL_PX) {
+        setHidden(false);
+        scrolledUp = 0;
+      } else if (delta > 0) {
+        scrolledUp = 0;
+        // Never slide the header away while a search field is being used: the
+        // phone scrolls the page to bring a focused field into view, which
+        // would otherwise take the field with it.
+        if (!headerRef.current?.contains(document.activeElement)) setHidden(true);
+      } else if (delta < 0) {
+        scrolledUp -= delta;
+        // Desktop: any upward movement brings it back. Phone: only a sustained one.
+        if (!window.matchMedia(PHONE_QUERY).matches || scrolledUp >= PHONE_REVEAL_SCROLL_UP_PX) setHidden(false);
+      }
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -144,10 +164,10 @@ export function Header() {
 
   // These search/filter controls live in the header so they're always
   // visible, but the board state (q/location/company/posted/remote/page/jobId)
-  // only makes sense on "/" — everywhere else, using them starts a fresh
+  // only makes sense on the board — everywhere else, using them starts a fresh
   // search there instead of trying to merge into whatever unrelated params
   // the current route has (or doesn't have).
-  const onBoard = routerLocation.pathname === "/";
+  const onBoard = routerLocation.pathname === BOARD_PATH;
   const query = onBoard ? (searchParams.get("q") ?? "") : "";
   const locationFilter = onBoard ? (searchParams.get("location") ?? "") : "";
   const metroSlug = onBoard ? (searchParams.get("metro") ?? "") : "";
@@ -187,7 +207,7 @@ export function Header() {
       } else {
         const next = new URLSearchParams();
         update(next);
-        navigate(`/?${next.toString()}`);
+        navigate(`${BOARD_PATH}?${next.toString()}`);
       }
     },
     [onBoard, setSearchParams, navigate],
@@ -274,6 +294,30 @@ export function Header() {
       setPlacesOpen(false);
       setActivePlace(-1);
     }
+  }
+
+  // The Search button (and Enter in either field) applies what's typed right now,
+  // instead of waiting out the typing debounce, and from any other page carries the
+  // search over to the board.
+  function handleSearchSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    if (locationDebounce.current) clearTimeout(locationDebounce.current);
+    setPlacesOpen(false);
+    setActivePlace(-1);
+    updateBoardParams((next) => {
+      if (searchInput) next.set("q", searchInput);
+      else next.delete("q");
+      // The box shows an area's label while ?metro= is set, so leave the place alone
+      // until it's edited (which clears the area).
+      if (!metroSlug) {
+        // A widened search belongs to the place it was widened for.
+        if ((next.get("location") ?? "") !== locationInput) next.delete("radius");
+        if (locationInput) next.set("location", locationInput);
+        else next.delete("location");
+      }
+      next.delete("page");
+    });
   }
 
   function handleCompanyInputChange(value: string) {
@@ -392,7 +436,7 @@ export function Header() {
   return (
     <header className={`site-header${hidden ? " site-header--hidden" : ""}`} ref={headerRef}>
       <div className="site-header__row">
-        <Link to="/" className="site-header__brand">
+        <Link to={BOARD_PATH} className="site-header__brand">
           <span className="site-header__mark" aria-hidden="true">
             <svg viewBox="0 0 48 48" fill="none" width="20" height="20">
               <path
@@ -408,58 +452,66 @@ export function Header() {
         </Link>
 
         <div className="site-header__center">
-          <input
-            className="site-header__search"
-            type="search"
-            placeholder="Search postings by title…"
-            value={searchInput}
-            onChange={(e) => handleSearchInputChange(e.target.value)}
-          />
-          <div className="site-header__combobox">
+          <form className="site-header__searchbar" role="search" onSubmit={handleSearchSubmit}>
             <input
               className="site-header__search"
               type="search"
-              role="combobox"
-              aria-expanded={showPlaces}
-              aria-controls="job-location-options"
-              aria-autocomplete="list"
-              aria-activedescendant={showPlaces && activePlace >= 0 ? `job-location-option-${activePlace}` : undefined}
-              autoComplete="off"
-              placeholder="Search by city or state…"
-              value={metroSlug && selectedMetro ? metroLabel(selectedMetro) : locationInput}
-              onChange={(e) => handleLocationInputChange(e.target.value)}
-              onFocus={() => setPlacesOpen(true)}
-              onBlur={() => setPlacesOpen(false)}
-              onKeyDown={handleLocationKeyDown}
+              aria-label="Job title or keyword"
+              placeholder="Search postings by title…"
+              value={searchInput}
+              onChange={(e) => handleSearchInputChange(e.target.value)}
             />
-            {showPlaces && (
-              <ul className="site-header__combobox-list" id="job-location-options" role="listbox">
-                {placeOptions?.map((place, index) => {
-                  // "Bountiful, Utah, United States": the place stands out, the
-                  // state and country after it are context.
-                  const [name, ...rest] = place.split(", ");
-                  return (
-                    <li
-                      key={place}
-                      id={`job-location-option-${index}`}
-                      role="option"
-                      aria-selected={index === activePlace}
-                      className={`site-header__combobox-option${index === activePlace ? " site-header__combobox-option--active" : ""}`}
-                      // mousedown, not click: it fires before the input's blur closes the list.
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        selectPlace(place);
-                      }}
-                      onMouseEnter={() => setActivePlace(index)}
-                    >
-                      <span>{name}</span>
-                      {rest.length > 0 && <span className="site-header__combobox-context">, {rest.join(", ")}</span>}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
+            <span className="site-header__searchbar-rule" aria-hidden="true" />
+            <div className="site-header__combobox">
+              <input
+                className="site-header__search"
+                type="search"
+                role="combobox"
+                aria-label="City or state"
+                aria-expanded={showPlaces}
+                aria-controls="job-location-options"
+                aria-autocomplete="list"
+                aria-activedescendant={showPlaces && activePlace >= 0 ? `job-location-option-${activePlace}` : undefined}
+                autoComplete="off"
+                placeholder="Search by city or state…"
+                value={metroSlug && selectedMetro ? metroLabel(selectedMetro) : locationInput}
+                onChange={(e) => handleLocationInputChange(e.target.value)}
+                onFocus={() => setPlacesOpen(true)}
+                onBlur={() => setPlacesOpen(false)}
+                onKeyDown={handleLocationKeyDown}
+              />
+              {showPlaces && (
+                <ul className="site-header__combobox-list" id="job-location-options" role="listbox">
+                  {placeOptions?.map((place, index) => {
+                    // "Bountiful, Utah, United States": the place stands out, the
+                    // state and country after it are context.
+                    const [name, ...rest] = place.split(", ");
+                    return (
+                      <li
+                        key={place}
+                        id={`job-location-option-${index}`}
+                        role="option"
+                        aria-selected={index === activePlace}
+                        className={`site-header__combobox-option${index === activePlace ? " site-header__combobox-option--active" : ""}`}
+                        // mousedown, not click: it fires before the input's blur closes the list.
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          selectPlace(place);
+                        }}
+                        onMouseEnter={() => setActivePlace(index)}
+                      >
+                        <span>{name}</span>
+                        {rest.length > 0 && <span className="site-header__combobox-context">, {rest.join(", ")}</span>}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+            <button type="submit" className="site-header__search-submit">
+              Search
+            </button>
+          </form>
           <button
             type="button"
             className={`site-header__filter-toggle${activeFilterCount > 0 ? " site-header__filter-toggle--active" : ""}`}
@@ -534,7 +586,7 @@ export function Header() {
                   onClick={async () => {
                     setMenuOpen(false);
                     await logout();
-                    navigate("/");
+                    navigate(BOARD_PATH);
                   }}
                 >
                   Log out

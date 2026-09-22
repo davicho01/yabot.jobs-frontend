@@ -6,6 +6,7 @@ import { adminApi } from "../api/admin";
 import { useConfirm } from "../components/ConfirmDialog";
 import { JobCaseFile } from "../components/JobCaseFile";
 import "./JobBoardPage.css";
+import { BOARD_PATH } from "../routes";
 
 export function JobDetailPage() {
   const { urlId } = useParams<{ urlId: string }>();
@@ -32,7 +33,7 @@ export function JobDetailPage() {
     mutationFn: (id: string) => adminApi.deleteListing(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
-      navigate("/");
+      navigate(BOARD_PATH);
     },
   });
 

@@ -69,38 +69,77 @@
   padding: 0 1.5rem;
 }
 
-.site-header__search {
-  flex: 1;
-  min-width: 160px;
-  max-width: 340px;
-  padding: 0.6rem 1rem;
+.site-header__searchbar {
+  position: relative;
+  flex: 1 1 20rem;
+  min-width: 0;
+  max-width: 41rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr) auto;
+  align-items: center;
+  padding: 0.2rem 0.2rem 0.2rem 1.1rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-pill);
   background: var(--surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* The blue glow: the pill lights up while either field is focused (the fields
+   themselves drop their own outline, so this is the visible focus indicator). */
+.site-header__searchbar:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.site-header__search {
+  width: 100%;
+  min-width: 0;
+  padding: 0.55rem 0.75rem 0.55rem 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.site-header__search::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+.site-header__search::placeholder {
+  color: var(--ink-soft);
+  opacity: 1;
+}
+
+.site-header__searchbar-rule {
+  width: 1px;
+  height: 1.4rem;
+  background: var(--line);
+}
+
+.site-header__search-submit {
+  min-height: 2.4rem;
+  padding: 0.5rem 1.15rem;
+  font-size: 0.88rem;
 }
 
 /* The location field and its suggestion list, which hangs directly under it
    (not the browser's native datalist popup, which can't be styled or anchored). */
 .site-header__combobox {
   position: relative;
-  flex: 1;
-  min-width: 160px;
-  max-width: 340px;
+  min-width: 0;
 }
 
 .site-header__combobox .site-header__search {
-  flex: none;
-  width: 100%;
-  min-width: 0;
-  max-width: none;
+  padding-left: 0.9rem;
 }
 
 .site-header__combobox-list {
   position: absolute;
-  top: calc(100% + 0.4rem);
+  top: calc(100% + 0.55rem);
   left: 0;
   min-width: 100%;
   width: max-content;
@@ -353,11 +392,6 @@
     gap: 0.5rem;
     padding: 0 1rem;
   }
-
-  .site-header__search,
-  .site-header__combobox {
-    min-width: 140px;
-  }
 }
 
 @media (max-width: 760px) {
@@ -377,20 +411,66 @@
     padding-left: 1rem;
     padding-right: 1rem;
   }
+
+  /* iOS Safari zooms the whole page when a field under 16px gets focus. */
+  .site-header__search {
+    font-size: 1rem;
+  }
+
+  .site-header__filter-toggle {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
 }
 
 @media (max-width: 520px) {
   /* Two side-by-side search fields would each be too narrow to read their
-     placeholder — give each its own row, with the filter/add-job buttons
-     sharing the last one. */
-  .site-header__search,
+     placeholder — the title gets its own row, the place and the Search button
+     share the next, and the filter/add-job buttons take the last. */
+  .site-header__searchbar {
+    /* Shares its row with the filter button (a full-width row for it wasted a
+       quarter of a phone screen on the fixed header). */
+    flex: 1 1 0;
+    max-width: none;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding-left: 1rem;
+    border-radius: 1.4rem;
+  }
+
+  .site-header__search-submit {
+    min-height: 2.6rem;
+  }
+
+  /* Anchor the suggestions to the whole pill, so the list lines up with it
+     instead of hanging under just the location half. */
   .site-header__combobox {
-    flex: 1 1 100%;
+    position: static;
+  }
+
+  .site-header__combobox-list {
+    left: 0;
+    right: 0;
+    width: auto;
+    min-width: 0;
     max-width: none;
   }
 
+  .site-header__searchbar-rule {
+    display: none;
+  }
+
+  .site-header__searchbar > .site-header__search {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .site-header__combobox .site-header__search {
+    padding-left: 0;
+  }
+
+  /* Signed in: Add Job takes its own full-width row under the search. */
   .site-header__add-job-toggle {
-    flex: 1;
+    flex: 1 1 100%;
   }
 
   .site-header__add-job-label {

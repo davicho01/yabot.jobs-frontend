@@ -1,40 +1,2445 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
     <script>
-      // Applies the effective theme before first paint, so there's no flash
-      // of the wrong theme while React boots. Mirrors the same "yabot-theme"
-      // localStorage key and default read in src/hooks/useTheme.ts: an
-      // explicit "system" choice means no override (CSS's own
-      // prefers-color-scheme media query decides), but no choice at all
-      // defaults to light rather than following the OS.
+      // Two jobs for old links, both before anything paints:
+      //  1. Shared board links used to live on "/" (yabot.jobs/?q=…&jobId=…); the board is
+      //     /jobs now, so carry those over.
+      //  2. The host answers unknown paths with this page (SPA fallback), so any other
+      //     path here is a deep link into the app (/login, /jobs/<id>, …): hand it to
+      //     the app shell, which puts the path back for its router.
       (function () {
-        var stored = localStorage.getItem("yabot-theme");
-        if (stored === "dark") {
-          document.documentElement.setAttribute("data-theme", "dark");
-        } else if (stored !== "system") {
-          document.documentElement.setAttribute("data-theme", "light");
+        var l = location;
+        var path = l.pathname;
+        if (path === "/" && /[?&](q|location|metro|radius|company|posted|workplace|page|jobId)=/.test(l.search)) {
+          l.replace("/jobs" + l.search + l.hash);
+        } else if (path !== "/" && path !== "/index.html") {
+          try {
+            sessionStorage.setItem("yabot-restore-path", path + l.search + l.hash);
+          } catch (e) {}
+          l.replace("/app.html");
         }
       })();
     </script>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-    <link rel="alternate icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <script>
+      // Applies the visitor's saved theme before first paint. Same "yabot-theme"
+      // key and default as index.html and src/hooks/useTheme.ts: "dark" is dark,
+      // "system" defers to the OS, and no choice yet means light.
+      (function () {
+        try {
+          var stored = localStorage.getItem("yabot-theme");
+          if (stored === "dark") {
+            document.documentElement.setAttribute("data-theme", "dark");
+          } else if (stored !== "system") {
+            document.documentElement.setAttribute("data-theme", "light");
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Free Tech Job Search and Application Tracker | Yabot Jobs</title>
+    <meta
+      name="description"
+      content="Search tech and product jobs by title, city, or remote. Track every application and tailor your resume and cover letter for each posting. Free to use."
+    />
+    <link rel="canonical" href="https://yabot.jobs/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#1d1d1f" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Yabot Jobs</title>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Yabot Jobs" />
+    <meta property="og:title" content="Free Tech Job Search and Application Tracker | Yabot Jobs" />
+    <meta
+      property="og:description"
+      content="Search tech and product jobs, track every application, and tailor your resume and cover letter. You shouldn't have to pay to get a job."
+    />
+    <meta property="og:url" content="https://yabot.jobs/" />
+    <meta property="og:image" content="https://yabot.jobs/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Yabot Jobs: You shouldn't have to pay to get a job." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Free Tech Job Search and Application Tracker | Yabot Jobs" />
+    <meta
+      name="twitter:description"
+      content="Search tech and product jobs, track every application, and tailor your resume and cover letter. You shouldn't have to pay to get a job."
+    />
+    <meta name="twitter:image" content="https://yabot.jobs/og-image.png" />
+
+    <link rel="icon" type="image/svg+xml" href="https://yabot.jobs/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="https://yabot.jobs/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="https://yabot.jobs/favicon-16x16.png" />
+    <link rel="alternate icon" href="https://yabot.jobs/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://yabot.jobs/apple-touch-icon.png" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap"
       rel="stylesheet"
     />
+
+    <!--
+      Structured data. The FAQPage block must match the visible questions in
+      #questions below — update both together.
+    -->
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://yabot.jobs/#organization",
+      "name": "Yabot Jobs",
+      "url": "https://yabot.jobs/",
+      "logo": "https://yabot.jobs/apple-touch-icon.png",
+      "sameAs": [
+        "https://github.com/davicho01/yabot.jobs-frontend"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://yabot.jobs/#website",
+      "url": "https://yabot.jobs/",
+      "name": "Yabot Jobs",
+      "description": "A free job search site for tech and product roles, with an application tracker, resume tailoring tools, and an MCP server for ChatGPT and Claude.",
+      "publisher": {
+        "@id": "https://yabot.jobs/#organization"
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://yabot.jobs/jobs?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://yabot.jobs/",
+      "url": "https://yabot.jobs/",
+      "name": "Free Tech Job Search and Application Tracker | Yabot Jobs",
+      "isPartOf": {
+        "@id": "https://yabot.jobs/#website"
+      },
+      "about": {
+        "@id": "https://yabot.jobs/#organization"
+      },
+      "inLanguage": "en"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is Yabot Jobs really free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Searching the job board, reading postings, saving jobs, and tracking applications cost nothing. The AI tools (fitness reports, tailored resumes, and cover letters) run on an API key you add yourself, so any charge comes from your AI provider for what you use. Yabot Jobs adds no fee on top."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need an account to search for jobs?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. You can search and browse the job board without one. Create a free account to save postings, track applications, upload a resume, and use the AI tools. There is no password: enter your email and Yabot Jobs sends you a sign-in link that works for 15 minutes."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Where do the job postings come from?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yabot Jobs scans public job postings and reads the details out of the page: title, company, location, work type, and pay. Once you are signed in you can also add any posting by pasting its link, and Yabot Jobs scans it for you."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I track jobs I found on other job boards?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Once you're signed in, paste the link to a posting from another job board or a company's careers page. Yabot Jobs scans it, reads the title, company, location, work type, and pay, and adds it to your jobs. From there you can check your fit, tailor your resume, and track the application with everything else. If a page can't be read, rescan it later. Your AI assistant can add a posting from its link too."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which AI providers can I use?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Anthropic, OpenAI, DeepSeek, or any OpenAI-compatible service. Your key is used only for your own resume reviews, scoring, and generation requests."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I edit the resume and cover letter it writes?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Download them as Word documents (.docx) and change anything you like before you send them."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use Yabot Jobs from ChatGPT or Claude?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Yabot Jobs has an MCP server, so ChatGPT, Claude, and any other assistant that supports the Model Context Protocol (MCP) can connect to it. Add https://mcp.yabot.jobs/mcp as a custom connector in your assistant's settings and approve access on Yabot Jobs. Your assistant can then search postings, track applications, and upload tailored resumes and cover letters for you."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Yabot Jobs open source?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. The website and the API behind it are both public on GitHub, and the website is released under the MIT license."
+          }
+        }
+      ]
+    }
+  ]
+}
+    </script>
+
+    <style>
+      /* Tokens mirror src/index.css so the landing page and the app read as one
+         product. Light is the default; dark follows the same data-theme switch. */
+      :root {
+        --paper: #ffffff;
+        --surface: #f5f5f7;
+        --ink: #1d1d1f;
+        --ink-soft: #6e6e73;
+        --accent: #0071e3;
+        --accent-deep: #0058b0;
+        --accent-fill: #0071e3;
+        --accent-fill-hover: #0058b0;
+        --teal: #248a3d;
+        --rose: #d70015;
+        --amber: #b36500;
+        --line: #e8e8ed;
+
+        /* The black stage used for the "free" section and the dark tile. */
+        --band: #000000;
+        --band-tile: #1d1d1f;
+        --band-ink: #f5f5f7;
+        --band-soft: #a1a1a6;
+        --band-line: #2c2c2e;
+        --band-accent: #2997ff;
+        --band-good: #30d158;
+
+        --font-display: "Outfit", system-ui, -apple-system, sans-serif;
+        --font-body: "Manrope", system-ui, -apple-system, sans-serif;
+
+        --radius-pill: 980px;
+        --radius-field: 12px;
+        --radius-card: 18px;
+        --radius-tile: 28px;
+        --lift: 0 1px 2px rgba(0, 0, 0, 0.05), 0 18px 40px -18px rgba(0, 0, 0, 0.22);
+
+        --wrap: 1180px;
+        --gutter: clamp(1.1rem, 4vw, 2rem);
+        color-scheme: light;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --paper: #000000;
+          --surface: #1d1d1f;
+          --ink: #f5f5f7;
+          --ink-soft: #86868b;
+          --accent: #2997ff;
+          --accent-deep: #6cb4ff;
+          --teal: #30d158;
+          --rose: #ff453a;
+          --amber: #ff9f0a;
+          --line: #2c2c2e;
+          --band: #161617;
+          --lift: 0 1px 2px rgba(0, 0, 0, 0.5), 0 18px 40px -18px rgba(0, 0, 0, 0.8);
+          color-scheme: dark;
+        }
+      }
+
+      :root[data-theme="dark"] {
+        --paper: #000000;
+        --surface: #1d1d1f;
+        --ink: #f5f5f7;
+        --ink-soft: #86868b;
+        --accent: #2997ff;
+        --accent-deep: #6cb4ff;
+        --teal: #30d158;
+        --rose: #ff453a;
+        --amber: #ff9f0a;
+        --line: #2c2c2e;
+        --band: #161617;
+        --lift: 0 1px 2px rgba(0, 0, 0, 0.5), 0 18px 40px -18px rgba(0, 0, 0, 0.8);
+        color-scheme: dark;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        scroll-behavior: smooth;
+        scroll-padding-top: 7rem;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 1.0625rem;
+        line-height: 1.6;
+        overflow-wrap: break-word;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      h1,
+      h2,
+      h3,
+      p,
+      ul,
+      ol,
+      dl,
+      dd,
+      figure {
+        margin: 0;
+      }
+
+      ul,
+      ol {
+        padding: 0;
+        list-style: none;
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--accent-deep);
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .skip {
+        position: absolute;
+        left: 1rem;
+        top: -4rem;
+        z-index: 50;
+        padding: 0.7rem 1.1rem;
+        background: var(--ink);
+        color: var(--paper);
+        font-weight: 600;
+        border-radius: var(--radius-pill);
+        text-decoration: none;
+      }
+
+      .skip:focus {
+        top: 0.75rem;
+      }
+
+      .wrap {
+        width: 100%;
+        max-width: var(--wrap);
+        margin-inline: auto;
+        padding-inline: var(--gutter);
+      }
+
+      /* ---------- type ---------- */
+
+      h1,
+      h2,
+      h3 {
+        font-family: var(--font-display);
+        color: var(--ink);
+        text-wrap: balance;
+      }
+
+      h1 {
+        font-size: clamp(2.9rem, 1rem + 7.4vw, 6.25rem);
+        line-height: 1;
+        letter-spacing: -0.036em;
+        word-spacing: 0.04em;
+        font-weight: 800;
+      }
+
+      h2 {
+        font-size: clamp(2.15rem, 1rem + 4.2vw, 4.25rem);
+        line-height: 1.04;
+        letter-spacing: -0.032em;
+        word-spacing: 0.03em;
+        font-weight: 800;
+      }
+
+      h3 {
+        font-size: clamp(1.6rem, 1.2rem + 1.3vw, 2.15rem);
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+        font-weight: 700;
+      }
+
+      .lede {
+        font-size: clamp(1.15rem, 1rem + 0.7vw, 1.5rem);
+        line-height: 1.45;
+        font-weight: 500;
+        color: var(--ink-soft);
+        letter-spacing: -0.01em;
+      }
+
+      .prose p {
+        max-width: 38rem;
+      }
+
+      .prose p + p {
+        margin-top: 1rem;
+      }
+
+      /* ---------- buttons ---------- */
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.6rem;
+        padding: 0.55rem 1.25rem;
+        border: 1px solid transparent;
+        border-radius: var(--radius-pill);
+        font-family: var(--font-body);
+        font-weight: 600;
+        font-size: 0.9rem;
+        line-height: 1.1;
+        text-decoration: none;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      }
+
+      .btn:active {
+        transform: translateY(1px);
+      }
+
+      .btn--lg {
+        min-height: 3.35rem;
+        padding: 0.8rem 1.9rem;
+        font-size: 1.05rem;
+      }
+
+      .btn--accent {
+        background: var(--accent-fill);
+        color: #fff;
+      }
+
+      .btn--accent:hover {
+        background: var(--accent-fill-hover);
+      }
+
+      .btn--line {
+        border-color: var(--line);
+        background: transparent;
+        color: var(--ink);
+      }
+
+      .btn--line:hover {
+        background: var(--ink);
+        border-color: var(--ink);
+        color: var(--paper);
+      }
+
+      .btn--white {
+        background: #fff;
+        color: #1d1d1f;
+      }
+
+      .btn--white:hover {
+        background: #e8e8ed;
+      }
+
+      /* ---------- header ---------- */
+
+      .top {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: color-mix(in srgb, var(--paper) 86%, transparent);
+        border-bottom: 1px solid var(--line);
+        -webkit-backdrop-filter: saturate(180%) blur(18px);
+        backdrop-filter: saturate(180%) blur(18px);
+      }
+
+      .top__row {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding-block: 0.8rem;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        color: var(--ink);
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 1.2rem;
+        letter-spacing: -0.02em;
+        text-decoration: none;
+        flex-shrink: 0;
+      }
+
+      .brand__mark {
+        display: inline-flex;
+        width: 2rem;
+        height: 2rem;
+        align-items: center;
+        justify-content: center;
+        background: var(--ink);
+        color: var(--accent);
+        border-radius: 8px;
+      }
+
+      .search {
+        flex: 1;
+        min-width: 0;
+        max-width: 41rem;
+        margin-inline: auto;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr) auto;
+        align-items: center;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-pill);
+        padding: 0.2rem 0.2rem 0.2rem 1.1rem;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .search:focus-within {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+      }
+
+      .search input {
+        min-width: 0;
+        width: 100%;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        padding: 0.55rem 0.75rem 0.55rem 0;
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 0.92rem;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+
+      .search input::-webkit-search-cancel-button {
+        -webkit-appearance: none;
+      }
+
+      .search input::placeholder {
+        color: var(--ink-soft);
+        opacity: 1;
+      }
+
+      .search__rule {
+        width: 1px;
+        height: 1.4rem;
+        background: var(--line);
+      }
+
+      .search .search__rule + label + input {
+        padding-left: 0.9rem;
+      }
+
+      .top__actions {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-shrink: 0;
+      }
+
+      /* ---------- hero ---------- */
+
+      .hero {
+        padding-block: clamp(3.5rem, 8vw, 7rem) clamp(3rem, 6vw, 5rem);
+        text-align: center;
+      }
+
+      .hero h1 {
+        max-width: 12.5em;
+        margin-inline: auto;
+      }
+
+      .hero .lede {
+        max-width: 40rem;
+        margin: 1.75rem auto 0;
+      }
+
+      .cta-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.8rem;
+        margin-top: 2.25rem;
+      }
+
+      .fineprint {
+        margin-top: 1.1rem;
+        font-size: 0.9rem;
+        color: var(--ink-soft);
+      }
+
+      /* The "product shot": a raw posting, and the job card Yabot builds from it */
+
+      .showcase {
+        margin-top: clamp(3rem, 7vw, 5.5rem);
+      }
+
+      .showcase__tile {
+        background: var(--surface);
+        border-radius: var(--radius-tile);
+        padding: clamp(1.5rem, 5vw, 4rem) clamp(1.25rem, 5vw, 4.5rem);
+      }
+
+      .showcase__grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) auto minmax(0, 0.95fr);
+        align-items: center;
+        gap: clamp(1rem, 3vw, 2.5rem);
+        text-align: left;
+        max-width: 60rem;
+        margin-inline: auto;
+      }
+
+      .posting {
+        /* An employer's page, so it stays a light page in either theme. */
+        background: #fff;
+        color: #6a726d;
+        border: 1px solid #e3e3e8;
+        border-radius: 14px;
+        padding: 1.2rem 1.35rem 1.4rem;
+        box-shadow: var(--lift);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 0.75rem;
+        line-height: 1.5;
+      }
+
+      .posting p + p,
+      .posting p + ul,
+      .posting ul + p {
+        margin-top: 0.55rem;
+      }
+
+      .posting__crumbs {
+        display: block;
+        color: #8a918d;
+        font-size: 0.68rem;
+        padding-bottom: 0.65rem;
+        margin-bottom: 0.85rem;
+        border-bottom: 1px solid #e6e9e7;
+      }
+
+      .posting__title {
+        font-size: 1.35rem;
+        line-height: 1.25;
+        font-weight: 700;
+        color: #26302b;
+      }
+
+      .posting__company {
+        margin-top: 0.15rem;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #3c4640;
+      }
+
+      .posting__facts {
+        margin-top: 0.7rem;
+        color: #3c4640;
+        font-size: 0.8rem;
+        line-height: 1.7;
+      }
+
+      .posting .posting__h {
+        margin: 0.9rem 0 0.2rem;
+        font-weight: 700;
+        font-size: 0.8rem;
+        color: #3c4640;
+      }
+
+      .posting ul {
+        list-style: disc;
+        padding-left: 1.1rem;
+      }
+
+      .posting__bar {
+        display: flex;
+        gap: 0.9rem;
+        margin-top: 0.9rem;
+        color: #8a918d;
+        font-size: 0.68rem;
+      }
+
+      .posting__apply {
+        display: inline-block;
+        margin-top: 0.7rem;
+        padding: 0.4rem 0.9rem;
+        background: #d9dedb;
+        color: #4b544f;
+        border-radius: 3px;
+        font-weight: 700;
+      }
+
+      /* Highlighter, swept over the fields Yabot reads */
+
+      .hl {
+        --i: 0;
+        background: linear-gradient(rgba(0, 113, 227, 0.22), rgba(0, 113, 227, 0.22)) no-repeat 0 0 / 100% 100%;
+        box-shadow: inset 0 -2px 0 rgba(0, 113, 227, 0.75);
+        border-radius: 3px;
+        padding: 0.05em 0.25em;
+        margin: 0 -0.25em;
+        -webkit-box-decoration-break: clone;
+        box-decoration-break: clone;
+        color: #1f2a25;
+        animation: sweep 0.55s cubic-bezier(0.3, 0.7, 0.2, 1) both;
+        animation-delay: calc(0.7s + var(--i) * 0.42s);
+      }
+
+      @keyframes sweep {
+        from {
+          background-size: 0% 100%;
+          box-shadow: inset 0 -2px 0 rgba(0, 113, 227, 0);
+        }
+      }
+
+      .showcase__arrow {
+        width: 5.5rem;
+        height: auto;
+        color: var(--accent);
+        overflow: visible;
+      }
+
+      .showcase__arrow path {
+        stroke-dasharray: 1;
+        stroke-dashoffset: 0;
+        animation: draw 0.7s ease-out 0.55s both;
+      }
+
+      @keyframes draw {
+        from {
+          stroke-dashoffset: 1;
+        }
+      }
+
+      .readout {
+        position: relative;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+        padding: 2.1rem 1.6rem 1.6rem 1.9rem;
+        box-shadow: var(--lift);
+      }
+
+      /* Same coloured left edge as the job cards in the app (hybrid is blue). */
+      .readout::before {
+        content: "";
+        position: absolute;
+        inset: -1px auto -1px -1px;
+        width: 6px;
+        background: var(--accent);
+        border-radius: var(--radius-card) 0 0 var(--radius-card);
+      }
+
+      .readout__tab {
+        position: absolute;
+        top: -0.9rem;
+        left: 1.75rem;
+        padding: 0.3rem 0.85rem;
+        background: var(--accent-fill);
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.75rem;
+        line-height: 1.3;
+        border-radius: var(--radius-pill);
+      }
+
+      .readout dl {
+        display: grid;
+        gap: 0.85rem;
+      }
+
+      .readout__row {
+        display: grid;
+        grid-template-columns: 5.4rem minmax(0, 1fr);
+        align-items: baseline;
+        gap: 0.5rem;
+        animation: pop 0.4s ease-out both;
+        animation-delay: calc(0.95s + var(--i) * 0.42s);
+      }
+
+      .readout dt {
+        font-size: 0.82rem;
+        font-weight: 500;
+        color: var(--ink-soft);
+      }
+
+      .readout dd {
+        font-weight: 600;
+        font-size: 1rem;
+        line-height: 1.3;
+      }
+
+      .readout__row--title dd {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 1.65rem;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+      }
+
+      .readout__row--pay dd {
+        color: var(--accent-deep);
+      }
+
+      @keyframes pop {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+      }
+
+      .showcase figcaption {
+        margin-top: 1.1rem;
+        font-size: 0.92rem;
+        color: var(--ink-soft);
+      }
+
+      /* ---------- sections ---------- */
+
+      .section {
+        padding-block: clamp(3.5rem, 8vw, 7rem);
+      }
+
+      .section-head {
+        max-width: 46rem;
+        margin-inline: auto;
+        text-align: center;
+      }
+
+      .section-head p {
+        margin-top: 1.1rem;
+      }
+
+      /* Status pills, the same tinted capsules the app uses */
+
+      .stamp {
+        display: inline-flex;
+        align-items: center;
+        justify-self: start;
+        padding: 0.3em 0.85em;
+        border-radius: var(--radius-pill);
+        font-weight: 600;
+        font-size: 0.8rem;
+        line-height: 1.3;
+        white-space: nowrap;
+        color: var(--accent-deep);
+        background: color-mix(in srgb, var(--accent) 14%, transparent);
+      }
+
+      .stamp--good {
+        color: var(--teal);
+        background: color-mix(in srgb, var(--teal) 14%, transparent);
+      }
+
+      .stamp--maybe {
+        color: var(--amber);
+        background: color-mix(in srgb, var(--amber) 14%, transparent);
+      }
+
+      .stamp--bad {
+        color: var(--rose);
+        background: color-mix(in srgb, var(--rose) 14%, transparent);
+      }
+
+      /* How it works: four big tiles */
+
+      .bento {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(0.85rem, 2vw, 1.4rem);
+        margin-top: clamp(2.5rem, 5vw, 4rem);
+      }
+
+      .tile {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 0;
+        padding: clamp(1.6rem, 3.6vw, 2.9rem);
+        background: var(--surface);
+        border-radius: var(--radius-tile);
+        overflow: hidden;
+      }
+
+      .tile .stamp {
+        margin-bottom: 0.35rem;
+      }
+
+      .tile__text {
+        display: grid;
+        gap: 0.85rem;
+      }
+
+      .tile__text p {
+        max-width: 30rem;
+        color: var(--ink-soft);
+      }
+
+      .tile__art {
+        margin-top: auto;
+        padding-top: 1.25rem;
+      }
+
+      .tile--dark {
+        background: var(--band-tile);
+        color: var(--band-ink);
+      }
+
+      .tile--dark h3 {
+        color: var(--band-ink);
+      }
+
+      .tile--dark .tile__text p {
+        color: var(--band-soft);
+      }
+
+      .tile--dark .stamp {
+        color: var(--band-accent);
+        background: rgba(41, 151, 255, 0.18);
+      }
+
+      /* The "bring your own key" notice inside the dark tile */
+
+      .byok {
+        display: grid;
+        grid-template-columns: 1.6rem minmax(0, 1fr);
+        gap: 0.85rem;
+        align-items: start;
+        padding: 1.1rem 1.25rem 1.2rem;
+        background: rgba(41, 151, 255, 0.12);
+        border: 1px solid rgba(41, 151, 255, 0.4);
+        border-radius: var(--radius-card);
+        color: var(--band-ink);
+      }
+
+      .byok svg {
+        width: 1.35rem;
+        height: 1.35rem;
+        margin-top: 0.1rem;
+        color: var(--band-accent);
+      }
+
+      .byok__title {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 1.1rem;
+        letter-spacing: -0.02em;
+        line-height: 1.3;
+        color: #fff;
+      }
+
+      .byok p + p {
+        margin-top: 0.3rem;
+        font-size: 0.95rem;
+        line-height: 1.55;
+        color: var(--band-ink);
+      }
+
+      /* Step 1: shortcut chips (real links) */
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.5rem;
+        padding: 0.4rem 1rem;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-pill);
+        color: var(--ink);
+        font-weight: 600;
+        font-size: 0.88rem;
+        text-decoration: none;
+        transition: border-color 0.15s ease, color 0.15s ease;
+      }
+
+      .chip:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .chips__break {
+        flex-basis: 100%;
+        height: 0;
+      }
+
+      .caption {
+        margin-top: 0.85rem;
+        font-size: 0.88rem;
+        color: var(--ink-soft);
+      }
+
+      /* Steps 2 and 4: little app-style lists */
+
+      .plate {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+        overflow: hidden;
+      }
+
+      .plate li {
+        display: grid;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.95rem 1.2rem;
+      }
+
+      .plate li + li {
+        border-top: 1px solid var(--line);
+      }
+
+      .verdicts li {
+        grid-template-columns: 7rem minmax(0, 1fr);
+      }
+
+      .verdicts p {
+        font-size: 0.92rem;
+        line-height: 1.45;
+        color: var(--ink-soft);
+      }
+
+      .verdicts .stamp {
+        justify-self: start;
+      }
+
+      .tracker li {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        row-gap: 0.35rem;
+      }
+
+      .tracker li > div {
+        flex: 1 1 9rem;
+        min-width: 0;
+      }
+
+      .tracker strong {
+        display: block;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 1.02rem;
+        letter-spacing: -0.01em;
+        line-height: 1.25;
+      }
+
+      .tracker .where {
+        display: block;
+        font-size: 0.85rem;
+        line-height: 1.4;
+        color: var(--ink-soft);
+      }
+
+      /* Step 4: the app's own "paste a job link" form */
+
+      .addjob {
+        margin-bottom: 0.9rem;
+        padding: 0.9rem 1.1rem 1rem;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+      }
+
+      .addjob__label {
+        display: block;
+        margin-bottom: 0.45rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--ink-soft);
+      }
+
+      .addjob__row {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+
+      .addjob__field {
+        flex: 1;
+        min-width: 0;
+        padding: 0.6rem 1rem;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-pill);
+        font-size: 0.88rem;
+        color: var(--ink);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .addjob__go {
+        flex-shrink: 0;
+        padding: 0.6rem 1.1rem;
+        background: var(--ink);
+        color: var(--paper);
+        border-radius: var(--radius-pill);
+        font-size: 0.85rem;
+        font-weight: 600;
+        line-height: 1.2;
+        white-space: nowrap;
+      }
+
+      /* Below this the field and the button no longer both fit on one line
+         wide enough to read a URL in — stack them instead, like the app's own
+         Add Job form does at the same width. */
+      @media (max-width: 26rem) {
+        .addjob__row {
+          flex-wrap: wrap;
+        }
+
+        .addjob__field {
+          flex-basis: 100%;
+        }
+
+        .addjob__go {
+          flex: 1;
+        }
+      }
+
+      .via {
+        display: inline-block;
+        margin-left: 0.3rem;
+        padding: 0.05em 0.6em;
+        background: var(--surface);
+        border-radius: var(--radius-pill);
+        font-size: 0.72rem;
+        font-weight: 600;
+        line-height: 1.5;
+        white-space: nowrap;
+      }
+
+      /* Step 3: a resume and a cover letter */
+
+      .sheets {
+        position: relative;
+        height: 15rem;
+        max-width: 22rem;
+      }
+
+      .sheet {
+        position: absolute;
+        width: 10.5rem;
+        height: 13.5rem;
+        padding: 1rem 0.95rem;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 18px 34px -14px rgba(0, 0, 0, 0.6);
+      }
+
+      .sheet--letter {
+        left: 5.6rem;
+        top: 0.9rem;
+        transform: rotate(4deg);
+      }
+
+      .sheet--resume {
+        left: 0.2rem;
+        top: 0.5rem;
+        transform: rotate(-3deg);
+      }
+
+      .sheet i {
+        display: block;
+        height: 0.36rem;
+        margin-top: 0.5rem;
+        background: #e8e8ed;
+        border-radius: 2px;
+      }
+
+      .sheet i.w9 {
+        width: 90%;
+      }
+      .sheet i.w8 {
+        width: 78%;
+      }
+      .sheet i.w6 {
+        width: 60%;
+      }
+      .sheet i.w4 {
+        width: 40%;
+      }
+
+      .sheet i.head {
+        height: 0.7rem;
+        width: 55%;
+        margin-top: 0;
+        background: #1d1d1f;
+      }
+
+      .sheet i.rule {
+        height: 2px;
+        margin-top: 0.8rem;
+        background: #0071e3;
+      }
+
+      .sheet i.gap {
+        margin-top: 1rem;
+      }
+
+      .sheet__tag {
+        position: absolute;
+        right: -0.6rem;
+        bottom: 0.9rem;
+        padding: 0.28rem 0.7rem;
+        background: #0071e3;
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.75rem;
+        border-radius: var(--radius-pill);
+      }
+
+      /* ---------- assistant (MCP) feature ---------- */
+
+      .assistant {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+        gap: clamp(2rem, 5vw, 4rem);
+        align-items: center;
+        background: var(--surface);
+        border-radius: var(--radius-tile);
+        padding: clamp(1.75rem, 5vw, 4.5rem);
+      }
+
+      .assistant h2 {
+        font-size: clamp(2rem, 1.2rem + 2.8vw, 3.4rem);
+      }
+
+      .assistant .lede {
+        margin-top: 1.1rem;
+      }
+
+      .can {
+        margin-top: 1.5rem;
+      }
+
+      .can li {
+        display: grid;
+        grid-template-columns: 1.5rem minmax(0, 1fr);
+        gap: 0.7rem;
+        align-items: start;
+        padding-block: 0.6rem;
+        border-bottom: 1px solid var(--line);
+        line-height: 1.45;
+      }
+
+      .can li:first-child {
+        border-top: 1px solid var(--line);
+      }
+
+      .can svg {
+        width: 1.2rem;
+        height: 1.2rem;
+        margin-top: 0.18rem;
+        color: var(--teal);
+      }
+
+      .assistant__note {
+        margin-top: 1.5rem;
+        max-width: 34rem;
+        font-size: 0.95rem;
+        color: var(--ink-soft);
+      }
+
+      .assistant__side {
+        display: grid;
+        gap: 1rem;
+        align-self: start;
+      }
+
+      .connectcard {
+        padding: 1.5rem 1.5rem 1.6rem;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+      }
+
+      .connectcard__cc {
+        margin-top: 1.25rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--line);
+        font-size: 0.92rem;
+        color: var(--ink-soft);
+      }
+
+      .block {
+        display: block;
+        margin-top: 0.5rem;
+        padding: 0.6rem 0.8rem;
+        background: var(--surface);
+        border-radius: 10px;
+        font-size: 0.78rem;
+        line-height: 1.5;
+        color: var(--ink);
+        overflow-wrap: anywhere;
+        user-select: all;
+      }
+
+      .chat {
+        display: grid;
+        gap: 0.9rem;
+        padding: 1.25rem;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        box-shadow: var(--lift);
+      }
+
+      .bubble {
+        max-width: 94%;
+        padding: 0.85rem 1.05rem;
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+
+      .bubble--me {
+        justify-self: end;
+        background: var(--accent-fill);
+        color: #fff;
+        border-radius: 20px 20px 6px 20px;
+      }
+
+      .bubble--ai {
+        justify-self: start;
+        background: var(--surface);
+        border-radius: 20px 20px 20px 6px;
+      }
+
+      .bubble__tool {
+        display: inline-flex;
+        margin-bottom: 0.5rem;
+        padding: 0.2em 0.7em;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-pill);
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1.4;
+        color: var(--ink-soft);
+      }
+
+      .mini {
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        row-gap: 0.35rem;
+        column-gap: 0.75rem;
+        margin-top: 0.6rem;
+        padding: 0.7rem 0.9rem 0.7rem 1.2rem;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+
+      .mini > div {
+        flex: 1 1 9rem;
+        min-width: 0;
+      }
+
+      /* Remote jobs get the app's green edge. */
+      .mini::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 5px;
+        background: var(--teal);
+      }
+
+      .mini strong {
+        display: block;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 0.98rem;
+        letter-spacing: -0.01em;
+        line-height: 1.25;
+      }
+
+      .mini .meta {
+        display: block;
+        font-size: 0.82rem;
+        line-height: 1.4;
+        color: var(--ink-soft);
+      }
+
+      .chat__caption {
+        font-size: 0.85rem;
+        color: var(--ink-soft);
+        text-align: center;
+      }
+
+      .connect__title {
+        font-size: 1.35rem;
+      }
+
+      .connect {
+        counter-reset: step;
+        margin-top: 0.9rem;
+        display: grid;
+        gap: 0.85rem;
+      }
+
+      .connect li {
+        counter-increment: step;
+        display: grid;
+        grid-template-columns: 1.75rem minmax(0, 1fr);
+        gap: 0.8rem;
+        align-items: start;
+        line-height: 1.5;
+      }
+
+      .connect li::before {
+        content: counter(step);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        background: var(--ink);
+        color: var(--paper);
+        border-radius: 50%;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 0.85rem;
+      }
+
+      code {
+        font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+      }
+
+      .addr {
+        display: block;
+        width: fit-content;
+        max-width: 100%;
+        margin-top: 0.55rem;
+        padding: 0.45rem 0.9rem;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-field);
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--ink);
+        overflow-wrap: anywhere;
+        user-select: all;
+      }
+
+      .inline {
+        display: inline;
+        padding: 0.1em 0.4em;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        font-size: 0.85em;
+        color: var(--ink);
+        overflow-wrap: anywhere;
+      }
+
+      .bubble__tool + .bubble__tool {
+        margin-left: 0.3rem;
+      }
+
+      /* ---------- the free band ---------- */
+
+      .free {
+        background: var(--band);
+        color: var(--band-ink);
+        padding-block: clamp(4.5rem, 10vw, 8rem);
+      }
+
+      .free .section-head h2 {
+        color: #fff;
+      }
+
+      .free .section-head p {
+        color: var(--band-soft);
+        font-size: clamp(1.1rem, 1rem + 0.5vw, 1.35rem);
+        line-height: 1.5;
+        margin-inline: auto;
+        max-width: 38rem;
+      }
+
+      .free a {
+        color: var(--band-accent);
+      }
+
+      .free :focus-visible {
+        outline-color: var(--band-accent);
+      }
+
+      .ledger {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(0.85rem, 2vw, 1.4rem);
+        margin-top: clamp(2.5rem, 5vw, 4rem);
+      }
+
+      .ledger__col {
+        background: var(--band-tile);
+        border-radius: var(--radius-tile);
+        padding: clamp(1.6rem, 3.6vw, 2.75rem);
+      }
+
+      .ledger h3 {
+        color: #fff;
+        font-size: 1.6rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--band-line);
+      }
+
+      .ledger li {
+        display: grid;
+        grid-template-columns: 1.6rem minmax(0, 1fr);
+        gap: 0.7rem;
+        align-items: start;
+        padding-block: 0.8rem;
+        border-bottom: 1px solid var(--band-line);
+        line-height: 1.45;
+        color: var(--band-ink);
+      }
+
+      .ledger svg {
+        width: 1.25rem;
+        height: 1.25rem;
+        margin-top: 0.17rem;
+      }
+
+      .ledger .good {
+        color: var(--band-good);
+      }
+
+      .ledger .key {
+        color: var(--band-accent);
+      }
+
+      .ledger .note-small {
+        margin-top: 1.1rem;
+        font-size: 0.95rem;
+        line-height: 1.55;
+        color: var(--band-soft);
+      }
+
+      /* ---------- questions ---------- */
+
+      .faq__grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+        gap: clamp(2rem, 6vw, 5rem);
+        align-items: start;
+      }
+
+      .faq__intro {
+        position: sticky;
+        top: 7rem;
+      }
+
+      .faq__intro p {
+        margin-top: 1rem;
+        max-width: 22rem;
+        color: var(--ink-soft);
+      }
+
+      .faq__list {
+        border-top: 1px solid var(--line);
+      }
+
+      details {
+        border-bottom: 1px solid var(--line);
+      }
+
+      summary {
+        position: relative;
+        display: block;
+        padding: 1.3rem 3rem 1.3rem 0;
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 1.25rem;
+        line-height: 1.25;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+        cursor: pointer;
+        list-style: none;
+      }
+
+      summary::-webkit-details-marker {
+        display: none;
+      }
+
+      summary::before,
+      summary::after {
+        content: "";
+        position: absolute;
+        right: 0.5rem;
+        top: 50%;
+        width: 1rem;
+        height: 2px;
+        margin-top: -1px;
+        background: var(--ink);
+        border-radius: 2px;
+        transition: transform 0.2s ease;
+      }
+
+      summary::after {
+        transform: rotate(90deg);
+      }
+
+      details[open] summary::after {
+        transform: rotate(0deg);
+      }
+
+      summary:hover {
+        color: var(--accent);
+      }
+
+      .answer {
+        padding: 0 3rem 1.5rem 0;
+        color: var(--ink-soft);
+      }
+
+      .answer p {
+        max-width: 36rem;
+      }
+
+      .answer p + p {
+        margin-top: 0.75rem;
+      }
+
+      /* ---------- closing call to action ---------- */
+
+      .closing {
+        padding-block: 0 clamp(3.5rem, 8vw, 6rem);
+      }
+
+      .closing__tile {
+        background: var(--surface);
+        border-radius: var(--radius-tile);
+        padding: clamp(3rem, 8vw, 6rem) var(--gutter);
+        text-align: center;
+      }
+
+      .closing__tile h2 {
+        max-width: 11em;
+        margin-inline: auto;
+      }
+
+      .closing__tile p {
+        margin-top: 1.1rem;
+      }
+
+      .closing__tile .btn--line {
+        background: var(--paper);
+      }
+
+      .closing__tile .btn--line:hover {
+        background: var(--ink);
+      }
+
+      /* ---------- footer ---------- */
+
+      .foot {
+        border-top: 1px solid var(--line);
+        background: var(--paper);
+        padding-block: clamp(2.25rem, 5vw, 3.5rem) 1.5rem;
+        font-size: 0.9rem;
+      }
+
+      .foot__grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
+        gap: 2rem;
+      }
+
+      .foot .brand {
+        font-size: 1.05rem;
+      }
+
+      .foot .brand__mark {
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 7px;
+      }
+
+      .foot__statement {
+        margin-top: 0.85rem;
+        max-width: 18rem;
+        color: var(--ink-soft);
+        font-weight: 500;
+        text-wrap: balance;
+      }
+
+      .foot h2 {
+        font-family: var(--font-body);
+        font-size: 0.78rem;
+        letter-spacing: 0;
+        font-weight: 600;
+        color: var(--ink-soft);
+        line-height: 1.3;
+      }
+
+      .foot ul {
+        margin-top: 0.7rem;
+        display: grid;
+        gap: 0.1rem;
+      }
+
+      .foot li a {
+        display: inline-block;
+        padding-block: 0.28rem;
+        color: var(--ink);
+        text-decoration: none;
+      }
+
+      .foot li a:hover {
+        color: var(--accent);
+      }
+
+      .foot__legal {
+        margin-top: 2.25rem;
+        padding-top: 1.1rem;
+        border-top: 1px solid var(--line);
+        font-size: 0.82rem;
+        color: var(--ink-soft);
+      }
+
+      /* ---------- responsive ---------- */
+
+      @media (max-width: 62rem) {
+        .showcase__grid {
+          grid-template-columns: minmax(0, 1fr);
+          justify-items: stretch;
+          max-width: 34rem;
+        }
+
+        .showcase__arrow {
+          justify-self: center;
+          transform: rotate(90deg);
+          margin-block: 0.4rem;
+        }
+
+        .assistant {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .faq__grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .faq__intro {
+          position: static;
+        }
+
+        .foot__grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .foot__grid > :first-child {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (max-width: 54rem) {
+        html {
+          scroll-padding-top: 9.5rem;
+        }
+
+        .bento,
+        .ledger {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .top__row {
+          flex-wrap: wrap;
+          gap: 0.6rem 1rem;
+        }
+
+        .top__actions {
+          margin-left: auto;
+        }
+
+        .search {
+          order: 3;
+          flex-basis: 100%;
+          max-width: none;
+        }
+      }
+
+      @media (max-width: 34rem) {
+        body {
+          font-size: 1rem;
+        }
+
+        .search {
+          grid-template-columns: minmax(0, 1fr) auto;
+          border-radius: 1.4rem;
+          padding: 0.2rem 0.2rem 0.2rem 1rem;
+        }
+
+        /* iOS Safari zooms the page when a field under 16px gets focus. */
+        .search input {
+          font-size: 1rem;
+        }
+
+        .search .btn {
+          min-height: 2.6rem;
+        }
+
+        .search__rule {
+          display: none;
+        }
+
+        .search input:first-of-type {
+          grid-column: 1 / -1;
+          border-bottom: 1px solid var(--line);
+          border-radius: 0;
+        }
+
+        .search .search__rule + label + input {
+          padding-left: 0;
+        }
+
+        .cta-row .btn {
+          flex: 1 1 100%;
+        }
+
+        .verdicts li {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 0.4rem;
+        }
+
+        .readout__row {
+          grid-template-columns: 4.6rem minmax(0, 1fr);
+        }
+
+        .answer,
+        summary {
+          padding-right: 2.25rem;
+        }
+
+        .foot__grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        .hl,
+        .readout__row,
+        .showcase__arrow path {
+          animation: none;
+        }
+      }
+    </style>
   </head>
+
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="top">
+      <div class="wrap top__row">
+        <a class="brand" href="https://yabot.jobs/" aria-label="Yabot Jobs home">
+          <span class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 48 48" fill="none" width="20" height="20">
+              <path d="M9 24h6l4-10 6 20 4-10h10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          Yabot Jobs
+        </a>
+
+        <form class="search" role="search" action="https://yabot.jobs/jobs" method="get">
+          <label class="sr" for="search-q">Job title or keyword</label>
+          <input id="search-q" name="q" type="search" placeholder="Search postings by title…" autocomplete="off" enterkeyhint="search" />
+          <span class="search__rule" aria-hidden="true"></span>
+          <label class="sr" for="search-location">City or state</label>
+          <input id="search-location" name="location" type="search" placeholder="Search by city or state…" autocomplete="off" enterkeyhint="search" />
+          <button class="btn btn--accent" type="submit">Search</button>
+        </form>
+
+        <nav class="top__actions" aria-label="Account">
+          <a class="btn btn--line" href="https://yabot.jobs/login">Log in</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="wrap">
+          <h1 id="hero-title">You shouldn't have to pay to get a job.</h1>
+          <p class="lede">
+            Yabot Jobs is a free job search site for tech and product roles. Look through postings it has already read for
+            you, keep every application in one place, and get help tailoring your resume and cover letter.
+          </p>
+          <div class="cta-row">
+            <a class="btn btn--accent btn--lg" href="https://yabot.jobs/jobs">Search the job board</a>
+            <a class="btn btn--line btn--lg" href="https://yabot.jobs/login">Create a free account</a>
+          </div>
+          <p class="fineprint">No password. We email you a sign-in link.</p>
+
+          <figure class="showcase">
+            <div class="showcase__tile">
+              <div class="showcase__grid">
+                <div class="posting" aria-hidden="true">
+                  <span class="posting__crumbs">brightwave.example &rsaquo; careers &rsaquo; product</span>
+                  <p class="posting__title"><span class="hl" style="--i: 0">Senior Product Manager</span></p>
+                  <p class="posting__company"><span class="hl" style="--i: 1">Brightwave</span></p>
+                  <p class="posting__facts">
+                    <span class="hl" style="--i: 2">Austin, TX 78701</span> &nbsp;|&nbsp;
+                    <span class="hl" style="--i: 3">Hybrid</span> &nbsp;|&nbsp; Full time<br />
+                    <span class="hl" style="--i: 4">$150,000 &ndash; $185,000 per year</span>, plus equity
+                  </p>
+                  <p class="posting__h">About the role</p>
+                  <p>
+                    Own the roadmap for our scheduling platform. Work with design and engineering to ship, talk to
+                    customers every week, and define the metrics that tell us it is working.
+                  </p>
+                  <p class="posting__h">What you bring</p>
+                  <ul>
+                    <li>4+ years in product management</li>
+                    <li>B2B SaaS experience</li>
+                    <li>Comfortable with SQL and analytics tools</li>
+                  </ul>
+                  <div class="posting__bar"><span>Save job</span><span>Share</span><span>Report</span><span>212 applicants</span></div>
+                  <span class="posting__apply">Apply on company site</span>
+                </div>
+
+                <svg class="showcase__arrow" viewBox="0 0 76 40" fill="none" aria-hidden="true">
+                  <path pathLength="1" d="M3 26C22 6 48 4 70 20" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+                  <path pathLength="1" d="M58 13L71 20L60 31" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+
+                <div class="readout">
+                  <span class="readout__tab">What Yabot read</span>
+                  <dl>
+                    <div class="readout__row readout__row--title" style="--i: 0">
+                      <dt>Title</dt>
+                      <dd>Senior Product Manager</dd>
+                    </div>
+                    <div class="readout__row" style="--i: 1">
+                      <dt>Company</dt>
+                      <dd>Brightwave</dd>
+                    </div>
+                    <div class="readout__row" style="--i: 2">
+                      <dt>Location</dt>
+                      <dd>Austin, Texas</dd>
+                    </div>
+                    <div class="readout__row" style="--i: 3">
+                      <dt>Work type</dt>
+                      <dd>Hybrid</dd>
+                    </div>
+                    <div class="readout__row readout__row--pay" style="--i: 4">
+                      <dt>Pay</dt>
+                      <dd>$150,000&ndash;185,000 a year</dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+            </div>
+            <figcaption>
+              A posting as it appears on an employer's site, and the details Yabot Jobs reads out of it. (Example.)
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="section" id="how-it-works" aria-labelledby="steps-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="steps-title">How Yabot Jobs works</h2>
+            <p class="lede">From finding a posting to keeping track of the interview, in the order you'd actually do it.</p>
+          </div>
+
+          <ol class="bento">
+            <li class="tile">
+              <div class="tile__text">
+                <span class="stamp">Step 1</span>
+                <h3>Find a posting</h3>
+                <p>
+                  Search the job board by title, city, or state. When a city comes up short, Yabot Jobs tells you how
+                  far around it looked and lets you widen the search.
+                </p>
+                <p>
+                  Narrow things down to remote, hybrid, or on-site work, or to jobs posted in the last day, week, or
+                  month.
+                </p>
+              </div>
+              <div class="tile__art">
+                <div class="chips">
+                  <a class="chip" href="https://yabot.jobs/jobs?workplace=remote">Remote jobs</a>
+                  <a class="chip" href="https://yabot.jobs/jobs?workplace=hybrid">Hybrid jobs</a>
+                  <a class="chip" href="https://yabot.jobs/jobs?workplace=onsite">On-site jobs</a>
+                  <span class="chips__break"></span>
+                  <a class="chip" href="https://yabot.jobs/jobs?posted=1">Posted in the last 24 hours</a>
+                  <a class="chip" href="https://yabot.jobs/jobs?posted=7">Last 7 days</a>
+                  <a class="chip" href="https://yabot.jobs/jobs?posted=30">Last 30 days</a>
+                </div>
+                <p class="caption">Jump straight into a filtered search.</p>
+              </div>
+            </li>
+
+            <li class="tile">
+              <div class="tile__text">
+                <span class="stamp">Step 2</span>
+                <h3>Check how well you fit</h3>
+                <p>
+                  Upload your resume once, as a PDF or a Word file. For any posting, Yabot Jobs compares it with what
+                  the employer is asking for and gives you a fitness report with a short explanation.
+                </p>
+                <p>You find out before you spend an evening on an application whether it's worth the evening.</p>
+              </div>
+              <div class="tile__art">
+                <ul class="plate verdicts" aria-label="The three possible results of a fitness report">
+                  <li>
+                    <span class="stamp stamp--good">Qualified</span>
+                    <p>Your resume meets what the posting asks for.</p>
+                  </li>
+                  <li>
+                    <span class="stamp stamp--maybe">Maybe</span>
+                    <p>Close. A tailored resume could tip it.</p>
+                  </li>
+                  <li>
+                    <span class="stamp stamp--bad">Not a match</span>
+                    <p>There's a real gap. Save your time for a better fit.</p>
+                  </li>
+                </ul>
+              </div>
+            </li>
+
+            <li class="tile tile--dark">
+              <div class="tile__text">
+                <span class="stamp">Step 3</span>
+                <h3>Tailor your resume and cover letter</h3>
+                <p>
+                  Yabot Jobs rewrites your resume for the posting in a layout applicant tracking systems can read, and
+                  drafts a cover letter that speaks to the role.
+                </p>
+                <p>Download either one as a Word document (.docx) and change anything you like.</p>
+              </div>
+              <div class="byok">
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="7" cy="12" r="3.6" stroke="currentColor" stroke-width="2" /><path d="m9.6 9.4 6.4-6.4M13.4 5.6l2 2M11.6 7.4l1.6 1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+                <div>
+                  <p class="byok__title">Bring your own AI key</p>
+                  <p>
+                    These tools run on a key from Anthropic, OpenAI, DeepSeek, or any OpenAI-compatible service. You pay
+                    that provider directly for what you use, and Yabot Jobs adds no fee. That's how the whole site stays
+                    free.
+                  </p>
+                </div>
+              </div>
+              <div class="tile__art">
+                <div class="sheets" aria-hidden="true">
+                  <div class="sheet sheet--letter">
+                    <i class="head w6"></i>
+                    <i class="gap w4"></i>
+                    <i class="w9"></i>
+                    <i class="w9"></i>
+                    <i class="w8"></i>
+                    <i class="gap w9"></i>
+                    <i class="w9"></i>
+                    <i class="w6"></i>
+                    <span class="sheet__tag">.docx</span>
+                  </div>
+                  <div class="sheet sheet--resume">
+                    <i class="head"></i>
+                    <i class="w6"></i>
+                    <i class="rule"></i>
+                    <i class="gap w4"></i>
+                    <i class="w9"></i>
+                    <i class="w8"></i>
+                    <i class="w9"></i>
+                    <i class="gap w4"></i>
+                    <i class="w9"></i>
+                    <i class="w6"></i>
+                  </div>
+                </div>
+              </div>
+            </li>
+
+            <li class="tile">
+              <div class="tile__text">
+                <span class="stamp">Step 4</span>
+                <h3>Keep track of every application</h3>
+                <p>
+                  Save a posting, then move it along as things happen: saved, applied, interviewing, offer. Rejected and
+                  withdrawn have their own places, and every application has room for your notes.
+                </p>
+                <p>
+                  Not every job is on Yabot Jobs, and it doesn't have to be. Found one on another job board or a
+                  company's careers page? Paste its link and Yabot Jobs reads the posting and adds it to your list, so
+                  everything you're chasing lives in one place and nothing slips through.
+                </p>
+              </div>
+              <div class="tile__art">
+                <div class="addjob" aria-hidden="true">
+                  <span class="addjob__label">Job Posting Url</span>
+                  <div class="addjob__row">
+                    <span class="addjob__field">https://jobs.northgate.example/staff-software-engineer</span>
+                    <span class="addjob__go">Add &amp; Scan</span>
+                  </div>
+                </div>
+                <ul class="plate tracker" aria-hidden="true">
+                  <li>
+                    <div>
+                      <strong>Senior Product Manager</strong>
+                      <span class="where">Brightwave, Austin, Texas</span>
+                    </div>
+                    <span class="stamp">Applied</span>
+                  </li>
+                  <li>
+                    <div>
+                      <strong>Staff Software Engineer</strong>
+                      <span class="where">Northgate Labs, Remote <span class="via">Added from a link</span></span>
+                    </div>
+                    <span class="stamp stamp--maybe">Interviewing</span>
+                  </li>
+                  <li>
+                    <div>
+                      <strong>Group Product Manager</strong>
+                      <span class="where">Alder Cloud, Seattle, Washington</span>
+                    </div>
+                    <span class="stamp stamp--good">Offer</span>
+                  </li>
+                </ul>
+                <p class="caption">Example. Adding jobs from a link needs a free account.</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="section" id="ai-assistant" aria-labelledby="assistant-title">
+        <div class="wrap">
+          <div class="assistant">
+            <div class="assistant__text">
+              <h2 id="assistant-title">Search for jobs from ChatGPT or Claude.</h2>
+              <p class="lede">
+                Yabot Jobs has an MCP server. Connect it to your ChatGPT or Claude account and ask for jobs in plain
+                language while your assistant does the searching.
+              </p>
+              <ul class="can" aria-label="What your assistant can do with Yabot Jobs">
+                <li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>Search the job board and open any posting for the full details</li>
+                <li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>Read your resume and score how well it fits a posting</li>
+                <li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>Write a tailored resume and cover letter and save them to your account as Word documents</li>
+                <li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>Log applications as applied, then update their status and notes</li>
+                <li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>Add a posting from its link</li>
+              </ul>
+
+              <p class="assistant__note">
+                Your assistant does the writing and scoring itself and saves the results to your account, so you don't
+                need to add an API key to Yabot Jobs to use it this way.
+              </p>
+            </div>
+
+            <div class="assistant__side">
+              <div class="chat" aria-hidden="true">
+                <div class="bubble bubble--me">Find remote senior product manager jobs posted this week and tell me which ones fit my resume.</div>
+                <div class="bubble bubble--ai">
+                  <span class="bubble__tool">Searched Yabot Jobs</span>
+                  <span class="bubble__tool">Read your resume</span>
+                  <p>I found a few remote roles from the last 7 days and compared each one with your resume. These two are your best fits:</p>
+                  <div class="mini">
+                    <div>
+                      <strong>Senior Product Manager</strong>
+                      <span class="meta">Brightwave, Remote</span>
+                    </div>
+                    <span class="stamp stamp--good">Qualified</span>
+                  </div>
+                  <div class="mini">
+                    <div>
+                      <strong>Group Product Manager</strong>
+                      <span class="meta">Alder Cloud, Remote</span>
+                    </div>
+                    <span class="stamp stamp--maybe">Maybe</span>
+                  </div>
+                </div>
+                <p class="chat__caption">Example conversation.</p>
+              </div>
+              <div class="connectcard">
+                <h3 class="connect__title">Connect it in three steps</h3>
+                <ol class="connect">
+                <li>
+                  <div>
+                    In your assistant's settings, add a custom connector (a remote MCP server) with this address:
+                    <code class="addr">https://mcp.yabot.jobs/mcp</code>
+                  </div>
+                </li>
+                <li><div>Sign in to Yabot Jobs when your assistant opens the sign-in page. We email you a link, same as always.</div></li>
+                <li><div>Approve access. Your assistant can now work with your Yabot Jobs account.</div></li>
+              </ol>
+                <p class="connectcard__cc">
+                  Using Claude Code? Run this instead:
+                  <code class="block">claude mcp add --transport http yabot-jobs https://mcp.yabot.jobs/mcp</code>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="free" aria-labelledby="free-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="free-title">Looking for work costs enough already.</h2>
+            <p>
+              Yabot Jobs has no subscription and no paywalled listings. Searching, saving, and tracking are free. The
+              AI tools work with a key you bring yourself, so the only bill you might ever see is from your own AI
+              provider, for what you actually use.
+            </p>
+            <p>
+              The code is open, too. Read the <a href="https://github.com/davicho01/yabot.jobs-frontend">website</a>
+              and the <a href="https://github.com/davicho01/yabot.jobs-backend">API</a> on GitHub.
+            </p>
+          </div>
+
+          <div class="ledger">
+            <div class="ledger__col">
+              <h3>Free, always</h3>
+              <ul>
+                <li>
+                  <svg class="good" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                  Searching and filtering the job board
+                </li>
+                <li>
+                  <svg class="good" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                  Reading postings that Yabot Jobs has scanned
+                </li>
+                <li>
+                  <svg class="good" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                  Saving jobs and tracking applications
+                </li>
+                <li>
+                  <svg class="good" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                  Adding jobs from other boards by pasting a link
+                </li>
+                <li>
+                  <svg class="good" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                  Signing in with an emailed link
+                </li>
+              </ul>
+            </div>
+            <div class="ledger__col">
+              <h3>Runs on your own AI key</h3>
+              <ul>
+                <li>
+                  <svg class="key" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="7" cy="12" r="3.6" stroke="currentColor" stroke-width="2" /><path d="m9.6 9.4 6.4-6.4M13.4 5.6l2 2M11.6 7.4l1.6 1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+                  Fitness reports
+                </li>
+                <li>
+                  <svg class="key" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="7" cy="12" r="3.6" stroke="currentColor" stroke-width="2" /><path d="m9.6 9.4 6.4-6.4M13.4 5.6l2 2M11.6 7.4l1.6 1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+                  Tailored resumes
+                </li>
+                <li>
+                  <svg class="key" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="7" cy="12" r="3.6" stroke="currentColor" stroke-width="2" /><path d="m9.6 9.4 6.4-6.4M13.4 5.6l2 2M11.6 7.4l1.6 1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+                  Cover letters
+                </li>
+              </ul>
+              <p class="note-small">
+                Use a key from Anthropic, OpenAI, DeepSeek, or any OpenAI-compatible service. Your provider bills you
+                directly. Yabot Jobs adds no fee.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="questions" aria-labelledby="faq-title">
+        <div class="wrap faq__grid">
+          <div class="faq__intro">
+            <h2 id="faq-title">Common questions</h2>
+            <p>
+              Anything else? The project is public on
+              <a href="https://github.com/davicho01/yabot.jobs-frontend">GitHub</a>.
+            </p>
+          </div>
+
+          <div class="faq__list">
+            <details open>
+              <summary>Is Yabot Jobs really free?</summary>
+              <div class="answer">
+                <p>
+                  Yes. Searching the job board, reading postings, saving jobs, and tracking applications cost nothing.
+                </p>
+                <p>
+                  The AI tools (fitness reports, tailored resumes, and cover letters) run on an API key you add
+                  yourself, so any charge comes from your AI provider for what you use. Yabot Jobs adds no fee on top.
+                </p>
+              </div>
+            </details>
+            <details>
+              <summary>Do I need an account to search for jobs?</summary>
+              <div class="answer">
+                <p>
+                  No. You can search and browse the job board without one. Create a free account to save postings,
+                  track applications, upload a resume, and use the AI tools.
+                </p>
+                <p>There's no password. Enter your email and we send a sign-in link that works for 15 minutes.</p>
+              </div>
+            </details>
+            <details>
+              <summary>Where do the job postings come from?</summary>
+              <div class="answer">
+                <p>
+                  Yabot Jobs scans public job postings and reads the details out of the page: title, company, location,
+                  work type, and pay. Once you're signed in, you can also add any posting by pasting its link, and Yabot
+                  Jobs scans it for you.
+                </p>
+              </div>
+            </details>
+            <details>
+              <summary>Can I track jobs I found on other job boards?</summary>
+              <div class="answer">
+                <p>
+                  Yes. Once you're signed in, paste the link to a posting from another job board or a company's careers page. Yabot Jobs scans it, reads the title, company, location, work type, and pay, and adds it to your jobs. From there you can check your fit, tailor your resume, and track the application with everything else. If a page can't be read, rescan it later. Your AI assistant can add a posting from its link too.
+                </p>
+              </div>
+            </details>
+            <details>
+              <summary>Which AI providers can I use?</summary>
+              <div class="answer">
+                <p>
+                  Anthropic, OpenAI, DeepSeek, or any OpenAI-compatible service. Your key is used only for your own
+                  resume reviews, scoring, and generation requests. You add it on the AI API Keys page after you sign
+                  in.
+                </p>
+              </div>
+            </details>
+            <details>
+              <summary>Can I edit the resume and cover letter it writes?</summary>
+              <div class="answer">
+                <p>Yes. Download them as Word documents (.docx) and change anything you like before you send them.</p>
+              </div>
+            </details>
+            <details>
+              <summary>Can I use Yabot Jobs from ChatGPT or Claude?</summary>
+              <div class="answer">
+                <p>
+                  Yes. Yabot Jobs has an MCP server, so ChatGPT, Claude, and any other assistant that supports the Model Context Protocol (MCP) can connect to it. Add <code class="inline">https://mcp.yabot.jobs/mcp</code> as a custom connector in your assistant's settings and approve access on Yabot Jobs. Your assistant can then search postings, track applications, and upload tailored resumes and cover letters for you.
+                </p>
+              </div>
+            </details>
+            <details>
+              <summary>Is Yabot Jobs open source?</summary>
+              <div class="answer">
+                <p>
+                  Yes. The <a href="https://github.com/davicho01/yabot.jobs-frontend">website</a> and the
+                  <a href="https://github.com/davicho01/yabot.jobs-backend">API behind it</a> are both public on GitHub,
+                  and the website is released under the MIT license.
+                </p>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="closing" aria-labelledby="closing-title">
+        <div class="wrap">
+          <div class="closing__tile">
+            <h2 id="closing-title">Start with one search.</h2>
+            <p class="lede">It's free, and you don't need an account to look around.</p>
+            <div class="cta-row">
+              <a class="btn btn--accent btn--lg" href="https://yabot.jobs/jobs">Search the job board</a>
+              <a class="btn btn--line btn--lg" href="https://yabot.jobs/login">Log in</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <div class="wrap">
+        <div class="foot__grid">
+          <div>
+            <a class="brand" href="https://yabot.jobs/" aria-label="Yabot Jobs home">
+              <span class="brand__mark" aria-hidden="true">
+                <svg viewBox="0 0 48 48" fill="none" width="18" height="18">
+                  <path d="M9 24h6l4-10 6 20 4-10h10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+              Yabot Jobs
+            </a>
+            <p class="foot__statement">You shouldn't have to pay to get a job.</p>
+          </div>
+
+          <nav aria-labelledby="foot-jobs">
+            <h2 id="foot-jobs">Browse jobs</h2>
+            <ul>
+              <li><a href="https://yabot.jobs/jobs">All jobs</a></li>
+              <li><a href="https://yabot.jobs/jobs?workplace=remote">Remote jobs</a></li>
+              <li><a href="https://yabot.jobs/jobs?workplace=hybrid">Hybrid jobs</a></li>
+              <li><a href="https://yabot.jobs/jobs?workplace=onsite">On-site jobs</a></li>
+              <li><a href="https://yabot.jobs/jobs?posted=1">Posted in the last 24 hours</a></li>
+            </ul>
+          </nav>
+
+          <nav aria-labelledby="foot-about">
+            <h2 id="foot-about">About</h2>
+            <ul>
+              <li><a href="#how-it-works">How it works</a></li>
+              <li><a href="#ai-assistant">Use it with ChatGPT or Claude</a></li>
+              <li><a href="#questions">Common questions</a></li>
+              <li><a href="https://github.com/davicho01/yabot.jobs-frontend">Website code</a></li>
+              <li><a href="https://github.com/davicho01/yabot.jobs-backend">API code</a></li>
+            </ul>
+          </nav>
+
+          <nav aria-labelledby="foot-account">
+            <h2 id="foot-account">Your account</h2>
+            <ul>
+              <li><a href="https://yabot.jobs/login">Log in</a></li>
+            </ul>
+          </nav>
+        </div>
+
+        <p class="foot__legal">&copy; 2026 Yabot Jobs. Free to use. The website is open source under the MIT license.</p>
+      </div>
+    </footer>
   </body>
 </html>

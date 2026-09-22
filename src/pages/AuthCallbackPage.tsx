@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../api/client";
 import "./LoginPage.css";
+import { BOARD_PATH } from "../routes";
 
 export function AuthCallbackPage() {
   const { verify } = useAuth();
@@ -16,7 +17,7 @@ export function AuthCallbackPage() {
     attempted.current = true;
 
     const token = searchParams.get("token");
-    const next = searchParams.get("next") || sessionStorage.getItem("post_login_next") || "/";
+    const next = searchParams.get("next") || sessionStorage.getItem("post_login_next") || BOARD_PATH;
     if (!token) {
       setError("Missing sign-in token.");
       return;

@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+# The app shell and signed-in / utility screens have nothing to index.
+Disallow: /app.html
+Disallow: /login
+Disallow: /auth/
+Disallow: /oauth/
+Disallow: /profile
+Disallow: /resume
+Disallow: /api-keys
+Disallow: /applications
+Disallow: /admin
+Disallow: /jobs/*/apply
+
+Sitemap: https://yabot.jobs/sitemap.xml

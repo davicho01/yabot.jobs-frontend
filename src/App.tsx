@@ -1,4 +1,5 @@
-import { Routes, Route, Outlet } from "react-router-dom";
+import { Routes, Route, Outlet, Navigate } from "react-router-dom";
+import { BOARD_PATH } from "./routes";
 import { LoginPage } from "./pages/LoginPage";
 import { AuthCallbackPage } from "./pages/AuthCallbackPage";
 import { OAuthAuthorizePage } from "./pages/OAuthAuthorizePage";
@@ -36,7 +37,7 @@ export default function App() {
   return (
     <Routes>
       <Route element={<RootLayout />}>
-        <Route path="/" element={<JobBoardPage />} />
+        <Route path={BOARD_PATH} element={<JobBoardPage />} />
         <Route path="/jobs/:urlId" element={<JobDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
@@ -112,6 +113,9 @@ export default function App() {
             </AdminRoute>
           }
         />
+        {/* "/" is the landing page (a separate static page), so anything else the
+            app doesn't know lands on the board instead of a blank screen. */}
+        <Route path="*" element={<Navigate to={BOARD_PATH} replace />} />
       </Route>
     </Routes>
   );
