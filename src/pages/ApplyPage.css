@@ -239,6 +239,25 @@
   background: var(--accent-deep);
 }
 
+.apply-page__resume-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.apply-page__resume-picker select {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  padding: 0.4rem 0.7rem;
+}
+
 @media (max-width: 900px) {
   .apply-page__layout {
     grid-template-columns: minmax(0, 1fr);

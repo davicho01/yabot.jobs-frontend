@@ -13,14 +13,23 @@ export const resumesApi = {
   previewUrl: (id: string) => fileUrl(`/resumes/${id}/download`),
   previewBlob: (id: string) => fetchBlob(`/resumes/${id}/download`),
 
-  getScore: (jobPostingId: string) => api.get<ResumeScore>("/resumes/main/score", { job_posting_id: jobPostingId }),
-  generateScore: (jobPostingId: string) =>
-    api.post<ResumeScore>("/resumes/main/score", undefined, { job_posting_id: jobPostingId }),
+  // resumeId is omitted (undefined) to mean "my main resume" — the
+  // backend's own default (app.api.routes.resumes._resolve_resume) when
+  // resume_id isn't sent, same as before resume selection existed. Passed
+  // explicitly, it scores/tailors/writes against that resume instead —
+  // see ApplyPage's resume picker (#8).
+  getScore: (jobPostingId: string, resumeId?: string) =>
+    api.get<ResumeScore>("/resumes/main/score", { job_posting_id: jobPostingId, resume_id: resumeId }),
+  generateScore: (jobPostingId: string, resumeId?: string) =>
+    api.post<ResumeScore>("/resumes/main/score", undefined, { job_posting_id: jobPostingId, resume_id: resumeId }),
 
-  getTailored: (jobPostingId: string) =>
-    api.get<TailoredResume>("/resumes/main/tailored", { job_posting_id: jobPostingId }),
-  generateTailored: (jobPostingId: string) =>
-    api.post<TailoredResume>("/resumes/main/tailored", undefined, { job_posting_id: jobPostingId }),
+  getTailored: (jobPostingId: string, resumeId?: string) =>
+    api.get<TailoredResume>("/resumes/main/tailored", { job_posting_id: jobPostingId, resume_id: resumeId }),
+  generateTailored: (jobPostingId: string, resumeId?: string) =>
+    api.post<TailoredResume>("/resumes/main/tailored", undefined, {
+      job_posting_id: jobPostingId,
+      resume_id: resumeId,
+    }),
   downloadTailored: (id: string, filename: string) => downloadFile(`/resumes/tailored/${id}/download`, filename),
 
   getTailoredScore: (tailoredResumeId: string) =>
@@ -28,10 +37,13 @@ export const resumesApi = {
   generateTailoredScore: (tailoredResumeId: string) =>
     api.post<TailoredResumeScore>(`/resumes/tailored/${tailoredResumeId}/score`),
 
-  getCoverLetter: (jobPostingId: string) =>
-    api.get<CoverLetter>("/resumes/main/cover-letter", { job_posting_id: jobPostingId }),
-  generateCoverLetter: (jobPostingId: string) =>
-    api.post<CoverLetter>("/resumes/main/cover-letter", undefined, { job_posting_id: jobPostingId }),
+  getCoverLetter: (jobPostingId: string, resumeId?: string) =>
+    api.get<CoverLetter>("/resumes/main/cover-letter", { job_posting_id: jobPostingId, resume_id: resumeId }),
+  generateCoverLetter: (jobPostingId: string, resumeId?: string) =>
+    api.post<CoverLetter>("/resumes/main/cover-letter", undefined, {
+      job_posting_id: jobPostingId,
+      resume_id: resumeId,
+    }),
   downloadCoverLetter: (id: string, filename: string) =>
     downloadFile(`/resumes/cover-letter/${id}/download`, filename),
 };
