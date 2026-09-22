@@ -84,6 +84,8 @@ export function JobBoardPage() {
   const company = searchParams.get("company") ?? "";
   const postedWithinDays = Number(searchParams.get("posted")) || undefined;
   const workplaceType = (searchParams.get("workplace") as WorkplaceTypeFilter | null) ?? undefined;
+  const salaryMin = Number(searchParams.get("salaryMin")) || undefined;
+  const salaryMax = Number(searchParams.get("salaryMax")) || undefined;
   const page = Number(searchParams.get("page")) || 1;
 
   const updateParams = useCallback(
@@ -109,7 +111,19 @@ export function JobBoardPage() {
   }
 
   const { data, isLoading } = useQuery({
-    queryKey: ["jobs", query, location, metro, radius, company, postedWithinDays, workplaceType, page],
+    queryKey: [
+      "jobs",
+      query,
+      location,
+      metro,
+      radius,
+      company,
+      postedWithinDays,
+      workplaceType,
+      salaryMin,
+      salaryMax,
+      page,
+    ],
     queryFn: () =>
       jobsApi.list({
         q: query || undefined,
@@ -119,6 +133,8 @@ export function JobBoardPage() {
         company: company || undefined,
         postedWithinDays,
         workplaceType,
+        salaryMin,
+        salaryMax,
         page,
       }),
   });

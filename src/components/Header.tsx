@@ -38,6 +38,29 @@ const POSTED_WITHIN_OPTIONS: { value: string; label: string }[] = [
   { value: "30", label: "Last 30 days" },
 ];
 
+// Preset bands rather than a free-typed number — matches how the other
+// filters here work, and sidesteps having to validate/parse arbitrary input.
+const SALARY_MIN_OPTIONS: { value: string; label: string }[] = [
+  { value: "", label: "Any minimum" },
+  { value: "40000", label: "$40,000+" },
+  { value: "60000", label: "$60,000+" },
+  { value: "80000", label: "$80,000+" },
+  { value: "100000", label: "$100,000+" },
+  { value: "120000", label: "$120,000+" },
+  { value: "150000", label: "$150,000+" },
+  { value: "200000", label: "$200,000+" },
+];
+
+const SALARY_MAX_OPTIONS: { value: string; label: string }[] = [
+  { value: "", label: "Any maximum" },
+  { value: "60000", label: "Up to $60,000" },
+  { value: "80000", label: "Up to $80,000" },
+  { value: "100000", label: "Up to $100,000" },
+  { value: "120000", label: "Up to $120,000" },
+  { value: "150000", label: "Up to $150,000" },
+  { value: "200000", label: "Up to $200,000" },
+];
+
 function FilterDropdown({
   options,
   value,
@@ -174,7 +197,15 @@ export function Header() {
   const companyFilter = onBoard ? (searchParams.get("company") ?? "") : "";
   const postedWithin = onBoard ? (searchParams.get("posted") ?? "") : "";
   const workplaceType = onBoard ? (searchParams.get("workplace") ?? "") : "";
-  const activeFilterCount = [!!workplaceType, !!companyFilter, !!postedWithin].filter(Boolean).length;
+  const salaryMinFilter = onBoard ? (searchParams.get("salaryMin") ?? "") : "";
+  const salaryMaxFilter = onBoard ? (searchParams.get("salaryMax") ?? "") : "";
+  const activeFilterCount = [
+    !!workplaceType,
+    !!companyFilter,
+    !!postedWithin,
+    !!salaryMinFilter,
+    !!salaryMaxFilter,
+  ].filter(Boolean).length;
 
   const [searchInput, setSearchInput] = useState(query);
   const [locationInput, setLocationInput] = useState(locationFilter);
@@ -333,6 +364,22 @@ export function Header() {
     }, 300);
   }
 
+  function setSalaryMin(value: string) {
+    updateBoardParams((next) => {
+      if (value) next.set("salaryMin", value);
+      else next.delete("salaryMin");
+      next.delete("page");
+    });
+  }
+
+  function setSalaryMax(value: string) {
+    updateBoardParams((next) => {
+      if (value) next.set("salaryMax", value);
+      else next.delete("salaryMax");
+      next.delete("page");
+    });
+  }
+
   function setPostedWithin(value: string) {
     updateBoardParams((next) => {
       if (value) next.set("posted", value);
@@ -356,6 +403,8 @@ export function Header() {
       next.delete("company");
       next.delete("workplace");
       next.delete("posted");
+      next.delete("salaryMin");
+      next.delete("salaryMax");
       next.delete("page");
     });
   }
@@ -641,13 +690,6 @@ export function Header() {
             defaultLabel="Any workplace"
             ariaLabel="Workplace type"
           />
-          <input
-            className="site-header__filter-input"
-            type="text"
-            placeholder="Company"
-            value={companyInput}
-            onChange={(e) => handleCompanyInputChange(e.target.value)}
-          />
           <FilterDropdown
             options={POSTED_WITHIN_OPTIONS}
             value={postedWithin}
@@ -655,6 +697,32 @@ export function Header() {
             defaultLabel="Any time posted"
             ariaLabel="Posted date"
           />
+          <input
+            className="site-header__filter-input"
+            type="text"
+            placeholder="Company"
+            value={companyInput}
+            onChange={(e) => handleCompanyInputChange(e.target.value)}
+          />
+          {/* Grouped so the pair wraps to a new line together on a phone,
+              instead of "Min pay" and "Max pay" splitting across two lines
+              like every other filter here is free to do independently. */}
+          <div className="site-header__salary-group">
+            <FilterDropdown
+              options={SALARY_MIN_OPTIONS}
+              value={salaryMinFilter}
+              onChange={setSalaryMin}
+              defaultLabel="Any minimum"
+              ariaLabel="Minimum pay"
+            />
+            <FilterDropdown
+              options={SALARY_MAX_OPTIONS}
+              value={salaryMaxFilter}
+              onChange={setSalaryMax}
+              defaultLabel="Any maximum"
+              ariaLabel="Maximum pay"
+            />
+          </div>
           {activeFilterCount > 0 && (
             <button type="button" className="site-header__filter-reset" onClick={resetFilters}>
               Reset filters

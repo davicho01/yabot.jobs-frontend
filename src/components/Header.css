@@ -285,6 +285,14 @@
   min-width: 130px;
 }
 
+.site-header__salary-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
 .site-header__filter-reset {
   border: none;
   background: none;
