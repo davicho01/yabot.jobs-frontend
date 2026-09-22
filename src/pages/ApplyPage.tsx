@@ -13,6 +13,7 @@ import type {
   CoverLetter,
   JobDetail,
   JobPosting,
+  Resume,
   ResumeScore,
   TailoredResume,
   TailoredResumeScore,
@@ -91,6 +92,60 @@ function NotesEditor({
         if (notes !== initialNotes) onSave(notes);
       }}
     />
+  );
+}
+
+// Same button-triggers-a-menu shape as TailoredDownloadMenu just below (and
+// the applications list's own Download/Sort menus) — a native <select>
+// looked out of place next to those, so this reads as one more of them
+// instead of a form control.
+function ResumePickerMenu({
+  resumes,
+  selectedResumeId,
+  onSelect,
+}: {
+  resumes: Resume[];
+  selectedResumeId: string | null;
+  onSelect: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  const selected = resumes.find((r) => r.id === selectedResumeId);
+
+  return (
+    <div className="action-dropdown apply-page__resume-picker" ref={containerRef}>
+      <button type="button" className="rescan-button" onClick={() => setOpen((o) => !o)}>
+        {selected ? selected.filename : "Choose resume"} ↓
+      </button>
+      {open && (
+        <div className="action-dropdown-menu">
+          {resumes.map((resume) => (
+            <button
+              key={resume.id}
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onSelect(resume.id);
+              }}
+            >
+              {resume.filename}
+              {resume.is_main ? " (main)" : ""}
+              {resume.id === selectedResumeId ? " ✓" : ""}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -599,21 +654,11 @@ function ApplyPageContent({
                 </div>
 
                 {resumes.length > 1 && (
-                  <div className="apply-page__resume-picker">
-                    <label htmlFor="apply-page-resume-select">Resume</label>
-                    <select
-                      id="apply-page-resume-select"
-                      value={selectedResumeId ?? ""}
-                      onChange={(e) => setPickedResumeId(e.target.value)}
-                    >
-                      {resumes.map((resume) => (
-                        <option key={resume.id} value={resume.id}>
-                          {resume.filename}
-                          {resume.is_main ? " (main)" : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <ResumePickerMenu
+                    resumes={resumes}
+                    selectedResumeId={selectedResumeId}
+                    onSelect={setPickedResumeId}
+                  />
                 )}
 
                 {!displayedScore && (
