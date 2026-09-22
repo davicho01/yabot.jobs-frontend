@@ -363,13 +363,68 @@
   font-size: 0.9rem;
 }
 
+/* Mirrors site-header__searchbar's own shape (pill, soft focus glow) and
+   sits close to its width too ("almost the same size as the search box on
+   desktop") — the Save search button embedded at its right edge instead of
+   sitting outside as its own separate pill, same as Search does there. */
+.site-header__save-search-bar {
+  position: relative;
+  flex: 1 1 20rem;
+  min-width: 0;
+  max-width: calc(38rem + 100px);
+  /* Auto margins on a flex item center it along the row on their own,
+     regardless of the container's own justify-content (still flex-start,
+     for the error message below to left-align if it's showing) — once this
+     hits its max-width on a wide screen, the leftover space on the
+     add-job-expand row splits evenly on both sides instead of sitting to
+     the bar's right only. */
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 0.2rem 0.2rem 0.2rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.site-header__save-search-bar:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* Same specificity as ".site-header__add-job-expand input" above (one
+   class + one element each) — wins on source order, coming after it here,
+   so this input reads flush inside the bar's own pill instead of getting
+   that generic rule's border/padding/background as a second, nested pill. */
+.site-header__save-search-bar input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.55rem 0.75rem 0.55rem 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+}
+
+.site-header__save-search-bar input::placeholder {
+  color: var(--ink-soft);
+  opacity: 1;
+}
+
 .site-header__add-job-submit {
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 0.85rem;
   letter-spacing: 0;
   text-transform: none;
-  color: #fff;
+  /* --paper, not a hardcoded #fff: --ink flips to near-white in dark mode
+     (see index.css), so a hardcoded white text color on this ink-colored
+     pill went unreadable there — white on near-white. --paper is always
+     ink's inverse in both themes, so this pairs correctly either way. */
+  color: var(--paper);
   background: var(--ink);
   border: none;
   padding: 0.6rem 1.1rem;

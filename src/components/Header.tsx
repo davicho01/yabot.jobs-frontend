@@ -791,22 +791,22 @@ export function Header() {
             saveSearchMutation.mutate();
           }}
         >
-          <label className="site-header__add-job-label" htmlFor="save-search-name">
-            Name
-          </label>
-          <input
-            id="save-search-name"
-            type="text"
-            required
-            autoFocus
-            maxLength={120}
-            placeholder="e.g. Remote frontend roles"
-            value={saveSearchName}
-            onChange={(e) => setSaveSearchName(e.target.value)}
-          />
-          <button type="submit" className="site-header__add-job-submit" disabled={saveSearchMutation.isPending}>
-            {saveSearchMutation.isPending ? "Saving…" : "Save search"}
-          </button>
+          <div className="site-header__save-search-bar">
+            <input
+              id="save-search-name"
+              aria-label="Search name"
+              type="text"
+              required
+              autoFocus
+              maxLength={120}
+              placeholder="e.g. Remote frontend roles"
+              value={saveSearchName}
+              onChange={(e) => setSaveSearchName(e.target.value)}
+            />
+            <button type="submit" className="site-header__search-submit" disabled={saveSearchMutation.isPending}>
+              {saveSearchMutation.isPending ? "Saving…" : "Save search"}
+            </button>
+          </div>
           {saveSearchMutation.isError && (
             <p className="site-header__add-job-error">
               {saveSearchMutation.error instanceof ApiError
