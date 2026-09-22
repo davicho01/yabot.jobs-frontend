@@ -653,6 +653,14 @@ function ApplyPageContent({
                   <p>See how your resume stacks up against this posting's requirements.</p>
                 </div>
 
+                {resumes.length > 1 && (
+                  <ResumePickerMenu
+                    resumes={resumes}
+                    selectedResumeId={selectedResumeId}
+                    onSelect={setPickedResumeId}
+                  />
+                )}
+
                 {!displayedScore && (
                   <button
                     type="button"
@@ -701,14 +709,6 @@ function ApplyPageContent({
                 )}
                 {genericErrorMessage(scoreMutation.error) && !prerequisiteMessage(scoreMutation.error) && (
                   <p className="dossier-action__error">{genericErrorMessage(scoreMutation.error)}</p>
-                )}
-
-                {resumes.length > 1 && (
-                  <ResumePickerMenu
-                    resumes={resumes}
-                    selectedResumeId={selectedResumeId}
-                    onSelect={setPickedResumeId}
-                  />
                 )}
               </section>
 
