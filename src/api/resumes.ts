@@ -1,6 +1,7 @@
 import { api, downloadFile, fetchBlob, fileUrl } from "./client";
 import type {
   CoverLetter,
+  InterviewPrep,
   Resume,
   ResumeScore,
   ResumeScoreHistory,
@@ -54,4 +55,12 @@ export const resumesApi = {
     }),
   downloadCoverLetter: (id: string, filename: string) =>
     downloadFile(`/resumes/cover-letter/${id}/download`, filename),
+
+  getInterviewPrep: (jobPostingId: string, resumeId?: string) =>
+    api.get<InterviewPrep>("/resumes/main/interview-prep", { job_posting_id: jobPostingId, resume_id: resumeId }),
+  generateInterviewPrep: (jobPostingId: string, resumeId?: string) =>
+    api.post<InterviewPrep>("/resumes/main/interview-prep", undefined, {
+      job_posting_id: jobPostingId,
+      resume_id: resumeId,
+    }),
 };
