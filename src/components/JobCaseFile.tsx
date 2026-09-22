@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import { applicationsApi } from "../api/applications";
-import type { JobDetail, JobPosting, User } from "../api/types";
+import type { Application, JobDetail, JobPosting, User } from "../api/types";
 
 // A JobPosting row exists from the moment its URL is submitted (see
 // get_or_create_job_posting) so job_posting_id is available right away —
@@ -28,6 +28,13 @@ function formatPostedAt(job: JobDetail): string | null {
   // backward for anyone west of UTC.
   const date = new Date(`${p.posted_at}T00:00:00Z`);
   return `Posted ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`;
+}
+
+// created_at is a real timestamp (not a date-only string like posted_at), so
+// this formats in the viewer's own local time zone rather than pinning UTC.
+function formatApplicationDate(application: Application): string {
+  const date = new Date(application.created_at);
+  return `Applied ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
 }
 
 export function JobCaseFile({
@@ -101,9 +108,14 @@ export function JobCaseFile({
               <a href={job.url.url} target="_blank" rel="noopener noreferrer" className="rescan-button">
                 Original ↗
               </a>
-              <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
-                {currentApplication ? "View application →" : "Evaluate Job →"}
-              </Link>
+              <div className="case-file__apply-group">
+                <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
+                  {currentApplication ? "View application →" : "Evaluate Job →"}
+                </Link>
+                {currentApplication && (
+                  <span className="case-file__applied-date">{formatApplicationDate(currentApplication)}</span>
+                )}
+              </div>
             </div>
           </div>
 

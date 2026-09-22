@@ -94,6 +94,9 @@ export interface Application {
   status: string;
   notes: string | null;
   is_archived: boolean;
+  // When this row was first made — always set (saving/applying to a job
+  // always adds one).
+  created_at: string;
   job_posting: ApplicationJobPosting;
   // Max of the fitness score and the tailored-resume score, whichever is set.
   best_score: number | null;
