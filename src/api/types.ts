@@ -212,3 +212,23 @@ export interface ApiKey {
   created_at: string;
   masked_key: string;
 }
+
+// One column per GET /jobs query param worth persisting — mirrors JobFilters
+// (api/jobs.ts) minus `page`. Re-run on a schedule server-side (see the
+// backend's saved_search_alerts.py) to email a digest when something new
+// matches.
+export interface SavedSearch {
+  id: string;
+  name: string | null;
+  q: string | null;
+  location: string | null;
+  metro: string | null;
+  radius: number | null;
+  company: string | null;
+  posted_within_days: number | null;
+  workplace_type: string | null;
+  salary_min: number | null;
+  salary_max: number | null;
+  created_at: string;
+  last_alerted_at: string | null;
+}

@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation, useSearchParams } from "react-router-do
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
 import { jobsApi } from "../api/jobs";
+import { describeSavedSearch, paramsToSavedSearchPayload, savedSearchesApi } from "../api/savedSearches";
 import { ApiError } from "../api/client";
 import type { Metro } from "../api/types";
 import { BOARD_PATH } from "../routes";
@@ -138,6 +139,8 @@ export function Header() {
   const [addJobOpen, setAddJobOpen] = useState(false);
   const [jobUrl, setJobUrl] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [saveSearchOpen, setSaveSearchOpen] = useState(false);
+  const [saveSearchName, setSaveSearchName] = useState("");
   const [hidden, setHidden] = useState(false);
   const lastScrollY = useRef(0);
 
@@ -480,6 +483,15 @@ export function Header() {
     },
   });
 
+  const saveSearchMutation = useMutation({
+    mutationFn: () => savedSearchesApi.create(paramsToSavedSearchPayload(searchParams, saveSearchName)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["savedSearches"] });
+      setSaveSearchOpen(false);
+      setSaveSearchName("");
+    },
+  });
+
   useEffect(() => {
     function onClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -512,14 +524,38 @@ export function Header() {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [filtersOpen]);
 
+  useEffect(() => {
+    if (!saveSearchOpen) return;
+    function onClickOutside(event: MouseEvent) {
+      if (headerRef.current && !headerRef.current.contains(event.target as Node)) {
+        setSaveSearchOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [saveSearchOpen]);
+
   function toggleAddJob() {
     setFiltersOpen(false);
+    setSaveSearchOpen(false);
     setAddJobOpen((o) => !o);
   }
 
   function toggleFilters() {
     setAddJobOpen(false);
+    setSaveSearchOpen(false);
     setFiltersOpen((o) => !o);
+  }
+
+  function toggleSaveSearch() {
+    setAddJobOpen(false);
+    setFiltersOpen(false);
+    setSaveSearchOpen((open) => {
+      // Suggest a name from the current filters each time it's freshly
+      // opened, not while it's already open (would stomp on typing).
+      if (!open) setSaveSearchName(describeSavedSearch(paramsToSavedSearchPayload(searchParams, "")));
+      return !open;
+    });
   }
 
   const initial = (user?.display_name?.trim()?.[0] ?? user?.email?.[0])?.toUpperCase() ?? "?";
@@ -622,6 +658,27 @@ export function Header() {
             </svg>
             {activeFilterCount > 0 && <span className="site-header__filter-badge">{activeFilterCount}</span>}
           </button>
+          {user && onBoard && (
+            <button
+              type="button"
+              className="site-header__filter-toggle"
+              onClick={toggleSaveSearch}
+              aria-haspopup="true"
+              aria-expanded={saveSearchOpen}
+              aria-label="Save this search"
+              title="Save this search"
+            >
+              <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+                <path
+                  d="M5 3.5h10a1 1 0 0 1 1 1V17l-6-3.5L4 17V4.5a1 1 0 0 1 1-1z"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          )}
           {user && (
             <button
               type="button"
@@ -659,6 +716,9 @@ export function Header() {
                 </Link>
                 <Link to="/applications" role="menuitem" onClick={() => setMenuOpen(false)}>
                   My applications
+                </Link>
+                <Link to="/saved-searches" role="menuitem" onClick={() => setMenuOpen(false)}>
+                  Saved searches
                 </Link>
                 <Link to="/resume" role="menuitem" onClick={() => setMenuOpen(false)}>
                   My resume
@@ -718,6 +778,40 @@ export function Header() {
           {submitJobMutation.isError && (
             <p className="site-header__add-job-error">
               {submitJobMutation.error instanceof ApiError ? submitJobMutation.error.message : "Couldn't add that URL."}
+            </p>
+          )}
+        </form>
+      )}
+
+      {user && onBoard && saveSearchOpen && (
+        <form
+          className="site-header__add-job-expand"
+          onSubmit={(e) => {
+            e.preventDefault();
+            saveSearchMutation.mutate();
+          }}
+        >
+          <label className="site-header__add-job-label" htmlFor="save-search-name">
+            Name
+          </label>
+          <input
+            id="save-search-name"
+            type="text"
+            required
+            autoFocus
+            maxLength={120}
+            placeholder="e.g. Remote frontend roles"
+            value={saveSearchName}
+            onChange={(e) => setSaveSearchName(e.target.value)}
+          />
+          <button type="submit" className="site-header__add-job-submit" disabled={saveSearchMutation.isPending}>
+            {saveSearchMutation.isPending ? "Saving…" : "Save search"}
+          </button>
+          {saveSearchMutation.isError && (
+            <p className="site-header__add-job-error">
+              {saveSearchMutation.error instanceof ApiError
+                ? saveSearchMutation.error.message
+                : "Couldn't save that search."}
             </p>
           )}
         </form>

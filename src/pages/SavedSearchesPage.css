@@ -1,0 +1,119 @@
+/* .settings-page/.settings-section/.record-list* are the same base classes
+   ApiKeysPage.css and ResumePage.css each define too — duplicated rather
+   than shared, same as between those two. */
+.settings-page {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+.settings-page h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.4rem;
+}
+
+.settings-page__intro {
+  color: var(--ink-soft);
+  margin: 0 0 2rem;
+}
+
+.settings-section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.settings-section__hint {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
+}
+
+.record-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.record-list__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  font-size: 0.88rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.record-list__item button,
+.record-list__item a.record-list__make-default {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.68rem;
+}
+
+.record-list__make-default {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+  text-decoration: none;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+}
+
+.record-list__make-default:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.record-list__remove {
+  background: transparent;
+  color: var(--rose);
+  border: 1px solid var(--rose);
+  border-radius: var(--radius-pill);
+  margin-left: auto;
+}
+
+.record-list__remove:hover {
+  background: var(--rose);
+  color: var(--surface);
+}
+
+.saved-search-row__text {
+  flex: 1 1 14rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  overflow-wrap: anywhere;
+}
+
+.saved-search-row__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.saved-search-row__description,
+.saved-search-row__alert {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 640px) {
+  main.settings-page {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .settings-page .settings-section {
+    padding: 1.1rem;
+  }
+}

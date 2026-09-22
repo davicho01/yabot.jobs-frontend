@@ -10,6 +10,7 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { ResumePage } from "./pages/ResumePage";
 import { ApiKeysPage } from "./pages/ApiKeysPage";
 import { ApplicationsPage } from "./pages/ApplicationsPage";
+import { SavedSearchesPage } from "./pages/SavedSearchesPage";
 import { AdminDashboardPage } from "./pages/AdminDashboardPage";
 import { AdminCrawlSourceStatsPage } from "./pages/AdminCrawlSourceStatsPage";
 import { AdminJobsPage } from "./pages/AdminJobsPage";
@@ -86,6 +87,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ApplicationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/saved-searches"
+          element={
+            <ProtectedRoute>
+              <SavedSearchesPage />
             </ProtectedRoute>
           }
         />
