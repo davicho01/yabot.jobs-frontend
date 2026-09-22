@@ -559,6 +559,9 @@ export function Header() {
   }
 
   const initial = (user?.display_name?.trim()?.[0] ?? user?.email?.[0])?.toUpperCase() ?? "?";
+  // "Hi <first name>!" under the avatar — falls back to the email's local
+  // part when no display name is set, same fallback the initial above uses.
+  const firstName = user?.display_name?.trim().split(/\s+/)[0] || user?.email?.split("@")[0];
 
   return (
     <header className={`site-header${hidden ? " site-header--hidden" : ""}`} ref={headerRef}>
@@ -704,6 +707,7 @@ export function Header() {
             >
               {initial}
             </button>
+            {firstName && <span className="site-header__greeting">Hi {firstName}!</span>}
             {menuOpen && (
               <div className="site-header__dropdown" role="menu">
                 <div className="site-header__dropdown-profile">
