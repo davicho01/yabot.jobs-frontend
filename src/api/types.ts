@@ -137,6 +137,9 @@ export interface ResumeScore {
 export interface ResumeScoreHistoryEntry {
   id: string;
   job_posting_id: string;
+  // What a history row links to — the ApplyPage route (/jobs/:urlId/apply)
+  // is keyed on this, not job_posting_id.
+  url_id: string;
   job_title: string | null;
   company_name: string | null;
   overall_score: number;
