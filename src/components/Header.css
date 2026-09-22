@@ -570,20 +570,35 @@
   color: var(--paper);
 }
 
+/* Stays exactly the avatar's own size — the row's align-items: center then
+   centers this the same way it centers every other single-line header
+   button, keeping the icon itself aligned with the rest of them. The
+   greeting is positioned out of this flow (see .site-header__greeting)
+   instead of stacked in it, which would otherwise center the taller
+   avatar+greeting block as a whole and push the icon upward, out of line
+   with its neighbors. */
 .site-header__menu {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
 }
 
 .site-header__greeting {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 0.2rem;
   font-size: 0.68rem;
   font-weight: 600;
   color: var(--ink-soft);
   white-space: nowrap;
   line-height: 1;
+}
+
+/* Clears the greeting (the base .site-header__dropdown rule's gap assumes
+   a plain single-line trigger right above it) so the account dropdown
+   doesn't open overlapping the text. */
+.site-header__menu .site-header__dropdown {
+  top: calc(100% + 1.5rem);
 }
 
 .site-header__avatar {
