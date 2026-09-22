@@ -34,7 +34,7 @@ function formatPostedAt(job: JobDetail): string | null {
 // this formats in the viewer's own local time zone rather than pinning UTC.
 function formatApplicationDate(application: Application): string {
   const date = new Date(application.created_at);
-  return `Applied ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+  return `Added ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
 }
 
 export function JobCaseFile({
@@ -108,14 +108,12 @@ export function JobCaseFile({
               <a href={job.url.url} target="_blank" rel="noopener noreferrer" className="rescan-button">
                 Original ↗
               </a>
-              <div className="case-file__apply-group">
-                <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
-                  {currentApplication ? "View application →" : "Evaluate Job →"}
-                </Link>
+              <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
+                <span>{currentApplication ? "View application →" : "Evaluate Job →"}</span>
                 {currentApplication && (
-                  <span className="case-file__applied-date">{formatApplicationDate(currentApplication)}</span>
+                  <span className="apply-button__meta">{formatApplicationDate(currentApplication)}</span>
                 )}
-              </div>
+              </Link>
             </div>
           </div>
 
