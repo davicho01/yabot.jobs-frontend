@@ -358,12 +358,93 @@ function DownloadMenu({ application }: { application: Application }) {
   );
 }
 
+// Fires one applicationsApi.update per id in parallel, matching the
+// existing per-row mutations exactly — no bulk endpoint on the backend,
+// this is just those same single-application calls fanned out client-side.
+function useBulkUpdateMutation(payload: { is_archived: boolean }) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => Promise.all(ids.map((id) => applicationsApi.update(id, payload))),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
+  });
+}
+
+function BulkActionsBar({
+  selectedIds,
+  applications,
+  onClear,
+}: {
+  selectedIds: Set<string>;
+  applications: Application[];
+  onClear: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
+
+  const archiveMutation = useBulkUpdateMutation({ is_archived: true });
+  const unarchiveMutation = useBulkUpdateMutation({ is_archived: false });
+  const evaluateMutation = useMutation({
+    // Only the ones without a score yet — matches how the per-row Evaluate
+    // button already only appears in that case, so this never re-spends an
+    // LLM call on something already scored.
+    mutationFn: (jobPostingIds: string[]) => Promise.all(jobPostingIds.map((id) => resumesApi.generateScore(id))),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
+  });
+
+  const anyPending = archiveMutation.isPending || unarchiveMutation.isPending || evaluateMutation.isPending;
+  const selected = applications.filter((a) => selectedIds.has(a.id));
+  const unscoredJobPostingIds = selected.filter((a) => a.best_score === null).map((a) => a.job_posting.id);
+
+  function runBulk(mutate: () => Promise<unknown>) {
+    setError(null);
+    mutate()
+      .then(onClear)
+      .catch((err) => setError(errorMessage(err, "That didn't fully go through — some rows may be unchanged.")));
+  }
+
+  return (
+    <div className="applications-page__bulk-bar">
+      <span className="applications-page__bulk-count">{selectedIds.size} selected</span>
+      <button
+        type="button"
+        className="application-row__action"
+        disabled={anyPending}
+        onClick={() => runBulk(() => archiveMutation.mutateAsync([...selectedIds]))}
+      >
+        {archiveMutation.isPending ? "Archiving…" : "Archive"}
+      </button>
+      <button
+        type="button"
+        className="application-row__action"
+        disabled={anyPending}
+        onClick={() => runBulk(() => unarchiveMutation.mutateAsync([...selectedIds]))}
+      >
+        {unarchiveMutation.isPending ? "Unarchiving…" : "Unarchive"}
+      </button>
+      <button
+        type="button"
+        className="application-row__action"
+        disabled={anyPending || unscoredJobPostingIds.length === 0}
+        onClick={() => runBulk(() => evaluateMutation.mutateAsync(unscoredJobPostingIds))}
+        title={unscoredJobPostingIds.length === 0 ? "Everything selected already has a score" : undefined}
+      >
+        {evaluateMutation.isPending ? "Evaluating…" : `Evaluate${unscoredJobPostingIds.length ? ` (${unscoredJobPostingIds.length})` : ""}`}
+      </button>
+      <button type="button" className="applications-page__bulk-clear" onClick={onClear}>
+        Clear
+      </button>
+      {error && <span className="application-row__details-error">{error}</span>}
+    </div>
+  );
+}
+
 export function ApplicationsPage() {
   const { data: allApplications, isLoading } = useQuery({
     queryKey: ["applications"],
     queryFn: applicationsApi.list,
   });
   const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // The view (which fields/directions are active, whether archived rows
   // show) lives in the URL so it survives a refresh or back/forward nav,
@@ -428,6 +509,7 @@ export function ApplicationsPage() {
   }
 
   function handleShowArchivedChange(checked: boolean) {
+    setSelectedIds(new Set());
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev);
@@ -437,6 +519,21 @@ export function ApplicationsPage() {
       },
       { replace: true },
     );
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  const allVisibleSelected = !!applications?.length && applications.every((a) => selectedIds.has(a.id));
+
+  function toggleSelectAll() {
+    setSelectedIds(allVisibleSelected ? new Set() : new Set(applications?.map((a) => a.id)));
   }
 
   return (
@@ -453,6 +550,15 @@ export function ApplicationsPage() {
             />
             Show archived
           </label>
+          <label className="applications-page__archive-toggle">
+            <input
+              type="checkbox"
+              checked={allVisibleSelected}
+              disabled={!applications?.length}
+              onChange={toggleSelectAll}
+            />
+            Select all
+          </label>
           <SortMenu activeSorts={activeSorts} onCycleField={handleCycleSortField} />
           <button
             type="button"
@@ -464,6 +570,14 @@ export function ApplicationsPage() {
           </button>
         </div>
 
+        {selectedIds.size > 0 && applications && (
+          <BulkActionsBar
+            selectedIds={selectedIds}
+            applications={applications}
+            onClear={() => setSelectedIds(new Set())}
+          />
+        )}
+
         {isLoading && <p>Loading…</p>}
         {!isLoading && applications?.length === 0 && (
           <p className="applications-page__empty">
@@ -474,6 +588,13 @@ export function ApplicationsPage() {
         <ul className="application-list">
           {applications?.map((application) => (
             <li key={application.id} className="application-row">
+              <input
+                type="checkbox"
+                className="application-row__select"
+                aria-label={`Select ${application.job_posting.title ?? "this application"}`}
+                checked={selectedIds.has(application.id)}
+                onChange={() => toggleSelect(application.id)}
+              />
               <div className="application-row__main">
                 <span className="application-row__title-row">
                   <Link to={`/jobs/${application.job_posting.url_id}/apply`} className="application-row__title">
