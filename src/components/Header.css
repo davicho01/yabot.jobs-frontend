@@ -572,6 +572,18 @@
 
 .site-header__menu {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.site-header__greeting {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  line-height: 1;
 }
 
 .site-header__avatar {
