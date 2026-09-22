@@ -236,6 +236,21 @@ function ApplyPageContent({
     enabled: !!urlId,
   });
 
+  // Which uploaded resume to score/tailor/write a cover letter against —
+  // defaults to the main one (undefined here means "let the backend pick
+  // its own default main resume", same as before this selector existed).
+  // Only meaningfully different from the default once someone has more
+  // than one resume uploaded (see ResumePage) and picks a non-main one.
+  const resumesQuery = useQuery({ queryKey: ["resumes"], queryFn: resumesApi.list });
+  const resumes = resumesQuery.data ?? [];
+  const mainResume = resumes.find((r) => r.is_main) ?? null;
+  const [pickedResumeId, setPickedResumeId] = useState<string | null>(null);
+  const selectedResumeId = pickedResumeId ?? mainResume?.id ?? null;
+  // undefined (not the main resume's own id) so a request with no picker
+  // shown still hits the exact same URL/cache key it did before resume_id
+  // existed.
+  const resumeIdParam = pickedResumeId ?? undefined;
+
   const jobPostingId = job ? scannedPosting(job)?.id : undefined;
 
   const rescanMutation = useMutation({
@@ -290,29 +305,31 @@ function ApplyPageContent({
   });
 
   const scoreQuery = useQuery<ResumeScore, ApiError>({
-    queryKey: ["score", jobPostingId],
-    queryFn: () => resumesApi.getScore(jobPostingId!),
+    queryKey: ["score", jobPostingId, resumeIdParam],
+    queryFn: () => resumesApi.getScore(jobPostingId!, resumeIdParam),
     enabled: !!jobPostingId,
     retry: false,
   });
 
   const scoreMutation = useMutation({
-    mutationFn: () => resumesApi.generateScore(jobPostingId!),
+    mutationFn: () => resumesApi.generateScore(jobPostingId!, resumeIdParam),
   });
 
   const tailoredQuery = useQuery<TailoredResume, ApiError>({
-    queryKey: ["tailored", jobPostingId],
-    queryFn: () => resumesApi.getTailored(jobPostingId!),
+    queryKey: ["tailored", jobPostingId, resumeIdParam],
+    queryFn: () => resumesApi.getTailored(jobPostingId!, resumeIdParam),
     enabled: !!jobPostingId,
     retry: false,
   });
 
   const tailorMutation = useMutation<TailoredResume, ApiError>({
-    mutationFn: () => resumesApi.generateTailored(jobPostingId!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tailored", jobPostingId] }),
+    mutationFn: () => resumesApi.generateTailored(jobPostingId!, resumeIdParam),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tailored", jobPostingId, resumeIdParam] }),
   });
 
-  const displayedTailored = tailorMutation.data ?? tailoredQuery.data;
+  // Same staleness concern as displayedScore/displayedCoverLetter below.
+  const displayedTailored =
+    tailorMutation.data?.resume_id === selectedResumeId ? tailorMutation.data : tailoredQuery.data;
 
   const tailoredScoreQuery = useQuery<TailoredResumeScore, ApiError>({
     queryKey: ["tailored-score", displayedTailored?.id],
@@ -330,21 +347,28 @@ function ApplyPageContent({
     displayedTailoredScoreRaw?.tailored_resume_id === displayedTailored?.id ? displayedTailoredScoreRaw : undefined;
 
   const coverLetterQuery = useQuery<CoverLetter, ApiError>({
-    queryKey: ["cover-letter", jobPostingId],
-    queryFn: () => resumesApi.getCoverLetter(jobPostingId!),
+    queryKey: ["cover-letter", jobPostingId, resumeIdParam],
+    queryFn: () => resumesApi.getCoverLetter(jobPostingId!, resumeIdParam),
     enabled: !!jobPostingId,
     retry: false,
   });
 
   const coverLetterMutation = useMutation<CoverLetter, ApiError>({
-    mutationFn: () => resumesApi.generateCoverLetter(jobPostingId!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cover-letter", jobPostingId] }),
+    mutationFn: () => resumesApi.generateCoverLetter(jobPostingId!, resumeIdParam),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cover-letter", jobPostingId, resumeIdParam] }),
   });
 
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
-  const displayedScore = scoreMutation.data ?? scoreQuery.data;
-  const displayedCoverLetter = coverLetterMutation.data ?? coverLetterQuery.data;
+  // A mutation's own .data sticks around across query-key changes (React
+  // Query doesn't know it's now stale), so switching resumes without these
+  // resume_id checks would keep showing the previous resume's just-generated
+  // score/tailored-resume/cover-letter instead of falling through to the
+  // freshly-keyed query below.
+  const displayedScore =
+    scoreMutation.data?.resume_id === selectedResumeId ? scoreMutation.data : scoreQuery.data;
+  const displayedCoverLetter =
+    coverLetterMutation.data?.resume_id === selectedResumeId ? coverLetterMutation.data : coverLetterQuery.data;
 
   if (isLoading) {
     return (
@@ -493,6 +517,23 @@ function ApplyPageContent({
                 Apply →
               </a>
             </div>
+            {resumes.length > 1 && (
+              <div className="apply-page__resume-picker">
+                <label htmlFor="apply-page-resume-select">Resume</label>
+                <select
+                  id="apply-page-resume-select"
+                  value={selectedResumeId ?? ""}
+                  onChange={(e) => setPickedResumeId(e.target.value)}
+                >
+                  {resumes.map((resume) => (
+                    <option key={resume.id} value={resume.id}>
+                      {resume.filename}
+                      {resume.is_main ? " (main)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="dossier">
               <section className="dossier-action">
                 <div className="score-summary-row">
