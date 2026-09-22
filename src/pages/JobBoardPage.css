@@ -96,6 +96,15 @@
   margin: 0 auto;
 }
 
+/* .case-file's own max-width (below) caps its reading width, but on its own
+   it just sits flush against the left edge of this now-full-page-wide pane
+   (no `margin: auto` of its own) — center it here instead of in the split
+   board view, where the pane is already narrow enough that it rarely matters
+   and flush-left against the list-side padding reads better anyway. */
+.board__detail--standalone .case-file {
+  margin: 0 auto;
+}
+
 /* Only shown on phones (see the media query below), where the list and the
    detail take turns filling the screen. */
 .board__back {
