@@ -48,6 +48,9 @@ export const jobsApi = {
   // "State, United States" or "United States". Searching a city lists it first,
   // then nearby places out to `radius` miles (25 by default); a state, the whole state.
   places: (q?: string, limit?: number) => api.get<string[]>("/jobs/places", { q: q || undefined, limit }),
+  // The closest known city to a browser geolocation fix, in the same format
+  // `places` suggestions come in — null if nothing's close enough to guess.
+  nearestPlace: (lat: number, lon: number) => api.get<string | null>("/jobs/places/nearest", { lat, lon }),
   // One area by its URL slug (null if unknown) — labels a shared ?metro= link.
   metro: (slug: string) => api.get<Metro[]>("/jobs/metros", { slug }).then((found) => found[0] ?? null),
   get: (urlId: string) => api.get<JobDetail>(`/jobs/${urlId}`),

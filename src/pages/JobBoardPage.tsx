@@ -110,6 +110,10 @@ export function JobBoardPage() {
     });
   }
 
+  // The "near you" default (geolocation -> GET /jobs/places/nearest) is set in
+  // <Header>, not here — it also has to land in the location box's own visible
+  // text, which is Header's local state, not just this page's URL params.
+
   const { data, isLoading } = useQuery({
     queryKey: [
       "jobs",
