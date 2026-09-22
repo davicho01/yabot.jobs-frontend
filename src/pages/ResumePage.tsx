@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { renderAsync } from "docx-preview";
 import { resumesApi } from "../api/resumes";
 import { ApiError } from "../api/client";
@@ -37,17 +38,19 @@ function ScoreHistoryPanel({ resumeId }: { resumeId: string }) {
       <h2 className="score-history__heading">Score history</h2>
       <ul className="score-history__list">
         {entries.map((entry) => (
-          <li key={entry.id} className="score-history__row">
-            <div className="score-history__row-label">
-              <span className="score-history__row-title">{entry.job_title ?? "Untitled role"}</span>
-              <span className="score-history__row-meta">
-                {entry.company_name ?? "Unknown company"} · {formatScoreHistoryDate(entry.created_at)}
-              </span>
-            </div>
-            <div className="score-history__bar-track">
-              <div className="score-history__bar-fill" style={{ width: `${entry.overall_score}%` }} />
-            </div>
-            <span className="score-history__row-score">{entry.overall_score}</span>
+          <li key={entry.id}>
+            <Link to={`/jobs/${entry.url_id}/apply`} className="score-history__row">
+              <div className="score-history__row-label">
+                <span className="score-history__row-title">{entry.job_title ?? "Untitled role"}</span>
+                <span className="score-history__row-meta">
+                  {entry.company_name ?? "Unknown company"} · {formatScoreHistoryDate(entry.created_at)}
+                </span>
+              </div>
+              <div className="score-history__bar-track">
+                <div className="score-history__bar-fill" style={{ width: `${entry.overall_score}%` }} />
+              </div>
+              <span className="score-history__row-score">{entry.overall_score}</span>
+            </Link>
           </li>
         ))}
       </ul>
