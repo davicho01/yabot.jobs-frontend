@@ -13,11 +13,24 @@ export interface JobFilters {
   company?: string;
   postedWithinDays?: number;
   workplaceType?: WorkplaceTypeFilter;
+  salaryMin?: number;
+  salaryMax?: number;
   page?: number;
 }
 
 export const jobsApi = {
-  list: ({ q, location, metro, radius, company, postedWithinDays, workplaceType, page = 1 }: JobFilters) =>
+  list: ({
+    q,
+    location,
+    metro,
+    radius,
+    company,
+    postedWithinDays,
+    workplaceType,
+    salaryMin,
+    salaryMax,
+    page = 1,
+  }: JobFilters) =>
     api.get<JobList>("/jobs", {
       q,
       location,
@@ -26,6 +39,8 @@ export const jobsApi = {
       company,
       posted_within_days: postedWithinDays,
       workplace_type: workplaceType,
+      salary_min: salaryMin,
+      salary_max: salaryMax,
       page,
       page_size: PAGE_SIZE,
     }),
