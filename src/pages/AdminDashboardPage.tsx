@@ -156,6 +156,15 @@ export function AdminDashboardPage() {
               <span className="admin-totals__label">Crawl sources</span>
             </div>
             <div className="admin-totals__tile">
+              <span
+                className="admin-totals__value"
+                style={dashboard.totals.crawl_sources_flagged > 0 ? { color: "var(--amber)" } : undefined}
+              >
+                {dashboard.totals.crawl_sources_flagged.toLocaleString()}
+              </span>
+              <span className="admin-totals__label">Sources flagged</span>
+            </div>
+            <div className="admin-totals__tile">
               <span className="admin-totals__value">{dashboard.totals.users.toLocaleString()}</span>
               <span className="admin-totals__label">Users</span>
             </div>

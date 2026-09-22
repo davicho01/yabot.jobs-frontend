@@ -163,6 +163,10 @@ export interface CrawlSource {
   last_crawled_at: string | null;
   last_job_count: number | null;
   last_error: string | null;
+  coverage_last_count: number | null;
+  coverage_baseline: number | null;
+  coverage_sample_count: number;
+  coverage_flagged_at: string | null;
   created_at: string;
 }
 
@@ -177,6 +181,7 @@ export interface AdminDashboard {
   totals: {
     job_listings: number;
     crawl_sources: number;
+    crawl_sources_flagged: number;
     users: number;
   };
   users_joined: WindowCounts;
