@@ -183,6 +183,25 @@ export interface CoverLetter {
   created_at: string;
 }
 
+export interface InterviewQuestion {
+  question: string;
+  category: "behavioral" | "technical" | "role_specific";
+  // How this specific candidate should answer it, referencing their own resume.
+  approach: string;
+}
+
+export interface InterviewPrep {
+  id: string;
+  resume_id: string;
+  job_posting_id: string;
+  content: {
+    likely_questions: InterviewQuestion[];
+    talking_points: string[];
+    questions_to_ask: string[];
+  };
+  created_at: string;
+}
+
 export interface CrawlSource {
   id: string;
   name: string;

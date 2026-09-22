@@ -11,6 +11,7 @@ import type {
   Application,
   ApplicationStatus,
   CoverLetter,
+  InterviewPrep,
   JobDetail,
   JobPosting,
   Resume,
@@ -413,17 +414,31 @@ function ApplyPageContent({
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cover-letter", jobPostingId, resumeIdParam] }),
   });
 
+  const interviewPrepQuery = useQuery<InterviewPrep, ApiError>({
+    queryKey: ["interview-prep", jobPostingId, resumeIdParam],
+    queryFn: () => resumesApi.getInterviewPrep(jobPostingId!, resumeIdParam),
+    enabled: !!jobPostingId,
+    retry: false,
+  });
+
+  const interviewPrepMutation = useMutation<InterviewPrep, ApiError>({
+    mutationFn: () => resumesApi.generateInterviewPrep(jobPostingId!, resumeIdParam),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["interview-prep", jobPostingId, resumeIdParam] }),
+  });
+
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
   // A mutation's own .data sticks around across query-key changes (React
   // Query doesn't know it's now stale), so switching resumes without these
   // resume_id checks would keep showing the previous resume's just-generated
-  // score/tailored-resume/cover-letter instead of falling through to the
-  // freshly-keyed query below.
+  // score/tailored-resume/cover-letter/interview-prep instead of falling
+  // through to the freshly-keyed query below.
   const displayedScore =
     scoreMutation.data?.resume_id === selectedResumeId ? scoreMutation.data : scoreQuery.data;
   const displayedCoverLetter =
     coverLetterMutation.data?.resume_id === selectedResumeId ? coverLetterMutation.data : coverLetterQuery.data;
+  const displayedInterviewPrep =
+    interviewPrepMutation.data?.resume_id === selectedResumeId ? interviewPrepMutation.data : interviewPrepQuery.data;
 
   if (isLoading) {
     return (
@@ -878,6 +893,77 @@ function ApplyPageContent({
                 {genericErrorMessage(coverLetterMutation.error) && !prerequisiteMessage(coverLetterMutation.error) && (
                   <p className="dossier-action__error">{genericErrorMessage(coverLetterMutation.error)}</p>
                 )}
+              </section>
+
+              <section className="dossier-action">
+                <div className="dossier-action__header">
+                  <h2>Prep for the interview</h2>
+                  <p>Likely questions for this exact role, how to answer them, and what to bring up yourself.</p>
+                </div>
+
+                {!displayedInterviewPrep && (
+                  <button
+                    type="button"
+                    className="dossier-action__button"
+                    onClick={() => interviewPrepMutation.mutate()}
+                    disabled={!jobPostingId || interviewPrepMutation.isPending}
+                  >
+                    {interviewPrepMutation.isPending ? "Preparing…" : "Generate interview prep"}
+                  </button>
+                )}
+
+                {displayedInterviewPrep && (
+                  <div className="fitness-result interview-prep">
+                    {displayedInterviewPrep.content.likely_questions.length > 0 && (
+                      <div className="interview-prep__section">
+                        <h3>Likely questions</h3>
+                        <ol className="interview-prep__questions">
+                          {displayedInterviewPrep.content.likely_questions.map((q, i) => (
+                            <li key={i}>
+                              <span className="tag interview-prep__category">{q.category.replace("_", " ")}</span>
+                              <p className="interview-prep__question">{q.question}</p>
+                              <p className="interview-prep__approach">{q.approach}</p>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    )}
+
+                    {displayedInterviewPrep.content.talking_points.length > 0 && (
+                      <div className="interview-prep__section">
+                        <h3>Bring these up yourself</h3>
+                        <ul className="interview-prep__list">
+                          {displayedInterviewPrep.content.talking_points.map((point, i) => (
+                            <li key={i}>{point}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {displayedInterviewPrep.content.questions_to_ask.length > 0 && (
+                      <div className="interview-prep__section">
+                        <h3>Questions to ask them</h3>
+                        <ul className="interview-prep__list">
+                          {displayedInterviewPrep.content.questions_to_ask.map((question, i) => (
+                            <li key={i}>{question}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <button type="button" className="rescan-button" onClick={() => interviewPrepMutation.mutate()}>
+                      Regenerate
+                    </button>
+                  </div>
+                )}
+
+                {prerequisiteMessage(interviewPrepMutation.error) && (
+                  <PrerequisiteNotice message={prerequisiteMessage(interviewPrepMutation.error)!} />
+                )}
+                {genericErrorMessage(interviewPrepMutation.error) &&
+                  !prerequisiteMessage(interviewPrepMutation.error) && (
+                    <p className="dossier-action__error">{genericErrorMessage(interviewPrepMutation.error)}</p>
+                  )}
               </section>
 
               <div className="apply-page__archive-row">

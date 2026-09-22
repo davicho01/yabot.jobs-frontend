@@ -623,6 +623,57 @@
   margin: 0;
 }
 
+/* .interview-prep shares .fitness-result's flex column, whose
+   align-items: flex-start otherwise shrinks a block child to its content
+   width instead of the card's full width — width: 100% opts each section
+   back in so its question/list text wraps at the card edge, not sooner. */
+.interview-prep__section {
+  width: 100%;
+}
+
+.interview-prep__section h3 {
+  font-size: 0.95rem;
+  margin: 0 0 0.6rem;
+}
+
+.interview-prep__questions {
+  list-style: decimal;
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.interview-prep__questions li {
+  padding-left: 0.15rem;
+}
+
+.interview-prep__category {
+  margin-bottom: 0.35rem;
+  text-transform: capitalize;
+}
+
+.interview-prep__question {
+  font-weight: 600;
+  margin: 0 0 0.2rem;
+}
+
+.interview-prep__approach {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.interview-prep__list {
+  list-style: disc;
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
 .apply-page__failed-actions {
   display: flex;
   flex-wrap: wrap;
