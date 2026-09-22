@@ -5,6 +5,72 @@ import { resumesApi } from "../api/resumes";
 import { ApiError } from "../api/client";
 import "./ResumePage.css";
 
+// created_at here is a real timestamp, formatted in the viewer's own local
+// time zone (unlike a job posting's date-only posted_at, which pins UTC).
+function formatScoreHistoryDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function ScoreHistoryPanel({ resumeId }: { resumeId: string }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["resume-score-history", resumeId],
+    queryFn: () => resumesApi.scoreHistory(resumeId),
+  });
+
+  if (isLoading) {
+    return <div className="resume-preview resume-preview--empty">Loading score history…</div>;
+  }
+
+  const entries = data?.entries ?? [];
+  const recurring = data?.recurring_missing_keywords ?? [];
+
+  if (entries.length === 0) {
+    return (
+      <div className="resume-preview resume-preview--empty">
+        No scores yet for this resume — evaluate a posting on its apply page first.
+      </div>
+    );
+  }
+
+  return (
+    <div className="score-history">
+      <h2 className="score-history__heading">Score history</h2>
+      <ul className="score-history__list">
+        {entries.map((entry) => (
+          <li key={entry.id} className="score-history__row">
+            <div className="score-history__row-label">
+              <span className="score-history__row-title">{entry.job_title ?? "Untitled role"}</span>
+              <span className="score-history__row-meta">
+                {entry.company_name ?? "Unknown company"} · {formatScoreHistoryDate(entry.created_at)}
+              </span>
+            </div>
+            <div className="score-history__bar-track">
+              <div className="score-history__bar-fill" style={{ width: `${entry.overall_score}%` }} />
+            </div>
+            <span className="score-history__row-score">{entry.overall_score}</span>
+          </li>
+        ))}
+      </ul>
+
+      {recurring.length > 0 && (
+        <div className="score-history__recurring">
+          <h2 className="score-history__heading">Keywords that keep coming up missing</h2>
+          <p className="settings-page__intro score-history__recurring-hint">
+            Showed up as missing on 2 or more separate scores — worth adding to this resume if it's genuinely there.
+          </p>
+          <ul className="score-history__keyword-list">
+            {recurring.map((k) => (
+              <li key={k.keyword} className="tag tag--secondary">
+                {k.keyword} <span className="score-history__keyword-count">×{k.count}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DocxPreview({ resumeId, filename }: { resumeId: string; filename: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -52,16 +118,29 @@ export function ResumePage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [previewId, setPreviewId] = useState<string | null>(null);
+  // Mutually exclusive with previewId — showing one clears the other, since
+  // they share the same right-hand column.
+  const [historyId, setHistoryId] = useState<string | null>(null);
 
   const resumesQuery = useQuery({ queryKey: ["resumes"], queryFn: resumesApi.list });
   const previewResume = resumesQuery.data?.find((r) => r.id === previewId) ?? null;
+
+  function showPreview(id: string) {
+    setHistoryId(null);
+    setPreviewId(id);
+  }
+
+  function showHistory(id: string) {
+    setPreviewId(null);
+    setHistoryId(id);
+  }
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) => resumesApi.upload(file),
     onSuccess: (resume) => {
       queryClient.invalidateQueries({ queryKey: ["resumes"] });
       if (fileInput.current) fileInput.current.value = "";
-      setPreviewId(resume.id);
+      showPreview(resume.id);
     },
   });
 
@@ -75,6 +154,7 @@ export function ResumePage() {
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: ["resumes"] });
       setPreviewId((current) => (current === id ? null : current));
+      setHistoryId((current) => (current === id ? null : current));
     },
   });
 
@@ -162,7 +242,9 @@ export function ResumePage() {
             {resumesQuery.data?.map((resume) => (
               <li
                 key={resume.id}
-                className={`record-list__item${resume.id === previewId ? " record-list__item--active" : ""}`}
+                className={`record-list__item${
+                  resume.id === previewId || resume.id === historyId ? " record-list__item--active" : ""
+                }`}
               >
                 <span>{resume.filename}</span>
                 {resume.is_main ? (
@@ -172,8 +254,11 @@ export function ResumePage() {
                     Set as main
                   </button>
                 )}
-                <button type="button" onClick={() => setPreviewId(resume.id)}>
+                <button type="button" onClick={() => showPreview(resume.id)}>
                   Preview
+                </button>
+                <button type="button" onClick={() => showHistory(resume.id)}>
+                  Score history
                 </button>
                 <button
                   type="button"
@@ -190,8 +275,11 @@ export function ResumePage() {
       </div>
 
       <div className="resume-page__preview-col">
-        {!previewResume && <div className="resume-preview resume-preview--empty">Select a resume to preview it here.</div>}
-        {previewResume && previewResume.content_type === "application/pdf" && (
+        {historyId && <ScoreHistoryPanel resumeId={historyId} />}
+        {!historyId && !previewResume && (
+          <div className="resume-preview resume-preview--empty">Select a resume to preview it here.</div>
+        )}
+        {!historyId && previewResume && previewResume.content_type === "application/pdf" && (
           <iframe
             key={previewResume.id}
             className="resume-preview"
@@ -199,7 +287,7 @@ export function ResumePage() {
             title={`Preview of ${previewResume.filename}`}
           />
         )}
-        {previewResume && previewResume.content_type !== "application/pdf" && (
+        {!historyId && previewResume && previewResume.content_type !== "application/pdf" && (
           <DocxPreview key={previewResume.id} resumeId={previewResume.id} filename={previewResume.filename} />
         )}
       </div>
