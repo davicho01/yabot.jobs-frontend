@@ -133,6 +133,27 @@ export interface ResumeScore {
   created_at: string;
 }
 
+// See GET /resumes/{resume_id}/score-history.
+export interface ResumeScoreHistoryEntry {
+  id: string;
+  job_posting_id: string;
+  job_title: string | null;
+  company_name: string | null;
+  overall_score: number;
+  missing_keywords: string[];
+  created_at: string;
+}
+
+export interface RecurringMissingKeyword {
+  keyword: string;
+  count: number;
+}
+
+export interface ResumeScoreHistory {
+  entries: ResumeScoreHistoryEntry[];
+  recurring_missing_keywords: RecurringMissingKeyword[];
+}
+
 export interface TailoredResume {
   id: string;
   resume_id: string;

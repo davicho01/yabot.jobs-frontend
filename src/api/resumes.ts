@@ -1,5 +1,12 @@
 import { api, downloadFile, fetchBlob, fileUrl } from "./client";
-import type { CoverLetter, Resume, ResumeScore, TailoredResume, TailoredResumeScore } from "./types";
+import type {
+  CoverLetter,
+  Resume,
+  ResumeScore,
+  ResumeScoreHistory,
+  TailoredResume,
+  TailoredResumeScore,
+} from "./types";
 
 export const resumesApi = {
   list: () => api.get<Resume[]>("/resumes"),
@@ -12,6 +19,7 @@ export const resumesApi = {
   remove: (id: string) => api.delete<void>(`/resumes/${id}`),
   previewUrl: (id: string) => fileUrl(`/resumes/${id}/download`),
   previewBlob: (id: string) => fetchBlob(`/resumes/${id}/download`),
+  scoreHistory: (id: string) => api.get<ResumeScoreHistory>(`/resumes/${id}/score-history`),
 
   // resumeId is omitted (undefined) to mean "my main resume" — the
   // backend's own default (app.api.routes.resumes._resolve_resume) when
