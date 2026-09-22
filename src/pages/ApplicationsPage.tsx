@@ -68,6 +68,58 @@ function serializeActiveSorts(sorts: ActiveSort[]): string {
   return sorts.map((sort) => `${sort.field}:${sort.direction}`).join(",");
 }
 
+const CSV_HEADER = [
+  "Title",
+  "Company",
+  "Status",
+  "Score",
+  "Salary min",
+  "Salary max",
+  "Currency",
+  "Posted",
+  "Apply URL",
+  "Archived",
+  "Notes",
+];
+
+// Quotes a cell only when it needs it (a comma, quote, or newline in the
+// value) — RFC 4180's minimal form, and what every spreadsheet app expects.
+function csvCell(value: string | number | null | undefined): string {
+  const text = value === null || value === undefined ? "" : String(value);
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function applicationsToCsv(applications: Application[]): string {
+  const rows = applications.map((application) => [
+    application.job_posting.title ?? "",
+    application.job_posting.company_name ?? "",
+    application.status,
+    application.best_score ?? "",
+    application.job_posting.salary_min ?? "",
+    application.job_posting.salary_max ?? "",
+    application.job_posting.salary_currency ?? "",
+    application.job_posting.posted_at ?? "",
+    application.job_posting.apply_url,
+    application.is_archived ? "Yes" : "No",
+    application.notes ?? "",
+  ]);
+  // \r\n per RFC 4180; a leading BOM so Excel opens it as UTF-8 rather than
+  // mis-decoding an accented company/job name under its own default codepage.
+  return "﻿" + [CSV_HEADER, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n");
+}
+
+function downloadCsv(filename: string, content: string) {
+  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 function sortValue(application: Application, field: SortableField): number | null {
   switch (field) {
     case "score":
@@ -348,6 +400,14 @@ export function ApplicationsPage() {
     }
   }
 
+  // Exports exactly what's currently on screen (the archived toggle and any
+  // active sort already applied), not the unfiltered full list underneath.
+  function handleExportCsv() {
+    if (!applications?.length) return;
+    const today = new Date().toISOString().slice(0, 10);
+    downloadCsv(`yabot-applications-${today}.csv`, applicationsToCsv(applications));
+  }
+
   function handleShowArchivedChange(checked: boolean) {
     setSearchParams(
       (prev) => {
@@ -375,6 +435,14 @@ export function ApplicationsPage() {
             Show archived
           </label>
           <SortMenu activeSorts={activeSorts} onCycleField={handleCycleSortField} />
+          <button
+            type="button"
+            className="application-row__action"
+            disabled={!applications?.length}
+            onClick={handleExportCsv}
+          >
+            Export CSV ↓
+          </button>
         </div>
 
         {isLoading && <p>Loading…</p>}
