@@ -91,7 +91,12 @@
   transition: background-color 0.15s ease;
 }
 
-.application-row__action:hover {
+.application-row__action:disabled {
+  color: var(--ink-soft);
+  cursor: default;
+}
+
+.application-row__action:hover:not(:disabled) {
   background: var(--surface);
 }
 
