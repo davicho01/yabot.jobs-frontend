@@ -239,20 +239,26 @@
   background: var(--accent-deep);
 }
 
-/* ResumePickerMenu is an .action-dropdown (see below) — this just adds the
-   spacing that positions it above the rest of the Fitness report card, and
-   left-anchors its menu instead of the shared right anchor, since every
-   other .action-dropdown on this page sits at the right edge of a toolbar
-   while this one sits at the left edge of the card (a right-anchored menu
-   here would run off the card's left side, the same fix
-   ApplicationsPage.css makes for its own left-edge Download button). */
+/* ResumePickerMenu is an .action-dropdown (see below), sitting at the
+   bottom of the Fitness report card — this adds the space separating it
+   from whatever's above it, and left-anchors its menu instead of the
+   shared right anchor, since every other .action-dropdown on this page
+   sits at the right edge of a toolbar while this one sits at the card's
+   left edge (a right-anchored menu here would run off that edge, the same
+   fix ApplicationsPage.css makes for its own left-edge Download button). */
 .apply-page__resume-picker {
-  margin-bottom: 1rem;
+  margin-top: 1.25rem;
 }
 
 .apply-page__resume-picker .action-dropdown-menu {
   left: 0;
   right: auto;
+  /* At the bottom of the card, opening downward (the shared default) would
+     run past its edge — open upward instead. */
+  top: auto;
+  bottom: 100%;
+  margin-top: 0;
+  margin-bottom: 0.3rem;
 }
 
 @media (max-width: 900px) {
