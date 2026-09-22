@@ -283,6 +283,16 @@
   font-family: var(--font-body);
   font-size: 0.83rem;
   min-width: 130px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Same thin blue line + glow as .site-header__searchbar:focus-within —
+   its own :focus-visible instead, since this is a single plain input, not
+   a pill wrapping a pair of fields. */
+.site-header__filter-input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .site-header__salary-group {
