@@ -268,6 +268,23 @@ export interface ApiKey {
   masked_key: string;
 }
 
+// A credential for third-party tools (e.g. the browser extension) to act on
+// this user's behalf — see POST /auth/tokens. Unlike ApiKey, there's no
+// masked form of it stored: the raw value only ever exists once, in
+// PersonalAccessTokenCreateResult, right when it's minted.
+export interface PersonalAccessToken {
+  id: string;
+  label: string;
+  expires_at: string | null;
+  last_used_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+}
+
+export interface PersonalAccessTokenCreateResult extends PersonalAccessToken {
+  token: string;
+}
+
 // One column per GET /jobs query param worth persisting — mirrors JobFilters
 // (api/jobs.ts) minus `page`. Re-run on a schedule server-side (see the
 // backend's saved_search_alerts.py) to email a digest when something new

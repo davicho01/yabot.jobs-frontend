@@ -9,6 +9,7 @@ import { ApplyPage } from "./pages/ApplyPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ResumePage } from "./pages/ResumePage";
 import { ApiKeysPage } from "./pages/ApiKeysPage";
+import { AccessTokensPage } from "./pages/AccessTokensPage";
 import { ApplicationsPage } from "./pages/ApplicationsPage";
 import { SavedSearchesPage } from "./pages/SavedSearchesPage";
 import { AdminDashboardPage } from "./pages/AdminDashboardPage";
@@ -79,6 +80,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ApiKeysPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/access-tokens"
+          element={
+            <ProtectedRoute>
+              <AccessTokensPage />
             </ProtectedRoute>
           }
         />

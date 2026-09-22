@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Yabot Jobs</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="popup">
+      <div class="popup__header">
+        <span class="popup__title">Yabot Jobs</span>
+        <button id="options-link" class="popup__options-link" title="Settings" type="button">⚙</button>
+      </div>
+
+      <div id="not-configured" class="popup__notice" hidden>
+        <p>Set up the extension first — add your Yabot Jobs URL and an access token.</p>
+        <button id="open-options" type="button">Open settings</button>
+      </div>
+
+      <div id="configured" hidden>
+        <p id="current-url" class="popup__url"></p>
+        <button id="save-button" class="popup__save-button" type="button">Save to Yabot Jobs</button>
+        <p id="status" class="popup__status" hidden></p>
+      </div>
+    </div>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
