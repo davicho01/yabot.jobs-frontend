@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import { applicationsApi } from "../api/applications";
+import { jobsApi } from "../api/jobs";
 import type { Application, JobDetail, JobPosting, User } from "../api/types";
 
 // A JobPosting row exists from the moment its URL is submitted (see
@@ -37,6 +38,69 @@ function formatApplicationDate(application: Application): string {
   return `Added ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
 }
 
+function SimilarJobsList({ items, onSelect }: { items: JobDetail[]; onSelect?: (urlId: string) => void }) {
+  return (
+    <ul className="case-file__similar-list">
+      {items.map((item) => (
+        <li key={item.url.id} className="case-file__similar-item">
+          {/* onSelect is only given from JobBoardPage, where picking one swaps
+              the split-pane's selection instead of leaving the board (see its
+              own selectJob) — everywhere else (JobDetailPage's standalone
+              deep link) this just navigates to that job's own page. */}
+          {onSelect ? (
+            <button type="button" className="case-file__similar-link" onClick={() => onSelect(item.url.id)}>
+              {item.posting?.title ?? "Untitled role"}
+            </button>
+          ) : (
+            <Link to={`/jobs/${item.url.id}`} className="case-file__similar-link">
+              {item.posting?.title ?? "Untitled role"}
+            </Link>
+          )}
+          <span className="case-file__similar-meta">
+            {item.posting?.company_name ?? item.url.domain}
+            {item.posting?.location ? ` · ${item.posting.location}` : ""}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function SimilarJobsSection({
+  jobId,
+  companyName,
+  onSelect,
+}: {
+  jobId: string;
+  companyName: string | null;
+  onSelect?: (urlId: string) => void;
+}) {
+  const { data } = useQuery({
+    queryKey: ["similar-jobs", jobId],
+    queryFn: () => jobsApi.similar(jobId),
+  });
+  const sameCompany = data?.same_company ?? [];
+  const similarTitle = data?.similar_title ?? [];
+  if (sameCompany.length === 0 && similarTitle.length === 0) return null;
+
+  return (
+    <div className="case-file__similar">
+      {sameCompany.length > 0 && (
+        <div className="case-file__similar-group">
+          <h2>{companyName ? `More from ${companyName}` : "More from this company"}</h2>
+          <SimilarJobsList items={sameCompany} onSelect={onSelect} />
+        </div>
+      )}
+      {similarTitle.length > 0 && (
+        <div className="case-file__similar-group">
+          <h2>Similar roles elsewhere</h2>
+          <SimilarJobsList items={similarTitle} onSelect={onSelect} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function JobCaseFile({
   job,
   user,
@@ -45,6 +109,7 @@ export function JobCaseFile({
   onRescan,
   onDelete,
   isDeleting,
+  onSelectSimilar,
 }: {
   job: JobDetail;
   user: User | null;
@@ -53,6 +118,8 @@ export function JobCaseFile({
   onRescan: () => void;
   onDelete?: () => void;
   isDeleting?: boolean;
+  // See SimilarJobsList — only set from JobBoardPage.
+  onSelectSimilar?: (urlId: string) => void;
 }) {
   const posting = scannedPosting(job);
   const scanFailed = job.url.scan_status === "failed";
@@ -141,6 +208,12 @@ export function JobCaseFile({
               "No description was extracted for this posting."
             )}
           </div>
+
+          <SimilarJobsSection
+            jobId={job.url.id}
+            companyName={posting.company_name}
+            onSelect={onSelectSimilar}
+          />
 
           {user?.role === "admin" && onDelete && (
             <div className="case-file__footer">

@@ -288,6 +288,7 @@ export function JobBoardPage() {
                 onRescan={() => rescanMutation.mutate(selected.url.id)}
                 onDelete={() => deleteListing(selected.url.id)}
                 isDeleting={deleteListingMutation.isPending}
+                onSelectSimilar={selectJob}
               />
             )}
         </div>
