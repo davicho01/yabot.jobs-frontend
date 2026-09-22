@@ -286,7 +286,6 @@
         -webkit-text-size-adjust: 100%;
         text-size-adjust: 100%;
         scroll-behavior: smooth;
-        scroll-padding-top: 7rem;
       }
 
       body {
@@ -476,13 +475,8 @@
       /* ---------- header ---------- */
 
       .top {
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        background: color-mix(in srgb, var(--paper) 86%, transparent);
+        background: var(--paper);
         border-bottom: 1px solid var(--line);
-        -webkit-backdrop-filter: saturate(180%) blur(18px);
-        backdrop-filter: saturate(180%) blur(18px);
       }
 
       .top__row {
@@ -1785,10 +1779,6 @@
       }
 
       @media (max-width: 54rem) {
-        html {
-          scroll-padding-top: 9.5rem;
-        }
-
         .bento,
         .ledger {
           grid-template-columns: minmax(0, 1fr);
