@@ -25,6 +25,20 @@ function formatPostedDate(postedAt: string): string {
   return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
 }
 
+// follow_up_at is also a date-only string — same UTC-pinning as above, plus
+// whether it's already due (today or earlier), matching the backend sweep's
+// own <= today check (app.services.follow_up_reminders) — compared in UTC
+// like that check is, not the viewer's own local "today".
+function formatFollowUp(followUpAt: string): { text: string; overdue: boolean } {
+  const date = new Date(`${followUpAt}T00:00:00Z`);
+  const now = new Date();
+  const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return {
+    text: date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }),
+    overdue: date.getTime() <= todayUtc,
+  };
+}
+
 function formatSalary(posting: ApplicationJobPosting): string | null {
   if (!posting.salary_min && !posting.salary_max) return null;
   const currency = posting.salary_currency ?? "";
@@ -34,7 +48,7 @@ function formatSalary(posting: ApplicationJobPosting): string | null {
   return `${currency} ${(posting.salary_min ?? posting.salary_max)?.toLocaleString()}`;
 }
 
-type SortableField = "score" | "pay" | "posted";
+type SortableField = "score" | "pay" | "posted" | "followUp";
 type SortDirection = "asc" | "desc";
 type ActiveSort = { field: SortableField; direction: SortDirection };
 
@@ -42,12 +56,13 @@ const SORT_FIELD_LABELS: Record<SortableField, string> = {
   score: "Score",
   pay: "Pay range",
   posted: "Posted date",
+  followUp: "Follow-up date",
 };
 
 const SORT_FIELDS = Object.keys(SORT_FIELD_LABELS) as SortableField[];
 
 function isSortField(value: string): value is SortableField {
-  return value === "score" || value === "pay" || value === "posted";
+  return value === "score" || value === "pay" || value === "posted" || value === "followUp";
 }
 
 // "sort=score:desc,pay:asc" — order in the list is sort priority (first
@@ -79,6 +94,7 @@ const CSV_HEADER = [
   "Posted",
   "Apply URL",
   "Archived",
+  "Follow up",
   "Notes",
 ];
 
@@ -101,6 +117,7 @@ function applicationsToCsv(applications: Application[]): string {
     application.job_posting.posted_at ?? "",
     application.job_posting.apply_url,
     application.is_archived ? "Yes" : "No",
+    application.follow_up_at ?? "",
     application.notes ?? "",
   ]);
   // \r\n per RFC 4180; a leading BOM so Excel opens it as UTF-8 rather than
@@ -128,6 +145,8 @@ function sortValue(application: Application, field: SortableField): number | nul
       return application.job_posting.salary_max ?? application.job_posting.salary_min ?? null;
     case "posted":
       return application.job_posting.posted_at ? new Date(`${application.job_posting.posted_at}T00:00:00Z`).getTime() : null;
+    case "followUp":
+      return application.follow_up_at ? new Date(`${application.follow_up_at}T00:00:00Z`).getTime() : null;
   }
 }
 
@@ -473,6 +492,15 @@ export function ApplicationsPage() {
                   )}
                   {application.job_posting.posted_at && (
                     <span className="application-row__added">Posted {formatPostedDate(application.job_posting.posted_at)}</span>
+                  )}
+                  {application.follow_up_at && (
+                    <span
+                      className={`application-row__follow-up${
+                        formatFollowUp(application.follow_up_at).overdue ? " application-row__follow-up--due" : ""
+                      }`}
+                    >
+                      Follow up {formatFollowUp(application.follow_up_at).text}
+                    </span>
                   )}
                 </div>
               </div>

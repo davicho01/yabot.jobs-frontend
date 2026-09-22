@@ -98,6 +98,9 @@ export interface Application {
   // When this row was first made — always set (saving/applying to a job
   // always adds one).
   created_at: string;
+  // A self-set "remind me about this one" day (not a specific time) — null
+  // means no reminder wanted.
+  follow_up_at: string | null;
   job_posting: ApplicationJobPosting;
   // Max of the fitness score and the tailored-resume score, whichever is set.
   best_score: number | null;

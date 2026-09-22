@@ -280,8 +280,12 @@ function ApplyPageContent({
   }, [job, recordApplication, isJobAlreadySaved]);
 
   const updateApplicationMutation = useMutation({
-    mutationFn: (payload: { status?: ApplicationStatus; notes?: string; is_archived?: boolean }) =>
-      applicationsApi.update(currentApplication!.id, payload),
+    mutationFn: (payload: {
+      status?: ApplicationStatus;
+      notes?: string;
+      is_archived?: boolean;
+      follow_up_at?: string | null;
+    }) => applicationsApi.update(currentApplication!.id, payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
   });
 
@@ -539,6 +543,18 @@ function ApplyPageContent({
                     ))}
                   </select>
                 </div>
+                <label className="apply-page__follow-up">
+                  <span>Remind me to follow up</span>
+                  <input
+                    type="date"
+                    className="apply-page__follow-up-input"
+                    disabled={!currentApplication}
+                    value={currentApplication?.follow_up_at ?? ""}
+                    onChange={(e) =>
+                      updateApplicationMutation.mutate({ follow_up_at: e.target.value || null })
+                    }
+                  />
+                </label>
                 <NotesEditor
                   key={currentApplication?.id ?? "pending"}
                   initialNotes={currentApplication?.notes ?? ""}
