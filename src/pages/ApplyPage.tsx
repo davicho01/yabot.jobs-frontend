@@ -653,23 +653,24 @@ function ApplyPageContent({
                   <p>See how your resume stacks up against this posting's requirements.</p>
                 </div>
 
-                {resumes.length > 1 && (
-                  <ResumePickerMenu
-                    resumes={resumes}
-                    selectedResumeId={selectedResumeId}
-                    onSelect={setPickedResumeId}
-                  />
-                )}
-
                 {!displayedScore && (
-                  <button
-                    type="button"
-                    className="dossier-action__button"
-                    onClick={() => scoreMutation.mutate()}
-                    disabled={!jobPostingId || scoreMutation.isPending}
-                  >
-                    {scoreMutation.isPending ? "Evaluating…" : "Check if I qualify"}
-                  </button>
+                  <>
+                    {resumes.length > 1 && (
+                      <ResumePickerMenu
+                        resumes={resumes}
+                        selectedResumeId={selectedResumeId}
+                        onSelect={setPickedResumeId}
+                      />
+                    )}
+                    <button
+                      type="button"
+                      className="dossier-action__button"
+                      onClick={() => scoreMutation.mutate()}
+                      disabled={!jobPostingId || scoreMutation.isPending}
+                    >
+                      {scoreMutation.isPending ? "Evaluating…" : "Check if I qualify"}
+                    </button>
+                  </>
                 )}
 
                 {displayedScore && (
@@ -697,6 +698,13 @@ function ApplyPageContent({
                           </span>
                         ))}
                       </div>
+                    )}
+                    {resumes.length > 1 && (
+                      <ResumePickerMenu
+                        resumes={resumes}
+                        selectedResumeId={selectedResumeId}
+                        onSelect={setPickedResumeId}
+                      />
                     )}
                     <button type="button" className="rescan-button" onClick={() => scoreMutation.mutate()}>
                       Re-evaluate

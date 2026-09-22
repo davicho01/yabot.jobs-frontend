@@ -239,16 +239,25 @@
   background: var(--accent-deep);
 }
 
-/* ResumePickerMenu is an .action-dropdown (see below), sitting under the
-   Fitness report card's header, above the qualify button/results — this
-   adds the space separating it from both, and left-anchors its menu
-   instead of the shared right anchor, since every other .action-dropdown
-   on this page sits at the right edge of a toolbar while this one sits at
-   the card's left edge (a right-anchored menu here would run off that
-   edge, the same fix ApplicationsPage.css makes for its own left-edge
-   Download button). */
+/* ResumePickerMenu is an .action-dropdown (see below), rendered twice —
+   right above "Check if I qualify" (no score yet) or right above
+   "Re-evaluate", below the matched/missing keyword rows (once there is
+   one) — always the last thing before whichever action button applies.
+   The qualify-button case has no surrounding gap container, so it needs
+   its own spacing below; the re-evaluate case is a .fitness-result flex
+   child, which already gaps its children evenly, so that margin would
+   double up there and is zeroed back out. Both cases left-anchor the
+   dropdown's menu instead of the shared right anchor, since every other
+   .action-dropdown on this page sits at the right edge of a toolbar while
+   this one sits at the card's left edge (a right-anchored menu here would
+   run off that edge, the same fix ApplicationsPage.css makes for its own
+   left-edge Download button). */
 .apply-page__resume-picker {
   margin-bottom: 1.25rem;
+}
+
+.fitness-result .apply-page__resume-picker {
+  margin-bottom: 0;
 }
 
 .apply-page__resume-picker .action-dropdown-menu {
