@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
-import type { JobDetail, JobPosting, User } from "../api/types";
+import { applicationsApi } from "../api/applications";
+import type { Application, JobDetail, JobPosting, User } from "../api/types";
 
 // A JobPosting row exists from the moment its URL is submitted (see
 // get_or_create_job_posting) so job_posting_id is available right away —
@@ -28,6 +30,13 @@ function formatPostedAt(job: JobDetail): string | null {
   return `Posted ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`;
 }
 
+// created_at is a real timestamp (not a date-only string like posted_at), so
+// this formats in the viewer's own local time zone rather than pinning UTC.
+function formatApplicationDate(application: Application): string {
+  const date = new Date(application.created_at);
+  return `Added ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+}
+
 export function JobCaseFile({
   job,
   user,
@@ -47,6 +56,17 @@ export function JobCaseFile({
 }) {
   const posting = scannedPosting(job);
   const scanFailed = job.url.scan_status === "failed";
+
+  // Same list ApplyPage/ApplicationsPage query (same ["applications"] cache
+  // key), just to answer one question here: has this posting already been
+  // saved/applied to? (Visiting ApplyPage auto-saves it — see its own
+  // effect — so "Evaluate Job" is the wrong label the moment that's true.)
+  const { data: applications } = useQuery({
+    queryKey: ["applications"],
+    queryFn: applicationsApi.list,
+    enabled: !!user,
+  });
+  const currentApplication = applications?.find((a) => a.job_posting.url_id === job.url.id) ?? null;
 
   return (
     <article className="case-file">
@@ -89,7 +109,10 @@ export function JobCaseFile({
                 Original ↗
               </a>
               <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
-                Evaluate Job →
+                <span>{currentApplication ? "View application →" : "Evaluate Job →"}</span>
+                {currentApplication && (
+                  <span className="apply-button__meta">{formatApplicationDate(currentApplication)}</span>
+                )}
               </Link>
             </div>
           </div>
