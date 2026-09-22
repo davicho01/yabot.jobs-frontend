@@ -517,23 +517,6 @@ function ApplyPageContent({
                 Apply →
               </a>
             </div>
-            {resumes.length > 1 && (
-              <div className="apply-page__resume-picker">
-                <label htmlFor="apply-page-resume-select">Resume</label>
-                <select
-                  id="apply-page-resume-select"
-                  value={selectedResumeId ?? ""}
-                  onChange={(e) => setPickedResumeId(e.target.value)}
-                >
-                  {resumes.map((resume) => (
-                    <option key={resume.id} value={resume.id}>
-                      {resume.filename}
-                      {resume.is_main ? " (main)" : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
             <div className="dossier">
               <section className="dossier-action">
                 <div className="score-summary-row">
@@ -614,6 +597,24 @@ function ApplyPageContent({
                   <h2>Fitness report</h2>
                   <p>See how your resume stacks up against this posting's requirements.</p>
                 </div>
+
+                {resumes.length > 1 && (
+                  <div className="apply-page__resume-picker">
+                    <label htmlFor="apply-page-resume-select">Resume</label>
+                    <select
+                      id="apply-page-resume-select"
+                      value={selectedResumeId ?? ""}
+                      onChange={(e) => setPickedResumeId(e.target.value)}
+                    >
+                      {resumes.map((resume) => (
+                        <option key={resume.id} value={resume.id}>
+                          {resume.filename}
+                          {resume.is_main ? " (main)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {!displayedScore && (
                   <button

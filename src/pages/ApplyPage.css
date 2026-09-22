@@ -239,23 +239,43 @@
   background: var(--accent-deep);
 }
 
+/* Styled as one pill-shaped control — a bold "Resume" label fused to the
+   native <select> — so it reads as a button with its current value shown,
+   matching .site-header__filter-dropdown-trigger's look elsewhere. */
 .apply-page__resume-picker {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 1.25rem;
-  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  padding: 0.3rem 0.3rem 0.3rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+}
+
+.apply-page__resume-picker label {
+  font-size: 0.72rem;
+  font-weight: 700;
   color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .apply-page__resume-picker select {
+  appearance: auto;
   font-family: var(--font-body);
+  font-weight: 600;
   font-size: 0.85rem;
   color: var(--ink);
   background: var(--paper);
   border: 1px solid var(--line);
-  border-radius: var(--radius-field);
-  padding: 0.4rem 0.7rem;
+  border-radius: var(--radius-pill);
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+}
+
+.apply-page__resume-picker select:hover {
+  border-color: var(--ink-soft);
 }
 
 @media (max-width: 900px) {
