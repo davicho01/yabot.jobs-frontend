@@ -20,10 +20,11 @@ export const applicationsApi = {
       selected_resume_id?: string | null;
     },
   ) => api.patch<Application>(`/applications/${id}`, payload),
-  // Backend counterpart to the apply-page's bulk-actions bar — sets the
-  // same status on several applications in one call instead of fanning
-  // individual `update` calls out client-side (see useBulkStatusMutation).
-  bulkUpdateStatus: (ids: string[], status: ApplicationStatus) =>
-    api.patch<Application[]>("/applications/bulk-status", { ids, status }),
+  // Backend counterpart to the apply-page's bulk-actions bar — applies
+  // status and/or is_archived to several applications in one call instead
+  // of fanning individual `update` calls out client-side (one request per
+  // selected row) the way every bulk action here used to.
+  bulkUpdate: (ids: string[], payload: { status?: ApplicationStatus; is_archived?: boolean }) =>
+    api.patch<Application[]>("/applications/bulk-update", { ids, ...payload }),
   remove: (id: string) => api.delete<void>(`/applications/${id}`),
 };

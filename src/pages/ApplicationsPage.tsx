@@ -363,29 +363,28 @@ function DownloadMenu({ application }: { application: Application }) {
   );
 }
 
-// Fires one applicationsApi.update per id in parallel, matching the
-// existing per-row mutations exactly — there's no bulk endpoint for
-// is_archived (unlike status, see useBulkStatusMutation below), so this is
-// just those same single-application calls fanned out client-side.
+// One PATCH /applications/bulk-update request for every selected id, not
+// one applicationsApi.update call fanned out per id client-side — archive/
+// unarchive's payload is fixed at the hook call site (below), unlike
+// useBulkStatusMutation's, which isn't known until BulkStatusMenu's
+// dropdown picks one.
 function useBulkUpdateMutation(payload: { is_archived: boolean }) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (ids: string[]) => Promise.all(ids.map((id) => applicationsApi.update(id, payload))),
+    mutationFn: (ids: string[]) => applicationsApi.bulkUpdate(ids, payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
   });
 }
 
-// Unlike useBulkUpdateMutation above, the status to apply isn't known
-// until the user picks one from BulkStatusMenu's dropdown — so it's a
-// mutate-time argument here instead of a payload baked in at the hook
-// call site. Uses the real PATCH /applications/bulk-status endpoint (one
-// request, not fanned-out per-id calls) since status is the field that
-// endpoint supports.
+// Same bulk-update endpoint as useBulkUpdateMutation above, just with the
+// status to apply passed at mutate time instead of baked into the hook
+// call site, since it isn't known until the user picks one from
+// BulkStatusMenu's dropdown.
 function useBulkStatusMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ ids, status }: { ids: string[]; status: ApplicationStatus }) =>
-      applicationsApi.bulkUpdateStatus(ids, status),
+      applicationsApi.bulkUpdate(ids, { status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
   });
 }
