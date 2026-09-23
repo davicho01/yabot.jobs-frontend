@@ -221,6 +221,14 @@
   opacity: 0.8;
 }
 
+.application-row__applied {
+  flex-shrink: 0;
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  opacity: 0.8;
+}
+
 .application-row__follow-up {
   flex-shrink: 0;
   margin-left: auto;
@@ -360,6 +368,10 @@
   }
 
   .application-row__added {
+    margin-left: 0;
+  }
+
+  .application-row__applied {
     margin-left: 0;
   }
 

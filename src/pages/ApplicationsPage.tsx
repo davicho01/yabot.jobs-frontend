@@ -27,6 +27,15 @@ function formatPostedDate(postedAt: string): string {
   return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
 }
 
+// applied_at is a real timestamp (unlike posted_at/follow_up_at above,
+// which are date-only), but the list row only has room for the day — see
+// ApplyPage's formatAppliedAt for the full date+time version shown there.
+// No UTC-pinning needed here: it already carries its own offset, so the
+// viewer's local calendar day is the right one to show.
+function formatAppliedDate(appliedAt: string): string {
+  return new Date(appliedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
 // follow_up_at is also a date-only string — same UTC-pinning as above, plus
 // whether it's already due (today or earlier), matching the backend sweep's
 // own <= today check (app.services.follow_up_reminders) — compared in UTC
@@ -94,6 +103,7 @@ const CSV_HEADER = [
   "Salary max",
   "Currency",
   "Posted",
+  "Applied",
   "Apply URL",
   "Archived",
   "Follow up",
@@ -117,6 +127,7 @@ function applicationsToCsv(applications: Application[]): string {
     application.job_posting.salary_max ?? "",
     application.job_posting.salary_currency ?? "",
     application.job_posting.posted_at ?? "",
+    application.applied_at ?? "",
     application.job_posting.apply_url,
     application.is_archived ? "Yes" : "No",
     application.follow_up_at ?? "",
@@ -616,6 +627,9 @@ export function ApplicationsPage() {
                   )}
                   {application.job_posting.posted_at && (
                     <span className="application-row__added">Posted {formatPostedDate(application.job_posting.posted_at)}</span>
+                  )}
+                  {application.applied_at && (
+                    <span className="application-row__applied">Applied {formatAppliedDate(application.applied_at)}</span>
                   )}
                   {application.follow_up_at && (
                     <span
