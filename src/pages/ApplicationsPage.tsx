@@ -5,15 +5,11 @@ import { applicationsApi } from "../api/applications";
 import { resumesApi } from "../api/resumes";
 import { ApiError } from "../api/client";
 import type { Application, ApplicationJobPosting, ApplicationStatus } from "../api/types";
+import { StatusSelect } from "../components/StatusSelect";
 import "./ApplicationsPage.css";
 import { BOARD_PATH } from "../routes";
 
 const QUALIFY_THRESHOLD = 70;
-// Matches utils/applicationStatus's STATUSES (used by StatusSelect and
-// ApplyPage) — kept as its own copy since this page's status <select>
-// predates that shared module and the two don't otherwise share a
-// components/constants module.
-const STATUSES: ApplicationStatus[] = ["saved", "applied", "interviewing", "offer", "rejected", "withdrawn"];
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof ApiError ? err.message : fallback;
@@ -211,8 +207,10 @@ function SortMenu({
 
 // Same status set ApplyPage's Notes card edits — moving it here too
 // means a status can be changed straight from the list, without opening
-// each job.
-function StatusSelect({ application }: { application: Application }) {
+// each job. Wraps the shared dropdown-button StatusSelect (same
+// action-dropdown pattern as DownloadMenu below, tinted per status like
+// the marketing site's stamp mocks) instead of a plain native <select>.
+function ApplicationStatusSelect({ application }: { application: Application }) {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
 
@@ -227,19 +225,11 @@ function StatusSelect({ application }: { application: Application }) {
 
   return (
     <div className="application-row__status">
-      <select
-        className="application-row__status-select"
-        aria-label="Application status"
-        value={application.status}
+      <StatusSelect
+        value={application.status as ApplicationStatus}
         disabled={mutation.isPending}
-        onChange={(e) => mutation.mutate(e.target.value as ApplicationStatus)}
-      >
-        {STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
+        onChange={(status) => mutation.mutate(status)}
+      />
       {error && <span className="application-row__details-error">{error}</span>}
     </div>
   );
@@ -642,7 +632,7 @@ export function ApplicationsPage() {
                   )}
                 </div>
               </div>
-              <StatusSelect application={application} />
+              <ApplicationStatusSelect application={application} />
               <DownloadMenu application={application} />
               {application.best_score !== null ? (
                 <span

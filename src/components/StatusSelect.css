@@ -7,18 +7,81 @@
   align-items: center;
   gap: 0.4rem;
   text-transform: capitalize;
+  border-color: transparent;
 }
 
 /* Focus glow itself comes from index.css's shared ".action-dropdown >
    button:focus" rule — every dropdown trigger app-wide gets it from
    there, not a copy here. */
 
+/* Tints the trigger like a .stamp (index.css) colored by the status it's
+   currently showing — same formula (color-mix at 14%) and the same tones
+   the marketing site mocks up on index.html's "Applied"/"Interviewing"/
+   "Offer" stamps, so the live control reads the way that page promises. */
+.status-select__button--default {
+  color: var(--accent-deep);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.status-select__button--positive {
+  color: var(--teal);
+  background: color-mix(in srgb, var(--teal) 14%, transparent);
+}
+
+.status-select__button--warning {
+  color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 14%, transparent);
+}
+
+.status-select__button--negative {
+  color: var(--rose);
+  background: color-mix(in srgb, var(--rose) 14%, transparent);
+}
+
+.status-select__button--neutral {
+  color: var(--ink-soft);
+  background: var(--surface);
+}
+
+.status-select__button:disabled {
+  opacity: 0.6;
+}
+
 .status-select__arrow {
   flex-shrink: 0;
   font-size: 0.7rem;
-  color: var(--ink-soft);
+  opacity: 0.7;
 }
 
 .status-select__menu button {
   text-transform: capitalize;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Small color key next to each option so the tone is scannable in the menu
+   too, not just on the closed trigger. */
+.status-select__option-dot {
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--ink-soft);
+}
+
+.status-select__option--default .status-select__option-dot {
+  background: var(--accent);
+}
+
+.status-select__option--positive .status-select__option-dot {
+  background: var(--teal);
+}
+
+.status-select__option--warning .status-select__option-dot {
+  background: var(--amber);
+}
+
+.status-select__option--negative .status-select__option-dot {
+  background: var(--rose);
 }

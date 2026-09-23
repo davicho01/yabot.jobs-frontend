@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { ApplicationStatus } from "../api/types";
-import { STATUSES } from "../utils/applicationStatus";
+import { STATUSES, statusTone } from "../utils/applicationStatus";
 import "./StatusSelect.css";
 
 // Same button-opens-a-menu dropdown as ResumeSelect (action-dropdown /
@@ -34,7 +34,7 @@ export function StatusSelect({
     <div className="action-dropdown status-select" ref={containerRef}>
       <button
         type="button"
-        className="rescan-button status-select__button"
+        className={`rescan-button status-select__button status-select__button--${statusTone(value)}`}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={`Status: ${value}`}
@@ -55,12 +55,14 @@ export function StatusSelect({
               key={s}
               type="button"
               role="option"
+              className={`status-select__option status-select__option--${statusTone(s)}`}
               aria-selected={s === value}
               onClick={() => {
                 setOpen(false);
                 onChange(s);
               }}
             >
+              <span className="status-select__option-dot" aria-hidden="true" />
               {s}
               {s === value ? " ✓" : ""}
             </button>
