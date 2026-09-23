@@ -878,15 +878,16 @@
 
       .bento {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1fr);
         gap: clamp(0.85rem, 2vw, 1.4rem);
         margin-top: clamp(2.5rem, 5vw, 4rem);
       }
 
       .tile {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
+        display: grid;
+        grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+        gap: clamp(1.5rem, 4vw, 3rem);
+        align-items: center;
         min-width: 0;
         padding: clamp(1.6rem, 3.6vw, 2.9rem);
         background: var(--surface);
@@ -903,14 +904,33 @@
         gap: 0.85rem;
       }
 
-      .tile__text p {
-        max-width: 30rem;
+      .tile__highlights {
+        display: grid;
+        gap: 0.5rem;
+        margin: 0;
+      }
+
+      .tile__highlights li {
+        position: relative;
+        padding-left: 1.1rem;
         color: var(--ink-soft);
+        font-size: 0.95rem;
+        line-height: 1.4;
+      }
+
+      .tile__highlights li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.5em;
+        width: 0.4rem;
+        height: 0.4rem;
+        border-radius: 50%;
+        background: var(--accent);
       }
 
       .tile__art {
-        margin-top: auto;
-        padding-top: 1.25rem;
+        min-width: 0;
       }
 
       .tile--dark {
@@ -922,13 +942,23 @@
         color: var(--band-ink);
       }
 
-      .tile--dark .tile__text p {
+      .tile--dark .tile__highlights li {
         color: var(--band-soft);
+      }
+
+      .tile--dark .tile__highlights li::before {
+        background: var(--band-accent);
       }
 
       .tile--dark .stamp {
         color: var(--band-accent);
         background: rgba(41, 151, 255, 0.18);
+      }
+
+      @media (max-width: 62rem) {
+        .tile {
+          grid-template-columns: minmax(0, 1fr);
+        }
       }
 
       /* The "bring your own key" notice inside the dark tile */
@@ -945,7 +975,7 @@
         color: var(--band-ink);
       }
 
-      .byok svg {
+      .byok > svg {
         width: 1.35rem;
         height: 1.35rem;
         margin-top: 0.1rem;
@@ -961,14 +991,134 @@
         color: #fff;
       }
 
-      .byok p + p {
-        margin-top: 0.3rem;
+      .byok__note {
+        margin-top: 0.6rem;
         font-size: 0.95rem;
         line-height: 1.55;
         color: var(--band-ink);
       }
 
-      /* Step 1: shortcut chips (real links) */
+      /* The provider badges inside the "bring your own key" notice */
+
+      .providers {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.65rem;
+      }
+
+      .provider {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.7rem;
+        background: rgba(41, 151, 255, 0.14);
+        border: 1px solid rgba(41, 151, 255, 0.35);
+        border-radius: var(--radius-pill);
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--band-ink);
+        white-space: nowrap;
+      }
+
+      .provider__icon {
+        flex-shrink: 0;
+        width: 0.9rem;
+        height: 0.9rem;
+        color: var(--band-accent);
+      }
+
+      .provider--muted {
+        background: transparent;
+        border-style: dashed;
+        border-color: var(--band-line);
+        color: var(--band-soft);
+        font-weight: 500;
+        white-space: normal;
+      }
+
+      /* Step 1: the search bar, with its exclude-a-word tip */
+
+      .searchmock {
+        margin-bottom: 2.75rem;
+      }
+
+      .searchmock__bar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr) auto;
+        align-items: center;
+        background: var(--paper);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-pill);
+        padding: 0.2rem 0.2rem 0.2rem 1.1rem;
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+      }
+
+      .searchmock__title {
+        padding: 0.55rem 0.75rem 0.55rem 0;
+        color: var(--ink-soft);
+        font-size: 0.88rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .searchmock__rule {
+        width: 1px;
+        height: 1.4rem;
+        background: var(--line);
+      }
+
+      .searchmock__location-wrap {
+        position: relative;
+        min-width: 0;
+      }
+
+      .searchmock__location {
+        display: block;
+        padding: 0.55rem 0.75rem 0.55rem 0.9rem;
+        color: var(--ink);
+        font-weight: 600;
+        font-size: 0.88rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .searchmock__cursor {
+        display: inline-block;
+        width: 1px;
+        height: 0.95em;
+        margin-left: 1px;
+        background: var(--ink);
+        vertical-align: -0.15em;
+      }
+
+      .searchmock__tip {
+        position: absolute;
+        left: 0.9rem;
+        top: calc(100% + 0.6rem);
+        padding: 0.45rem 0.7rem;
+        max-width: 15rem;
+        background: #1d1d1f;
+        color: #fff;
+        font-size: 0.72rem;
+        line-height: 1.35;
+        border-radius: 6px;
+        white-space: nowrap;
+        box-shadow: var(--lift);
+      }
+
+      .searchmock__tip::before {
+        content: "";
+        position: absolute;
+        left: 1.1rem;
+        top: -0.3rem;
+        width: 0.6rem;
+        height: 0.6rem;
+        background: #1d1d1f;
+        transform: rotate(45deg);
+      }
 
       .chips {
         display: flex;
@@ -1027,18 +1177,125 @@
         border-top: 1px solid var(--line);
       }
 
-      .verdicts li {
-        grid-template-columns: 7rem minmax(0, 1fr);
+      /* Step 2's art: the real apply page's numbered/checkmark process
+         list, shown mid-way through an example application. */
+
+      .flow-card {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+        padding: 1.1rem 1.2rem;
       }
 
-      .verdicts p {
-        font-size: 0.92rem;
-        line-height: 1.45;
+      .flow-steps {
+        display: grid;
+      }
+
+      .flow-step {
+        display: flex;
+        gap: 0.85rem;
+      }
+
+      .flow-step__rail {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex-shrink: 0;
+      }
+
+      .flow-step__marker {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 1.8rem;
+        height: 1.8rem;
+        border-radius: 50%;
+        border: 2px solid var(--line);
+        background: var(--paper);
+        color: var(--ink-soft);
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 0.85rem;
+      }
+
+      .flow-step--done .flow-step__marker {
+        border-color: var(--teal);
+        background: var(--teal);
+        color: #fff;
+      }
+
+      .flow-step__line {
+        width: 2px;
+        flex: 1;
+        min-height: 1.4rem;
+        margin: 0.25rem 0;
+        background: var(--line);
+      }
+
+      .flow-step__content {
+        flex: 1;
+        min-width: 0;
+        padding-bottom: 1.1rem;
+      }
+
+      .flow-step:last-child .flow-step__content {
+        padding-bottom: 0;
+      }
+
+      .flow-step__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+
+      .flow-step__title {
+        display: block;
+        font-family: var(--font-display);
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 0.2rem;
+      }
+
+      .flow-step__status {
+        display: block;
+        font-size: 0.8rem;
         color: var(--ink-soft);
       }
 
-      .verdicts .stamp {
-        justify-self: start;
+      .flow-step__status--done {
+        color: var(--teal);
+      }
+
+      .flow-step__chevron {
+        flex-shrink: 0;
+        margin-top: 0.25rem;
+        font-size: 0.65rem;
+        color: var(--ink-soft);
+      }
+
+      .flow-step__body {
+        margin-top: 0.9rem;
+        padding: 1rem 1.1rem;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+      }
+
+      .flow-step__body p {
+        color: var(--ink-soft);
+        font-size: 0.88rem;
+        line-height: 1.5;
+      }
+
+      .flow-step__body .btn {
+        margin-top: 0.85rem;
+      }
+
+      .flow-step__note {
+        margin-top: 0.85rem;
       }
 
       .tracker li {
@@ -1227,6 +1484,67 @@
         font-weight: 700;
         font-size: 0.75rem;
         border-radius: var(--radius-pill);
+      }
+
+      /* The three provider icons from the byok note, echoed here as small
+         floating discs pinned to .sheets' own right edge so they read as
+         hovering next to the paper rather than sitting in the text. The
+         accessible provider names stay put in .providers — these are a
+         decorative repeat (.sheets is already aria-hidden). */
+
+      .logo-float {
+        position: absolute;
+        display: grid;
+        place-items: center;
+        width: 4.8rem;
+        height: 4.8rem;
+        background: #fff;
+        border-radius: 50%;
+        box-shadow: 0 10px 20px -9px rgba(0, 0, 0, 0.6);
+        animation: logo-float-bob 4.5s ease-in-out infinite;
+      }
+
+      .logo-float svg {
+        width: 2.2rem;
+        height: 2.2rem;
+        color: var(--band-tile);
+      }
+
+      .logo-float--anthropic {
+        --rot: -9deg;
+        top: -0.5rem;
+        right: -1.8rem;
+        animation-delay: 0s;
+      }
+
+      .logo-float--openai {
+        --rot: 7deg;
+        top: 5.6rem;
+        right: -2.4rem;
+        animation-delay: 0.7s;
+      }
+
+      .logo-float--deepseek {
+        --rot: -5deg;
+        top: 11.4rem;
+        right: -1.2rem;
+        animation-delay: 1.4s;
+      }
+
+      @keyframes logo-float-bob {
+        0%,
+        100% {
+          transform: translateY(0) rotate(var(--rot));
+        }
+        50% {
+          transform: translateY(-0.5rem) rotate(var(--rot));
+        }
+      }
+
+      @media (max-width: 30rem) {
+        .logo-float {
+          display: none;
+        }
       }
 
       /* ---------- assistant (MCP) feature ---------- */
@@ -1838,11 +2156,6 @@
           flex: 1 1 100%;
         }
 
-        .verdicts li {
-          grid-template-columns: minmax(0, 1fr);
-          gap: 0.4rem;
-        }
-
         .readout__row {
           grid-template-columns: 4.6rem minmax(0, 1fr);
         }
@@ -1864,7 +2177,8 @@
 
         .hl,
         .readout__row,
-        .showcase__arrow path {
+        .showcase__arrow path,
+        .logo-float {
           animation: none;
         }
       }
@@ -1916,6 +2230,13 @@
 
           <figure class="showcase">
             <div class="showcase__tile">
+              <div class="addjob" aria-hidden="true">
+                <span class="addjob__label">Job Posting Url</span>
+                <div class="addjob__row">
+                  <span class="addjob__field">https://company.com/careers/job/123</span>
+                  <span class="addjob__go">Add &amp; Scan</span>
+                </div>
+              </div>
               <div class="showcase__grid">
                 <div class="posting" aria-hidden="true">
                   <span class="posting__crumbs">brightwave.example &rsaquo; careers &rsaquo; product</span>
@@ -1992,16 +2313,26 @@
               <div class="tile__text">
                 <span class="stamp">Step 1</span>
                 <h3>Find a posting</h3>
-                <p>
-                  Search the job board by title, city, or state. When a city comes up short, Yabot Jobs tells you how
-                  far around it looked and lets you widen the search.
-                </p>
-                <p>
-                  Narrow things down to remote, hybrid, or on-site work, or to jobs posted in the last day, week, or
-                  month.
-                </p>
+                <ul class="tile__highlights">
+                  <li>Search by title, city, or state</li>
+                  <li>Filter to remote, hybrid, or on-site</li>
+                  <li>Filter by how recently it was posted</li>
+                </ul>
               </div>
               <div class="tile__art">
+                <div class="searchmock" aria-hidden="true">
+                  <div class="searchmock__bar">
+                    <span class="searchmock__title">Search postings by title&hellip;</span>
+                    <span class="searchmock__rule"></span>
+                    <span class="searchmock__location-wrap">
+                      <span class="searchmock__location"
+                        >San Jose, California (metro area)<span class="searchmock__cursor"></span
+                      ></span>
+                      <span class="searchmock__tip">Add a word starting with &minus; to exclude it, e.g. &minus;senior</span>
+                    </span>
+                    <span class="btn btn--accent">Search</span>
+                  </div>
+                </div>
                 <div class="chips">
                   <a class="chip" href="/jobs?workplace=remote">Remote jobs</a>
                   <a class="chip" href="/jobs?workplace=hybrid">Hybrid jobs</a>
@@ -2019,27 +2350,107 @@
               <div class="tile__text">
                 <span class="stamp">Step 2</span>
                 <h3>Check how well you fit</h3>
-                <p>
-                  Upload your resume once, as a PDF or a Word file. For any posting, Yabot Jobs compares it with what
-                  the employer is asking for and gives you a fitness report with a short explanation.
-                </p>
-                <p>You find out before you spend an evening on an application whether it's worth the evening.</p>
+                <ul class="tile__highlights">
+                  <li>Upload your resume once, use it anywhere</li>
+                  <li>Get a fit score with a short explanation</li>
+                  <li>Then tailor it, write a cover letter, apply, and prep for the interview &mdash; all on one page</li>
+                </ul>
               </div>
               <div class="tile__art">
-                <ul class="plate verdicts" aria-label="The three possible results of a fitness report">
-                  <li>
-                    <span class="stamp stamp--good">Qualified</span>
-                    <p>Your resume meets what the posting asks for.</p>
-                  </li>
-                  <li>
-                    <span class="stamp stamp--maybe">Maybe</span>
-                    <p>Close. A tailored resume could tip it.</p>
-                  </li>
-                  <li>
-                    <span class="stamp stamp--bad">Not a match</span>
-                    <p>There's a real gap. Save your time for a better fit.</p>
-                  </li>
-                </ul>
+                <div class="flow-card" aria-hidden="true">
+                  <ol class="flow-steps">
+                    <li class="flow-step flow-step--done">
+                      <div class="flow-step__rail">
+                        <span class="flow-step__marker">&check;</span>
+                        <span class="flow-step__line"></span>
+                      </div>
+                      <div class="flow-step__content">
+                        <div class="flow-step__header">
+                          <span>
+                            <span class="flow-step__title">Review your skills</span>
+                            <span class="flow-step__status flow-step__status--done">Done &middot; fit score 91</span>
+                          </span>
+                          <span class="flow-step__chevron">&#9660;</span>
+                        </div>
+                      </div>
+                    </li>
+
+                    <li class="flow-step flow-step--done">
+                      <div class="flow-step__rail">
+                        <span class="flow-step__marker">&check;</span>
+                        <span class="flow-step__line"></span>
+                      </div>
+                      <div class="flow-step__content">
+                        <div class="flow-step__header">
+                          <span>
+                            <span class="flow-step__title">Address gaps &amp; tailor your resume</span>
+                            <span class="flow-step__status flow-step__status--done">Done &middot; tailored score 94</span>
+                          </span>
+                          <span class="flow-step__chevron">&#9660;</span>
+                        </div>
+                      </div>
+                    </li>
+
+                    <li class="flow-step">
+                      <div class="flow-step__rail">
+                        <span class="flow-step__marker">3</span>
+                        <span class="flow-step__line"></span>
+                      </div>
+                      <div class="flow-step__content">
+                        <div class="flow-step__header">
+                          <span>
+                            <span class="flow-step__title">Write a cover letter</span>
+                            <span class="flow-step__status">Not started</span>
+                          </span>
+                          <span class="flow-step__chevron">&#9660;</span>
+                        </div>
+                      </div>
+                    </li>
+
+                    <li class="flow-step flow-step--done">
+                      <div class="flow-step__rail">
+                        <span class="flow-step__marker">&check;</span>
+                        <span class="flow-step__line"></span>
+                      </div>
+                      <div class="flow-step__content">
+                        <div class="flow-step__header">
+                          <span>
+                            <span class="flow-step__title">Apply for the job</span>
+                            <span class="flow-step__status flow-step__status--done">Status: applied &middot; applied Sep 21, 2026, 11:46 AM</span>
+                          </span>
+                          <span class="flow-step__chevron">&#9650;</span>
+                        </div>
+                        <div class="flow-step__body">
+                          <p>
+                            Submit your application on the employer's site, then mark it applied here to keep your
+                            status in sync.
+                          </p>
+                          <span class="btn btn--accent">Apply &rarr;</span>
+                          <p class="flow-step__note">
+                            Status: applied &mdash; marked applied Sep 21, 2026, 11:46 AM. Change it any time from
+                            the Notes card above.
+                          </p>
+                        </div>
+                      </div>
+                    </li>
+
+                    <li class="flow-step">
+                      <div class="flow-step__rail">
+                        <span class="flow-step__marker">5</span>
+                      </div>
+                      <div class="flow-step__content">
+                        <div class="flow-step__header">
+                          <span>
+                            <span class="flow-step__title">Prep for the interview</span>
+                            <span class="flow-step__status">Optional &mdash; do this once an interview is scheduled</span>
+                          </span>
+                          <span class="flow-step__chevron">&#9660;</span>
+                        </div>
+                      </div>
+                    </li>
+                  </ol>
+                </div>
+                <p class="caption">A real application, partway through. (Example.)</p>
               </div>
             </li>
 
@@ -2047,21 +2458,32 @@
               <div class="tile__text">
                 <span class="stamp">Step 3</span>
                 <h3>Tailor your resume and cover letter</h3>
-                <p>
-                  Yabot Jobs rewrites your resume for the posting in a layout applicant tracking systems can read, and
-                  drafts a cover letter that speaks to the role.
-                </p>
-                <p>Download either one as a Word document (.docx) and change anything you like.</p>
-              </div>
-              <div class="byok">
-                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="7" cy="12" r="3.6" stroke="currentColor" stroke-width="2" /><path d="m9.6 9.4 6.4-6.4M13.4 5.6l2 2M11.6 7.4l1.6 1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
-                <div>
-                  <p class="byok__title">Bring your own AI key</p>
-                  <p>
-                    These tools run on a key from Anthropic, OpenAI, DeepSeek, or any OpenAI-compatible service. You pay
-                    that provider directly for what you use, and Yabot Jobs adds no fee. That's how the whole site stays
-                    free.
-                  </p>
+                <ul class="tile__highlights">
+                  <li>Rewritten for the posting, in an ATS-friendly layout</li>
+                  <li>A cover letter drafted to match</li>
+                  <li>Download both as Word documents (.docx) and edit freely</li>
+                </ul>
+                <div class="byok">
+                  <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="7" cy="12" r="3.6" stroke="currentColor" stroke-width="2" /><path d="m9.6 9.4 6.4-6.4M13.4 5.6l2 2M11.6 7.4l1.6 1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+                  <div>
+                    <p class="byok__title">Bring your own AI key</p>
+                    <ul class="providers" aria-label="Supported AI providers">
+                      <li class="provider">
+                        <svg class="provider__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z" /></svg>
+                        Anthropic
+                      </li>
+                      <li class="provider">
+                        <svg class="provider__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z" /></svg>
+                        OpenAI
+                      </li>
+                      <li class="provider">
+                        <svg class="provider__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23.748 4.651c-.254-.124-.364.113-.512.233-.051.04-.094.09-.137.137-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.155-.708-.311-.955-.65-.172-.24-.219-.509-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.094.172.187.129.323-.082.28-.18.553-.266.833-.055.179-.137.218-.328.14a5.5 5.5 0 0 1-1.737-1.179c-.857-.828-1.631-1.743-2.597-2.46a12 12 0 0 0-.689-.47c-.985-.957.13-1.743.387-1.836.27-.098.094-.433-.778-.428-.872.003-1.67.295-2.687.685a3 3 0 0 1-.465.136 9.6 9.6 0 0 0-2.883-.101c-1.885.21-3.39 1.1-4.497 2.622C.082 8.776-.231 10.854.152 13.02c.403 2.284 1.568 4.175 3.36 5.653 1.857 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.132-.284 4.994-1.86.47.234.962.328 1.78.398.629.058 1.235-.031 1.705-.129.735-.155.684-.836.418-.961-2.155-1.004-1.682-.595-2.112-.926 1.095-1.295 2.768-3.598 3.284-6.733.05-.346.115-.834.108-1.114-.004-.171.035-.238.23-.257a4.2 4.2 0 0 0 1.545-.475c1.397-.763 1.96-2.016 2.093-3.517.02-.23-.004-.467-.247-.588M11.58 18.168c-2.088-1.642-3.101-2.183-3.52-2.16-.39.024-.32.472-.234.763.09.288.207.487.371.74.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.168-1.361-.801-2.5-1.86-3.301-3.306-.775-1.393-1.225-2.888-1.299-4.482-.02-.385.094-.522.477-.592a4.7 4.7 0 0 1 1.53-.038c2.131.311 3.946 1.264 5.467 2.774.868.86 1.525 1.887 2.202 2.89.72 1.066 1.494 2.082 2.48 2.915.348.291.626.513.892.677-.802.09-2.14.109-3.055-.615zm1.001-6.44a.306.306 0 0 1 .415-.287.3.3 0 0 1 .113.074.3.3 0 0 1 .086.214c0 .17-.136.307-.308.307a.303.303 0 0 1-.306-.307m3.11 1.596c-.2.081-.4.151-.591.16a1.25 1.25 0 0 1-.798-.254c-.274-.23-.47-.358-.551-.758a1.7 1.7 0 0 1 .015-.588c.07-.327-.007-.537-.238-.727-.188-.156-.426-.199-.689-.199a.6.6 0 0 1-.254-.078.253.253 0 0 1-.114-.358 1 1 0 0 1 .192-.21c.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.392.451.462.576.685.915.176.264.336.536.446.848.066.194-.02.353-.25.45" /></svg>
+                        DeepSeek
+                      </li>
+                      <li class="provider provider--muted">+ any OpenAI-compatible service</li>
+                    </ul>
+                    <p class="byok__note">Yabot Jobs adds no fee &mdash; you pay your provider directly.</p>
+                  </div>
                 </div>
               </div>
               <div class="tile__art">
@@ -2089,6 +2511,15 @@
                     <i class="w9"></i>
                     <i class="w6"></i>
                   </div>
+                  <span class="logo-float logo-float--anthropic">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z" /></svg>
+                  </span>
+                  <span class="logo-float logo-float--openai">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z" /></svg>
+                  </span>
+                  <span class="logo-float logo-float--deepseek">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23.748 4.651c-.254-.124-.364.113-.512.233-.051.04-.094.09-.137.137-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.155-.708-.311-.955-.65-.172-.24-.219-.509-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.094.172.187.129.323-.082.28-.18.553-.266.833-.055.179-.137.218-.328.14a5.5 5.5 0 0 1-1.737-1.179c-.857-.828-1.631-1.743-2.597-2.46a12 12 0 0 0-.689-.47c-.985-.957.13-1.743.387-1.836.27-.098.094-.433-.778-.428-.872.003-1.67.295-2.687.685a3 3 0 0 1-.465.136 9.6 9.6 0 0 0-2.883-.101c-1.885.21-3.39 1.1-4.497 2.622C.082 8.776-.231 10.854.152 13.02c.403 2.284 1.568 4.175 3.36 5.653 1.857 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.132-.284 4.994-1.86.47.234.962.328 1.78.398.629.058 1.235-.031 1.705-.129.735-.155.684-.836.418-.961-2.155-1.004-1.682-.595-2.112-.926 1.095-1.295 2.768-3.598 3.284-6.733.05-.346.115-.834.108-1.114-.004-.171.035-.238.23-.257a4.2 4.2 0 0 0 1.545-.475c1.397-.763 1.96-2.016 2.093-3.517.02-.23-.004-.467-.247-.588M11.58 18.168c-2.088-1.642-3.101-2.183-3.52-2.16-.39.024-.32.472-.234.763.09.288.207.487.371.74.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.168-1.361-.801-2.5-1.86-3.301-3.306-.775-1.393-1.225-2.888-1.299-4.482-.02-.385.094-.522.477-.592a4.7 4.7 0 0 1 1.53-.038c2.131.311 3.946 1.264 5.467 2.774.868.86 1.525 1.887 2.202 2.89.72 1.066 1.494 2.082 2.48 2.915.348.291.626.513.892.677-.802.09-2.14.109-3.055-.615zm1.001-6.44a.306.306 0 0 1 .415-.287.3.3 0 0 1 .113.074.3.3 0 0 1 .086.214c0 .17-.136.307-.308.307a.303.303 0 0 1-.306-.307m3.11 1.596c-.2.081-.4.151-.591.16a1.25 1.25 0 0 1-.798-.254c-.274-.23-.47-.358-.551-.758a1.7 1.7 0 0 1 .015-.588c.07-.327-.007-.537-.238-.727-.188-.156-.426-.199-.689-.199a.6.6 0 0 1-.254-.078.253.253 0 0 1-.114-.358 1 1 0 0 1 .192-.21c.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.392.451.462.576.685.915.176.264.336.536.446.848.066.194-.02.353-.25.45" /></svg>
+                  </span>
                 </div>
               </div>
             </li>
@@ -2097,15 +2528,11 @@
               <div class="tile__text">
                 <span class="stamp">Step 4</span>
                 <h3>Keep track of every application</h3>
-                <p>
-                  Save a posting, then move it along as things happen: saved, applied, interviewing, offer. Rejected and
-                  withdrawn have their own places, and every application has room for your notes.
-                </p>
-                <p>
-                  Not every job is on Yabot Jobs, and it doesn't have to be. Found one on another job board or a
-                  company's careers page? Paste its link and Yabot Jobs reads the posting and adds it to your list, so
-                  everything you're chasing lives in one place and nothing slips through.
-                </p>
+                <ul class="tile__highlights">
+                  <li>Move it along: saved, applied, interviewing, offer</li>
+                  <li>Notes and a follow-up reminder on every one</li>
+                  <li>Paste a link to add a job from anywhere</li>
+                </ul>
               </div>
               <div class="tile__art">
                 <div class="addjob" aria-hidden="true">
