@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { jobsApi, type WorkplaceTypeFilter } from "../api/jobs";
 import { adminApi } from "../api/admin";
@@ -234,6 +234,9 @@ export function JobBoardPage() {
       {dialog}
       <div className="board__layout">
         <div className="board__list">
+          <Link to="/applications" className="board__applications-link">
+            My applications →
+          </Link>
           <div className="board__list-scroll">
               {searchArea && (
                 <p className="board__search-area">
