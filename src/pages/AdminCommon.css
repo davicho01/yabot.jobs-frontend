@@ -106,6 +106,25 @@
   padding: 1.25rem 1.5rem;
 }
 
+.admin-totals__tile--button {
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-totals__tile--button:disabled {
+  cursor: default;
+}
+
+.admin-totals__tile--button:not(:disabled):hover {
+  border-color: var(--amber);
+}
+
+.admin-totals__tile--button[aria-pressed="true"] {
+  border-color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 8%, var(--surface));
+}
+
 .admin-totals__value {
   font-family: var(--font-display);
   font-weight: 700;
@@ -230,6 +249,11 @@
 /* Phone-only under-the-name summary; the desktop table has real columns. */
 .admin-table__sub {
   display: none;
+}
+
+.admin-table__sub-flagged {
+  color: var(--amber);
+  font-weight: 600;
 }
 
 .admin-pagination {
@@ -517,13 +541,16 @@
   }
 
   /* Compact source rows: name (with ATS type and last crawl underneath) |
-     status | arrow — instead of a five-column table that has to scroll. The
-     ATS type and last-crawled columns are hidden; the same info is in
-     .admin-table__sub. */
+     status | arrow — instead of a six-column table that has to scroll. The
+     ATS type, last-crawled, and flagged columns are hidden; the ATS/last-crawl
+     info is in .admin-table__sub, and flagged sources still show inline via
+     .admin-table__sub-flagged there. */
   .admin-table--sources th:nth-child(2),
   .admin-table--sources td:nth-child(2),
   .admin-table--sources th:nth-child(4),
-  .admin-table--sources td:nth-child(4) {
+  .admin-table--sources td:nth-child(4),
+  .admin-table--sources th:nth-child(5),
+  .admin-table--sources td:nth-child(5) {
     display: none;
   }
 
