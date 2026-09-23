@@ -464,7 +464,13 @@ function ApplyPageContent({
   });
   const displayedScore =
     scoreMutation.data?.resume_id === selectedResumeId ? scoreMutation.data : scoreQuery.data;
-  const scoreError = scoreMutation.error ?? scoreQuery.error;
+  // scoreQuery 404s on the very first load of a job never scored yet —
+  // that's already the "No fit evaluation yet" panel below, not an error,
+  // so it's excluded here (unlike a 422 missing-prerequisite, which is
+  // worth surfacing immediately rather than waiting for Evaluate to be
+  // clicked and fail the same way).
+  const scoreQueryError = scoreQuery.error?.status === 404 ? undefined : scoreQuery.error;
+  const scoreError = scoreMutation.error ?? scoreQueryError;
 
   const tailoredQuery = useQuery<TailoredResume, ApiError>({
     queryKey: ["tailored", jobPostingId, resumeIdParam],
