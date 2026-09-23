@@ -364,8 +364,9 @@ function DownloadMenu({ application }: { application: Application }) {
 }
 
 // Fires one applicationsApi.update per id in parallel, matching the
-// existing per-row mutations exactly — no bulk endpoint on the backend,
-// this is just those same single-application calls fanned out client-side.
+// existing per-row mutations exactly — there's no bulk endpoint for
+// is_archived (unlike status, see useBulkStatusMutation below), so this is
+// just those same single-application calls fanned out client-side.
 function useBulkUpdateMutation(payload: { is_archived: boolean }) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -377,12 +378,14 @@ function useBulkUpdateMutation(payload: { is_archived: boolean }) {
 // Unlike useBulkUpdateMutation above, the status to apply isn't known
 // until the user picks one from BulkStatusMenu's dropdown — so it's a
 // mutate-time argument here instead of a payload baked in at the hook
-// call site.
+// call site. Uses the real PATCH /applications/bulk-status endpoint (one
+// request, not fanned-out per-id calls) since status is the field that
+// endpoint supports.
 function useBulkStatusMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ ids, status }: { ids: string[]; status: ApplicationStatus }) =>
-      Promise.all(ids.map((id) => applicationsApi.update(id, { status }))),
+      applicationsApi.bulkUpdateStatus(ids, status),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
   });
 }

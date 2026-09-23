@@ -20,5 +20,10 @@ export const applicationsApi = {
       selected_resume_id?: string | null;
     },
   ) => api.patch<Application>(`/applications/${id}`, payload),
+  // Backend counterpart to the apply-page's bulk-actions bar — sets the
+  // same status on several applications in one call instead of fanning
+  // individual `update` calls out client-side (see useBulkStatusMutation).
+  bulkUpdateStatus: (ids: string[], status: ApplicationStatus) =>
+    api.patch<Application[]>("/applications/bulk-status", { ids, status }),
   remove: (id: string) => api.delete<void>(`/applications/${id}`),
 };
