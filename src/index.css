@@ -130,12 +130,18 @@ button {
 }
 
 /* :where() zeroes this selector's specificity so any component class
-   (e.g. .job-card, which is also a <button>) can override the hover/disabled
-   fill without needing a matching or higher-specificity selector of its
-   own — otherwise button:hover's two pseudo-classes always outrank a lone
-   class selector and repaint the button solid accent-blue on hover. */
+   (e.g. .job-card, which is also a <button>, or .delete-button, which
+   stays rose-bordered instead of blue) can override the hover/focus/
+   disabled treatment without needing a matching or higher-specificity
+   selector of its own — otherwise button:hover's two pseudo-classes
+   always outrank a lone class selector. border-color only visibly changes
+   anything on a button that already has a real border (the app's
+   "secondary"/outlined buttons, e.g. .rescan-button); a primary filled
+   button's own border:none makes it a no-op there, which is the point —
+   one rule for both button styles instead of two. */
 :where(button:hover:not(:disabled)) {
   background: var(--accent-deep);
+  border-color: var(--accent);
 }
 
 :where(button:disabled) {
@@ -152,6 +158,67 @@ textarea {
 :focus-visible {
   outline: 2px solid var(--accent-deep);
   outline-offset: 2px;
+}
+
+/* Hover: thin blue line. Click/focus: same line plus a soft halo — the
+   header search bar's own glow, applied consistently everywhere instead
+   of one-off per-component rules. Covers every plain text input and
+   textarea in the app (excluding .site-header__search and
+   .site-header__save-search-input: both are borderless inputs that sit
+   inside a pill wrapper already showing this exact glow on
+   :focus-within, so this would otherwise draw a second, redundant line
+   around just the input itself), and — via the plain :where(button)
+   rules below — every button, including dropdown triggers (Resume,
+   Status, Sort, Download, …) and the options inside their menus, all of
+   which are just <button>s themselves. */
+input:where(
+    [type="text"],
+    [type="search"],
+    [type="email"],
+    [type="password"],
+    [type="date"],
+    [type="url"],
+    [type="tel"],
+    [type="number"],
+    :not([type])
+  ):not(.site-header__search, .site-header__save-search-input):hover:not(:disabled, :focus-visible),
+textarea:hover:not(:disabled, :focus-visible) {
+  border-color: var(--accent);
+}
+
+input:where(
+    [type="text"],
+    [type="search"],
+    [type="email"],
+    [type="password"],
+    [type="date"],
+    [type="url"],
+    [type="tel"],
+    [type="number"],
+    :not([type])
+  ):not(.site-header__search, .site-header__save-search-input):focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* Plain :focus (not :focus-visible): the ask is for the glow on click, and
+   a mouse click alone gives a <button> :focus but usually not
+   :focus-visible. Covers every button app-wide, dropdown triggers and the
+   plain option buttons inside their menus included (see comment above). */
+:where(button:focus) {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* Dropdown menu options are borderless rows, not outlined pills, so
+   border-color above has nothing to tint — an inset line stands in for
+   the same hover cue without shifting their padding/alignment the way a
+   real border would. */
+.action-dropdown-menu button:hover:not(:disabled) {
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 
 /* Status/verdict badge (SAVED/APPLIED, QUALIFIED/NOT A MATCH) — a soft

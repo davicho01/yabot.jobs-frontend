@@ -1,0 +1,324 @@
+/* Shared building blocks for the dossier-style cards inside ApplyPage's
+   process steps (fitness report actions, notes, cover letter/interview prep
+   previews, dropdown menus) — originally part of the old /apply page (now
+   removed in favor of ApplyPage) and split out here since NotesEditor,
+   TailoredDownloadMenu, and PrerequisiteNotice still need it. */
+
+.dossier-action {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 1.5rem;
+}
+
+.dossier-action__header h2 {
+  font-size: 1.15rem;
+  margin-bottom: 0.3rem;
+}
+
+.dossier-action__header p {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+}
+
+.dossier-action__button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0.65rem 1.2rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.88rem;
+  letter-spacing: 0;
+  text-transform: none;
+  cursor: pointer;
+  margin-right: 0.75rem;
+}
+
+.dossier-action__button:hover:not(:disabled) {
+  background: var(--accent-deep);
+}
+
+.dossier-action__button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.dossier-action__link {
+  background: none;
+  border: none;
+  color: var(--teal);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  text-transform: none;
+  letter-spacing: normal;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.dossier-action__prereq {
+  margin-top: 0.9rem;
+  font-size: 0.85rem;
+  color: var(--rose);
+}
+
+.dossier-action__error {
+  margin-top: 0.9rem;
+  font-size: 0.85rem;
+  color: var(--rose);
+}
+
+.fitness-result {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.action-dropdown {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.action-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 170px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  box-shadow: 0 20px 40px -16px rgba(0, 0, 0, 0.28);
+  padding: 0.35rem;
+  z-index: 10;
+  overflow: hidden;
+}
+
+.action-dropdown-menu button {
+  background: none;
+  border: none;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.88rem;
+  letter-spacing: 0;
+  text-align: left;
+  border-radius: calc(var(--radius-field) - 4px);
+  padding: 0.55rem 0.7rem;
+  cursor: pointer;
+}
+
+.action-dropdown-menu button:hover:not(:disabled) {
+  background: var(--surface);
+}
+
+.action-dropdown-menu button:disabled {
+  color: var(--ink-soft);
+  cursor: default;
+}
+
+/* Notes card (ApplyPage) — status/header row, follow-up date, the
+   Notes textarea itself (see NotesEditor), and the Archive button that
+   rides along in NotesEditor's own action row via its extraActions slot. */
+.apply-page__notes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.apply-page__follow-up {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.75rem 0 1rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.apply-page__follow-up-input {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+}
+
+/* Confirms the follow-up date's autosave (it has no Save button of its
+   own, unlike Notes) so picking a date doesn't look like it did nothing. */
+.apply-page__follow-up-status {
+  font-weight: 400;
+  font-size: 0.78rem;
+}
+
+.apply-page__follow-up-status--saved {
+  color: var(--teal);
+}
+
+.apply-page__notes-textarea {
+  width: 100%;
+  min-height: 90px;
+  resize: vertical;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.apply-page__notes-textarea:disabled {
+  opacity: 0.6;
+}
+
+.apply-page__notes-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.apply-page__notes-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* extraActions (ApplyPage's Archive button) pushes to the opposite
+   end instead of stacking in its own row below Save. */
+.apply-page__notes-actions--split {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.apply-page__notes-save {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0.45rem 1rem;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.apply-page__notes-save:hover:not(:disabled) {
+  background: var(--accent-deep);
+}
+
+.apply-page__notes-save:disabled {
+  background: var(--line);
+  color: var(--ink-soft);
+  cursor: default;
+}
+
+.apply-page__archive-button {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 0.6rem 1.1rem;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.apply-page__archive-button:hover:not(:disabled) {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.apply-page__archive-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.delete-button {
+  background: transparent;
+  color: var(--rose);
+  border-color: var(--rose);
+}
+
+.delete-button:hover:not(:disabled) {
+  background: var(--rose);
+  color: var(--surface);
+}
+
+/* Cover letter preview (Write a cover letter step). */
+.cover-letter-preview__greeting {
+  font-style: italic;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.cover-letter-preview__paragraph {
+  margin: 0;
+}
+
+/* Interview prep (Prep for the interview step) — shares .fitness-result's
+   flex column, whose align-items: flex-start otherwise shrinks a block
+   child to its content width instead of the card's full width — width:
+   100% opts each section back in so its question/list text wraps at the
+   card edge, not sooner. */
+.interview-prep__section {
+  width: 100%;
+}
+
+.interview-prep__section h3 {
+  font-size: 0.95rem;
+  margin: 0 0 0.6rem;
+}
+
+.interview-prep__questions {
+  list-style: decimal;
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.interview-prep__questions li {
+  padding-left: 0.15rem;
+}
+
+.interview-prep__category {
+  margin-bottom: 0.35rem;
+  text-transform: capitalize;
+}
+
+.interview-prep__question {
+  font-weight: 600;
+  margin: 0 0 0.2rem;
+}
+
+.interview-prep__approach {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.interview-prep__list {
+  list-style: disc;
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}

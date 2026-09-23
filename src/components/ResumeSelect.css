@@ -1,0 +1,47 @@
+.resume-select {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.resume-select__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+/* action-dropdown/rescan-button/action-dropdown-menu are
+   components/DossierAction.css's and index.css's classes (already global)
+   — this just left-anchors the menu instead of the right-anchored default,
+   since this picker sits at the left edge of its row rather than a
+   toolbar's right edge. */
+.resume-select__dropdown .action-dropdown-menu {
+  left: 0;
+  right: auto;
+  min-width: 220px;
+}
+
+/* Fixed width so the button doesn't grow/shrink (and shift neighboring
+   elements) as different resumes with different filename lengths are
+   selected — the filename truncates with an ellipsis instead. */
+.resume-select__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 300px;
+  max-width: 70vw;
+}
+
+.resume-select__filename {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  text-align: left;
+}
+
+.resume-select__arrow {
+  flex-shrink: 0;
+}

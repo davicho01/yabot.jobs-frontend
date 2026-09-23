@@ -1,803 +1,404 @@
-.apply-page {
-  padding: 2.5rem 1.5rem 4rem;
+/* Small additions on top of the shared JobDashboardShell — everything else
+   (card/header/tabs/evidence lists/plan) is that shared shell; the
+   tailor/cover-letter/interview-prep/notes sections below reuse
+   components/DossierAction.css's .dossier-action family directly, already
+   loaded globally. */
+
+/* Space below the standalone "‹ Back to applications" link above the
+   card. */
+.apply__page-back-link {
+  margin-bottom: 1rem;
 }
 
-.apply-page__job-nav {
+/* Same plain-text-link format as AdminCrawlSourceStatsPage's
+   "‹ Back to dashboard" (see .admin-back-link in AdminCommon.css) — used
+   both for the back link above and, unmargined, for the Prev/Next
+   application nav inside the toolbar row. */
+.apply__back-link {
+  display: inline-block;
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.apply__back-link:hover {
+  color: var(--ink);
+}
+
+.apply__back-link--disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Sits inline in .job-dashboard__tags, floated all the way to the right of
+   the row (margin-left: auto eats the flex row's remaining space) rather
+   than sitting immediately after the pay-range tag or on its own line. */
+.apply__posted {
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  align-self: center;
+  margin-left: auto;
+}
+
+.apply__apply-button {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.apply__apply-button:hover {
+  background: var(--accent-deep);
+}
+
+/* The first thing in the card (above the title block) — a 3-column grid
+   (start-aligned View job | centered Prev/Next | end-aligned Apply) with a
+   pb+border reads as its own row rather than floating loose above the
+   title. */
+.apply__toolbar-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.apply__toolbar-view-job {
+  grid-column: 1;
+  justify-self: start;
+}
+
+.apply__nav-group {
+  grid-column: 2;
+  justify-self: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.apply__toolbar-apply {
+  grid-column: 3;
+  justify-self: end;
+}
+
+@media (max-width: 640px) {
+  .apply__toolbar-row {
+    grid-template-columns: 1fr;
+  }
+
+  .apply__toolbar-view-job,
+  .apply__nav-group,
+  .apply__toolbar-apply {
+    grid-column: 1;
+    justify-self: center;
+  }
+}
+
+/* Resume picker + its one headline score, sitting above the Notes card —
+   see the comment at its JSX for why this is boxed and single-number now. */
+.apply__resume-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.75rem 1.5rem;
+}
+
+/* Centers and enlarges the shared ResumeSelect (label above button instead
+   of alongside it, bigger button) so it reads as this page's actual
+   starting point rather than a small inline control — see the comment at
+   its JSX. Scoped to this one spot; ResumeSelect's own default (compact,
+   label-beside-button) is unchanged everywhere else it's used. */
+.apply__resume-card-picker {
+  display: flex;
+  justify-content: center;
+}
+
+.apply__resume-card-picker .resume-select {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Visually hidden, not display:none — the card's own "Resume" heading
+   above (added via .dossier-action__header) says this already, so
+   repeating it as a small caption over the picker button is redundant.
+   Kept in the accessibility tree since the button's aria-labelledby
+   still points at it. */
+.apply__resume-card-picker .resume-select__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.apply__resume-card-picker .resume-select__button {
+  width: 400px;
+  max-width: 85vw;
+  justify-content: center;
+  padding: 0.8rem 1.4rem;
+  font-size: 0.95rem;
+}
+
+/* Plain rule instead of a third block of text to separate the picker from
+   the score row underneath it. */
+.apply__resume-card-divider {
+  border-top: 1px solid var(--line);
+  margin: 0.25rem 0;
+}
+
+.apply__resume-score-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* This card drops the shared .job-dashboard__alignment's first (label)
+   column — the bar comes first here, with the percentage + qualified
+   stamp grouped together after it instead of the label sitting before
+   the bar. */
+.apply__resume-card .job-dashboard__alignment {
+  grid-template-columns: 1fr auto;
+}
+
+/* Fitness report card (Fit tab): the score sits next to the verdict stamp
+   in the card's top-right corner (replacing .dossier-action__corner-stamp)
+   instead of as a big standalone headline next to the summary — the
+   summary is now a plain full-width paragraph below the header. */
+.apply__report-score-badge {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.apply-page__nav-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.4rem 0.85rem;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-pill);
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.85rem;
-  letter-spacing: 0;
+.apply__report-number {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   line-height: 1;
-  text-decoration: none;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
 }
 
-.apply-page__nav-button:hover {
-  background: var(--line);
+/* Same red/amber/green bands as the alignment bar and its percentage. */
+.apply__report-number--negative {
+  color: var(--rose);
 }
 
-.apply-page__nav-button--disabled {
-  opacity: 0.35;
-  cursor: default;
-  pointer-events: none;
+.apply__report-number--warning {
+  color: var(--amber);
 }
 
-.apply-page__layout {
-  display: grid;
-  grid-template-columns: minmax(320px, 1fr) minmax(360px, 500px);
-  gap: 2.5rem;
-  align-items: start;
-}
-
-.apply-page__description-col {
-  /* The header inside adapts to this column's own width, which is only ~360px
-     on a mid-size desktop but the full screen on a phone. */
-  container: description-col / inline-size;
-  min-width: 0;
-  position: sticky;
-  top: 1.5rem;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-card);
-  padding: 1.75rem;
-}
-
-/* Grid (not flex) so the prev/next nav sits in a fixed center column and
-   stays visually centered whether or not Rescan renders on the left. */
-.apply-page__description-header {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 1rem;
-  padding-bottom: 1rem;
-  margin-bottom: 1.25rem;
-  border-bottom: 1px solid var(--line);
-}
-
-.apply-page__description-header .rescan-button {
-  grid-column: 1;
-  justify-self: start;
-}
-
-.apply-page__description-header .apply-page__job-nav {
-  grid-column: 2;
-  justify-self: center;
-}
-
-.apply-page__description-header .stamp {
-  grid-column: 3;
-  justify-self: end;
-}
-
-.apply-page__description-header .apply-page__view-link {
-  grid-column: 3;
-  justify-self: end;
-  text-decoration: none;
-}
-
-.apply-page__title-block {
-  margin-bottom: 0.75rem;
-}
-
-.apply-page__title-block h1 {
-  font-size: 1.9rem;
-}
-
-.apply-page__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-bottom: 1.5rem;
-}
-
-.apply-page__description {
-  line-height: 1.65;
-  color: var(--ink);
-  overflow-wrap: anywhere;
-}
-
-/* Scraped descriptions can contain anything — keep wide media/tables/code
-   from stretching the column past the viewport. */
-.apply-page__description img,
-.apply-page__description video {
-  max-width: 100%;
-  height: auto;
-}
-
-.apply-page__description table,
-.apply-page__description pre {
-  display: block;
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.apply-page__description > :first-child {
-  margin-top: 0;
-}
-
-.apply-page__description > :last-child {
-  margin-bottom: 0;
-}
-
-.apply-page__description p,
-.apply-page__description ul,
-.apply-page__description ol {
-  margin: 0 0 1rem;
-}
-
-.apply-page__description ul,
-.apply-page__description ol {
-  padding-left: 1.25rem;
-}
-
-.apply-page__description li {
-  margin-bottom: 0.35rem;
-}
-
-.apply-page__description h1,
-.apply-page__description h2,
-.apply-page__description h3,
-.apply-page__description h4,
-.apply-page__description h5,
-.apply-page__description h6 {
-  font-family: var(--font-display);
-  color: var(--ink);
-  margin: 1.5rem 0 0.75rem;
-  line-height: 1.3;
-}
-
-.apply-page__description strong {
-  font-weight: 700;
-}
-
-.apply-page__description a {
-  color: var(--accent-deep);
-}
-
-.apply-page__main-col {
-  min-width: 0;
-}
-
-.apply-page__main-header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-}
-
-.apply-page__view-applications-button {
-  display: inline-flex;
-  align-items: center;
-  background: none;
-  border: 1px solid var(--line);
-  color: var(--ink);
-  text-decoration: none;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.88rem;
-  letter-spacing: 0;
-  text-transform: none;
-  padding: 0.65rem 1.2rem;
-  border-radius: var(--radius-pill);
-  transition: background-color 0.15s ease;
-}
-
-.apply-page__view-applications-button:hover {
-  background: var(--surface);
-}
-
-.apply-page__company {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.25rem 1rem;
-  color: var(--ink-soft);
-  margin: 0.3rem 0 0;
-}
-
-.apply-page__posted {
-  flex-shrink: 0;
-  font-size: 0.85rem;
-}
-
-.apply-page__apply-button {
-  display: inline-flex;
-  align-items: center;
-  background: var(--accent);
-  color: #fff;
-  text-decoration: none;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.92rem;
-  letter-spacing: 0;
-  text-transform: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius-pill);
-  transition: background-color 0.15s ease;
-}
-
-.apply-page__apply-button:hover {
-  background: var(--accent-deep);
-}
-
-/* ResumePickerMenu is an .action-dropdown (see below), rendered twice —
-   right above "Check if I qualify" (no score yet) or right above
-   "Re-evaluate", below the matched/missing keyword rows (once there is
-   one) — always the last thing before whichever action button applies.
-   The qualify-button case has no surrounding gap container, so it needs
-   its own spacing below; the re-evaluate case is a .fitness-result flex
-   child, which already gaps its children evenly, so that margin would
-   double up there and is zeroed back out. Both cases left-anchor the
-   dropdown's menu instead of the shared right anchor, since every other
-   .action-dropdown on this page sits at the right edge of a toolbar while
-   this one sits at the card's left edge (a right-anchored menu here would
-   run off that edge, the same fix ApplicationsPage.css makes for its own
-   left-edge Download button). */
-.apply-page__resume-picker {
-  margin-bottom: 1.25rem;
-}
-
-.fitness-result .apply-page__resume-picker {
-  margin-bottom: 0;
-}
-
-.apply-page__resume-picker .action-dropdown-menu {
-  left: 0;
-  right: auto;
-}
-
-@media (max-width: 900px) {
-  .apply-page__layout {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 1.5rem;
-  }
-
-  .apply-page__description-col {
-    position: static;
-    order: 2;
-  }
-
-  .apply-page__main-col {
-    order: 1;
-  }
-}
-
-.dossier {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  /* Lets the cards below adapt to the width of this column rather than the
-     viewport — it's ~360–500px on a desktop split layout but the full
-     screen width once the page collapses to one column. */
-  container: dossier / inline-size;
-}
-
-.apply-page__notes-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.apply-page__status-select {
-  padding: 0.45rem 0.7rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-pill);
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.85rem;
-  text-transform: none;
-  flex-shrink: 0;
-}
-
-.apply-page__follow-up {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin: 0.75rem 0 1rem;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.82rem;
-  color: var(--ink-soft);
-}
-
-.apply-page__follow-up-input {
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-field);
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-}
-
-.apply-page__notes-textarea {
-  width: 100%;
-  min-height: 90px;
-  resize: vertical;
-  padding: 0.7rem 0.9rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-field);
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-.apply-page__notes-textarea:disabled {
-  opacity: 0.6;
-}
-
-.apply-page__archive-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.apply-page__archive-button {
-  background: none;
-  border: 1px solid var(--line);
-  color: var(--ink-soft);
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.85rem;
-  letter-spacing: 0;
-  text-transform: none;
-  padding: 0.6rem 1.1rem;
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.apply-page__archive-button:hover:not(:disabled) {
-  background: var(--surface);
-  color: var(--ink);
-}
-
-.apply-page__archive-button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.dossier-action {
-  position: relative;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-card);
-  padding: 1.5rem;
-}
-
-.dossier-action__corner-stamp {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-}
-
-.dossier-action__header h2 {
-  font-size: 1.15rem;
-  margin-bottom: 0.3rem;
-}
-
-.dossier-action__header p {
-  color: var(--ink-soft);
-  font-size: 0.9rem;
-  margin: 0 0 1rem;
-}
-
-.dossier-action__button {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  padding: 0.65rem 1.2rem;
-  border-radius: var(--radius-pill);
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.88rem;
-  letter-spacing: 0;
-  text-transform: none;
-  cursor: pointer;
-  margin-right: 0.75rem;
-}
-
-.dossier-action__button:hover:not(:disabled) {
-  background: var(--accent-deep);
-}
-
-.dossier-action__button:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-.dossier-action__link {
-  background: none;
-  border: none;
+.apply__report-number--positive {
   color: var(--teal);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  text-transform: none;
-  letter-spacing: normal;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 0;
 }
 
-.dossier-action__prereq {
-  margin-top: 0.9rem;
-  font-size: 0.85rem;
-  color: var(--rose);
+/* Space before the Strong evidence/Evidence gaps columns — .job-dashboard__summary
+   itself carries no margin of its own. */
+.apply__report-text {
+  margin-bottom: 1rem;
 }
 
-.dossier-action__error {
-  margin-top: 0.9rem;
-  font-size: 0.85rem;
-  color: var(--rose);
-}
-
-.fitness-result {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.75rem;
-}
-
-.dossier-action__action-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  align-self: stretch;
-  width: 100%;
-  gap: 1rem;
-}
-
-.dossier-action__action-row .dossier-action__button {
-  margin-right: 0;
-}
-
-.action-dropdown {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.action-dropdown-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 0.3rem;
-  display: flex;
-  flex-direction: column;
-  min-width: 170px;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-field);
-  box-shadow: 0 20px 40px -16px rgba(0, 0, 0, 0.28);
-  padding: 0.35rem;
-  z-index: 10;
-  overflow: hidden;
-}
-
-.action-dropdown-menu button {
-  background: none;
-  border: none;
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-weight: 500;
-  font-size: 0.88rem;
-  letter-spacing: 0;
-  text-align: left;
-  border-radius: calc(var(--radius-field) - 4px);
-  padding: 0.55rem 0.7rem;
-  cursor: pointer;
-}
-
-.action-dropdown-menu button:hover:not(:disabled) {
-  background: var(--surface);
-}
-
-.action-dropdown-menu button:disabled {
-  color: var(--ink-soft);
-  cursor: default;
-}
-
-.fitness-result__summary {
-  display: block;
-  width: 100%;
-  align-self: stretch;
-}
-
-.fitness-result__summary::after {
-  content: "";
-  display: block;
-  clear: right;
-}
-
-.fitness-result__summary p {
-  margin: 0;
-}
-
-.score-summary-row {
-  display: flex;
-  gap: 1.5rem;
-}
-
-.score-summary-item {
-  position: relative;
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.3rem;
-  padding-top: 1.75rem;
-}
-
-.score-summary-item .keyword-row__label {
-  margin-right: 0;
-}
-
-.score-summary-item__label {
-  position: absolute;
-  top: 0;
-  left: 0;
-  color: var(--ink);
-}
-
-.score-summary-item__stamp {
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-
-.score-summary-divider {
-  align-self: stretch;
-  width: 1px;
-  background: var(--line);
-}
-
-.fitness-result__number {
-  font-family: var(--font-display);
-  font-size: 4.2rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--accent);
-}
-
-.fitness-result_section_number {
-  float: left;
-  margin: 0 2.0rem 0.5rem 2.0rem;
-  font-family: var(--font-display);
-  font-size: 3.6rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--accent);
-}
-
-.keyword-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.keyword-row__label {
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.8rem;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--ink);
-  margin-right: 0.3rem;
-}
-
-.cover-letter-preview__greeting {
-  font-style: italic;
-  color: var(--ink-soft);
-  margin: 0;
-}
-
-.cover-letter-preview__paragraph {
-  margin: 0;
-}
-
-/* .interview-prep shares .fitness-result's flex column, whose
-   align-items: flex-start otherwise shrinks a block child to its content
-   width instead of the card's full width — width: 100% opts each section
-   back in so its question/list text wraps at the card edge, not sooner. */
-.interview-prep__section {
-  width: 100%;
-}
-
-.interview-prep__section h3 {
-  font-size: 0.95rem;
-  margin: 0 0 0.6rem;
-}
-
-.interview-prep__questions {
-  list-style: decimal;
-  margin: 0;
-  padding-left: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-}
-
-.interview-prep__questions li {
-  padding-left: 0.15rem;
-}
-
-.interview-prep__category {
-  margin-bottom: 0.35rem;
-  text-transform: capitalize;
-}
-
-.interview-prep__question {
-  font-weight: 600;
-  margin: 0 0 0.2rem;
-}
-
-.interview-prep__approach {
-  color: var(--ink-soft);
-  font-size: 0.88rem;
-  margin: 0;
-}
-
-.interview-prep__list {
-  list-style: disc;
-  margin: 0;
-  padding-left: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.apply-page__failed-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-top: 1.25rem;
-}
-
-.delete-button {
-  background: transparent;
-  color: var(--rose);
-  border-color: var(--rose);
-}
-
-.delete-button:hover:not(:disabled) {
-  background: var(--rose);
-  color: var(--surface);
-}
-
-@media (max-width: 640px) {
-  .apply-page {
-    padding: 1.5rem 1rem 3rem;
-  }
-
-  .apply-page__description-col {
-    padding: 1.25rem;
-  }
-
-  .apply-page__title-block h1 {
-    font-size: 1.5rem;
-  }
-
-  /* Scraped descriptions carry their own headings, which default to larger
-     than the page's own job title — scale them down on a phone. */
-  .apply-page__description h1 {
-    font-size: 1.35rem;
-  }
-
-  .apply-page__description h2 {
-    font-size: 1.2rem;
-  }
-
-  .apply-page__description h3 {
-    font-size: 1.05rem;
-  }
-}
-
-/* The desktop header is a fixed 3-column grid (rescan | prev/next | view),
-   which needs ~340px — let it wrap when the column is narrower, with
-   prev/next centered on a row of its own. */
-@container description-col (max-width: 360px) {
-  .apply-page__description-header {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 0.6rem 1rem;
-  }
-
-  .apply-page__description-header .apply-page__job-nav {
-    order: 3;
-    flex-basis: 100%;
-    justify-content: center;
-  }
-
-  .apply-page__description-header .apply-page__view-link {
-    margin-left: auto;
-  }
-}
-
-/* Narrow-column layout for the fitness/notes/tailor/cover-letter cards. The
-   score tiles pin their label and verdict stamp to opposite top corners with
-   position:absolute, which collides once a tile is under ~200px wide. */
-@container dossier (max-width: 480px) {
-  .dossier-action {
-    padding: 1.1rem;
-  }
-
-  .dossier-action__corner-stamp {
+@media (max-width: 480px) {
+  .apply__report-score-badge {
     top: 1.1rem;
     right: 1.1rem;
   }
 
-  /* Keep a wrapping heading from running under the corner stamp. */
-  .dossier-action__corner-stamp + .dossier-action__header h2,
-  .dossier-action__corner-stamp + .fitness-result > .dossier-action__header h2 {
-    padding-right: 6.5rem;
-  }
-
-  .score-summary-row {
-    gap: 0.75rem;
-  }
-
-  .score-summary-item {
-    padding-top: 0;
-  }
-
-  .score-summary-item__label,
-  .score-summary-item__stamp {
-    position: static;
-  }
-
-  .score-summary-item__label {
-    order: -1;
-  }
-
-  .score-summary-item__stamp {
-    order: 1;
-  }
-
-  .fitness-result__number {
-    font-size: 3.4rem;
-  }
-
-  .fitness-result_section_number {
-    margin: 0 1rem 0.25rem 0;
-    font-size: 3rem;
-  }
-
-  .apply-page__notes-header {
-    flex-wrap: wrap;
-  }
-
-  .apply-page__notes-header > div {
-    flex: 1 1 12rem;
+  .apply__report-score-badge + .dossier-action__header h2 {
+    padding-right: 5rem;
   }
 }
+
+/* Room between Re-evaluate and the category breakdown/evidence bullets
+   right above it — .job-dashboard__actions itself carries no margin of its
+   own. */
+.job-dashboard__actions--spaced {
+  margin-top: 1.25rem;
+}
+
+/* "Address gaps & tailor your resume" step's action row: Check/Re-check
+   tailored fit stays on the left, the download-and-regenerate menu sits in
+   the card's lower-right corner instead of both bunching at the start. */
+.apply__tailor-actions {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+/* Space between Apply and Mark as applied/the status line so they don't
+   touch — the base .job-dashboard__actions flex row carries no gap of
+   its own. Centered so the status line's plain text sits level with the
+   Apply button's own vertical middle instead of its top. */
+.apply__apply-actions {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Replaces the old Fit/Update Resume/Application plan/Documents/Notes tabs
+   with a single vertical timeline of the real steps a candidate works
+   through — a numbered marker rail on the left (connected by a line, like a
+   shipping-tracker or checkout progress view) next to each step's
+   toggleable header and collapsible body on the right. */
+.process-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.process-step {
+  display: flex;
+  gap: 1rem;
+}
+
+.process-step__rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.process-step__marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* The step currently expanded gets the accent outline even if not done yet
+   — done (checkmark) always wins over active where a step is both. */
+.process-step--active .process-step__marker {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.process-step--done .process-step__marker {
+  border-color: var(--teal);
+  background: var(--teal);
+  color: #fff;
+}
+
+.process-step__line {
+  width: 2px;
+  flex: 1;
+  min-height: 1.5rem;
+  margin: 0.25rem 0;
+  background: var(--line);
+}
+
+.process-step:last-child .process-step__line {
+  display: none;
+}
+
+.process-step__content {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 1.75rem;
+}
+
+.process-step:last-child .process-step__content {
+  padding-bottom: 0;
+}
+
+.process-step__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  background: none;
+  color: var(--ink);
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: left;
+}
+
+/* Opts out of index.css's global button focus glow — a box-shadow halo
+   drawn around this full-width row (rather than a small pill-shaped
+   button) read as an odd floating rectangle. Expanding/collapsing is
+   already its own clear feedback (marker fill, chevron, body appearing),
+   so this needs no extra highlight on top of that. */
+.process-step__header:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.process-step__title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.process-step__status {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.process-step__status--done {
+  color: var(--teal);
+}
+
+/* Fit/tailored score in a step's status line colored by the same
+   qualify/maybe/no-match bands as the stamp and progress bar (see
+   fitTier in utils/fitScore.ts) — overrides the plain teal above so a
+   low score doesn't read as unambiguously "done and good". */
+.process-step__status-score--positive {
+  color: var(--teal);
+}
+
+.process-step__status-score--warning {
+  color: var(--amber);
+}
+
+.process-step__status-score--negative {
+  color: var(--rose);
+}
+
+.process-step__chevron {
+  flex-shrink: 0;
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.process-step__body {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dossier-action__lede {
+  color: var(--ink-soft);
+}
+
+/* Remove application is destructive/irreversible, so it sits well clear of
+   everything above it — outside the gray card entirely, on the page's own
+   background, rather than tucked next to routine actions like Archive. */
+.apply__remove-row {
+  margin-top: 1.5rem;
+}
+

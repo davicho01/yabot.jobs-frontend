@@ -122,6 +122,23 @@ export interface Resume {
   created_at: string;
 }
 
+// One rubric category's contribution to overall_score (backend:
+// app.schemas.resume.ScoreCategoryBreakdown) — job_requirements/strengths/
+// weaknesses here are scoped to this one category, distinct from the flat
+// matched_keywords/missing_keywords on the containing ResumeScore. category
+// is one of "required_skills" (50 pts) | "responsibilities" (30 pts) |
+// "seniority" (15 pts) | "preferred_qualifications" (5 pts), always all 4
+// present in that order (see app.services.resume_llm._CATEGORY_MAX).
+export interface ScoreCategoryBreakdown {
+  category: string;
+  score: number;
+  max_score: number;
+  why: string;
+  job_requirements: string[];
+  strengths: string[];
+  weaknesses: string[];
+}
+
 export interface ResumeScore {
   id: string;
   resume_id: string;
@@ -130,6 +147,11 @@ export interface ResumeScore {
   matched_keywords: string[];
   missing_keywords: string[];
   summary: string;
+  category_scores: ScoreCategoryBreakdown[];
+  // Informational only — does not affect overall_score/category_scores,
+  // which stay purely merit-based (see app.services.prompts.SCORE_PROMPT).
+  // Empty string when the candidate isn't substantially overqualified.
+  overqualification_note: string;
   created_at: string;
 }
 
@@ -137,8 +159,8 @@ export interface ResumeScore {
 export interface ResumeScoreHistoryEntry {
   id: string;
   job_posting_id: string;
-  // What a history row links to — the ApplyPage route (/jobs/:urlId/apply)
-  // is keyed on this, not job_posting_id.
+  // What a history row links to — the ApplyPage route
+  // (/jobs/:urlId/apply) is keyed on this, not job_posting_id.
   url_id: string;
   job_title: string | null;
   company_name: string | null;
@@ -174,6 +196,9 @@ export interface TailoredResumeScore {
   matched_keywords: string[];
   missing_keywords: string[];
   summary: string;
+  category_scores: ScoreCategoryBreakdown[];
+  // See ResumeScore.overqualification_note.
+  overqualification_note: string;
   created_at: string;
 }
 

@@ -1,0 +1,24 @@
+.status-select {
+  flex-shrink: 0;
+}
+
+.status-select__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-transform: capitalize;
+}
+
+/* Focus glow itself comes from index.css's shared ".action-dropdown >
+   button:focus" rule — every dropdown trigger app-wide gets it from
+   there, not a copy here. */
+
+.status-select__arrow {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+}
+
+.status-select__menu button {
+  text-transform: capitalize;
+}

@@ -131,10 +131,11 @@ export function JobCaseFile({
   const posting = scannedPosting(job);
   const scanFailed = job.url.scan_status === "failed";
 
-  // Same list ApplyPage/ApplicationsPage query (same ["applications"] cache
-  // key), just to answer one question here: has this posting already been
-  // saved/applied to? (Visiting ApplyPage auto-saves it — see its own
-  // effect — so "Evaluate Job" is the wrong label the moment that's true.)
+  // Same list ApplyPage/ApplicationsPage query (same ["applications"]
+  // cache key), just to answer one question here: has this posting already
+  // been saved/applied to? (Visiting ApplyPage auto-saves it — see its
+  // own effect — so "Evaluate Job" is the wrong label the moment that's
+  // true.)
   const { data: applications } = useQuery({
     queryKey: ["applications"],
     queryFn: applicationsApi.list,

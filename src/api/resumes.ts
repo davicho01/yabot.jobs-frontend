@@ -26,7 +26,7 @@ export const resumesApi = {
   // backend's own default (app.api.routes.resumes._resolve_resume) when
   // resume_id isn't sent, same as before resume selection existed. Passed
   // explicitly, it scores/tailors/writes against that resume instead —
-  // see ApplyPage's resume picker (#8).
+  // see ResumeSelect, ApplyPage's resume picker (#8).
   getScore: (jobPostingId: string, resumeId?: string) =>
     api.get<ResumeScore>("/resumes/main/score", { job_posting_id: jobPostingId, resume_id: resumeId }),
   generateScore: (jobPostingId: string, resumeId?: string) =>

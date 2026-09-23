@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
@@ -12,232 +12,282 @@ import type {
   ApplicationStatus,
   CoverLetter,
   InterviewPrep,
-  JobDetail,
-  JobPosting,
-  Resume,
   ResumeScore,
+  ScoreCategoryBreakdown,
   TailoredResume,
   TailoredResumeScore,
 } from "../api/types";
 import { useConfirm } from "../components/ConfirmDialog";
+import { ResumeSelect } from "../components/ResumeSelect";
+import { StatusSelect } from "../components/StatusSelect";
+import { NotesEditor } from "../components/NotesEditor";
+import { TailoredDownloadMenu } from "../components/TailoredDownloadMenu";
+import { PrerequisiteNotice } from "../components/PrerequisiteNotice";
+import { fitLabel, fitTier } from "../utils/fitScore";
+import { prerequisiteMessage, genericErrorMessage } from "../utils/apiErrors";
+import { scannedPosting, formatSalary, formatPostedAt } from "../utils/jobPosting";
+import { splitSentences } from "../utils/text";
+import { categoryLabel } from "../utils/scoreCategories";
+import "../components/JobDashboardShell.css";
+import "../components/DossierAction.css";
 import "./ApplyPage.css";
 
-const QUALIFY_THRESHOLD = 85;
-const MAYBE_THRESHOLD = 70;
-const STATUSES: ApplicationStatus[] = ["saved", "applied", "interviewing", "offer", "rejected", "withdrawn"];
+// The real-world order a candidate works through a posting in — replaces
+// the old Fit/Update Resume/Application plan/Documents/Notes tabs (which
+// scattered the same handful of actions across unrelated groupings) with
+// one linear process. Notes/status/archive live in their own card above
+// this instead of being a "step" — they're ongoing, not a one-time task.
+const STEP_COUNT = 5;
 
-function fitLabel(score: number): { text: string; stampClass: string } {
-  if (score >= QUALIFY_THRESHOLD) return { text: "Qualified", stampClass: "stamp--positive" };
-  if (score >= MAYBE_THRESHOLD) return { text: "Maybe", stampClass: "stamp--warning" };
-  return { text: "Not a match", stampClass: "stamp--negative" };
+// Shared by the Fit tab (against the resume as uploaded) and the Resume
+// Review tab (against the tailored version) — same score shape either way
+// (ResumeScore and TailoredResumeScore both carry category_scores), just a
+// different title/description around it.
+function FitnessReportBody({
+  score,
+  title,
+  description,
+}: {
+  score: {
+    overall_score: number;
+    summary: string;
+    matched_keywords: string[];
+    missing_keywords: string[];
+    category_scores: ScoreCategoryBreakdown[];
+    overqualification_note: string;
+  };
+  title: string;
+  description: string;
+}) {
+  // Collapsed by default (same "keep it concise" pattern as the Job
+  // description toggle above the resume picker) — keyed by category so
+  // opening one doesn't affect the others, and so the Fit tab and Update
+  // Resume tab (each its own FitnessReportBody instance) track state
+  // independently.
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
+  const toggleCategory = (category: string) => {
+    setOpenCategories((prev) => ({ ...prev, [category]: !prev[category] }));
+  };
+
+  return (
+    <>
+      <div className="apply__report-score-badge">
+        <span className={`apply__report-number apply__report-number--${fitTier(score.overall_score)}`}>
+          {score.overall_score}
+        </span>
+        <span className={`stamp ${fitLabel(score.overall_score).stampClass}`}>{fitLabel(score.overall_score).text}</span>
+      </div>
+      <div className="dossier-action__header">
+        <h2>{title}</h2>
+        <p>{description}</p>
+      </div>
+      <div className="job-dashboard__summary apply__report-text">
+        {splitSentences(score.summary).map((sentence, i) => (
+          <p key={i}>{sentence}</p>
+        ))}
+      </div>
+      {score.overqualification_note && (
+        // Informational only — separate from and doesn't affect
+        // overall_score/category_scores, which stay purely merit-based
+        // (see app.services.prompts.SCORE_PROMPT's overqualification rule).
+        <div className="job-dashboard__warning" role="note">
+          <span className="job-dashboard__warning-icon" aria-hidden="true">
+            ⚠
+          </span>
+          <p>{score.overqualification_note}</p>
+        </div>
+      )}
+      {score.category_scores.length > 0 ? (
+        <div className="job-dashboard__categories">
+          {score.category_scores.map((cat) => {
+            const isOpen = !!openCategories[cat.category];
+            const bodyId = `category-body-${cat.category}`;
+            return (
+              <div key={cat.category} className="job-dashboard__category">
+                <button
+                  type="button"
+                  className="job-dashboard__category-header job-dashboard__category-toggle"
+                  onClick={() => toggleCategory(cat.category)}
+                  aria-expanded={isOpen}
+                  aria-controls={bodyId}
+                >
+                  <h3>{categoryLabel(cat.category)}</h3>
+                  <span className="job-dashboard__category-header-right">
+                    <span className="job-dashboard__category-score">
+                      {cat.score}/{cat.max_score}
+                    </span>
+                    <span className="job-dashboard__category-toggle-icon" aria-hidden="true">
+                      {isOpen ? "▲" : "▼"}
+                    </span>
+                  </span>
+                </button>
+                {isOpen && (
+                  <div className="job-dashboard__category-body" id={bodyId}>
+                    <p className="job-dashboard__category-ask">{cat.why}</p>
+                    {cat.job_requirements.length > 0 && (
+                      <ul className="job-dashboard__category-asks">
+                        {cat.job_requirements.map((r) => (
+                          <li key={r}>{r}</li>
+                        ))}
+                      </ul>
+                    )}
+                    <div className="job-dashboard__category-columns">
+                      <div>
+                        <h4>Strengths</h4>
+                        {cat.strengths.length === 0 ? (
+                          <p className="job-dashboard__panel-empty">None noted.</p>
+                        ) : (
+                          <ul className="evidence-list evidence-list--positive">
+                            {cat.strengths.map((item) => (
+                              <li key={item}>{item}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                      <div>
+                        <h4>Weaknesses</h4>
+                        {cat.weaknesses.length === 0 ? (
+                          <p className="job-dashboard__panel-empty">None noted.</p>
+                        ) : (
+                          <ul className="evidence-list evidence-list--negative">
+                            {cat.weaknesses.map((item) => (
+                              <li key={item}>{item}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        // Defensive fallback for a score generated before category_scores
+        // existed on the backend — plain matched/missing keyword lists.
+        <div className="job-dashboard__columns">
+          <section className="job-dashboard__section">
+            <h2>Strong evidence</h2>
+            {score.matched_keywords.length === 0 ? (
+              <p className="job-dashboard__panel-empty">No matched requirements were recorded.</p>
+            ) : (
+              <ul className="evidence-list evidence-list--positive">
+                {score.matched_keywords.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            )}
+          </section>
+          <section className="job-dashboard__section">
+            <h2>Evidence gaps</h2>
+            {score.missing_keywords.length === 0 ? (
+              <p className="job-dashboard__panel-empty">No gaps were recorded.</p>
+            ) : (
+              <ul className="evidence-list evidence-list--negative">
+                {score.missing_keywords.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      )}
+    </>
+  );
 }
 
-// A JobPosting row exists from the moment its URL is submitted (see
-// get_or_create_job_posting) so job_posting_id is available right away —
-// scanned/not-scanned is tracked by extraction_status, not by the posting
-// being present at all.
-function scannedPosting(job: JobDetail): JobPosting | null {
-  return job.posting && job.posting.extraction_status !== "pending" ? job.posting : null;
-}
-
-function formatSalary(job: JobDetail): string | null {
-  const p = scannedPosting(job);
-  if (!p || (!p.salary_min && !p.salary_max)) return null;
-  const currency = p.salary_currency ?? "";
-  if (p.salary_min && p.salary_max) return `${currency} ${p.salary_min.toLocaleString()}–${p.salary_max.toLocaleString()}`;
-  return `${currency} ${(p.salary_min ?? p.salary_max)?.toLocaleString()}`;
-}
-
-function formatPostedAt(job: JobDetail): string | null {
-  const p = scannedPosting(job);
-  if (!p?.posted_at) return null;
-  // posted_at is a date-only string (YYYY-MM-DD) — parsing it as UTC and
-  // formatting with the same zone keeps the displayed day from shifting
-  // backward for anyone west of UTC.
-  const date = new Date(`${p.posted_at}T00:00:00Z`);
-  return `Posted ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`;
-}
-
-function prerequisiteMessage(err: unknown): string | null {
-  if (err instanceof ApiError && err.status === 422) return err.message;
-  return null;
-}
-
-function genericErrorMessage(err: unknown): string | null {
-  if (err instanceof ApiError && err.status !== 422) return err.message;
-  if (err) return "Something went wrong. Try again.";
-  return null;
-}
-
-// Keyed by the caller on the application's id (see usage below) so this
-// resets its local draft whenever the identity changes, instead of an
-// effect syncing state after the fact.
-function NotesEditor({
-  initialNotes,
+function EvaluateButton({
+  label,
+  onClick,
+  isPending,
   disabled,
-  onSave,
+  variant = "primary",
 }: {
-  initialNotes: string;
-  disabled: boolean;
-  onSave: (notes: string) => void;
+  label: string;
+  onClick: () => void;
+  isPending: boolean;
+  disabled?: boolean;
+  // "primary" (filled accent) for the first-time "Evaluate this resume"
+  // call to action; "secondary" (outlined, like .rescan-button elsewhere
+  // in the app) once a score already exists and this just re-runs it.
+  variant?: "primary" | "secondary";
 }) {
-  const [notes, setNotes] = useState(initialNotes);
   return (
-    <textarea
-      className="apply-page__notes-textarea"
-      value={notes}
-      disabled={disabled}
-      placeholder="Add notes about this application…"
-      onChange={(e) => setNotes(e.target.value)}
-      onBlur={() => {
-        if (notes !== initialNotes) onSave(notes);
-      }}
-    />
+    <button
+      type="button"
+      className={variant === "secondary" ? "rescan-button" : "job-dashboard__evaluate-button"}
+      onClick={onClick}
+      disabled={disabled || isPending}
+    >
+      {isPending ? "Evaluating…" : label}
+    </button>
   );
 }
 
-// Same button-triggers-a-menu shape as TailoredDownloadMenu just below (and
-// the applications list's own Download/Sort menus) — a native <select>
-// looked out of place next to those, so this reads as one more of them
-// instead of a form control.
-function ResumePickerMenu({
-  resumes,
-  selectedResumeId,
-  onSelect,
+// One numbered stop on the process timeline — a toggleable header (marker +
+// title + a one-line status telling the candidate where they stand) above a
+// collapsible body holding that step's actual content. Steps aren't locked
+// to being done in order; any of them can be opened at any time so someone
+// resuming a saved application can jump straight to whichever one they need.
+function ProcessStep({
+  index,
+  title,
+  status,
+  done,
+  isOpen,
+  onToggle,
+  children,
 }: {
-  resumes: Resume[];
-  selectedResumeId: string | null;
-  onSelect: (id: string) => void;
+  index: number;
+  title: string;
+  status: ReactNode;
+  done: boolean;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: ReactNode;
 }) {
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open]);
-
-  const selected = resumes.find((r) => r.id === selectedResumeId);
-
+  const bodyId = `process-step-body-${index}`;
   return (
-    <div className="action-dropdown apply-page__resume-picker" ref={containerRef}>
-      <button type="button" className="rescan-button" onClick={() => setOpen((o) => !o)}>
-        {selected ? selected.filename : "Choose resume"} ↓
-      </button>
-      {open && (
-        <div className="action-dropdown-menu">
-          {resumes.map((resume) => (
-            <button
-              key={resume.id}
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                onSelect(resume.id);
-              }}
-            >
-              {resume.filename}
-              {resume.is_main ? " (main)" : ""}
-              {resume.id === selectedResumeId ? " ✓" : ""}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <li className={`process-step${done ? " process-step--done" : ""}${isOpen ? " process-step--active" : ""}`}>
+      <div className="process-step__rail" aria-hidden="true">
+        <span className="process-step__marker">{done ? "✓" : index}</span>
+        <span className="process-step__line" />
+      </div>
+      <div className="process-step__content">
+        <button
+          type="button"
+          className="process-step__header"
+          onClick={onToggle}
+          aria-expanded={isOpen}
+          aria-controls={bodyId}
+        >
+          <span className="process-step__heading">
+            <span className="process-step__title">{title}</span>
+            <span className={`process-step__status${done ? " process-step__status--done" : ""}`}>{status}</span>
+          </span>
+          <span className="process-step__chevron" aria-hidden="true">
+            {isOpen ? "▲" : "▼"}
+          </span>
+        </button>
+        {isOpen && (
+          <div className="process-step__body" id={bodyId}>
+            {children}
+          </div>
+        )}
+      </div>
+    </li>
   );
 }
 
-// Mirrors DownloadMenu on the applications list page: the button doubles as
-// the dropdown's trigger, and closing on outside-click keeps it from
-// lingering open while the user works elsewhere on the page.
-function TailoredDownloadMenu({
-  tailoredResume,
-  onRegenerate,
-  isRegenerating,
-}: {
-  tailoredResume: TailoredResume;
-  onRegenerate: () => void;
-  isRegenerating: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open]);
-
-  return (
-    <div className="action-dropdown" ref={containerRef}>
-      <button type="button" className="rescan-button" onClick={() => setOpen((o) => !o)}>
-        Download .docx ↓
-      </button>
-      {open && (
-        <div className="action-dropdown-menu">
-          <button
-            type="button"
-            onClick={async () => {
-              setOpen(false);
-              setError(null);
-              try {
-                await resumesApi.downloadTailored(tailoredResume.id, tailoredResume.filename);
-              } catch {
-                setError("Couldn't download the file. Try again.");
-              }
-            }}
-          >
-            Download .docx
-          </button>
-          <button
-            type="button"
-            disabled={isRegenerating}
-            onClick={() => {
-              setOpen(false);
-              onRegenerate();
-            }}
-          >
-            {isRegenerating ? "Regenerating…" : "Regenerate"}
-          </button>
-        </div>
-      )}
-      {error && <p className="dossier-action__error">{error}</p>}
-    </div>
-  );
-}
-
-function PrerequisiteNotice({ message }: { message: string }) {
-  // The backend's 422 detail text names which prerequisite is missing (a
-  // main resume vs. an LLM API key) — route to whichever settings page
-  // actually fixes it, since those now live on separate pages.
-  const isResumeIssue = /resume/i.test(message);
-  const fixLink = isResumeIssue
-    ? { to: "/resume", label: "Fix this in Resume →" }
-    : { to: "/api-keys", label: "Fix this in AI API Keys →" };
-  return (
-    <p className="dossier-action__prereq">
-      {message} <Link to={fixLink.to}>{fixLink.label}</Link>
-    </p>
-  );
-}
-
+// Split so the applications list is computed here — in the part that stays
+// mounted across prev/next clicks — and is only ever fetched once per
+// visit, while the content below fully remounts on urlId change instead of
+// reusing another job's mutation state.
 export function ApplyPage() {
   const { urlId } = useParams<{ urlId: string }>();
-  // Fetched here, in the wrapper that stays mounted across prev/next clicks,
-  // so the saved-applications list is only ever loaded once per page visit
-  // instead of refetching on every job we navigate to below.
   const applicationsQuery = useQuery({ queryKey: ["applications"], queryFn: applicationsApi.list });
   const applications = applicationsQuery.data ?? [];
-  // Unfiltered lookup — an archived job's own /apply page still needs to
-  // find its application (to show/unarchive it), even though it's excluded
-  // from the prev/next cycle below.
   const currentApplication = applications.find((a) => a.job_posting.url_id === urlId) ?? null;
 
   const activeApplications = applications.filter((a) => !a.is_archived);
@@ -253,9 +303,6 @@ export function ApplyPage() {
     : null;
   const isJobAlreadySaved = currentApplication !== null;
 
-  // Keyed on urlId so navigating between saved applications (which stays on
-  // this same route, just with a different :urlId) fully remounts the page
-  // instead of reusing mutation state / the auto-save ref from the old job.
   return (
     <ApplyPageContent
       key={urlId}
@@ -285,6 +332,24 @@ function ApplyPageContent({
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const appliedRef = useRef(false);
+  // Which process step is expanded — null means all collapsed. Starts on
+  // step 1 and, once the step data below has loaded, jumps once to whichever
+  // step is the candidate's actual next unfinished one (see the effect near
+  // the bottom of this component) unless they've already clicked a step
+  // themselves.
+  const [activeStep, setActiveStep] = useState<number | null>(1);
+  const hasAutoSelectedStep = useRef(false);
+  const toggleStep = (step: number) => {
+    hasAutoSelectedStep.current = true;
+    setActiveStep((prev) => (prev === step ? null : step));
+  };
+  // Collapsed by default — the full posting text can be long, and keeping
+  // it tucked away by default matches the "keep it concise" brief.
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
+  // The follow-up date autosaves on change (there's no Save button for
+  // it, unlike Notes below) — this just gives that invisible save some
+  // on-screen confirmation so it doesn't look like nothing happened.
+  const [followUpStatus, setFollowUpStatus] = useState<"idle" | "saving" | "saved">("idle");
 
   const { data: job, isLoading, isFetching, isRefetchError, refetch } = useQuery({
     queryKey: ["job", urlId],
@@ -292,22 +357,16 @@ function ApplyPageContent({
     enabled: !!urlId,
   });
 
-  // Which uploaded resume to score/tailor/write a cover letter against —
-  // defaults to the main one (undefined here means "let the backend pick
-  // its own default main resume", same as before this selector existed).
-  // Only meaningfully different from the default once someone has more
-  // than one resume uploaded (see ResumePage) and picks a non-main one.
   const resumesQuery = useQuery({ queryKey: ["resumes"], queryFn: resumesApi.list });
   const resumes = resumesQuery.data ?? [];
-  const mainResume = resumes.find((r) => r.is_main) ?? null;
+  const mainResume = resumes.find((r) => r.is_main) ?? resumes[0] ?? null;
   const [pickedResumeId, setPickedResumeId] = useState<string | null>(null);
   const selectedResumeId = pickedResumeId ?? mainResume?.id ?? null;
-  // undefined (not the main resume's own id) so a request with no picker
-  // shown still hits the exact same URL/cache key it did before resume_id
-  // existed.
+  const selectedResume = resumes.find((r) => r.id === selectedResumeId) ?? null;
   const resumeIdParam = pickedResumeId ?? undefined;
 
-  const jobPostingId = job ? scannedPosting(job)?.id : undefined;
+  const posting = job ? scannedPosting(job) : null;
+  const jobPostingId = posting?.id;
 
   const rescanMutation = useMutation({
     mutationFn: (id: string) => jobsApi.rescan(id),
@@ -338,11 +397,10 @@ function ApplyPageContent({
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
   });
 
+  // Auto-save on visit: a job seen through this dashboard is tracked in
+  // Applications too, not just scored.
   useEffect(() => {
     if (appliedRef.current) return;
-    // Already present in the saved-applications list (fetched once by the
-    // wrapper above) — skip the re-save so we don't invalidate and refetch
-    // that list on every prev/next click.
     if (isJobAlreadySaved) return;
     if (job?.posting && job.url.url) {
       appliedRef.current = true;
@@ -366,10 +424,12 @@ function ApplyPageContent({
     enabled: !!jobPostingId,
     retry: false,
   });
-
-  const scoreMutation = useMutation({
+  const scoreMutation = useMutation<ResumeScore, ApiError>({
     mutationFn: () => resumesApi.generateScore(jobPostingId!, resumeIdParam),
   });
+  const displayedScore =
+    scoreMutation.data?.resume_id === selectedResumeId ? scoreMutation.data : scoreQuery.data;
+  const scoreError = scoreMutation.error ?? scoreQuery.error;
 
   const tailoredQuery = useQuery<TailoredResume, ApiError>({
     queryKey: ["tailored", jobPostingId, resumeIdParam],
@@ -377,13 +437,10 @@ function ApplyPageContent({
     enabled: !!jobPostingId,
     retry: false,
   });
-
   const tailorMutation = useMutation<TailoredResume, ApiError>({
     mutationFn: () => resumesApi.generateTailored(jobPostingId!, resumeIdParam),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tailored", jobPostingId, resumeIdParam] }),
   });
-
-  // Same staleness concern as displayedScore/displayedCoverLetter below.
   const displayedTailored =
     tailorMutation.data?.resume_id === selectedResumeId ? tailorMutation.data : tailoredQuery.data;
 
@@ -393,11 +450,9 @@ function ApplyPageContent({
     enabled: !!displayedTailored?.id,
     retry: false,
   });
-
   const tailoredScoreMutation = useMutation<TailoredResumeScore, ApiError>({
     mutationFn: () => resumesApi.generateTailoredScore(displayedTailored!.id),
   });
-
   const displayedTailoredScoreRaw = tailoredScoreMutation.data ?? tailoredScoreQuery.data;
   const displayedTailoredScore =
     displayedTailoredScoreRaw?.tailored_resume_id === displayedTailored?.id ? displayedTailoredScoreRaw : undefined;
@@ -408,72 +463,157 @@ function ApplyPageContent({
     enabled: !!jobPostingId,
     retry: false,
   });
-
   const coverLetterMutation = useMutation<CoverLetter, ApiError>({
     mutationFn: () => resumesApi.generateCoverLetter(jobPostingId!, resumeIdParam),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cover-letter", jobPostingId, resumeIdParam] }),
   });
+  const displayedCoverLetter =
+    coverLetterMutation.data?.resume_id === selectedResumeId ? coverLetterMutation.data : coverLetterQuery.data;
 
+  // Sent explicitly (never left undefined-for-"main-résumé" like the other
+  // steps' resumeIdParam) so interview prep always targets whichever
+  // résumé the score card above is actually showing as best, even before
+  // the candidate has touched the picker themselves.
+  const interviewPrepResumeId = selectedResumeId ?? undefined;
   const interviewPrepQuery = useQuery<InterviewPrep, ApiError>({
-    queryKey: ["interview-prep", jobPostingId, resumeIdParam],
-    queryFn: () => resumesApi.getInterviewPrep(jobPostingId!, resumeIdParam),
+    queryKey: ["interview-prep", jobPostingId, interviewPrepResumeId],
+    queryFn: () => resumesApi.getInterviewPrep(jobPostingId!, interviewPrepResumeId),
     enabled: !!jobPostingId,
     retry: false,
   });
-
   const interviewPrepMutation = useMutation<InterviewPrep, ApiError>({
-    mutationFn: () => resumesApi.generateInterviewPrep(jobPostingId!, resumeIdParam),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["interview-prep", jobPostingId, resumeIdParam] }),
+    mutationFn: () => resumesApi.generateInterviewPrep(jobPostingId!, interviewPrepResumeId),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["interview-prep", jobPostingId, interviewPrepResumeId] }),
   });
-
-  const [downloadError, setDownloadError] = useState<string | null>(null);
-
-  // A mutation's own .data sticks around across query-key changes (React
-  // Query doesn't know it's now stale), so switching resumes without these
-  // resume_id checks would keep showing the previous resume's just-generated
-  // score/tailored-resume/cover-letter/interview-prep instead of falling
-  // through to the freshly-keyed query below.
-  const displayedScore =
-    scoreMutation.data?.resume_id === selectedResumeId ? scoreMutation.data : scoreQuery.data;
-  const displayedCoverLetter =
-    coverLetterMutation.data?.resume_id === selectedResumeId ? coverLetterMutation.data : coverLetterQuery.data;
   const displayedInterviewPrep =
     interviewPrepMutation.data?.resume_id === selectedResumeId ? interviewPrepMutation.data : interviewPrepQuery.data;
 
+  // One headline number instead of three overlapping ones (a standalone
+  // score bar plus a Fitness/Tailored pair that just repeated it) — the
+  // better of the two, since that's the one that actually reflects the
+  // resume version the candidate would submit.
+  const bestScoreSource: "fitness" | "tailored" | null =
+    displayedTailoredScore && (!displayedScore || displayedTailoredScore.overall_score > displayedScore.overall_score)
+      ? "tailored"
+      : displayedScore
+        ? "fitness"
+        : null;
+  const bestScoreValue =
+    bestScoreSource === "tailored"
+      ? displayedTailoredScore!.overall_score
+      : bestScoreSource === "fitness"
+        ? displayedScore!.overall_score
+        : null;
+
+  const step1Done = !!displayedScore;
+  const step1Status = displayedScore ? (
+    <>
+      Done ·{" "}
+      <span className={`process-step__status-score process-step__status-score--${fitTier(displayedScore.overall_score)}`}>
+        fit score {displayedScore.overall_score}
+      </span>
+    </>
+  ) : (
+    "Not started"
+  );
+  const step2Done = !!displayedTailored;
+  const step2Status = !step2Done ? (
+    "Not started"
+  ) : displayedTailoredScore ? (
+    <>
+      Done ·{" "}
+      <span
+        className={`process-step__status-score process-step__status-score--${fitTier(displayedTailoredScore.overall_score)}`}
+      >
+        tailored score {displayedTailoredScore.overall_score}
+      </span>
+    </>
+  ) : (
+    "Tailored resume ready"
+  );
+  const step3Done = !!displayedCoverLetter;
+  const step3Status = step3Done ? "Drafted" : "Not started";
+  const step4Done = currentApplication ? currentApplication.status !== "saved" : false;
+  const step4Status = !currentApplication
+    ? "Save this application to track its status"
+    : step4Done
+      ? `Status: ${currentApplication.status}`
+      : "Not applied yet";
+  const step5Done = !!displayedInterviewPrep;
+  const step5Status = step5Done ? "Prepared" : "Optional — do this once an interview is scheduled";
+
+  // Jump to the candidate's actual next step once the data that decides
+  // that has settled — but only the first time, and only if they haven't
+  // already clicked a step themselves (toggleStep sets the ref too, so a
+  // later query settling — e.g. tailoring finishes while they're reading
+  // the cover letter step — never yanks them back to an earlier step).
+  useEffect(() => {
+    if (hasAutoSelectedStep.current) return;
+    if (!jobPostingId) return;
+    // isPending (not isLoading) on purpose: these queries stay disabled
+    // until jobPostingId is known, and a disabled TanStack Query v5 query
+    // reports isLoading: false (it isn't actively fetching) even though it
+    // has never resolved — isPending is what actually means "no result
+    // yet", and only flips once each query has truly settled.
+    const stillLoading =
+      scoreQuery.isPending || tailoredQuery.isPending || coverLetterQuery.isPending || interviewPrepQuery.isPending;
+    if (stillLoading) return;
+    hasAutoSelectedStep.current = true;
+    const done = [step1Done, step2Done, step3Done, step4Done, step5Done];
+    const firstIncomplete = done.findIndex((d) => !d);
+    // Genuinely synchronizing with four async queries (score/tailored/cover
+    // letter/interview prep) settling; there's no render-time value to
+    // derive this from until they resolve, and hasAutoSelectedStep keeps it
+    // to a single one-shot jump rather than a render loop.
+    // oxlint-disable-next-line react/set-state-in-effect
+    setActiveStep(firstIncomplete === -1 ? STEP_COUNT : firstIncomplete + 1);
+  }, [
+    jobPostingId,
+    step1Done,
+    step2Done,
+    step3Done,
+    step4Done,
+    step5Done,
+    scoreQuery.isPending,
+    tailoredQuery.isPending,
+    coverLetterQuery.isPending,
+    interviewPrepQuery.isPending,
+  ]);
+
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
   if (isLoading) {
     return (
-      <main className="apply-page">
-        <p>Loading case file…</p>
+      <main className="job-dashboard">
+        <p>Loading job-fit dashboard…</p>
       </main>
     );
   }
 
   if (!job) {
     return (
-      <main className="apply-page">
+      <main className="job-dashboard">
         <p>Couldn't find that posting.</p>
       </main>
     );
   }
 
-  const posting = scannedPosting(job);
-  const isRescanning = rescanMutation.isPending;
-
   if (job.url.scan_status === "failed") {
     return (
-      <main className="apply-page">
+      <main className="job-dashboard">
         {dialog}
         <span className="stamp stamp--neutral">Scan failed</span>
         <p>{job.url.scan_error ?? "This posting couldn't be scanned."}</p>
-        <div className="apply-page__failed-actions">
+        <div className="job-dashboard__actions">
           {user && (
             <button
               type="button"
               className="rescan-button"
-              disabled={isRescanning}
+              disabled={rescanMutation.isPending}
               onClick={() => rescanMutation.mutate(job.url.id)}
             >
-              {isRescanning ? "Rescanning…" : "Rescan ↻"}
+              {rescanMutation.isPending ? "Rescanning…" : "Rescan ↻"}
             </button>
           )}
           {user && currentApplication && (
@@ -491,342 +631,306 @@ function ApplyPageContent({
     );
   }
 
+  if (!posting) {
+    return (
+      <main className="job-dashboard">
+        {dialog}
+        <span className="stamp stamp--neutral">Still scanning</span>
+        <p>This posting hasn't finished being scanned yet — check back shortly.</p>
+        <button type="button" className="rescan-button" disabled={isFetching} onClick={() => void refetch()}>
+          {isFetching ? "Refreshing…" : "Refresh job content ↻"}
+        </button>
+        {isRefetchError && <p className="job-dashboard__error">Couldn't refresh this posting. Try again.</p>}
+      </main>
+    );
+  }
+
+  const salary = formatSalary(job);
+
   return (
-    <main className="apply-page">
+    <main className="job-dashboard">
       {dialog}
-      <div className="apply-page__layout">
-          <div className="apply-page__description-col">
-            <div className="apply-page__description-header">
-              {user && (
-                <button
-                  type="button"
-                  className="rescan-button"
-                  disabled={isRescanning}
-                  onClick={() => rescanMutation.mutate(job.url.id)}
-                >
-                  {isRescanning ? "Rescanning…" : "Rescan ↻"}
-                </button>
-              )}
-              <div className="apply-page__job-nav">
-                {previousApplicationUrlId ? (
-                  <Link to={`/jobs/${previousApplicationUrlId}/apply`} className="apply-page__nav-button">
-                    ‹ Prev
-                  </Link>
-                ) : (
-                  <span className="apply-page__nav-button apply-page__nav-button--disabled" aria-hidden="true">
-                    ‹ Prev
-                  </span>
-                )}
-                {nextApplicationUrlId ? (
-                  <Link to={`/jobs/${nextApplicationUrlId}/apply`} className="apply-page__nav-button">
-                    Next ›
-                  </Link>
-                ) : (
-                  <span className="apply-page__nav-button apply-page__nav-button--disabled" aria-hidden="true">
-                    Next ›
-                  </span>
-                )}
-              </div>
-              <Link to={`/jobs/${job.url.id}`} className="rescan-button apply-page__view-link">
-                View ↑
+      <Link to="/applications" className="apply__back-link apply__page-back-link">
+        ‹ Back to applications
+      </Link>
+      <div className="job-dashboard__card">
+        <div className="apply__toolbar-row">
+          <Link to={`/jobs/${job.url.id}`} className="rescan-button apply__toolbar-view-job">
+            View job ↑
+          </Link>
+          <div className="apply__nav-group">
+            {previousApplicationUrlId ? (
+              <Link to={`/jobs/${previousApplicationUrlId}/apply`} className="apply__back-link">
+                ‹ Prev
               </Link>
-            </div>
-
-            {!posting ? (
-              <div className="apply-page__description" aria-live="polite">
-                <span className="stamp stamp--neutral">Still scanning</span>
-                <p>This posting hasn't finished being scanned yet — check back shortly.</p>
-                <button
-                  type="button"
-                  className="rescan-button"
-                  disabled={isFetching}
-                  onClick={() => void refetch()}
-                >
-                  {isFetching ? "Refreshing…" : "Refresh job content ↻"}
-                </button>
-                {isRefetchError && (
-                  <p className="dossier-action__error">Couldn't refresh this posting. Try again.</p>
-                )}
-              </div>
             ) : (
-              <>
-                <div className="apply-page__title-block">
-                  <h1>{posting.title ?? "Untitled role"}</h1>
-                  <p className="apply-page__company">
-                    <span>
-                      {posting.company_name ?? job.url.domain}
-                      {posting.location ? ` · ${posting.location}` : ""}
-                    </span>
-                    {formatPostedAt(job) && <span className="apply-page__posted">{formatPostedAt(job)}</span>}
-                  </p>
-                </div>
-
-                <div className="apply-page__tags">
-                  <span className="tag">{posting.workplace_type}</span>
-                  <span className="tag">{posting.employment_type.replace("_", " ")}</span>
-                  {formatSalary(job) && <span className="tag tag--accent">{formatSalary(job)}</span>}
-                </div>
-
-                <div className="apply-page__description">
-                  {posting.description ? (
-                    <ReactMarkdown>{posting.description}</ReactMarkdown>
-                  ) : (
-                    "No description was extracted for this posting."
-                  )}
-                </div>
-              </>
+              <span className="apply__back-link apply__back-link--disabled" aria-hidden="true">
+                ‹ Prev
+              </span>
+            )}
+            {nextApplicationUrlId ? (
+              <Link to={`/jobs/${nextApplicationUrlId}/apply`} className="apply__back-link">
+                Next ›
+              </Link>
+            ) : (
+              <span className="apply__back-link apply__back-link--disabled" aria-hidden="true">
+                Next ›
+              </span>
             )}
           </div>
+          <a
+            className="job-dashboard__view-button apply__apply-button apply__toolbar-apply"
+            href={job.url.url}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Apply →
+          </a>
+        </div>
 
-          <div className="apply-page__main-col">
-            <div className="apply-page__main-header">
-              <Link to="/applications" className="apply-page__view-applications-button">
-                View all applications
-              </Link>
-              <a href={job.url.url} target="_blank" rel="noreferrer" className="apply-page__apply-button">
-                Apply →
-              </a>
+        <div className="job-dashboard__header">
+          <div className="job-dashboard__title-block">
+            <h1>{posting.title ?? "Untitled role"}</h1>
+            <p className="job-dashboard__subheader">
+              {posting.company_name ?? job.url.domain}
+              {posting.location ? ` · ${posting.location}` : ""}
+            </p>
+            <div className="job-dashboard__tags">
+              <span className="tag">{posting.workplace_type}</span>
+              <span className="tag">{posting.employment_type.replace("_", " ")}</span>
+              {salary && <span className="tag tag--accent">{salary}</span>}
+              {formatPostedAt(job) && <span className="apply__posted">{formatPostedAt(job)}</span>}
             </div>
-            <div className="dossier">
-              <section className="dossier-action">
-                <div className="score-summary-row">
-                  <div className="score-summary-item">
-                    {displayedScore && (
-                      <span
-                        className={`stamp score-summary-item__stamp ${fitLabel(displayedScore.overall_score).stampClass}`}
-                      >
-                        {fitLabel(displayedScore.overall_score).text}
-                      </span>
-                    )}
-                    <span className="keyword-row__label score-summary-item__label">Fitness score</span>
-                    <span className="fitness-result__number">{displayedScore?.overall_score ?? "—"}</span>
-                  </div>
-                  <div className="score-summary-divider" />
-                  <div className="score-summary-item">
-                    {displayedTailoredScore && (
-                      <span
-                        className={`stamp score-summary-item__stamp ${fitLabel(displayedTailoredScore.overall_score).stampClass}`}
-                      >
-                        {fitLabel(displayedTailoredScore.overall_score).text}
-                      </span>
-                    )}
-                    <span className="keyword-row__label score-summary-item__label">Tailored score</span>
-                    <span className="fitness-result__number">{displayedTailoredScore?.overall_score ?? "—"}</span>
-                  </div>
-                </div>
-              </section>
+          </div>
+          {user && (
+            <button
+              type="button"
+              className="rescan-button"
+              disabled={rescanMutation.isPending}
+              onClick={() => rescanMutation.mutate(job.url.id)}
+            >
+              {rescanMutation.isPending ? "Rescanning…" : "Rescan ↻"}
+            </button>
+          )}
+        </div>
 
-              <section className="dossier-action">
-                <div className="dossier-action__header apply-page__notes-header">
-                  <div>
-                    <h2>Notes</h2>
-                    <p>Keep track of anything worth remembering about this application.</p>
-                  </div>
-                  <select
-                    className="apply-page__status-select"
-                    value={currentApplication?.status ?? "saved"}
-                    disabled={!currentApplication}
-                    onChange={(e) =>
-                      updateApplicationMutation.mutate({ status: e.target.value as ApplicationStatus })
-                    }
-                  >
-                    {STATUSES.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <label className="apply-page__follow-up">
-                  <span>Remind me to follow up</span>
-                  <input
-                    type="date"
-                    className="apply-page__follow-up-input"
-                    disabled={!currentApplication}
-                    value={currentApplication?.follow_up_at ?? ""}
-                    onChange={(e) =>
-                      updateApplicationMutation.mutate({ follow_up_at: e.target.value || null })
-                    }
-                  />
-                </label>
-                <NotesEditor
-                  key={currentApplication?.id ?? "pending"}
-                  initialNotes={currentApplication?.notes ?? ""}
-                  disabled={!currentApplication}
-                  onSave={(notes) => updateApplicationMutation.mutate({ notes })}
+        <div className="job-dashboard__job-description">
+          <button
+            type="button"
+            className="job-dashboard__description-toggle"
+            onClick={() => setDescriptionOpen((open) => !open)}
+            aria-expanded={descriptionOpen}
+            aria-controls="description-body"
+          >
+            <span className="job-dashboard__description-toggle-title">Job description</span>
+            <span className="job-dashboard__description-toggle-icon" aria-hidden="true">
+              {descriptionOpen ? "▲" : "▼"}
+            </span>
+          </button>
+          {descriptionOpen && (
+            <div className="job-dashboard__description-body" id="description-body">
+              <div className="job-dashboard__description">
+                {posting.description ? (
+                  <ReactMarkdown>{posting.description}</ReactMarkdown>
+                ) : (
+                  "No description was extracted for this posting."
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Resume picker + a single overall score, grouped into one card —
+            previously two bare unboxed rows (picker, score bar) floating
+            above a second card repeating that same score alongside the
+            tailored one, three numbers for what is really one "how am I
+            doing" answer. Now just the better of the two (labeled so it's
+            clear which resume it's for), with a live-status stamp and bar.
+            The picker itself is centered and enlarged — every fit check,
+            tailored version, and score on this page is computed from
+            whichever resume is selected here, so it's the page's actual
+            starting point, not a minor control to skim past. (An
+            explanatory sentence used to sit here too, but between the
+            label, the sentence, and the score row it was three separate
+            pieces of text competing for attention — the size/centering
+            alone already says "this one matters".) */}
+        <section className="dossier-action apply__resume-card">
+          <div className="dossier-action__header">
+            <h2>Resume</h2>
+            <p>Select the resume you'd like to use as your working resume for this application.</p>
+          </div>
+          <div className="apply__resume-card-picker">
+            <ResumeSelect resumes={resumes} selectedId={selectedResumeId ?? ""} onChange={setPickedResumeId} />
+          </div>
+          <div className="apply__resume-card-divider" />
+          <div className="job-dashboard__alignment">
+            <div className="progress-bar" role="presentation">
+              {bestScoreValue !== null && (
+                <div
+                  className={`progress-bar__fill progress-bar__fill--${fitTier(bestScoreValue)}`}
+                  style={{ width: `${bestScoreValue}%` }}
                 />
-              </section>
+              )}
+            </div>
+            <span className="apply__resume-score-label">
+              <span
+                className={`job-dashboard__alignment-pct${bestScoreValue !== null ? ` job-dashboard__alignment-pct--${fitTier(bestScoreValue)}` : ""}`}
+              >
+                {bestScoreValue !== null ? `${bestScoreValue}` : "—"}
+              </span>
+              {bestScoreValue !== null && (
+                <span className={`stamp ${fitLabel(bestScoreValue).stampClass}`}>{fitLabel(bestScoreValue).text}</span>
+              )}
+            </span>
+          </div>
+        </section>
 
+        <section className="dossier-action">
+          <div className="dossier-action__header apply-page__notes-header">
+            <div>
+              <h2>Notes</h2>
+              <p>Keep track of anything worth remembering about this application.</p>
+            </div>
+            <StatusSelect
+              value={(currentApplication?.status ?? "saved") as ApplicationStatus}
+              disabled={!currentApplication}
+              onChange={(status) => updateApplicationMutation.mutate({ status })}
+            />
+          </div>
+          <label className="apply-page__follow-up">
+            <span>Remind me to follow up</span>
+            <input
+              type="date"
+              className="apply-page__follow-up-input"
+              disabled={!currentApplication}
+              value={currentApplication?.follow_up_at ?? ""}
+              onChange={(e) => {
+                setFollowUpStatus("saving");
+                updateApplicationMutation.mutate(
+                  { follow_up_at: e.target.value || null },
+                  {
+                    onSuccess: () => setFollowUpStatus("saved"),
+                    onError: () => setFollowUpStatus("idle"),
+                  },
+                );
+              }}
+            />
+            {followUpStatus === "saving" && (
+              <span className="apply-page__follow-up-status">Saving…</span>
+            )}
+            {followUpStatus === "saved" && (
+              <span className="apply-page__follow-up-status apply-page__follow-up-status--saved">Saved ✓</span>
+            )}
+          </label>
+          {/* Archive used to live alongside Remove on their own Notes tab —
+              folded in here now that the tabs are gone. Passed as
+              extraActions so it sits level with Save in the same row
+              instead of in its own row underneath it. Remove is
+              destructive/irreversible though, so it stays on its own at
+              the very bottom of the page instead of next to routine
+              actions like this one. */}
+          <NotesEditor
+            key={currentApplication?.id ?? "pending"}
+            initialNotes={currentApplication?.notes ?? ""}
+            disabled={!currentApplication}
+            onSave={(notes) => updateApplicationMutation.mutate({ notes })}
+            extraActions={
+              <button
+                type="button"
+                className="apply-page__archive-button"
+                disabled={!currentApplication || updateApplicationMutation.isPending}
+                onClick={() =>
+                  currentApplication &&
+                  updateApplicationMutation.mutate({ is_archived: !currentApplication.is_archived })
+                }
+              >
+                {currentApplication?.is_archived ? "Unarchive application" : "Archive application"}
+              </button>
+            }
+          />
+        </section>
+
+        <ol className="process-steps">
+          <ProcessStep
+            index={1}
+            title="Review your skills"
+            status={step1Status}
+            done={step1Done}
+            isOpen={activeStep === 1}
+            onToggle={() => toggleStep(1)}
+          >
+            {displayedScore ? (
               <section className="dossier-action">
-                {displayedScore && (
-                  <span className={`stamp dossier-action__corner-stamp ${fitLabel(displayedScore.overall_score).stampClass}`}>
-                    {fitLabel(displayedScore.overall_score).text}
-                  </span>
-                )}
-                <div className="dossier-action__header">
-                  <h2>Fitness report</h2>
-                  <p>See how your resume stacks up against this posting's requirements.</p>
+                <FitnessReportBody
+                  score={displayedScore}
+                  title="Fitness report"
+                  description="See how your resume stacks up against this posting's requirements."
+                />
+                <div className="job-dashboard__actions job-dashboard__actions--spaced">
+                  <EvaluateButton
+                    label="Re-evaluate"
+                    onClick={() => scoreMutation.mutate()}
+                    isPending={scoreMutation.isPending}
+                    variant="secondary"
+                  />
                 </div>
-
-                {!displayedScore && (
-                  <>
-                    {resumes.length > 1 && (
-                      <ResumePickerMenu
-                        resumes={resumes}
-                        selectedResumeId={selectedResumeId}
-                        onSelect={setPickedResumeId}
-                      />
-                    )}
-                    <button
-                      type="button"
-                      className="dossier-action__button"
-                      onClick={() => scoreMutation.mutate()}
-                      disabled={!jobPostingId || scoreMutation.isPending}
-                    >
-                      {scoreMutation.isPending ? "Evaluating…" : "Check if I qualify"}
-                    </button>
-                  </>
-                )}
-
-                {displayedScore && (
-                  <div className="fitness-result">
-                    <div className="fitness-result__summary">
-                      <span className="fitness-result_section_number">{displayedScore.overall_score}</span>
-                      <p>{displayedScore.summary}</p>
-                    </div>
-                    {displayedScore.matched_keywords.length > 0 && (
-                      <div className="keyword-row">
-                        <span className="keyword-row__label">Matched</span>
-                        {displayedScore.matched_keywords.map((k) => (
-                          <span key={k} className="tag tag--accent">
-                            {k}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {displayedScore.missing_keywords.length > 0 && (
-                      <div className="keyword-row">
-                        <span className="keyword-row__label">Missing</span>
-                        {displayedScore.missing_keywords.map((k) => (
-                          <span key={k} className="tag tag--secondary">
-                            {k}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {resumes.length > 1 && (
-                      <ResumePickerMenu
-                        resumes={resumes}
-                        selectedResumeId={selectedResumeId}
-                        onSelect={setPickedResumeId}
-                      />
-                    )}
-                    <button type="button" className="rescan-button" onClick={() => scoreMutation.mutate()}>
-                      Re-evaluate
-                    </button>
-                  </div>
-                )}
-
-                {prerequisiteMessage(scoreMutation.error) && (
-                  <PrerequisiteNotice message={prerequisiteMessage(scoreMutation.error)!} />
-                )}
-                {genericErrorMessage(scoreMutation.error) && !prerequisiteMessage(scoreMutation.error) && (
-                  <p className="dossier-action__error">{genericErrorMessage(scoreMutation.error)}</p>
-                )}
               </section>
+            ) : (
+              <div className="job-dashboard__evaluate-panel">
+                <p>No fit evaluation yet for {selectedResume?.filename ?? "this resume"}.</p>
+                <EvaluateButton
+                  label="Evaluate this resume"
+                  onClick={() => scoreMutation.mutate()}
+                  isPending={scoreMutation.isPending}
+                  disabled={!jobPostingId}
+                />
+              </div>
+            )}
+            {prerequisiteMessage(scoreError) && <p className="job-dashboard__error">{prerequisiteMessage(scoreError)}</p>}
+            {genericErrorMessage(scoreError) && !prerequisiteMessage(scoreError) && (
+              <p className="job-dashboard__error">{genericErrorMessage(scoreError)}</p>
+            )}
+          </ProcessStep>
 
+          <ProcessStep
+            index={2}
+            title="Address gaps & tailor your resume"
+            status={step2Status}
+            done={step2Done}
+            isOpen={activeStep === 2}
+            onToggle={() => toggleStep(2)}
+          >
+            {displayedScore && displayedScore.missing_keywords.length > 0 && !displayedTailored && (
               <section className="dossier-action">
-                {displayedTailoredScore && (
-                  <span
-                    className={`stamp dossier-action__corner-stamp ${fitLabel(displayedTailoredScore.overall_score).stampClass}`}
-                  >
-                    {fitLabel(displayedTailoredScore.overall_score).text}
-                  </span>
-                )}
-                {!displayedTailored && (
-                  <div className="dossier-action__header">
-                    <h2>Tailor my resume</h2>
-                    <p>Generate an ATS-friendly version of your resume rewritten for this role.</p>
-                  </div>
-                )}
+                <div className="dossier-action__header">
+                  <h2>Gaps this fit check found</h2>
+                  <p>
+                    Speak to these directly in your resume below if you have relevant experience — otherwise they'll
+                    likely come up again in the interview.
+                  </p>
+                </div>
+                <ul className="evidence-list evidence-list--negative">
+                  {displayedScore.missing_keywords.map((k) => (
+                    <li key={k}>{k}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
-                {!displayedTailored && (
-                  <button
-                    type="button"
-                    className="dossier-action__button"
-                    onClick={() => tailorMutation.mutate()}
-                    disabled={!jobPostingId || tailorMutation.isPending}
-                  >
-                    {tailorMutation.isPending ? "Tailoring…" : "Tailor my resume"}
-                  </button>
-                )}
-
-                {displayedTailored && (
-                  <div className="fitness-result">
-                    <div className="dossier-action__header">
-                      <h2>Fitness report for this version</h2>
-                      <p>See how this tailored resume stacks up against this posting's requirements.</p>
-                    </div>
-
-                    {displayedTailoredScore && (
-                      <div className="fitness-result">
-                        <div className="fitness-result__summary">
-                          <span className="fitness-result_section_number">{displayedTailoredScore.overall_score}</span>
-                          <p>{displayedTailoredScore.summary}</p>
-                        </div>
-                        {displayedTailoredScore.matched_keywords.length > 0 && (
-                          <div className="keyword-row">
-                            <span className="keyword-row__label">Matched</span>
-                            {displayedTailoredScore.matched_keywords.map((k) => (
-                              <span key={k} className="tag tag--accent">
-                                {k}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        {displayedTailoredScore.missing_keywords.length > 0 && (
-                          <div className="keyword-row">
-                            <span className="keyword-row__label">Missing</span>
-                            {displayedTailoredScore.missing_keywords.map((k) => (
-                              <span key={k} className="tag tag--secondary">
-                                {k}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {prerequisiteMessage(tailoredScoreMutation.error) && (
-                      <PrerequisiteNotice message={prerequisiteMessage(tailoredScoreMutation.error)!} />
-                    )}
-                    {genericErrorMessage(tailoredScoreMutation.error) &&
-                      !prerequisiteMessage(tailoredScoreMutation.error) && (
-                        <p className="dossier-action__error">{genericErrorMessage(tailoredScoreMutation.error)}</p>
-                      )}
-
-                    <div className="dossier-action__action-row">
-                      <button
-                        type="button"
-                        className={displayedTailoredScore ? "rescan-button" : "dossier-action__button"}
-                        onClick={() => tailoredScoreMutation.mutate()}
-                        disabled={tailoredScoreMutation.isPending}
-                      >
-                        {tailoredScoreMutation.isPending
-                          ? "Evaluating…"
-                          : displayedTailoredScore
-                            ? "Re-check tailored fit"
-                            : "Check tailored fit"}
-                      </button>
-                      <TailoredDownloadMenu
-                        tailoredResume={displayedTailored}
-                        onRegenerate={() => tailorMutation.mutate()}
-                        isRegenerating={tailorMutation.isPending}
-                      />
-                    </div>
-                  </div>
-                )}
-
+            {!displayedTailored ? (
+              <section className="dossier-action">
+                <div className="dossier-action__header">
+                  <h2>Tailor my resume</h2>
+                  <p>Generate an ATS-friendly version of your resume rewritten for this role.</p>
+                </div>
+                <button
+                  type="button"
+                  className="dossier-action__button"
+                  onClick={() => tailorMutation.mutate()}
+                  disabled={!jobPostingId || tailorMutation.isPending}
+                >
+                  {tailorMutation.isPending ? "Tailoring…" : "Tailor my resume"}
+                </button>
                 {prerequisiteMessage(tailorMutation.error) && (
                   <PrerequisiteNotice message={prerequisiteMessage(tailorMutation.error)!} />
                 )}
@@ -834,165 +938,248 @@ function ApplyPageContent({
                   <p className="dossier-action__error">{genericErrorMessage(tailorMutation.error)}</p>
                 )}
               </section>
-
+            ) : (
               <section className="dossier-action">
-                <div className="dossier-action__header">
-                  <h2>Write a cover letter</h2>
-                  <p>Draft a cover letter that speaks directly to this posting.</p>
-                </div>
-
-                {!displayedCoverLetter && (
-                  <button
-                    type="button"
-                    className="dossier-action__button"
-                    onClick={() => coverLetterMutation.mutate()}
-                    disabled={!jobPostingId || coverLetterMutation.isPending}
-                  >
-                    {coverLetterMutation.isPending ? "Drafting…" : "Generate cover letter"}
-                  </button>
-                )}
-
-                {displayedCoverLetter && (
-                  <div className="fitness-result">
-                    <p className="cover-letter-preview__greeting">{displayedCoverLetter.content.greeting}</p>
-                    {displayedCoverLetter.content.body_paragraphs.slice(0, 1).map((p, i) => (
-                      <p key={i} className="cover-letter-preview__paragraph">
-                        {p}
-                      </p>
-                    ))}
-                    <button
-                      type="button"
-                      className="dossier-action__button"
-                      onClick={async () => {
-                        setDownloadError(null);
-                        try {
-                          await resumesApi.downloadCoverLetter(
-                            displayedCoverLetter.id,
-                            displayedCoverLetter.filename,
-                          );
-                        } catch {
-                          setDownloadError("Couldn't download the file. Try again.");
-                        }
-                      }}
-                    >
-                      Download .docx
-                    </button>
-                    <button
-                      type="button"
-                      className="dossier-action__link"
-                      onClick={() => coverLetterMutation.mutate()}
-                    >
-                      Regenerate
-                    </button>
+                {displayedTailoredScore ? (
+                  <FitnessReportBody
+                    score={displayedTailoredScore}
+                    title="Fitness report for this version"
+                    description="See how this tailored resume stacks up against this posting's requirements."
+                  />
+                ) : (
+                  <div className="dossier-action__header">
+                    <h2>Fitness report for this version</h2>
+                    <p>Check this tailored resume's fit to see its report here.</p>
                   </div>
                 )}
-
-                {prerequisiteMessage(coverLetterMutation.error) && (
-                  <PrerequisiteNotice message={prerequisiteMessage(coverLetterMutation.error)!} />
-                )}
-                {genericErrorMessage(coverLetterMutation.error) && !prerequisiteMessage(coverLetterMutation.error) && (
-                  <p className="dossier-action__error">{genericErrorMessage(coverLetterMutation.error)}</p>
-                )}
-              </section>
-
-              <section className="dossier-action">
-                <div className="dossier-action__header">
-                  <h2>Prep for the interview</h2>
-                  <p>Likely questions for this exact role, how to answer them, and what to bring up yourself.</p>
+                {/* Bottom-right of the card: Check/Re-check on the left,
+                    download (with regenerate in its menu) on the right. */}
+                <div className="job-dashboard__actions job-dashboard__actions--spaced apply__tailor-actions">
+                  <EvaluateButton
+                    label={displayedTailoredScore ? "Re-check tailored fit" : "Check tailored fit"}
+                    onClick={() => tailoredScoreMutation.mutate()}
+                    isPending={tailoredScoreMutation.isPending}
+                    variant={displayedTailoredScore ? "secondary" : "primary"}
+                  />
+                  <TailoredDownloadMenu
+                    tailoredResume={displayedTailored}
+                    onRegenerate={() => tailorMutation.mutate()}
+                    isRegenerating={tailorMutation.isPending}
+                  />
                 </div>
-
-                {!displayedInterviewPrep && (
-                  <button
-                    type="button"
-                    className="dossier-action__button"
-                    onClick={() => interviewPrepMutation.mutate()}
-                    disabled={!jobPostingId || interviewPrepMutation.isPending}
-                  >
-                    {interviewPrepMutation.isPending ? "Preparing…" : "Generate interview prep"}
-                  </button>
+                {prerequisiteMessage(tailoredScoreMutation.error) && (
+                  <PrerequisiteNotice message={prerequisiteMessage(tailoredScoreMutation.error)!} />
                 )}
-
-                {displayedInterviewPrep && (
-                  <div className="fitness-result interview-prep">
-                    {displayedInterviewPrep.content.likely_questions.length > 0 && (
-                      <div className="interview-prep__section">
-                        <h3>Likely questions</h3>
-                        <ol className="interview-prep__questions">
-                          {displayedInterviewPrep.content.likely_questions.map((q, i) => (
-                            <li key={i}>
-                              <span className="tag interview-prep__category">{q.category.replace("_", " ")}</span>
-                              <p className="interview-prep__question">{q.question}</p>
-                              <p className="interview-prep__approach">{q.approach}</p>
-                            </li>
-                          ))}
-                        </ol>
-                      </div>
-                    )}
-
-                    {displayedInterviewPrep.content.talking_points.length > 0 && (
-                      <div className="interview-prep__section">
-                        <h3>Bring these up yourself</h3>
-                        <ul className="interview-prep__list">
-                          {displayedInterviewPrep.content.talking_points.map((point, i) => (
-                            <li key={i}>{point}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {displayedInterviewPrep.content.questions_to_ask.length > 0 && (
-                      <div className="interview-prep__section">
-                        <h3>Questions to ask them</h3>
-                        <ul className="interview-prep__list">
-                          {displayedInterviewPrep.content.questions_to_ask.map((question, i) => (
-                            <li key={i}>{question}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    <button type="button" className="rescan-button" onClick={() => interviewPrepMutation.mutate()}>
-                      Regenerate
-                    </button>
-                  </div>
+                {genericErrorMessage(tailoredScoreMutation.error) && !prerequisiteMessage(tailoredScoreMutation.error) && (
+                  <p className="job-dashboard__error">{genericErrorMessage(tailoredScoreMutation.error)}</p>
                 )}
-
-                {prerequisiteMessage(interviewPrepMutation.error) && (
-                  <PrerequisiteNotice message={prerequisiteMessage(interviewPrepMutation.error)!} />
+                {prerequisiteMessage(tailorMutation.error) && (
+                  <PrerequisiteNotice message={prerequisiteMessage(tailorMutation.error)!} />
                 )}
-                {genericErrorMessage(interviewPrepMutation.error) &&
-                  !prerequisiteMessage(interviewPrepMutation.error) && (
-                    <p className="dossier-action__error">{genericErrorMessage(interviewPrepMutation.error)}</p>
-                  )}
+                {genericErrorMessage(tailorMutation.error) && !prerequisiteMessage(tailorMutation.error) && (
+                  <p className="dossier-action__error">{genericErrorMessage(tailorMutation.error)}</p>
+                )}
               </section>
+            )}
+          </ProcessStep>
 
-              <div className="apply-page__archive-row">
+          <ProcessStep
+            index={3}
+            title="Write a cover letter"
+            status={step3Status}
+            done={step3Done}
+            isOpen={activeStep === 3}
+            onToggle={() => toggleStep(3)}
+          >
+            <section className="dossier-action">
+              <p className="dossier-action__lede">Draft a cover letter that speaks directly to this posting.</p>
+
+              {!displayedCoverLetter && (
                 <button
                   type="button"
-                  className="apply-page__archive-button"
-                  disabled={!currentApplication || updateApplicationMutation.isPending}
-                  onClick={() =>
-                    currentApplication &&
-                    updateApplicationMutation.mutate({ is_archived: !currentApplication.is_archived })
-                  }
+                  className="dossier-action__button"
+                  onClick={() => coverLetterMutation.mutate()}
+                  disabled={!jobPostingId || coverLetterMutation.isPending}
                 >
-                  {currentApplication?.is_archived ? "Unarchive application" : "Archive application"}
+                  {coverLetterMutation.isPending ? "Drafting…" : "Generate cover letter"}
                 </button>
-                {currentApplication && (
+              )}
+
+              {displayedCoverLetter && (
+                <div className="fitness-result">
+                  <p className="cover-letter-preview__greeting">{displayedCoverLetter.content.greeting}</p>
+                  {displayedCoverLetter.content.body_paragraphs.slice(0, 1).map((p, i) => (
+                    <p key={i} className="cover-letter-preview__paragraph">
+                      {p}
+                    </p>
+                  ))}
                   <button
                     type="button"
-                    className="apply-page__archive-button delete-button"
-                    disabled={removeApplicationMutation.isPending}
-                    onClick={() => removeApplication(currentApplication.id)}
+                    className="dossier-action__button"
+                    onClick={async () => {
+                      setDownloadError(null);
+                      try {
+                        await resumesApi.downloadCoverLetter(displayedCoverLetter.id, displayedCoverLetter.filename);
+                      } catch {
+                        setDownloadError("Couldn't download the file. Try again.");
+                      }
+                    }}
                   >
-                    {removeApplicationMutation.isPending ? "Removing…" : "Remove application"}
+                    Download .docx
                   </button>
-                )}
+                  <button type="button" className="dossier-action__link" onClick={() => coverLetterMutation.mutate()}>
+                    Regenerate
+                  </button>
+                </div>
+              )}
+
+              {prerequisiteMessage(coverLetterMutation.error) && (
+                <PrerequisiteNotice message={prerequisiteMessage(coverLetterMutation.error)!} />
+              )}
+              {genericErrorMessage(coverLetterMutation.error) && !prerequisiteMessage(coverLetterMutation.error) && (
+                <p className="dossier-action__error">{genericErrorMessage(coverLetterMutation.error)}</p>
+              )}
+              {downloadError && <p className="dossier-action__error">{downloadError}</p>}
+            </section>
+          </ProcessStep>
+
+          <ProcessStep
+            index={4}
+            title="Apply for the job"
+            status={step4Status}
+            done={step4Done}
+            isOpen={activeStep === 4}
+            onToggle={() => toggleStep(4)}
+          >
+            <section className="dossier-action">
+              <p className="dossier-action__lede">
+                Submit your application on the employer's site, then mark it applied here to keep your status in
+                sync.
+              </p>
+              <div className="job-dashboard__actions apply__apply-actions">
+                <a
+                  className="job-dashboard__view-button apply__apply-button"
+                  href={job.url.url}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Apply →
+                </a>
+                {currentApplication &&
+                  (!step4Done ? (
+                    <button
+                      type="button"
+                      className="rescan-button"
+                      disabled={updateApplicationMutation.isPending}
+                      onClick={() => updateApplicationMutation.mutate({ status: "applied" })}
+                    >
+                      Mark as applied
+                    </button>
+                  ) : (
+                    <p className="job-dashboard__panel-empty">
+                      Status: {currentApplication.status}. Change it any time from the Notes card above.
+                    </p>
+                  ))}
               </div>
-            </div>
-          </div>
+            </section>
+          </ProcessStep>
+
+          <ProcessStep
+            index={5}
+            title="Prep for the interview"
+            status={step5Status}
+            done={step5Done}
+            isOpen={activeStep === 5}
+            onToggle={() => toggleStep(5)}
+          >
+            <section className="dossier-action">
+              <p className="dossier-action__lede">
+                Likely questions for this exact role, how to answer them, and what to bring up yourself.
+              </p>
+
+              {!displayedInterviewPrep && (
+                <button
+                  type="button"
+                  className="dossier-action__button"
+                  onClick={() => interviewPrepMutation.mutate()}
+                  disabled={!jobPostingId || interviewPrepMutation.isPending}
+                >
+                  {interviewPrepMutation.isPending ? "Preparing…" : "Generate interview prep"}
+                </button>
+              )}
+
+              {displayedInterviewPrep && (
+                <div className="fitness-result interview-prep">
+                  {displayedInterviewPrep.content.likely_questions.length > 0 && (
+                    <div className="interview-prep__section">
+                      <h3>Likely questions</h3>
+                      <ol className="interview-prep__questions">
+                        {displayedInterviewPrep.content.likely_questions.map((q, i) => (
+                          <li key={i}>
+                            <span className="tag interview-prep__category">{q.category.replace("_", " ")}</span>
+                            <p className="interview-prep__question">{q.question}</p>
+                            <p className="interview-prep__approach">{q.approach}</p>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+
+                  {displayedInterviewPrep.content.talking_points.length > 0 && (
+                    <div className="interview-prep__section">
+                      <h3>Bring these up yourself</h3>
+                      <ul className="interview-prep__list">
+                        {displayedInterviewPrep.content.talking_points.map((point, i) => (
+                          <li key={i}>{point}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {displayedInterviewPrep.content.questions_to_ask.length > 0 && (
+                    <div className="interview-prep__section">
+                      <h3>Questions to ask them</h3>
+                      <ul className="interview-prep__list">
+                        {displayedInterviewPrep.content.questions_to_ask.map((question, i) => (
+                          <li key={i}>{question}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <button type="button" className="rescan-button" onClick={() => interviewPrepMutation.mutate()}>
+                    Regenerate
+                  </button>
+                </div>
+              )}
+
+              {prerequisiteMessage(interviewPrepMutation.error) && (
+                <PrerequisiteNotice message={prerequisiteMessage(interviewPrepMutation.error)!} />
+              )}
+              {genericErrorMessage(interviewPrepMutation.error) && !prerequisiteMessage(interviewPrepMutation.error) && (
+                <p className="dossier-action__error">{genericErrorMessage(interviewPrepMutation.error)}</p>
+              )}
+            </section>
+          </ProcessStep>
+        </ol>
+
+      </div>
+
+      {/* Outside the card entirely, not just at the bottom of it — Remove
+          is destructive/irreversible, so it deliberately doesn't sit
+          alongside any of the routine controls above, gray-card included. */}
+      {currentApplication && (
+        <div className="apply__remove-row">
+          <button
+            type="button"
+            className="apply-page__archive-button delete-button"
+            disabled={removeApplicationMutation.isPending}
+            onClick={() => removeApplication(currentApplication.id)}
+          >
+            {removeApplicationMutation.isPending ? "Removing…" : "Remove application"}
+          </button>
         </div>
-      {downloadError && <p className="dossier-action__error">{downloadError}</p>}
+      )}
     </main>
   );
 }

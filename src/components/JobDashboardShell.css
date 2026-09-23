@@ -1,0 +1,616 @@
+/* width: 100% (not just max-width) is required here: .page-shell__content
+   (the app shell wrapping every page) is a row flex container, and without
+   an explicit width a flex item's default flex-basis is "auto" — sized to
+   its own content rather than stretched to fill the row. That let this
+   page's width shrink to whatever its narrowest content happened to be
+   (e.g. the collapsed Job description toggle) and grow again once wider
+   content appeared (the expanded description), instead of holding steady
+   at 900px regardless of what's currently rendered inside it. */
+.job-dashboard {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+/* Everything lives inside one card, matching the rest of the app's
+   surface-on-paper convention (.dossier-action cards, see
+   components/DossierAction.css) rather than floating loose sections down
+   the page. */
+.job-dashboard__card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.job-dashboard__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+/* Fills the header row (up to the Rescan/View-posting button on the
+   right) instead of shrinking to its own content width — needed so a
+   full-width child like .job-dashboard__tags can actually reach the far
+   right edge with margin-left: auto, rather than being capped at
+   whatever width the title text itself happens to need. */
+.job-dashboard__title-block {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Company · location line, same plain style as the real job page's
+   .case-file__company — sits below the title as a sub-header, not above it
+   as a small-caps eyebrow. */
+.job-dashboard__subheader {
+  color: var(--ink-soft);
+  margin: 0.3rem 0 0;
+}
+
+.job-dashboard__title-block h1 {
+  font-size: 1.7rem;
+  margin: 0 0 0.35rem;
+}
+
+/* Workplace type / employment type / salary, right under the title — same
+   .tag atoms used throughout the app (index.css). */
+.job-dashboard__tags {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+}
+
+/* .tag's default background is var(--surface) — the same color as the
+   real job page's tags sit on var(--paper), giving a visible light-gray
+   pill there. This page's own .job-dashboard__card is ALSO var(--surface)
+   though, so the identical fill had zero contrast against the card behind
+   it and disappeared into plain text. A plain white fill (var(--paper))
+   fixed the visibility but looked like a different, brighter pill than the
+   real page's — a thin border reading against the card is enough contrast
+   to keep it visible while keeping the same gray fill the real page uses.
+   .tag--accent doesn't have this problem since its blue tint shows through
+   either way. */
+.job-dashboard__tags .tag {
+  padding: 0.3rem 0.85rem;
+}
+
+.job-dashboard__tags .tag:not(.tag--accent) {
+  border: 1px solid var(--line);
+}
+
+.job-dashboard__view-button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  background: var(--paper);
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 0.55rem 1.1rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: background-color 0.15s ease;
+}
+
+.job-dashboard__view-button:hover {
+  background: var(--line);
+}
+
+/* Full scanned job description, shown above the resume picker so the
+   source text driving the fit check is visible without hunting through a
+   tab. Collapsed by default (per the "keep it concise" brief) behind its
+   own toggle button. Styled like one of ApplyPage's process steps —
+   a plain, un-boxed header row (title on the left, chevron on the far
+   right) rather than a bordered pill or a full-width card with nothing in
+   it; the card treatment only shows up on the body once it's expanded and
+   there's actual content to contain. */
+.job-dashboard__description-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.job-dashboard__description-toggle:hover {
+  color: var(--accent);
+}
+
+/* Opts out of index.css's global button focus glow, same as
+   ApplyPage's .process-step__header — a box-shadow halo around this
+   full-width row reads as an odd floating rectangle, and the chevron
+   flip/body appearing is already clear feedback on its own. */
+.job-dashboard__description-toggle:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.job-dashboard__description-toggle-title {
+  display: block;
+}
+
+.job-dashboard__description-toggle-icon {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.job-dashboard__description-body {
+  margin-top: 0.85rem;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  padding: 0.9rem 1.25rem;
+}
+
+.job-dashboard__evaluate-button {
+  align-self: flex-start;
+  margin-top: 0.2rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.job-dashboard__evaluate-button:hover:not(:disabled) {
+  background: var(--accent-deep);
+}
+
+.job-dashboard__evaluate-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.job-dashboard__evaluate-panel p {
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+/* Wraps one <p> per sentence (see utils/text's splitSentences) instead of
+   one dense paragraph — "a lot of words together" is hard to scan, so each
+   idea gets its own line with breathing room around it. */
+.job-dashboard__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.job-dashboard__summary p {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.job-dashboard__actions {
+  display: flex;
+}
+
+.job-dashboard__panel-empty {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.job-dashboard__error {
+  color: var(--rose);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* Heads-up callout for ResumeScore/TailoredResumeScore's
+   overqualification_note — informational only (doesn't affect the score
+   itself), so it's styled as a warning rather than the negative/error
+   (--rose) treatment used elsewhere. */
+.job-dashboard__warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  background: color-mix(in srgb, var(--amber) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--amber) 35%, transparent);
+  border-radius: var(--radius-field);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.job-dashboard__warning-icon {
+  flex-shrink: 0;
+  color: var(--amber);
+  line-height: 1.5;
+}
+
+.job-dashboard__warning p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+/* The posting's own scanned description, rendered from markdown. */
+.job-dashboard__description {
+  line-height: 1.65;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  font-size: 0.92rem;
+}
+
+.job-dashboard__description img,
+.job-dashboard__description video {
+  max-width: 100%;
+  height: auto;
+}
+
+.job-dashboard__description table,
+.job-dashboard__description pre {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.job-dashboard__description > :first-child {
+  margin-top: 0;
+}
+
+.job-dashboard__description > :last-child {
+  margin-bottom: 0;
+}
+
+.job-dashboard__description p,
+.job-dashboard__description ul,
+.job-dashboard__description ol {
+  margin: 0 0 1rem;
+}
+
+.job-dashboard__description h1,
+.job-dashboard__description h2,
+.job-dashboard__description h3,
+.job-dashboard__description h4 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  margin: 1.25rem 0 0.6rem;
+}
+
+/* Standalone alignment bar — separate from the fit-score card itself, so
+   the headline number in the card and this full-width bar aren't showing
+   the same value twice inside one box. */
+.job-dashboard__alignment {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.job-dashboard__alignment-pct {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Same three bands as the bar fill itself (see .progress-bar__fill--* and
+   utils/fitScore's fitTier) — the percentage number is colored to match,
+   not left neutral ink while the bar below it is red/amber/green. */
+.job-dashboard__alignment-pct--negative {
+  color: var(--rose);
+}
+
+.job-dashboard__alignment-pct--warning {
+  color: var(--amber);
+}
+
+.job-dashboard__alignment-pct--positive {
+  color: var(--teal);
+}
+
+.progress-bar {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--line);
+  overflow: hidden;
+}
+
+.progress-bar__fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius-pill);
+  transition: width 0.4s ease;
+}
+
+/* Score-banded fill color, matching fitLabel's own 0–70 / 70–85 / 85–100
+   verdict cutoffs (see utils/fitScore's fitTier) — red/amber/green rather
+   than the neutral accent blue, so the bar itself signals the verdict. */
+.progress-bar__fill--negative {
+  background: var(--rose);
+}
+
+.progress-bar__fill--warning {
+  background: var(--amber);
+}
+
+.progress-bar__fill--positive {
+  background: var(--teal);
+}
+
+/* Tabs — WAI-ARIA tabs pattern (roving tabindex + arrow keys, see
+   DemoTabs in the .tsx), styled as a full-width segmented control. */
+.job-dashboard__tablist {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.25rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 0.3rem;
+}
+
+.job-dashboard__tab {
+  background: none;
+  color: var(--ink-soft);
+  border: none;
+  padding: 0.55rem 0.5rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  text-align: center;
+}
+
+.job-dashboard__tab:hover:not(.job-dashboard__tab--active) {
+  color: var(--ink);
+}
+
+.job-dashboard__tab--active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.job-dashboard__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.job-dashboard__panel:focus-visible {
+  outline: none;
+}
+
+.job-dashboard__columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.75rem;
+}
+
+.job-dashboard__section h2 {
+  font-size: 1rem;
+  margin: 0 0 0.85rem;
+}
+
+.evidence-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.evidence-list li {
+  position: relative;
+  padding-left: 1.15rem;
+  line-height: 1.5;
+  font-size: 0.88rem;
+}
+
+.evidence-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.evidence-list--positive li::before {
+  background: var(--teal);
+}
+
+.evidence-list--negative li::before {
+  background: var(--amber);
+}
+
+.evidence-list--neutral li::before {
+  background: var(--ink-soft);
+}
+
+
+@media (max-width: 760px) {
+  .job-dashboard__columns {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .job-dashboard__tablist {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .job-dashboard {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .job-dashboard__card {
+    padding: 1.25rem;
+  }
+
+  .job-dashboard__title-block h1 {
+    font-size: 1.4rem;
+  }
+
+  .job-dashboard__view-button {
+    order: -1;
+  }
+
+  .job-dashboard__resume-picker select {
+    max-width: 100%;
+  }
+}
+
+/* Live per-rubric-category breakdown (ResumeScore.category_scores, from the
+   backend's own LLM scoring — see api/types' ScoreCategoryBreakdown) in the
+   Fitness report card: what that category of the posting asks for, and the
+   resume's strengths/weaknesses against it specifically, rather than one
+   flat matched/missing list spanning the whole posting. Shared by both
+   demo pages. */
+.job-dashboard__categories {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.job-dashboard__category {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+
+.job-dashboard__category:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.job-dashboard__category-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.job-dashboard__category-header h3 {
+  font-size: 0.98rem;
+  margin: 0;
+}
+
+.job-dashboard__category-score {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Same collapse-toggle pattern as .job-dashboard__description-toggle above
+   the resume picker — each category collapsed by default, its header
+   doubling as the expand/collapse control. */
+.job-dashboard__category-toggle {
+  width: 100%;
+  background: none;
+  color: var(--ink);
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: left;
+}
+
+.job-dashboard__category-toggle:hover h3 {
+  color: var(--ink);
+}
+
+/* Opts out of index.css's global button focus glow — same reasoning as
+   .process-step__header: a box-shadow halo around this full-width row
+   read as an odd floating rectangle rather than a button being pressed.
+   Expanding/collapsing (chevron, body appearing) is feedback enough. */
+.job-dashboard__category-toggle:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.job-dashboard__category-header-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.job-dashboard__category-toggle-icon {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+}
+
+.job-dashboard__category-body {
+  margin-top: 0.6rem;
+}
+
+.job-dashboard__category-ask {
+  margin: 0 0 0.6rem;
+  color: var(--ink);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.job-dashboard__category-asks {
+  margin: 0 0 0.9rem;
+  padding-left: 1.1rem;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.job-dashboard__category-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.job-dashboard__category-columns h4 {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 0 0 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .job-dashboard__category-columns {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}

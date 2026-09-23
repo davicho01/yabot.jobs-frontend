@@ -802,6 +802,7 @@ export function Header() {
           <div className="site-header__save-search-bar">
             <input
               id="save-search-name"
+              className="site-header__save-search-input"
               aria-label="Search name"
               type="text"
               required

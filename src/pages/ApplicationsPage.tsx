@@ -9,8 +9,10 @@ import "./ApplicationsPage.css";
 import { BOARD_PATH } from "../routes";
 
 const QUALIFY_THRESHOLD = 70;
-// Matches ApplyPage's STATUSES — kept as its own copy since the two pages
-// don't otherwise share a components/constants module.
+// Matches utils/applicationStatus's STATUSES (used by StatusSelect and
+// ApplyPage) — kept as its own copy since this page's status <select>
+// predates that shared module and the two don't otherwise share a
+// components/constants module.
 const STATUSES: ApplicationStatus[] = ["saved", "applied", "interviewing", "offer", "rejected", "withdrawn"];
 
 function errorMessage(err: unknown, fallback: string): string {
@@ -196,8 +198,9 @@ function SortMenu({
   );
 }
 
-// Same status set ApplyPage's dossier panel edits — moving it here too means
-// a status can be changed straight from the list, without opening each job.
+// Same status set ApplyPage's Notes card edits — moving it here too
+// means a status can be changed straight from the list, without opening
+// each job.
 function StatusSelect({ application }: { application: Application }) {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
@@ -453,8 +456,8 @@ export function ApplicationsPage() {
   const activeSorts = parseActiveSorts(searchParams.get("sort"));
 
   // Archived applications stay in the same list (so an archived job's own
-  // /apply page can still look up and unarchive it) — this page just hides
-  // them from the default view unless the checkbox below is checked.
+  // ApplyPage can still look up and unarchive it) — this page just
+  // hides them from the default view unless the checkbox below is checked.
   const applications = allApplications?.filter((application) => showArchived || !application.is_archived);
 
   // Multi-key sort: each checked field is a tiebreaker for the ones before
