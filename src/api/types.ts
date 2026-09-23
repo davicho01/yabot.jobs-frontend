@@ -104,9 +104,14 @@ export interface Application {
   // When this row was first made — always set (saving/applying to a job
   // always adds one).
   created_at: string;
+  // Set the moment status first switched to "applied" — null until then.
+  applied_at: string | null;
   // A self-set "remind me about this one" day (not a specific time) — null
   // means no reminder wanted.
   follow_up_at: string | null;
+  // Which resume the apply page's picker is set to for this application —
+  // null means no explicit pick was ever saved (falls back to is_main).
+  selected_resume_id: string | null;
   job_posting: ApplicationJobPosting;
   // Max of the fitness score and the tailored-resume score, whichever is set.
   best_score: number | null;

@@ -32,6 +32,20 @@ import "../components/JobDashboardShell.css";
 import "../components/DossierAction.css";
 import "./ApplyPage.css";
 
+// Applied_at is a real timestamp (unlike the follow-up date, which is a
+// day with no time-of-day), so it's worth telling apart from "Sep 23,
+// 2026" — the candidate clicked Mark as applied at some specific moment,
+// and step 4 says so.
+function formatAppliedAt(value: string): string {
+  return new Date(value).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 // The real-world order a candidate works through a posting in — replaces
 // the old Fit/Update Resume/Application plan/Documents/Notes tabs (which
 // scattered the same handful of actions across unrelated groupings) with
@@ -360,10 +374,16 @@ function ApplyPageContent({
   const resumesQuery = useQuery({ queryKey: ["resumes"], queryFn: resumesApi.list });
   const resumes = resumesQuery.data ?? [];
   const mainResume = resumes.find((r) => r.is_main) ?? resumes[0] ?? null;
+  // pickedResumeId is an optimistic local override for this render only —
+  // it's what makes the picker feel instant on click. The actual pick that
+  // survives a refresh lives on the application record
+  // (currentApplication.selected_resume_id, see the sync effect below,
+  // near updateApplicationMutation) and is what this falls back to once
+  // pickedResumeId is unset, before falling back to is_main same as before.
   const [pickedResumeId, setPickedResumeId] = useState<string | null>(null);
-  const selectedResumeId = pickedResumeId ?? mainResume?.id ?? null;
+  const selectedResumeId = pickedResumeId ?? currentApplication?.selected_resume_id ?? mainResume?.id ?? null;
   const selectedResume = resumes.find((r) => r.id === selectedResumeId) ?? null;
-  const resumeIdParam = pickedResumeId ?? undefined;
+  const resumeIdParam = selectedResumeId ?? undefined;
 
   const posting = job ? scannedPosting(job) : null;
   const jobPostingId = posting?.id;
@@ -414,9 +434,24 @@ function ApplyPageContent({
       notes?: string;
       is_archived?: boolean;
       follow_up_at?: string | null;
+      selected_resume_id?: string | null;
     }) => applicationsApi.update(currentApplication!.id, payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
   });
+
+  // Persists a resume pick to the application record so it survives a
+  // refresh, instead of living only in pickedResumeId's component state —
+  // the bug this fixes. Fires once per genuine pick (guarded by comparing
+  // against what's already stored) rather than on every render, and stays
+  // quiet afterward once the two agree — no separate "Saving…" affordance
+  // like the follow-up date's below, since picking a resume already
+  // re-renders the whole score/tailored/cover-letter stack beneath it.
+  useEffect(() => {
+    if (!currentApplication) return;
+    if (pickedResumeId === null || pickedResumeId === currentApplication.selected_resume_id) return;
+    updateApplicationMutation.mutate({ selected_resume_id: pickedResumeId });
+    // oxlint-disable-next-line react/exhaustive-deps -- updateApplicationMutation is a fresh object every render; re-running this only on the actual inputs changing is what keeps it a one-shot sync instead of a loop.
+  }, [pickedResumeId, currentApplication]);
 
   const scoreQuery = useQuery<ResumeScore, ApiError>({
     queryKey: ["score", jobPostingId, resumeIdParam],
@@ -470,21 +505,19 @@ function ApplyPageContent({
   const displayedCoverLetter =
     coverLetterMutation.data?.resume_id === selectedResumeId ? coverLetterMutation.data : coverLetterQuery.data;
 
-  // Sent explicitly (never left undefined-for-"main-résumé" like the other
-  // steps' resumeIdParam) so interview prep always targets whichever
-  // résumé the score card above is actually showing as best, even before
-  // the candidate has touched the picker themselves.
-  const interviewPrepResumeId = selectedResumeId ?? undefined;
+  // resumeIdParam (now always the resolved selectedResumeId, explicit
+  // main-résumé id included — see its definition above) so interview prep
+  // always targets whichever résumé the score card is actually showing as
+  // best, even before the candidate has touched the picker themselves.
   const interviewPrepQuery = useQuery<InterviewPrep, ApiError>({
-    queryKey: ["interview-prep", jobPostingId, interviewPrepResumeId],
-    queryFn: () => resumesApi.getInterviewPrep(jobPostingId!, interviewPrepResumeId),
+    queryKey: ["interview-prep", jobPostingId, resumeIdParam],
+    queryFn: () => resumesApi.getInterviewPrep(jobPostingId!, resumeIdParam),
     enabled: !!jobPostingId,
     retry: false,
   });
   const interviewPrepMutation = useMutation<InterviewPrep, ApiError>({
-    mutationFn: () => resumesApi.generateInterviewPrep(jobPostingId!, interviewPrepResumeId),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["interview-prep", jobPostingId, interviewPrepResumeId] }),
+    mutationFn: () => resumesApi.generateInterviewPrep(jobPostingId!, resumeIdParam),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["interview-prep", jobPostingId, resumeIdParam] }),
   });
   const displayedInterviewPrep =
     interviewPrepMutation.data?.resume_id === selectedResumeId ? interviewPrepMutation.data : interviewPrepQuery.data;
@@ -538,7 +571,9 @@ function ApplyPageContent({
   const step4Status = !currentApplication
     ? "Save this application to track its status"
     : step4Done
-      ? `Status: ${currentApplication.status}`
+      ? `Status: ${currentApplication.status}${
+          currentApplication.applied_at ? ` · applied ${formatAppliedAt(currentApplication.applied_at)}` : ""
+        }`
       : "Not applied yet";
   const step5Done = !!displayedInterviewPrep;
   const step5Status = step5Done ? "Prepared" : "Optional — do this once an interview is scheduled";
@@ -1077,7 +1112,11 @@ function ApplyPageContent({
                     </button>
                   ) : (
                     <p className="job-dashboard__panel-empty">
-                      Status: {currentApplication.status}. Change it any time from the Notes card above.
+                      Status: {currentApplication.status}
+                      {currentApplication.applied_at && (
+                        <> — marked applied {formatAppliedAt(currentApplication.applied_at)}</>
+                      )}
+                      . Change it any time from the Notes card above.
                     </p>
                   ))}
               </div>
