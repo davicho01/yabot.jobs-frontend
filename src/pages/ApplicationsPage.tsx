@@ -6,6 +6,7 @@ import { resumesApi } from "../api/resumes";
 import { ApiError } from "../api/client";
 import type { Application, ApplicationJobPosting, ApplicationStatus } from "../api/types";
 import { StatusSelect } from "../components/StatusSelect";
+import { STATUSES, statusTone } from "../utils/applicationStatus";
 import "./ApplicationsPage.css";
 import { BOARD_PATH } from "../routes";
 
@@ -373,6 +374,64 @@ function useBulkUpdateMutation(payload: { is_archived: boolean }) {
   });
 }
 
+// Unlike useBulkUpdateMutation above, the status to apply isn't known
+// until the user picks one from BulkStatusMenu's dropdown — so it's a
+// mutate-time argument here instead of a payload baked in at the hook
+// call site.
+function useBulkStatusMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ids, status }: { ids: string[]; status: ApplicationStatus }) =>
+      Promise.all(ids.map((id) => applicationsApi.update(id, { status }))),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
+  });
+}
+
+// Same action-dropdown pattern as SortMenu/DownloadMenu above — a menu of
+// every ApplicationStatus (STATUSES, the same list StatusSelect's per-row
+// dropdown uses) rather than StatusSelect itself, since there's no single
+// "current" status to highlight when the selection spans rows in different
+// states.
+function BulkStatusMenu({ disabled, onPick }: { disabled: boolean; onPick: (status: ApplicationStatus) => void }) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  return (
+    <div className="action-dropdown" ref={containerRef}>
+      <button type="button" className="application-row__action" disabled={disabled} onClick={() => setOpen((o) => !o)}>
+        Set status ↓
+      </button>
+      {open && (
+        <div className="action-dropdown-menu status-select__menu">
+          {STATUSES.map((status) => (
+            <button
+              key={status}
+              type="button"
+              className={`status-select__option status-select__option--${statusTone(status)}`}
+              onClick={() => {
+                setOpen(false);
+                onPick(status);
+              }}
+            >
+              <span className="status-select__option-dot" aria-hidden="true" />
+              {status}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BulkActionsBar({
   selectedIds,
   applications,
@@ -387,6 +446,7 @@ function BulkActionsBar({
 
   const archiveMutation = useBulkUpdateMutation({ is_archived: true });
   const unarchiveMutation = useBulkUpdateMutation({ is_archived: false });
+  const statusMutation = useBulkStatusMutation();
   const evaluateMutation = useMutation({
     // Only the ones without a score yet — matches how the per-row Evaluate
     // button already only appears in that case, so this never re-spends an
@@ -395,7 +455,8 @@ function BulkActionsBar({
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
   });
 
-  const anyPending = archiveMutation.isPending || unarchiveMutation.isPending || evaluateMutation.isPending;
+  const anyPending =
+    archiveMutation.isPending || unarchiveMutation.isPending || statusMutation.isPending || evaluateMutation.isPending;
   const selected = applications.filter((a) => selectedIds.has(a.id));
   const unscoredJobPostingIds = selected.filter((a) => a.best_score === null).map((a) => a.job_posting.id);
 
@@ -409,6 +470,10 @@ function BulkActionsBar({
   return (
     <div className="applications-page__bulk-bar">
       <span className="applications-page__bulk-count">{selectedIds.size} selected</span>
+      <BulkStatusMenu
+        disabled={anyPending}
+        onPick={(status) => runBulk(() => statusMutation.mutateAsync({ ids: [...selectedIds], status }))}
+      />
       <button
         type="button"
         className="application-row__action"
