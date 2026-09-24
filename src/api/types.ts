@@ -12,7 +12,9 @@ export interface User {
 export interface JobPosting {
   id: string;
   url_id: string;
-  apply_url: string;
+  // null for anonymous callers — the backend only includes the original
+  // posting URL for logged-in users.
+  apply_url: string | null;
   title: string | null;
   company_name: string | null;
   location: string | null;
@@ -30,7 +32,9 @@ export interface JobPosting {
 
 export interface JobPostingUrl {
   id: string;
-  url: string;
+  // null for anonymous callers — the backend only includes the original
+  // posting URL for logged-in users.
+  url: string | null;
   domain: string;
   scan_status: string;
   scan_error: string | null;

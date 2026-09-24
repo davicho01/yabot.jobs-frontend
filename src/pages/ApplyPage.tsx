@@ -759,7 +759,7 @@ function ApplyPageContent({
           </div>
           <a
             className="job-dashboard__view-button apply__apply-button apply__toolbar-apply"
-            href={job.url.url}
+            href={job.url.url ?? undefined}
             target="_blank"
             rel="noreferrer"
           >
@@ -1172,7 +1172,7 @@ function ApplyPageContent({
               <div className="job-dashboard__actions apply__apply-actions">
                 <a
                   className="job-dashboard__view-button apply__apply-button"
-                  href={job.url.url}
+                  href={job.url.url ?? undefined}
                   target="_blank"
                   rel="noreferrer"
                 >

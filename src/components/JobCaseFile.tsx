@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import { applicationsApi } from "../api/applications";
 import { jobsApi } from "../api/jobs";
@@ -130,18 +130,27 @@ export function JobCaseFile({
 }) {
   const posting = scannedPosting(job);
   const scanFailed = job.url.scan_status === "failed";
+  const queryClient = useQueryClient();
 
   // Same list ApplyPage/ApplicationsPage query (same ["applications"]
   // cache key), just to answer one question here: has this posting already
-  // been saved/applied to? (Visiting ApplyPage auto-saves it — see its
-  // own effect — so "Evaluate Job" is the wrong label the moment that's
-  // true.)
+  // been saved/applied to? (So "Evaluate Job" is the wrong label the
+  // moment that's true.)
   const { data: applications } = useQuery({
     queryKey: ["applications"],
     queryFn: applicationsApi.list,
     enabled: !!user,
   });
   const currentApplication = applications?.find((a) => a.job_posting.url_id === job.url.id) ?? null;
+
+  // "Evaluate Job" just tracks the posting in Applications — it shouldn't
+  // also navigate there. Once it exists, the label swaps to "View
+  // application →", which does navigate (that's an explicit request to go
+  // look at it).
+  const recordApplication = useMutation({
+    mutationFn: (url: string) => applicationsApi.create(url),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
+  });
 
   return (
     <article className="case-file">
@@ -180,15 +189,28 @@ export function JobCaseFile({
               )}
             </div>
             <div className="case-file__header-actions">
-              <a href={job.url.url} target="_blank" rel="noopener noreferrer" className="rescan-button">
-                Original ↗
-              </a>
-              <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
-                <span>{currentApplication ? "View application →" : "Evaluate Job →"}</span>
-                {currentApplication && (
-                  <span className="apply-button__meta">{formatApplicationDate(currentApplication)}</span>
-                )}
-              </Link>
+              {user && (
+                <a href={job.url.url ?? undefined} target="_blank" rel="noopener noreferrer" className="rescan-button">
+                  Original ↗
+                </a>
+              )}
+              {currentApplication || !user ? (
+                <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
+                  <span>{currentApplication ? "View application →" : "Evaluate Job →"}</span>
+                  {currentApplication && (
+                    <span className="apply-button__meta">{formatApplicationDate(currentApplication)}</span>
+                  )}
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  className="apply-button"
+                  disabled={recordApplication.isPending || !job.url.url}
+                  onClick={() => job.url.url && recordApplication.mutate(job.url.url)}
+                >
+                  <span>{recordApplication.isPending ? "Adding…" : "Evaluate Job →"}</span>
+                </button>
+              )}
             </div>
           </div>
 
