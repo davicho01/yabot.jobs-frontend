@@ -61,6 +61,8 @@ function FitnessReportBody({
   score,
   title,
   description,
+  onRequestEvaluation,
+  isEvaluationPending,
 }: {
   score: {
     overall_score: number;
@@ -72,6 +74,11 @@ function FitnessReportBody({
   };
   title: string;
   description: string;
+  // Comprehensive category breakdown is opt-in — omitted category_scores
+  // means "not evaluated yet" (see app.models.resume.ResumeScore's
+  // docstring), and this CTA is how the candidate requests it.
+  onRequestEvaluation: () => void;
+  isEvaluationPending: boolean;
 }) {
   // Collapsed by default (same "keep it concise" pattern as the Job
   // description toggle above the resume picker) — keyed by category so
@@ -178,34 +185,46 @@ function FitnessReportBody({
           })}
         </div>
       ) : (
-        // Defensive fallback for a score generated before category_scores
-        // existed on the backend — plain matched/missing keyword lists.
-        <div className="job-dashboard__columns">
-          <section className="job-dashboard__section">
-            <h2>Strong evidence</h2>
-            {score.matched_keywords.length === 0 ? (
-              <p className="job-dashboard__panel-empty">No matched requirements were recorded.</p>
-            ) : (
-              <ul className="evidence-list evidence-list--positive">
-                {score.matched_keywords.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            )}
-          </section>
-          <section className="job-dashboard__section">
-            <h2>Evidence gaps</h2>
-            {score.missing_keywords.length === 0 ? (
-              <p className="job-dashboard__panel-empty">No gaps were recorded.</p>
-            ) : (
-              <ul className="evidence-list evidence-list--negative">
-                {score.missing_keywords.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            )}
-          </section>
-        </div>
+        // The quick-score view: this resume/job pairing has a score but
+        // hasn't been through the slower, opt-in comprehensive evaluation
+        // yet (empty category_scores is exactly that signal — see
+        // app.models.resume.ResumeScore's docstring) — plain matched/missing
+        // keyword lists plus a CTA to request the full breakdown.
+        <>
+          <div className="job-dashboard__columns">
+            <section className="job-dashboard__section">
+              <h2>Strong evidence</h2>
+              {score.matched_keywords.length === 0 ? (
+                <p className="job-dashboard__panel-empty">No matched requirements were recorded.</p>
+              ) : (
+                <ul className="evidence-list evidence-list--positive">
+                  {score.matched_keywords.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              )}
+            </section>
+            <section className="job-dashboard__section">
+              <h2>Evidence gaps</h2>
+              {score.missing_keywords.length === 0 ? (
+                <p className="job-dashboard__panel-empty">No gaps were recorded.</p>
+              ) : (
+                <ul className="evidence-list evidence-list--negative">
+                  {score.missing_keywords.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </div>
+          <div className="job-dashboard__actions job-dashboard__actions--spaced">
+            <EvaluateButton
+              label="Get full evaluation"
+              onClick={onRequestEvaluation}
+              isPending={isEvaluationPending}
+            />
+          </div>
+        </>
       )}
     </>
   );
@@ -213,18 +232,22 @@ function FitnessReportBody({
 
 function EvaluateButton({
   label,
+  pendingLabel = "Evaluating…",
   onClick,
   isPending,
   disabled,
   variant = "primary",
 }: {
   label: string;
+  // Distinguishes "Scoring…" (fast) from "Evaluating…" (comprehensive) —
+  // defaults to the latter since most callers are the comprehensive action.
+  pendingLabel?: string;
   onClick: () => void;
   isPending: boolean;
   disabled?: boolean;
-  // "primary" (filled accent) for the first-time "Evaluate this resume"
-  // call to action; "secondary" (outlined, like .rescan-button elsewhere
-  // in the app) once a score already exists and this just re-runs it.
+  // "primary" (filled accent) for the first-time call to action;
+  // "secondary" (outlined, like .rescan-button elsewhere in the app) once
+  // a result already exists and this just re-runs it.
   variant?: "primary" | "secondary";
 }) {
   return (
@@ -234,7 +257,7 @@ function EvaluateButton({
       onClick={onClick}
       disabled={disabled || isPending}
     >
-      {isPending ? "Evaluating…" : label}
+      {isPending ? pendingLabel : label}
     </button>
   );
 }
@@ -459,18 +482,27 @@ function ApplyPageContent({
     enabled: !!jobPostingId,
     retry: false,
   });
+  // Local "last mutation wins" cache, shared by the fast score and the
+  // slower opt-in evaluation — both return the same ResumeScore shape (an
+  // evaluation just fills in the row's category_scores in place), so
+  // whichever ran most recently is always the right thing to show.
+  const [freshScore, setFreshScore] = useState<ResumeScore | null>(null);
   const scoreMutation = useMutation<ResumeScore, ApiError>({
     mutationFn: () => resumesApi.generateScore(jobPostingId!, resumeIdParam),
+    onSuccess: setFreshScore,
   });
-  const displayedScore =
-    scoreMutation.data?.resume_id === selectedResumeId ? scoreMutation.data : scoreQuery.data;
+  const evaluationMutation = useMutation<ResumeScore, ApiError>({
+    mutationFn: () => resumesApi.generateEvaluation(jobPostingId!, resumeIdParam),
+    onSuccess: setFreshScore,
+  });
+  const displayedScore = freshScore?.resume_id === selectedResumeId ? freshScore : scoreQuery.data;
   // scoreQuery 404s on the very first load of a job never scored yet —
-  // that's already the "No fit evaluation yet" panel below, not an error,
-  // so it's excluded here (unlike a 422 missing-prerequisite, which is
-  // worth surfacing immediately rather than waiting for Evaluate to be
-  // clicked and fail the same way).
+  // that's already the "No fit score yet" panel below, not an error, so
+  // it's excluded here (unlike a 422 missing-prerequisite, which is worth
+  // surfacing immediately rather than waiting for Score to be clicked and
+  // fail the same way).
   const scoreQueryError = scoreQuery.error?.status === 404 ? undefined : scoreQuery.error;
-  const scoreError = scoreMutation.error ?? scoreQueryError;
+  const scoreError = scoreMutation.error ?? evaluationMutation.error ?? scoreQueryError;
 
   const tailoredQuery = useQuery<TailoredResume, ApiError>({
     queryKey: ["tailored", jobPostingId, resumeIdParam],
@@ -491,10 +523,16 @@ function ApplyPageContent({
     enabled: !!displayedTailored?.id,
     retry: false,
   });
+  const [freshTailoredScore, setFreshTailoredScore] = useState<TailoredResumeScore | null>(null);
   const tailoredScoreMutation = useMutation<TailoredResumeScore, ApiError>({
     mutationFn: () => resumesApi.generateTailoredScore(displayedTailored!.id),
+    onSuccess: setFreshTailoredScore,
   });
-  const displayedTailoredScoreRaw = tailoredScoreMutation.data ?? tailoredScoreQuery.data;
+  const tailoredEvaluationMutation = useMutation<TailoredResumeScore, ApiError>({
+    mutationFn: () => resumesApi.generateTailoredEvaluation(displayedTailored!.id),
+    onSuccess: setFreshTailoredScore,
+  });
+  const displayedTailoredScoreRaw = freshTailoredScore ?? tailoredScoreQuery.data;
   const displayedTailoredScore =
     displayedTailoredScoreRaw?.tailored_resume_id === displayedTailored?.id ? displayedTailoredScoreRaw : undefined;
 
@@ -906,21 +944,33 @@ function ApplyPageContent({
                   score={displayedScore}
                   title="Fitness report"
                   description="See how your resume stacks up against this posting's requirements."
+                  onRequestEvaluation={() => evaluationMutation.mutate()}
+                  isEvaluationPending={evaluationMutation.isPending}
                 />
                 <div className="job-dashboard__actions job-dashboard__actions--spaced">
                   <EvaluateButton
-                    label="Re-evaluate"
+                    label="Re-score"
+                    pendingLabel="Scoring…"
                     onClick={() => scoreMutation.mutate()}
                     isPending={scoreMutation.isPending}
                     variant="secondary"
                   />
+                  {displayedScore.category_scores.length > 0 && (
+                    <EvaluateButton
+                      label="Re-evaluate"
+                      onClick={() => evaluationMutation.mutate()}
+                      isPending={evaluationMutation.isPending}
+                      variant="secondary"
+                    />
+                  )}
                 </div>
               </section>
             ) : (
               <div className="job-dashboard__evaluate-panel">
-                <p>No fit evaluation yet for {selectedResume?.filename ?? "this resume"}.</p>
+                <p>No fit score yet for {selectedResume?.filename ?? "this resume"}.</p>
                 <EvaluateButton
-                  label="Evaluate this resume"
+                  label="Score this resume"
+                  pendingLabel="Scoring…"
                   onClick={() => scoreMutation.mutate()}
                   isPending={scoreMutation.isPending}
                   disabled={!jobPostingId}
@@ -986,6 +1036,8 @@ function ApplyPageContent({
                     score={displayedTailoredScore}
                     title="Fitness report for this version"
                     description="See how this tailored resume stacks up against this posting's requirements."
+                    onRequestEvaluation={() => tailoredEvaluationMutation.mutate()}
+                    isEvaluationPending={tailoredEvaluationMutation.isPending}
                   />
                 ) : (
                   <div className="dossier-action__header">
@@ -993,27 +1045,42 @@ function ApplyPageContent({
                     <p>Check this tailored resume's fit to see its report here.</p>
                   </div>
                 )}
-                {/* Bottom-right of the card: Check/Re-check on the left,
-                    download (with regenerate in its menu) on the right. */}
+                {/* Bottom-right of the card: Score/Re-score (plus Re-evaluate
+                    once evaluated) on the left, download (with regenerate in
+                    its menu) on the right. */}
                 <div className="job-dashboard__actions job-dashboard__actions--spaced apply__tailor-actions">
                   <EvaluateButton
-                    label={displayedTailoredScore ? "Re-check tailored fit" : "Check tailored fit"}
+                    label={displayedTailoredScore ? "Re-score" : "Score this version"}
+                    pendingLabel="Scoring…"
                     onClick={() => tailoredScoreMutation.mutate()}
                     isPending={tailoredScoreMutation.isPending}
                     variant={displayedTailoredScore ? "secondary" : "primary"}
                   />
+                  {displayedTailoredScore && displayedTailoredScore.category_scores.length > 0 && (
+                    <EvaluateButton
+                      label="Re-evaluate"
+                      onClick={() => tailoredEvaluationMutation.mutate()}
+                      isPending={tailoredEvaluationMutation.isPending}
+                      variant="secondary"
+                    />
+                  )}
                   <TailoredDownloadMenu
                     tailoredResume={displayedTailored}
                     onRegenerate={() => tailorMutation.mutate()}
                     isRegenerating={tailorMutation.isPending}
                   />
                 </div>
-                {prerequisiteMessage(tailoredScoreMutation.error) && (
-                  <PrerequisiteNotice message={prerequisiteMessage(tailoredScoreMutation.error)!} />
+                {prerequisiteMessage(tailoredScoreMutation.error ?? tailoredEvaluationMutation.error) && (
+                  <PrerequisiteNotice
+                    message={prerequisiteMessage(tailoredScoreMutation.error ?? tailoredEvaluationMutation.error)!}
+                  />
                 )}
-                {genericErrorMessage(tailoredScoreMutation.error) && !prerequisiteMessage(tailoredScoreMutation.error) && (
-                  <p className="job-dashboard__error">{genericErrorMessage(tailoredScoreMutation.error)}</p>
-                )}
+                {genericErrorMessage(tailoredScoreMutation.error ?? tailoredEvaluationMutation.error) &&
+                  !prerequisiteMessage(tailoredScoreMutation.error ?? tailoredEvaluationMutation.error) && (
+                    <p className="job-dashboard__error">
+                      {genericErrorMessage(tailoredScoreMutation.error ?? tailoredEvaluationMutation.error)}
+                    </p>
+                  )}
                 {prerequisiteMessage(tailorMutation.error) && (
                   <PrerequisiteNotice message={prerequisiteMessage(tailorMutation.error)!} />
                 )}

@@ -31,6 +31,13 @@ export const resumesApi = {
     api.get<ResumeScore>("/resumes/main/score", { job_posting_id: jobPostingId, resume_id: resumeId }),
   generateScore: (jobPostingId: string, resumeId?: string) =>
     api.post<ResumeScore>("/resumes/main/score", undefined, { job_posting_id: jobPostingId, resume_id: resumeId }),
+  // Comprehensive, opt-in follow-up to generateScore — fills in the same
+  // score row's category breakdown in place (see app.models.resume.ResumeScore).
+  generateEvaluation: (jobPostingId: string, resumeId?: string) =>
+    api.post<ResumeScore>("/resumes/main/evaluation", undefined, {
+      job_posting_id: jobPostingId,
+      resume_id: resumeId,
+    }),
 
   getTailored: (jobPostingId: string, resumeId?: string) =>
     api.get<TailoredResume>("/resumes/main/tailored", { job_posting_id: jobPostingId, resume_id: resumeId }),
@@ -45,6 +52,8 @@ export const resumesApi = {
     api.get<TailoredResumeScore>(`/resumes/tailored/${tailoredResumeId}/score`),
   generateTailoredScore: (tailoredResumeId: string) =>
     api.post<TailoredResumeScore>(`/resumes/tailored/${tailoredResumeId}/score`),
+  generateTailoredEvaluation: (tailoredResumeId: string) =>
+    api.post<TailoredResumeScore>(`/resumes/tailored/${tailoredResumeId}/evaluation`),
 
   getCoverLetter: (jobPostingId: string, resumeId?: string) =>
     api.get<CoverLetter>("/resumes/main/cover-letter", { job_posting_id: jobPostingId, resume_id: resumeId }),
