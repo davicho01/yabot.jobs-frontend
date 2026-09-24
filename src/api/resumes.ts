@@ -2,9 +2,12 @@ import { api, downloadFile, fetchBlob, fileUrl } from "./client";
 import type {
   CoverLetter,
   InterviewPrep,
+  MissingSkillsSummary,
   Resume,
+  ResumeRoles,
   ResumeScore,
   ResumeScoreHistory,
+  SkillAddition,
   TailoredResume,
   TailoredResumeScore,
 } from "./types";
@@ -27,6 +30,17 @@ export const resumesApi = {
   // resume_id isn't sent, same as before resume selection existed. Passed
   // explicitly, it scores/tailors/writes against that resume instead —
   // see ResumeSelect, ApplyPage's resume picker (#8).
+  missingKeywordsSummary: (resumeId?: string) =>
+    api.get<MissingSkillsSummary>("/resumes/missing-keywords", { resume_id: resumeId }),
+  roles: (resumeId: string) => api.get<ResumeRoles>(`/resumes/${resumeId}/roles`),
+  listSkillAdditions: (resumeId: string) => api.get<SkillAddition[]>(`/resumes/${resumeId}/skill-additions`),
+  saveSkillAddition: (
+    resumeId: string,
+    payload: { keyword: string; target_role: string; explanation: string },
+  ) => api.post<SkillAddition>(`/resumes/${resumeId}/skill-additions`, payload),
+  deleteSkillAddition: (resumeId: string, additionId: string) =>
+    api.delete<void>(`/resumes/${resumeId}/skill-additions/${additionId}`),
+  applySkillAdditions: (resumeId: string) => api.post<Resume>(`/resumes/${resumeId}/skill-additions/apply`),
   getScore: (jobPostingId: string, resumeId?: string) =>
     api.get<ResumeScore>("/resumes/main/score", { job_posting_id: jobPostingId, resume_id: resumeId }),
   generateScore: (jobPostingId: string, resumeId?: string) =>

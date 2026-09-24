@@ -1,0 +1,173 @@
+.resume-optimization-page {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+.resume-optimization-page h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.4rem;
+}
+
+.resume-optimization-page__intro {
+  color: var(--ink-soft);
+  margin: 0 0 1.25rem;
+}
+
+.resume-optimization-page__resume-picker {
+  margin-bottom: 2rem;
+}
+
+.resume-optimization-page__empty {
+  color: var(--ink-soft);
+}
+
+.resume-optimization-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.resume-optimization-page__entry {
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.resume-optimization-page__entry:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.resume-optimization-page__entry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Same collapse-toggle pattern as ApplyPage's per-category rows
+   (.job-dashboard__category-toggle) — collapsed by default, the toggle
+   doubling as the expand/collapse control. A sibling button (not nested —
+   this used to be one big button) handles "Add to resume" separately.
+   space-between here keeps the count/chevron pinned to the toggle's own
+   right edge, flush against the Add button, rather than drifting right
+   after the keyword tag. */
+.resume-optimization-page__entry-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: left;
+}
+
+.resume-optimization-page__entry-toggle:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.resume-optimization-page__entry-header-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.resume-optimization-page__entry-count {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.resume-optimization-page__entry-toggle-icon {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+}
+
+.resume-optimization-page__job-list {
+  margin: 0.7rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.resume-optimization-page__job-list a {
+  font-size: 0.88rem;
+  color: var(--ink);
+}
+
+.resume-optimization-page__job-list a:hover {
+  color: var(--accent-deep);
+}
+
+.resume-optimization-page__apply-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+/* The one CTA on this page worth calling out above the per-skill list —
+   same filled-accent treatment as ApplicationsPage's own primary button. */
+.resume-optimization-page__apply-button {
+  flex-shrink: 0;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0.65rem 1.3rem;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
+.resume-optimization-page__apply-button:hover:not(:disabled) {
+  background: var(--accent-deep);
+}
+
+.resume-optimization-page__apply-button:disabled {
+  background: var(--line);
+  color: var(--ink-soft);
+  cursor: default;
+}
+
+.resume-optimization-page__apply-hint {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+.resume-optimization-page__success {
+  color: var(--teal);
+  background: color-mix(in srgb, var(--teal) 12%, transparent);
+  border-radius: var(--radius-field);
+  padding: 0.8rem 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.resume-optimization-page__error {
+  color: var(--rose);
+  font-size: 0.85rem;
+  margin: -1rem 0 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .resume-optimization-page {
+    padding: 1.5rem 1rem 3rem;
+  }
+}

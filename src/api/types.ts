@@ -184,6 +184,49 @@ export interface ResumeScoreHistory {
   recurring_missing_keywords: RecurringMissingKeyword[];
 }
 
+// See GET /resumes/missing-keywords — the richer analogue of
+// ResumeScoreHistory's recurring_missing_keywords above, for one resume
+// (main resume by default): same recurring-keyword idea, but with the jobs
+// that asked for each skill attached instead of just a count.
+export interface MissingSkillJobRef {
+  job_posting_id: string;
+  // What a job ref links to — same url_id convention as
+  // ResumeScoreHistoryEntry above.
+  url_id: string;
+  job_title: string | null;
+  company_name: string | null;
+}
+
+export interface MissingSkillSummaryEntry {
+  keyword: string;
+  count: number;
+  jobs: MissingSkillJobRef[];
+}
+
+export interface MissingSkillsSummary {
+  entries: MissingSkillSummaryEntry[];
+}
+
+// See GET /resumes/{resume_id}/roles — labels for this resume's own
+// work-history entries, used to populate the "which job does this belong
+// to" dropdown on a SkillAddition below.
+export interface ResumeRoles {
+  roles: string[];
+}
+
+// A candidate's draft explanation of a missing skill they actually have
+// experience with — see app.models.resume.ResumeSkillAddition. Saved
+// immediately on entry so progress across several skills survives a
+// refresh; only consumed once "Add missing skills to resume" is pressed.
+export interface SkillAddition {
+  id: string;
+  resume_id: string;
+  keyword: string;
+  target_role: string;
+  explanation: string;
+  created_at: string;
+}
+
 export interface TailoredResume {
   id: string;
   resume_id: string;

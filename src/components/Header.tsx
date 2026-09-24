@@ -728,6 +728,9 @@ export function Header() {
                 <Link to="/resume" role="menuitem" onClick={() => setMenuOpen(false)}>
                   My resume
                 </Link>
+                <Link to="/resume-optimization" role="menuitem" onClick={() => setMenuOpen(false)}>
+                  Resume optimization
+                </Link>
                 <Link to="/api-keys" role="menuitem" onClick={() => setMenuOpen(false)}>
                   AI API Keys
                 </Link>

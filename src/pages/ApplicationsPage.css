@@ -10,9 +10,41 @@
   margin-bottom: 0.4rem;
 }
 
+.applications-page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
 .applications-page__intro {
   color: var(--ink-soft);
-  margin: 0 0 2rem;
+  margin: 0;
+}
+
+/* The one CTA on this page worth calling out above the routine list
+   controls (sort/export/archive) below — same filled-accent treatment as
+   ApplyPage's primary evaluate button, pinned to the header's top-right
+   corner instead of living in the toolbar row. Links to its own page
+   (/resume-optimization) rather than opening a modal. */
+.applications-page__evaluate-button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0.65rem 1.3rem;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.88rem;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.applications-page__evaluate-button:hover {
+  background: var(--accent-deep);
 }
 
 .applications-page__empty {
@@ -321,6 +353,15 @@
 @media (max-width: 640px) {
   .applications-page {
     padding: 1.5rem 1rem 3rem;
+  }
+
+  .applications-page__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .applications-page__evaluate-button {
+    align-self: flex-start;
   }
 
   .application-row {

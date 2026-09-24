@@ -1,0 +1,139 @@
+.add-skill-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 1000;
+}
+
+.add-skill-modal {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  padding: 1.5rem;
+  max-width: 480px;
+  width: 100%;
+  max-height: min(85vh, 640px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.add-skill-modal__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.add-skill-modal__header h2 {
+  font-size: 1.05rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.add-skill-modal__close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--ink-soft);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
+}
+
+.add-skill-modal__close:hover {
+  color: var(--ink);
+}
+
+.add-skill-modal__intro {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.add-skill-modal__label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: -0.4rem;
+}
+
+.add-skill-modal__role-dropdown {
+  width: 100%;
+}
+
+.add-skill-modal__role-button {
+  width: 100%;
+  justify-content: space-between;
+  display: flex;
+}
+
+.add-skill-modal__textarea {
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+}
+
+.add-skill-modal__error {
+  color: var(--rose);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.add-skill-modal__actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.add-skill-modal__save {
+  margin-left: auto;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.add-skill-modal__save:hover:not(:disabled) {
+  background: var(--accent-deep);
+}
+
+.add-skill-modal__save:disabled {
+  background: var(--line);
+  color: var(--ink-soft);
+  cursor: default;
+}
+
+.add-skill-modal__remove {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--rose);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.add-skill-modal__remove:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--rose) 10%, transparent);
+}

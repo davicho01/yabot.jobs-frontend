@@ -8,6 +8,7 @@ import { JobDetailPage } from "./pages/JobDetailPage";
 import { ApplyPage } from "./pages/ApplyPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ResumePage } from "./pages/ResumePage";
+import { ResumeOptimizationPage } from "./pages/ResumeOptimizationPage";
 import { ApiKeysPage } from "./pages/ApiKeysPage";
 import { AccessTokensPage } from "./pages/AccessTokensPage";
 import { ApplicationsPage } from "./pages/ApplicationsPage";
@@ -96,6 +97,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ApplicationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resume-optimization"
+          element={
+            <ProtectedRoute>
+              <ResumeOptimizationPage />
             </ProtectedRoute>
           }
         />

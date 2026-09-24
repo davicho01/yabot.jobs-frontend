@@ -991,7 +991,12 @@ function ApplyPageContent({
             isOpen={activeStep === 2}
             onToggle={() => toggleStep(2)}
           >
-            {displayedScore && displayedScore.missing_keywords.length > 0 && !displayedTailored && (
+            {displayedScore &&
+              displayedScore.missing_keywords.length > 0 &&
+              // Stays up through tailoring itself — a tailored resume
+              // existing isn't proof its gaps got addressed, only its own
+              // comprehensive evaluation (category_scores filled in) is.
+              !(displayedTailoredScore && displayedTailoredScore.category_scores.length > 0) && (
               <section className="dossier-action">
                 <div className="dossier-action__header">
                   <h2>Gaps this fit check found</h2>

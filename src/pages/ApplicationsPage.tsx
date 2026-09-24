@@ -246,7 +246,7 @@ function EvaluateButton({ jobPostingId }: { jobPostingId: string }) {
       setError(null);
       queryClient.invalidateQueries({ queryKey: ["applications"] });
     },
-    onError: (err) => setError(errorMessage(err, "Couldn't evaluate this job.")),
+    onError: (err) => setError(errorMessage(err, "Couldn't score this job.")),
   });
 
   return (
@@ -257,7 +257,7 @@ function EvaluateButton({ jobPostingId }: { jobPostingId: string }) {
         disabled={mutation.isPending}
         onClick={() => mutation.mutate()}
       >
-        {mutation.isPending ? "Evaluating…" : "Evaluate"}
+        {mutation.isPending ? "Scoring…" : "Score"}
       </button>
       {error && <span className="application-row__details-error">{error}</span>}
     </div>
@@ -609,8 +609,15 @@ export function ApplicationsPage() {
 
   return (
     <main className="applications-page">
-        <h1>My applications</h1>
-        <p className="applications-page__intro">Every posting you've saved or applied to, in one drawer.</p>
+        <div className="applications-page__header">
+          <div>
+            <h1>My applications</h1>
+            <p className="applications-page__intro">Every posting you've saved or applied to, in one drawer.</p>
+          </div>
+          <Link to="/resume-optimization" className="applications-page__evaluate-button">
+            Resume optimization
+          </Link>
+        </div>
 
         <div className="applications-page__toolbar">
           <label className="applications-page__archive-toggle">
