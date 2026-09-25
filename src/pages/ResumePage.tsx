@@ -5,6 +5,7 @@ import { resumesApi, type ResumeDetail } from "../api/resumes";
 import { ApiError } from "../api/client";
 import type { DocumentFormat, Resume } from "../api/types";
 import { DownloadDropdown } from "../components/DownloadDropdown";
+import { useConfirm } from "../components/ConfirmDialog";
 import "./ResumePage.css";
 
 // created_at here is a real timestamp, formatted in the viewer's own local
@@ -108,6 +109,7 @@ function StructureControl({
 
 export function ResumePage() {
   const queryClient = useQueryClient();
+  const { confirm, dialog } = useConfirm();
   const fileInput = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [previewId, setPreviewId] = useState<string | null>(null);
@@ -150,6 +152,12 @@ export function ResumePage() {
       setHistoryId((current) => (current === id ? null : current));
     },
   });
+
+  async function removeResume(id: string, filename: string) {
+    if (await confirm(`Remove "${filename}"? This can't be undone.`)) {
+      deleteResumeMutation.mutate(id);
+    }
+  }
 
   const structureMutation = useMutation<ResumeDetail, ApiError, string>({
     mutationFn: (id: string) => resumesApi.structure(id),
@@ -279,7 +287,7 @@ export function ResumePage() {
                   <button
                     type="button"
                     className="record-list__remove"
-                    onClick={() => deleteResumeMutation.mutate(resume.id)}
+                    onClick={() => removeResume(resume.id, resume.filename)}
                   >
                     Remove
                   </button>
@@ -344,6 +352,7 @@ export function ResumePage() {
           </div>
         )}
       </div>
+      {dialog}
     </main>
   );
 }
