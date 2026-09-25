@@ -129,7 +129,14 @@ export interface Resume {
   content_type: string;
   is_main: boolean;
   created_at: string;
+  // Whether this resume has been structured yet (LLM-broken-down into
+  // summary/sections/contact — see the backend's Resume.structured_content)
+  // — what GET /resumes/{id}/download?format=docx|pdf needs to be available.
+  has_structured_content: boolean;
 }
+
+// Format a resume/tailored-resume/cover-letter can be downloaded/rendered as.
+export type DocumentFormat = "docx" | "pdf";
 
 // One rubric category's contribution to overall_score (backend:
 // app.schemas.resume.ScoreCategoryBreakdown) — job_requirements/strengths/

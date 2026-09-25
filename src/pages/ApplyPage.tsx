@@ -22,6 +22,7 @@ import { ResumeSelect } from "../components/ResumeSelect";
 import { StatusSelect } from "../components/StatusSelect";
 import { NotesEditor } from "../components/NotesEditor";
 import { TailoredDownloadMenu } from "../components/TailoredDownloadMenu";
+import { CoverLetterDownloadMenu } from "../components/CoverLetterDownloadMenu";
 import { PrerequisiteNotice } from "../components/PrerequisiteNotice";
 import { fitLabel, fitTier } from "../utils/fitScore";
 import { prerequisiteMessage, genericErrorMessage } from "../utils/apiErrors";
@@ -660,8 +661,6 @@ function ApplyPageContent({
     interviewPrepQuery.isPending,
   ]);
 
-  const [downloadError, setDownloadError] = useState<string | null>(null);
-
   if (isLoading) {
     return (
       <main className="job-dashboard">
@@ -1126,23 +1125,13 @@ function ApplyPageContent({
                       {p}
                     </p>
                   ))}
-                  <button
-                    type="button"
-                    className="dossier-action__button"
-                    onClick={async () => {
-                      setDownloadError(null);
-                      try {
-                        await resumesApi.downloadCoverLetter(displayedCoverLetter.id, displayedCoverLetter.filename);
-                      } catch {
-                        setDownloadError("Couldn't download the file. Try again.");
-                      }
-                    }}
-                  >
-                    Download .docx
-                  </button>
-                  <button type="button" className="dossier-action__link" onClick={() => coverLetterMutation.mutate()}>
-                    Regenerate
-                  </button>
+                  <div className="job-dashboard__actions apply__cover-letter-actions">
+                    <CoverLetterDownloadMenu
+                      coverLetter={displayedCoverLetter}
+                      onRegenerate={() => coverLetterMutation.mutate()}
+                      isRegenerating={coverLetterMutation.isPending}
+                    />
+                  </div>
                 </div>
               )}
 
@@ -1152,7 +1141,6 @@ function ApplyPageContent({
               {genericErrorMessage(coverLetterMutation.error) && !prerequisiteMessage(coverLetterMutation.error) && (
                 <p className="dossier-action__error">{genericErrorMessage(coverLetterMutation.error)}</p>
               )}
-              {downloadError && <p className="dossier-action__error">{downloadError}</p>}
             </section>
           </ProcessStep>
 

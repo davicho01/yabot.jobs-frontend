@@ -76,8 +76,12 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return undefined as T;
 }
 
-export async function downloadFile(path: string, fallbackFilename: string): Promise<void> {
-  const response = await fetch(buildUrl(path), { credentials: "include" });
+export async function downloadFile(
+  path: string,
+  fallbackFilename: string,
+  query?: RequestOptions["query"],
+): Promise<void> {
+  const response = await fetch(buildUrl(path, query), { credentials: "include" });
   if (!response.ok) {
     throw new ApiError(response.status, await parseErrorDetail(response));
   }
@@ -114,8 +118,8 @@ export async function fetchBlob(path: string): Promise<Blob> {
  * different ports), so no fetch/blob indirection is needed the way
  * downloadFile above needs it for a forced save-as.
  */
-export function fileUrl(path: string): string {
-  return buildUrl(path);
+export function fileUrl(path: string, query?: RequestOptions["query"]): string {
+  return buildUrl(path, query);
 }
 
 export const api = {

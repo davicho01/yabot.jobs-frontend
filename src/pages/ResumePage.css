@@ -329,18 +329,37 @@
 
 .record-list__item {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 0.75rem;
+  flex-direction: column;
+  gap: 0.4rem;
   font-size: 0.88rem;
   padding: 0.5rem 0;
   border-top: 1px solid var(--line);
 }
 
-.record-list__item > span:first-child {
-  flex: 1 1 10rem;
+/* Three rows per resume: filename alone; the neutral actions (Set as
+   main/Preview/Score history), right-aligned as one group; then Remove on
+   the left, Download (or the structure prompt) on the right — see
+   .record-list__download. */
+.record-list__row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.record-list__row > span:first-child {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+/* The single flex item in its row, so margin-left: auto reliably pushes the
+   whole group flush right regardless of what's inside it. */
+.record-list__button-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-left: auto;
 }
 
 .record-list__item--active {
@@ -356,6 +375,23 @@
   background: transparent;
   color: var(--rose);
   border: 1px solid var(--rose);
+}
+
+/* record-list__* is reused (unscoped, plain global CSS, no module
+   scoping) across several pages' own stylesheets — AccessTokensPage.css's
+   ".record-list__item button" rule also sets margin-left: auto for its own
+   layout, and since that selector matches every button here too, it
+   silently pushes buttons off the left edge (only .record-list__button-group
+   and .record-list__download are meant to carry auto margins). The
+   repeated class bumps specificity so this wins regardless of which
+   page's CSS the bundler happens to place last. */
+.record-list__row.record-list__row button {
+  margin-left: 0;
+}
+
+/* Pushed to the far right of its (bottom) row — Remove anchors the
+   opposite, left side of that same row. */
+.record-list__download {
   margin-left: auto;
 }
 

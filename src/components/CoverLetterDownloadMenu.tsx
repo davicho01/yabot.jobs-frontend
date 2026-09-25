@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { resumesApi } from "../api/resumes";
-import type { TailoredResume } from "../api/types";
+import type { CoverLetter } from "../api/types";
 import { DownloadDropdown } from "./DownloadDropdown";
 import "./DossierAction.css";
 
-export function TailoredDownloadMenu({
-  tailoredResume,
+export function CoverLetterDownloadMenu({
+  coverLetter,
   onRegenerate,
   isRegenerating,
 }: {
-  tailoredResume: TailoredResume;
+  coverLetter: CoverLetter;
   onRegenerate: () => void;
   isRegenerating: boolean;
 }) {
@@ -28,7 +28,7 @@ export function TailoredDownloadMenu({
                   close();
                   setError(null);
                   try {
-                    await resumesApi.downloadTailored(tailoredResume.id, tailoredResume.filename, format);
+                    await resumesApi.downloadCoverLetter(coverLetter.id, coverLetter.filename, format);
                   } catch {
                     setError("Couldn't download the file. Try again.");
                   }

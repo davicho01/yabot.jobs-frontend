@@ -1,6 +1,7 @@
-import { api, downloadFile, fetchBlob, fileUrl } from "./client";
+import { api, downloadFile, fileUrl } from "./client";
 import type {
   CoverLetter,
+  DocumentFormat,
   InterviewPrep,
   MissingSkillsSummary,
   Resume,
@@ -12,6 +13,14 @@ import type {
   TailoredResumeScore,
 } from "./types";
 
+// Extends Resume with the parsed text + (once generated) structured content
+// — see ResumeDetailRead. Only GET /resumes/{id}/structure and .../main
+// return this; the list endpoint stays on the lighter Resume shape.
+export interface ResumeDetail extends Resume {
+  parsed_text: string;
+  structured_content: { summary: string; sections: unknown[]; contact: unknown } | null;
+}
+
 export const resumesApi = {
   list: () => api.get<Resume[]>("/resumes"),
   upload: (file: File) => {
@@ -22,7 +31,15 @@ export const resumesApi = {
   setMain: (id: string) => api.patch<Resume>(`/resumes/${id}`, { is_main: true }),
   remove: (id: string) => api.delete<void>(`/resumes/${id}`),
   previewUrl: (id: string) => fileUrl(`/resumes/${id}/download`),
-  previewBlob: (id: string) => fetchBlob(`/resumes/${id}/download`),
+  // Inline (not attachment) render of a resume's *structured* content —
+  // only meaningful once has_structured_content is true. Used for the
+  // docx-original preview iframe, which otherwise has no native in-browser
+  // renderer (see ResumePage.tsx).
+  structuredPreviewUrl: (id: string, format: DocumentFormat) =>
+    fileUrl(`/resumes/${id}/download`, { format, disposition: "inline" }),
+  structure: (id: string) => api.post<ResumeDetail>(`/resumes/${id}/structure`),
+  downloadMainResume: (id: string, filename: string, format: DocumentFormat) =>
+    downloadFile(`/resumes/${id}/download`, filename, { format }),
   scoreHistory: (id: string) => api.get<ResumeScoreHistory>(`/resumes/${id}/score-history`),
 
   // resumeId is omitted (undefined) to mean "my main resume" — the
@@ -60,7 +77,8 @@ export const resumesApi = {
       job_posting_id: jobPostingId,
       resume_id: resumeId,
     }),
-  downloadTailored: (id: string, filename: string) => downloadFile(`/resumes/tailored/${id}/download`, filename),
+  downloadTailored: (id: string, filename: string, format: DocumentFormat = "docx") =>
+    downloadFile(`/resumes/tailored/${id}/download`, filename, { format }),
 
   getTailoredScore: (tailoredResumeId: string) =>
     api.get<TailoredResumeScore>(`/resumes/tailored/${tailoredResumeId}/score`),
@@ -76,8 +94,8 @@ export const resumesApi = {
       job_posting_id: jobPostingId,
       resume_id: resumeId,
     }),
-  downloadCoverLetter: (id: string, filename: string) =>
-    downloadFile(`/resumes/cover-letter/${id}/download`, filename),
+  downloadCoverLetter: (id: string, filename: string, format: DocumentFormat = "docx") =>
+    downloadFile(`/resumes/cover-letter/${id}/download`, filename, { format }),
 
   getInterviewPrep: (jobPostingId: string, resumeId?: string) =>
     api.get<InterviewPrep>("/resumes/main/interview-prep", { job_posting_id: jobPostingId, resume_id: resumeId }),

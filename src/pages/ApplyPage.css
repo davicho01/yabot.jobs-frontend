@@ -233,6 +233,19 @@
   flex-wrap: wrap;
 }
 
+/* "Write a cover letter" step's download menu — no left-side action to
+   balance against here (Regenerate lives inside the menu itself), so just
+   the one action sits in the card's lower-right corner, same convention as
+   .apply__tailor-actions above. */
+.apply__cover-letter-actions {
+  /* .fitness-result's own align-items: flex-start would otherwise shrink
+     this row to the button's own width, leaving justify-content: flex-end
+     nothing to push against. */
+  align-self: stretch;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
 /* Space between Apply and Mark as applied/the status line so they don't
    touch — the base .job-dashboard__actions flex row carries no gap of
    its own. Centered so the status line's plain text sits level with the

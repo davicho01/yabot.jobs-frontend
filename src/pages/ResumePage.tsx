@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
+import { useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { renderAsync } from "docx-preview";
-import { resumesApi } from "../api/resumes";
+import { resumesApi, type ResumeDetail } from "../api/resumes";
 import { ApiError } from "../api/client";
+import type { DocumentFormat, Resume } from "../api/types";
+import { DownloadDropdown } from "../components/DownloadDropdown";
 import "./ResumePage.css";
 
 // created_at here is a real timestamp, formatted in the viewer's own local
@@ -74,44 +75,33 @@ function ScoreHistoryPanel({ resumeId }: { resumeId: string }) {
   );
 }
 
-function DocxPreview({ resumeId, filename }: { resumeId: string; filename: string }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
-
-  useEffect(() => {
-    let cancelled = false;
-    const container = containerRef.current;
-    if (!container) return;
-    container.innerHTML = "";
-    setStatus("loading");
-
-    resumesApi
-      .previewBlob(resumeId)
-      .then((blob) => renderAsync(blob, container))
-      .then(() => {
-        if (!cancelled) setStatus("ready");
-      })
-      .catch(() => {
-        if (!cancelled) setStatus("error");
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [resumeId]);
+// Shared by the per-resume row controls and the preview pane: the button
+// that kicks off LLM structuring, plus (once it fails) either a generic
+// retry message or — specifically for a missing default LLM key — a link to
+// go add one, rather than a bare error.
+function StructureControl({
+  resumeId,
+  mutation,
+}: {
+  resumeId: string;
+  mutation: ReturnType<typeof useMutation<ResumeDetail, ApiError, string>>;
+}) {
+  const isThisRow = mutation.variables === resumeId;
+  const isPending = isThisRow && mutation.isPending;
+  const needsApiKey = isThisRow && mutation.isError && mutation.error instanceof ApiError && mutation.error.status === 422;
+  const failedOtherwise = isThisRow && mutation.isError && !needsApiKey;
 
   return (
-    <div className="resume-preview resume-preview--docx">
-      {status === "loading" && <p className="resume-preview__status">Rendering preview…</p>}
-      {status === "error" && (
-        <div className="resume-preview__status">
-          <p>Couldn't render a preview for this file.</p>
-          <a href={resumesApi.previewUrl(resumeId)} target="_blank" rel="noreferrer">
-            Open {filename} in a new tab →
-          </a>
-        </div>
+    <div className="resume-structure-control">
+      <button type="button" onClick={() => mutation.mutate(resumeId)} disabled={isPending}>
+        {isPending ? "Structuring…" : "Structure for download"}
+      </button>
+      {needsApiKey && (
+        <p className="settings-section__hint">
+          <Link to="/api-keys">Add an LLM API key</Link> to enable docx/PDF downloads.
+        </p>
       )}
-      <div ref={containerRef} className="docx-preview-container" />
+      {failedOtherwise && <p className="settings-page__error">Couldn't structure this resume. Try again.</p>}
     </div>
   );
 }
@@ -160,6 +150,22 @@ export function ResumePage() {
       setHistoryId((current) => (current === id ? null : current));
     },
   });
+
+  const structureMutation = useMutation<ResumeDetail, ApiError, string>({
+    mutationFn: (id: string) => resumesApi.structure(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["resumes"] }),
+  });
+
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  async function downloadResume(resume: Resume, format: DocumentFormat) {
+    setDownloadError(null);
+    try {
+      await resumesApi.downloadMainResume(resume.id, resume.filename, format);
+    } catch {
+      setDownloadError("Couldn't download the file. Try again.");
+    }
+  }
 
   function uploadFile(file: File | undefined) {
     if (file) uploadMutation.mutate(file);
@@ -249,31 +255,64 @@ export function ResumePage() {
                   resume.id === previewId || resume.id === historyId ? " record-list__item--active" : ""
                 }`}
               >
-                <span>{resume.filename}</span>
-                {resume.is_main ? (
-                  <span className="stamp stamp--positive">Main</span>
-                ) : (
-                  <button type="button" onClick={() => setMainMutation.mutate(resume.id)}>
-                    Set as main
+                <div className="record-list__row">
+                  <span>{resume.filename}</span>
+                </div>
+                <div className="record-list__row">
+                  <div className="record-list__button-group">
+                    {resume.is_main ? (
+                      <span className="stamp stamp--positive">Main</span>
+                    ) : (
+                      <button type="button" onClick={() => setMainMutation.mutate(resume.id)}>
+                        Set as main
+                      </button>
+                    )}
+                    <button type="button" onClick={() => showPreview(resume.id)}>
+                      Preview
+                    </button>
+                    <button type="button" onClick={() => showHistory(resume.id)}>
+                      Score history
+                    </button>
+                  </div>
+                </div>
+                <div className="record-list__row">
+                  <button
+                    type="button"
+                    className="record-list__remove"
+                    onClick={() => deleteResumeMutation.mutate(resume.id)}
+                  >
+                    Remove
                   </button>
-                )}
-                <button type="button" onClick={() => showPreview(resume.id)}>
-                  Preview
-                </button>
-                <button type="button" onClick={() => showHistory(resume.id)}>
-                  Score history
-                </button>
-                <button
-                  type="button"
-                  className="record-list__remove"
-                  onClick={() => deleteResumeMutation.mutate(resume.id)}
-                >
-                  Remove
-                </button>
+                  <div className="record-list__download">
+                    {resume.has_structured_content ? (
+                      <DownloadDropdown triggerClassName="">
+                        {(close) => (
+                          <>
+                            {(["docx", "pdf"] as const).map((format) => (
+                              <button
+                                key={format}
+                                type="button"
+                                onClick={() => {
+                                  close();
+                                  downloadResume(resume, format);
+                                }}
+                              >
+                                Download .{format}
+                              </button>
+                            ))}
+                          </>
+                        )}
+                      </DownloadDropdown>
+                    ) : (
+                      <StructureControl resumeId={resume.id} mutation={structureMutation} />
+                    )}
+                  </div>
+                </div>
               </li>
             ))}
             {resumesQuery.data?.length === 0 && <li className="settings-section__hint">No resumes uploaded yet.</li>}
           </ul>
+          {downloadError && <p className="settings-page__error">{downloadError}</p>}
         </section>
       </div>
 
@@ -290,8 +329,19 @@ export function ResumePage() {
             title={`Preview of ${previewResume.filename}`}
           />
         )}
-        {!historyId && previewResume && previewResume.content_type !== "application/pdf" && (
-          <DocxPreview key={previewResume.id} resumeId={previewResume.id} filename={previewResume.filename} />
+        {!historyId && previewResume && previewResume.content_type !== "application/pdf" && previewResume.has_structured_content && (
+          <iframe
+            key={previewResume.id}
+            className="resume-preview"
+            src={resumesApi.structuredPreviewUrl(previewResume.id, "pdf")}
+            title={`Preview of ${previewResume.filename}`}
+          />
+        )}
+        {!historyId && previewResume && previewResume.content_type !== "application/pdf" && !previewResume.has_structured_content && (
+          <div className="resume-preview resume-preview--empty">
+            <p>No preview yet for this file — structure it first.</p>
+            <StructureControl resumeId={previewResume.id} mutation={structureMutation} />
+          </div>
         )}
       </div>
     </main>
