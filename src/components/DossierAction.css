@@ -225,7 +225,11 @@
 .apply-page__archive-button {
   background: none;
   border: 1px solid var(--line);
-  color: var(--ink-soft);
+  /* Accent, not --ink-soft, while enabled — matching .rescan-button's
+     secondary-button convention (index.css) so it reads as an active
+     action rather than as already-disabled next to the blue Save button.
+     --ink-soft is reserved for :disabled below, same as .rescan-button. */
+  color: var(--accent);
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 0.85rem;
@@ -241,11 +245,12 @@
 
 .apply-page__archive-button:hover:not(:disabled) {
   background: var(--surface);
-  color: var(--ink);
+  color: var(--accent-deep);
 }
 
 .apply-page__archive-button:disabled {
-  opacity: 0.5;
+  color: var(--ink-soft);
+  opacity: 0.6;
   cursor: default;
 }
 
