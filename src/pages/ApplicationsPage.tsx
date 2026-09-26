@@ -313,40 +313,46 @@ function DownloadMenu({ application }: { application: Application }) {
       {open && (
         <div className="action-dropdown-menu">
           {tailoredResume ? (
-            <button
-              type="button"
-              onClick={async () => {
-                setOpen(false);
-                setError(null);
-                try {
-                  await resumesApi.downloadTailored(tailoredResume.id, tailoredResume.filename);
-                } catch {
-                  setError("Couldn't download the resume.");
-                }
-              }}
-            >
-              Resume
-            </button>
+            (["docx", "pdf"] as const).map((format) => (
+              <button
+                key={format}
+                type="button"
+                onClick={async () => {
+                  setOpen(false);
+                  setError(null);
+                  try {
+                    await resumesApi.downloadTailored(tailoredResume.id, tailoredResume.filename, format);
+                  } catch {
+                    setError("Couldn't download the resume.");
+                  }
+                }}
+              >
+                Resume (.{format})
+              </button>
+            ))
           ) : (
             <button type="button" disabled={createTailoredMutation.isPending} onClick={() => createTailoredMutation.mutate()}>
               {createTailoredMutation.isPending ? "Creating…" : "Create resume"}
             </button>
           )}
           {coverLetter ? (
-            <button
-              type="button"
-              onClick={async () => {
-                setOpen(false);
-                setError(null);
-                try {
-                  await resumesApi.downloadCoverLetter(coverLetter.id, coverLetter.filename);
-                } catch {
-                  setError("Couldn't download the cover letter.");
-                }
-              }}
-            >
-              Cover letter
-            </button>
+            (["docx", "pdf"] as const).map((format) => (
+              <button
+                key={format}
+                type="button"
+                onClick={async () => {
+                  setOpen(false);
+                  setError(null);
+                  try {
+                    await resumesApi.downloadCoverLetter(coverLetter.id, coverLetter.filename, format);
+                  } catch {
+                    setError("Couldn't download the cover letter.");
+                  }
+                }}
+              >
+                Cover letter (.{format})
+              </button>
+            ))
           ) : (
             <button
               type="button"
