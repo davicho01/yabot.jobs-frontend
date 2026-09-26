@@ -76,6 +76,83 @@ function ScoreHistoryPanel({ resumeId }: { resumeId: string }) {
   );
 }
 
+// A family's versions are always listed newest first (see resumesApi.versions),
+// so index 0 is always the current one — restoring an older version never
+// rewinds in place, it creates a new latest version instead (see
+// resumesApi.restore), so that invariant always holds.
+function VersionHistoryPanel({
+  resumeId,
+  onPreview,
+}: {
+  resumeId: string;
+  onPreview: (resume: Resume) => void;
+}) {
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ["resume-versions", resumeId],
+    queryFn: () => resumesApi.versions(resumeId),
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: (id: string) => resumesApi.restore(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["resumes"] });
+      queryClient.invalidateQueries({ queryKey: ["resume-versions", resumeId] });
+    },
+  });
+
+  if (isLoading) {
+    return <div className="resume-preview resume-preview--empty">Loading version history…</div>;
+  }
+
+  const versions = data ?? [];
+
+  if (versions.length <= 1) {
+    return (
+      <div className="resume-preview resume-preview--empty">
+        Only one version so far — adding missing skills from{" "}
+        <Link to="/resume-optimization">Resume optimization</Link> creates a new version automatically.
+      </div>
+    );
+  }
+
+  return (
+    <div className="score-history">
+      <h2 className="score-history__heading">Version history</h2>
+      <ul className="version-history__list">
+        {versions.map((version, index) => (
+          <li key={version.id} className="version-history__row">
+            <div className="score-history__row-label">
+              <span className="score-history__row-title">Version {version.version_number}</span>
+              <span className="score-history__row-meta">{formatScoreHistoryDate(version.created_at)}</span>
+            </div>
+            <div className="version-history__row-actions">
+              {index === 0 ? (
+                <span className="stamp stamp--positive">Current</span>
+              ) : (
+                <button
+                  type="button"
+                  className="rescan-button"
+                  onClick={() => restoreMutation.mutate(version.id)}
+                  disabled={restoreMutation.isPending && restoreMutation.variables === version.id}
+                >
+                  Restore this version
+                </button>
+              )}
+              <button type="button" className="rescan-button" onClick={() => onPreview(version)}>
+                Preview
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      {restoreMutation.error && (
+        <p className="settings-page__error">Couldn't restore this version. Try again.</p>
+      )}
+    </div>
+  );
+}
+
 // Shared by the per-resume row controls and the preview pane: the button
 // that kicks off LLM structuring, plus (once it fails) either a generic
 // retry message or — specifically for a missing default LLM key — a link to
@@ -112,22 +189,35 @@ export function ResumePage() {
   const { confirm, dialog } = useConfirm();
   const fileInput = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [previewId, setPreviewId] = useState<string | null>(null);
-  // Mutually exclusive with previewId — showing one clears the other, since
-  // they share the same right-hand column.
+  // Holds the full Resume object, not just an id — a previewed resume might
+  // be an older version that GET /resumes never returns (it only returns
+  // one representative row per family), so there'd be nothing to look an id
+  // back up against. VersionHistoryPanel hands over the version object
+  // it already has from its own versions query.
+  const [previewResume, setPreviewResume] = useState<Resume | null>(null);
+  // Mutually exclusive with previewResume/versionHistoryId — showing one
+  // clears the others, since they share the same right-hand column.
   const [historyId, setHistoryId] = useState<string | null>(null);
+  const [versionHistoryId, setVersionHistoryId] = useState<string | null>(null);
 
   const resumesQuery = useQuery({ queryKey: ["resumes"], queryFn: resumesApi.list });
-  const previewResume = resumesQuery.data?.find((r) => r.id === previewId) ?? null;
 
-  function showPreview(id: string) {
+  function showPreview(resume: Resume) {
     setHistoryId(null);
-    setPreviewId(id);
+    setVersionHistoryId(null);
+    setPreviewResume(resume);
   }
 
   function showHistory(id: string) {
-    setPreviewId(null);
+    setPreviewResume(null);
+    setVersionHistoryId(null);
     setHistoryId(id);
+  }
+
+  function showVersionHistory(id: string) {
+    setPreviewResume(null);
+    setHistoryId(null);
+    setVersionHistoryId(id);
   }
 
   const uploadMutation = useMutation({
@@ -135,7 +225,7 @@ export function ResumePage() {
     onSuccess: (resume) => {
       queryClient.invalidateQueries({ queryKey: ["resumes"] });
       if (fileInput.current) fileInput.current.value = "";
-      showPreview(resume.id);
+      showPreview(resume);
     },
   });
 
@@ -148,8 +238,10 @@ export function ResumePage() {
     mutationFn: (id: string) => resumesApi.remove(id),
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: ["resumes"] });
-      setPreviewId((current) => (current === id ? null : current));
+      if (versionHistoryId) queryClient.invalidateQueries({ queryKey: ["resume-versions", versionHistoryId] });
+      setPreviewResume((current) => (current?.id === id ? null : current));
       setHistoryId((current) => (current === id ? null : current));
+      setVersionHistoryId((current) => (current === id ? null : current));
     },
   });
 
@@ -260,7 +352,9 @@ export function ResumePage() {
               <li
                 key={resume.id}
                 className={`record-list__item${
-                  resume.id === previewId || resume.id === historyId ? " record-list__item--active" : ""
+                  resume.id === previewResume?.id || resume.id === historyId || resume.id === versionHistoryId
+                    ? " record-list__item--active"
+                    : ""
                 }`}
               >
                 <div className="record-list__row">
@@ -269,17 +363,20 @@ export function ResumePage() {
                 <div className="record-list__row">
                   <div className="record-list__button-group">
                     {resume.is_main ? (
-                      <span className="stamp stamp--positive">Main</span>
+                      <span className="stamp stamp--positive">Default</span>
                     ) : (
                       <button type="button" onClick={() => setMainMutation.mutate(resume.id)}>
-                        Set as main
+                        Set as default
                       </button>
                     )}
-                    <button type="button" onClick={() => showPreview(resume.id)}>
+                    <button type="button" onClick={() => showPreview(resume)}>
                       Preview
                     </button>
                     <button type="button" onClick={() => showHistory(resume.id)}>
                       Score history
+                    </button>
+                    <button type="button" onClick={() => showVersionHistory(resume.id)}>
+                      Version history
                     </button>
                   </div>
                 </div>
@@ -326,10 +423,11 @@ export function ResumePage() {
 
       <div className="resume-page__preview-col">
         {historyId && <ScoreHistoryPanel resumeId={historyId} />}
-        {!historyId && !previewResume && (
+        {versionHistoryId && <VersionHistoryPanel resumeId={versionHistoryId} onPreview={showPreview} />}
+        {!historyId && !versionHistoryId && !previewResume && (
           <div className="resume-preview resume-preview--empty">Select a resume to preview it here.</div>
         )}
-        {!historyId && previewResume && previewResume.content_type === "application/pdf" && (
+        {!historyId && !versionHistoryId && previewResume && previewResume.content_type === "application/pdf" && (
           <iframe
             key={previewResume.id}
             className="resume-preview"
@@ -337,7 +435,7 @@ export function ResumePage() {
             title={`Preview of ${previewResume.filename}`}
           />
         )}
-        {!historyId && previewResume && previewResume.content_type !== "application/pdf" && previewResume.has_structured_content && (
+        {!historyId && !versionHistoryId && previewResume && previewResume.content_type !== "application/pdf" && previewResume.has_structured_content && (
           <iframe
             key={previewResume.id}
             className="resume-preview"
@@ -345,7 +443,7 @@ export function ResumePage() {
             title={`Preview of ${previewResume.filename}`}
           />
         )}
-        {!historyId && previewResume && previewResume.content_type !== "application/pdf" && !previewResume.has_structured_content && (
+        {!historyId && !versionHistoryId && previewResume && previewResume.content_type !== "application/pdf" && !previewResume.has_structured_content && (
           <div className="resume-preview resume-preview--empty">
             <p>No preview yet for this file — structure it first.</p>
             <StructureControl resumeId={previewResume.id} mutation={structureMutation} />

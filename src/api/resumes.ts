@@ -41,14 +41,17 @@ export const resumesApi = {
   downloadMainResume: (id: string, filename: string, format: DocumentFormat) =>
     downloadFile(`/resumes/${id}/download`, filename, { format }),
   scoreHistory: (id: string) => api.get<ResumeScoreHistory>(`/resumes/${id}/score-history`),
+  // Every version in this resume's family (id may be any version's id, not
+  // just the family's representative one returned by list()), newest first.
+  versions: (id: string) => api.get<Resume[]>(`/resumes/${id}/versions`),
+  // Brings an older version's content back as a brand-new latest version of
+  // the same family (never rewinds in place) — see VersionHistoryPanel.
+  restore: (id: string) => api.post<Resume>(`/resumes/${id}/restore`),
 
-  // resumeId is omitted (undefined) to mean "my main resume" — the
-  // backend's own default (app.api.routes.resumes._resolve_resume) when
-  // resume_id isn't sent, same as before resume selection existed. Passed
-  // explicitly, it scores/tailors/writes against that resume instead —
-  // see ResumeSelect, ApplyPage's resume picker (#8).
-  missingKeywordsSummary: (resumeId?: string) =>
-    api.get<MissingSkillsSummary>("/resumes/missing-keywords", { resume_id: resumeId }),
+  // Across every resume the candidate has ever scored, not scoped to one
+  // resume — a gap flagged on one resume is just as real a gap on any
+  // other (see get_missing_keywords_summary).
+  missingKeywordsSummary: () => api.get<MissingSkillsSummary>("/resumes/missing-keywords"),
   roles: (resumeId: string) => api.get<ResumeRoles>(`/resumes/${resumeId}/roles`),
   listSkillAdditions: (resumeId: string) => api.get<SkillAddition[]>(`/resumes/${resumeId}/skill-additions`),
   saveSkillAddition: (

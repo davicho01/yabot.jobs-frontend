@@ -190,6 +190,42 @@
   margin-left: 0.2em;
 }
 
+.version-history__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.version-history__row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Whichever the first slot holds ("Current" or "Restore this version")
+   varies a lot in width — give it a shared min-width so the Preview
+   button after it lines up in the same spot on every row. */
+.version-history__row-actions > :first-child {
+  min-width: 8.5rem;
+  justify-content: center;
+  text-align: center;
+}
+
+.version-history__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: var(--radius-field);
+  margin: 0 -0.5rem;
+  padding: 0.3rem 0.5rem;
+}
+
 @media (max-width: 900px) {
   .settings-page.resume-page {
     grid-template-columns: minmax(0, 1fr);

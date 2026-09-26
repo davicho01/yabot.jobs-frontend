@@ -12,23 +12,27 @@ import "./ResumeOptimizationPage.css";
 // actual jobs that asked for each skill attached instead of just a count,
 // and a way to act on a gap: explain the real experience behind it (see
 // AddSkillModal) and, once ready, turn every explanation into a bullet
-// point on a brand-new resume. Scoped to one resume at a time (defaulting
-// to the main one), same as every other resume feature — scoring itself is
-// always done against a specific selected resume (see ResumeSelect/
-// ApplyPage), so a candidate running several resumes for different tracks
-// shouldn't see their gaps blended together.
+// point on a new version of a resume. The missing-skills list itself is
+// global — a gap flagged while scoring one resume is just as real a gap on
+// any other — but staging/applying an explanation still targets one
+// specific resume at a time (defaulting to the default one, else the first
+// resume — same fallback as ApplyPage's own picker), since that's what
+// actually receives the new bullet point.
 export function ResumeOptimizationPage() {
   const queryClient = useQueryClient();
   const resumesQuery = useQuery({ queryKey: ["resumes"], queryFn: resumesApi.list });
   const resumes = resumesQuery.data ?? [];
-  const mainResume = resumes.find((r) => r.is_main) ?? null;
+  // Falls back to the first resume when none is default (same fallback
+  // ApplyPage's own resume picker uses) — otherwise a candidate whose
+  // resumes all happen to be non-default sees "upload a resume first" here
+  // despite having resumes with real missing-skills history.
+  const mainResume = resumes.find((r) => r.is_main) ?? resumes[0] ?? null;
   const [pickedResumeId, setPickedResumeId] = useState<string | null>(null);
   const selectedResumeId = pickedResumeId ?? mainResume?.id ?? null;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["missing-keywords", selectedResumeId],
-    queryFn: () => resumesApi.missingKeywordsSummary(selectedResumeId ?? undefined),
-    enabled: !!selectedResumeId,
+    queryKey: ["missing-keywords"],
+    queryFn: () => resumesApi.missingKeywordsSummary(),
   });
   const skillAdditionsQuery = useQuery({
     queryKey: ["skill-additions", selectedResumeId],
@@ -58,26 +62,19 @@ export function ResumeOptimizationPage() {
     <main className="resume-optimization-page">
       <h1>Resume optimization</h1>
       <p className="resume-optimization-page__intro">
-        Skills that keep showing up as missing across the jobs you've applied to with this resume — some of these
-        might already be on it in different words, or genuine gaps worth addressing.
+        Skills that keep showing up as missing across the jobs you've scored — with any of your resumes — some of
+        these might already be on it in different words, or genuine gaps worth addressing.
       </p>
       {resumes.length > 1 && (
         <div className="resume-optimization-page__resume-picker">
-          <ResumeSelect
-            resumes={resumes}
-            selectedId={selectedResumeId ?? ""}
-            onChange={(id) => {
-              setPickedResumeId(id);
-              setOpenKeywords({});
-            }}
-          />
+          <ResumeSelect resumes={resumes} selectedId={selectedResumeId ?? ""} onChange={setPickedResumeId} />
         </div>
       )}
 
       {isLoading && <p className="resume-optimization-page__empty">Loading…</p>}
       {!isLoading && selectedResumeId && entries.length === 0 && (
         <p className="resume-optimization-page__empty">
-          Nothing recurring yet — score a few more jobs with this resume and patterns will show up here.
+          Nothing recurring yet — score a few more jobs and patterns will show up here.
         </p>
       )}
       {!resumesQuery.isLoading && !selectedResumeId && (
@@ -88,10 +85,11 @@ export function ResumeOptimizationPage() {
 
       {entries.length > 0 && (
         <>
-          {applyMutation.isSuccess ? (
+          {applyMutation.isSuccess && applyMutation.data ? (
             <p className="resume-optimization-page__success">
-              Done — created a new resume with those additions. Head to <Link to="/resume">My resume</Link> to
-              review it and set it as your main resume.
+              Done — this became version {applyMutation.data.version_number} of your resume and is now set as your
+              default resume automatically. Head to <Link to="/resume">My resume</Link> to see it, or check its
+              version history there.
             </p>
           ) : (
             <div className="resume-optimization-page__apply-bar">

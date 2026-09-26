@@ -133,6 +133,13 @@ export interface Resume {
   // summary/sections/contact — see the backend's Resume.structured_content)
   // — what GET /resumes/{id}/download?format=docx|pdf needs to be available.
   has_structured_content: boolean;
+  // Groups every version of the same resume together — see
+  // GET /resumes/{id}/versions. GET /resumes itself already returns one row
+  // per family (the current main version, or the most recent if none is
+  // main), so these two fields only matter once you're inside a family's
+  // own version history.
+  root_resume_id: string;
+  version_number: number;
 }
 
 // Format a resume/tailored-resume/cover-letter can be downloaded/rendered as.

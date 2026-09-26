@@ -65,7 +65,7 @@ export function ResumeSelect({
                 }}
               >
                 {resume.filename}
-                {resume.is_main ? " (main)" : ""}
+                {resume.is_main ? " (default)" : ""}
                 {resume.id === selectedId ? " ✓" : ""}
               </button>
             ))}
