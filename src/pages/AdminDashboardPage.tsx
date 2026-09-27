@@ -165,6 +165,20 @@ export function AdminDashboardPage() {
               <span className="admin-totals__value">{dashboard.totals.job_listings.toLocaleString()}</span>
               <span className="admin-totals__label">Job listings</span>
             </div>
+            <Link
+              to="/admin/jobs?flagged=1"
+              className={`admin-totals__tile admin-totals__tile--button${
+                dashboard.totals.jobs_flagged === 0 ? " admin-totals__tile--empty" : ""
+              }`}
+            >
+              <span
+                className="admin-totals__value"
+                style={dashboard.totals.jobs_flagged > 0 ? { color: "var(--amber)" } : undefined}
+              >
+                {dashboard.totals.jobs_flagged.toLocaleString()}
+              </span>
+              <span className="admin-totals__label">Jobs flagged{dashboard.totals.jobs_flagged > 0 ? " →" : ""}</span>
+            </Link>
             <div className="admin-totals__tile">
               <span className="admin-totals__value">{dashboard.totals.crawl_sources.toLocaleString()}</span>
               <span className="admin-totals__label">Crawl sources</span>

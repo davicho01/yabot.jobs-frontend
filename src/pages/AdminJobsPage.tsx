@@ -6,6 +6,7 @@ import { jobsApi } from "../api/jobs";
 import { AdminPagination } from "../components/AdminPagination";
 import { AdminSortMenu } from "../components/AdminSortMenu";
 import type { JobSortKey } from "../api/admin";
+import { FLAG_REASON_LABELS } from "../api/types";
 import "./AdminCommon.css";
 
 const DEFAULT_PAGE_SIZE = 50;
@@ -47,6 +48,7 @@ export function AdminJobsPage() {
   const sourceId = searchParams.get("sourceId") ?? undefined;
   const scanFrom = searchParams.get("scanFrom") ?? undefined;
   const scanTo = searchParams.get("scanTo") ?? undefined;
+  const flaggedOnly = searchParams.get("flagged") === "1";
 
   // Page/size/sort live in the URL (not component state) so a refresh, or
   // sharing the link, reproduces exactly the same table view.
@@ -70,9 +72,18 @@ export function AdminJobsPage() {
   );
 
   const jobsQuery = useQuery({
-    queryKey: ["admin", "jobs", sourceId, scanFrom, scanTo, page, pageSize, sortKey, sortDirection],
+    queryKey: ["admin", "jobs", sourceId, scanFrom, scanTo, flaggedOnly, page, pageSize, sortKey, sortDirection],
     queryFn: () =>
-      adminApi.jobs({ sourceId, scanFrom, scanTo, page, pageSize, sortBy: sortKey, sortOrder: sortDirection }),
+      adminApi.jobs({
+        sourceId,
+        scanFrom,
+        scanTo,
+        flagged: flaggedOnly || undefined,
+        page,
+        pageSize,
+        sortBy: sortKey,
+        sortOrder: sortDirection,
+      }),
   });
   const statsQuery = useQuery({
     queryKey: ["admin", "crawl-source-stats", sourceId],
@@ -109,6 +120,21 @@ export function AdminJobsPage() {
       queryClient.invalidateQueries({ queryKey: ["job", urlId] });
     },
   });
+  const dismissFlagMutation = useMutation({
+    mutationFn: (urlId: string) => adminApi.dismissListingFlag(urlId),
+    onSuccess: (_data, urlId) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "jobs"] });
+      queryClient.invalidateQueries({ queryKey: ["job", urlId] });
+    },
+  });
+
+  function toggleFlaggedOnly() {
+    updateParams((next) => {
+      if (flaggedOnly) next.delete("flagged");
+      else next.set("flagged", "1");
+      next.delete("page");
+    });
+  }
 
   const goToPage = (target: number) => {
     const clamped = Math.min(totalPages, Math.max(1, target));
@@ -153,11 +179,22 @@ export function AdminJobsPage() {
 
       {data && (
         <section className="admin-section">
-          {data.items.length === 0 && <p className="admin-page__hint">No listings match these filters.</p>}
-          {data.items.length > 0 && (
-            <div className="admin-toolbar admin-toolbar--above-table">
+          <div className="admin-toolbar admin-toolbar--above-table">
+            <button
+              type="button"
+              className={flaggedOnly ? "stamp stamp--warning" : "rescan-button"}
+              onClick={toggleFlaggedOnly}
+            >
+              {flaggedOnly ? "Flagged only ✕" : "Show flagged only"}
+            </button>
+            {data.items.length > 0 && (
               <AdminSortMenu options={SORT_OPTIONS} sortKey={sortKey} sortDirection={sortDirection} onChange={applySort} />
-            </div>
+            )}
+          </div>
+          {data.items.length === 0 && (
+            <p className="admin-page__hint">
+              {flaggedOnly ? "No flagged listings right now." : "No listings match these filters."}
+            </p>
           )}
           {data.items.length > 0 && (
             <div className="admin-table-wrap">
@@ -172,6 +209,7 @@ export function AdminJobsPage() {
                         )}
                       </th>
                     ))}
+                    <th>Flagged</th>
                     <th />
                   </tr>
                 </thead>
@@ -181,6 +219,8 @@ export function AdminJobsPage() {
                       rescanListingMutation.isPending && rescanListingMutation.variables === job.url.id;
                     const rescanFailed =
                       rescanListingMutation.isError && rescanListingMutation.variables === job.url.id;
+                    const isDismissingFlag =
+                      dismissFlagMutation.isPending && dismissFlagMutation.variables === job.url.id;
                     return (
                       <tr key={job.url.id}>
                         <td>
@@ -199,6 +239,18 @@ export function AdminJobsPage() {
                         </td>
                         <td className="admin-table__nowrap">{formatDate(job.url.created_at)}</td>
                         <td>
+                          {job.url.flagged_at ? (
+                            <span
+                              className="stamp stamp--warning"
+                              title={job.url.flag_note ? job.url.flag_note : undefined}
+                            >
+                              {job.url.flag_reason ? FLAG_REASON_LABELS[job.url.flag_reason] : "Flagged"}
+                            </span>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td>
                           <div className="admin-table__actions">
                             <button
                               type="button"
@@ -208,6 +260,16 @@ export function AdminJobsPage() {
                             >
                               {isRescanning ? "Rescanning…" : "Rescan ↻"}
                             </button>
+                            {job.url.flagged_at && (
+                              <button
+                                type="button"
+                                className="rescan-button"
+                                disabled={isDismissingFlag}
+                                onClick={() => dismissFlagMutation.mutate(job.url.id)}
+                              >
+                                {isDismissingFlag ? "Dismissing…" : "Dismiss flag"}
+                              </button>
+                            )}
                             <Link to={`/jobs/${job.url.id}`} className="rescan-button">
                               View job
                             </Link>

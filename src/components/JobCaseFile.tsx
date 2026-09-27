@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
@@ -5,6 +6,7 @@ import { applicationsApi } from "../api/applications";
 import { jobsApi } from "../api/jobs";
 import type { Application, JobDetail, JobPosting, User } from "../api/types";
 import { highlightQuery } from "../utils/searchHighlight";
+import { FlagJobModal } from "./FlagJobModal";
 
 // A JobPosting row exists from the moment its URL is submitted (see
 // get_or_create_job_posting) so job_posting_id is available right away —
@@ -131,6 +133,7 @@ export function JobCaseFile({
   const posting = scannedPosting(job);
   const scanFailed = job.url.scan_status === "failed";
   const queryClient = useQueryClient();
+  const [flagModalOpen, setFlagModalOpen] = useState(false);
 
   // Same list ApplyPage/ApplicationsPage query (same ["applications"]
   // cache key), just to answer one question here: has this posting already
@@ -193,6 +196,11 @@ export function JobCaseFile({
                 <a href={job.url.url ?? undefined} target="_blank" rel="noopener noreferrer" className="rescan-button">
                   Original ↗
                 </a>
+              )}
+              {user && (
+                <button type="button" className="rescan-button" onClick={() => setFlagModalOpen(true)}>
+                  Report a problem
+                </button>
               )}
               {currentApplication || !user ? (
                 <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
@@ -259,6 +267,7 @@ export function JobCaseFile({
           )}
         </>
       )}
+      {flagModalOpen && <FlagJobModal urlId={job.url.id} onClose={() => setFlagModalOpen(false)} />}
     </article>
   );
 }

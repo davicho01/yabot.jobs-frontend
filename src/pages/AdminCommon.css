@@ -110,6 +110,11 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
+  /* A Link renders an <a> here too (see AdminDashboardPage's "Jobs
+     flagged" tile) — resets its default underline/color so it reads as
+     the same tile as the plain <button> tiles. */
+  text-decoration: none;
+  color: inherit;
 }
 
 .admin-totals__tile--button:disabled {
@@ -123,6 +128,15 @@
 .admin-totals__tile--button[aria-pressed="true"] {
   border-color: var(--amber);
   background: color-mix(in srgb, var(--amber) 8%, var(--surface));
+}
+
+/* A Link tile has no `disabled` attribute to gray itself out with when
+   there's nothing to show (see admin-totals__tile--button:disabled above,
+   which only ever applied to the real <button> tiles) — this covers that
+   case for it instead. */
+.admin-totals__tile--empty {
+  pointer-events: none;
+  opacity: 0.6;
 }
 
 .admin-totals__value {

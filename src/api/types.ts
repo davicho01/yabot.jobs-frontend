@@ -30,6 +30,18 @@ export interface JobPosting {
   extraction_status: string;
 }
 
+export type FlagReason = "wrong_details" | "broken_or_expired" | "garbled_description" | "other";
+
+// Short admin-facing labels for FlagReason — see AdminJobsPage's flagged
+// column. FlagJobModal has its own, longer, reporter-facing wording for the
+// same reasons; these aren't meant to match verbatim.
+export const FLAG_REASON_LABELS: Record<FlagReason, string> = {
+  wrong_details: "Wrong details",
+  broken_or_expired: "Broken or expired",
+  garbled_description: "Garbled description",
+  other: "Other",
+};
+
 export interface JobPostingUrl {
   id: string;
   // null for anonymous callers — the backend only includes the original
@@ -41,6 +53,13 @@ export interface JobPostingUrl {
   crawl_source_id: string | null;
   last_scanned_at: string | null;
   created_at: string;
+  // A user's report that this listing's scanned data looks wrong — always
+  // null unless the caller is an admin viewing GET /admin/jobs (see
+  // to_job_detail's include_flag). The reporter themselves never sees their
+  // own report reflected back.
+  flagged_at: string | null;
+  flag_reason: FlagReason | null;
+  flag_note: string | null;
 }
 
 export interface JobDetail {
@@ -323,6 +342,7 @@ export interface WindowCounts {
 export interface AdminDashboard {
   totals: {
     job_listings: number;
+    jobs_flagged: number;
     crawl_sources: number;
     crawl_sources_flagged: number;
     users: number;

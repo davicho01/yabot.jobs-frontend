@@ -1,6 +1,6 @@
 import { api } from "./client";
 import { PAGE_SIZE } from "./jobs";
-import type { AdminDashboard, CrawlSource, CrawlSourceStats, JobList, ScanDayCount, ScanHourCount } from "./types";
+import type { AdminDashboard, CrawlSource, CrawlSourceStats, JobDetail, JobList, ScanDayCount, ScanHourCount } from "./types";
 
 export interface CrawlSourceUpdatePayload {
   name?: string;
@@ -19,6 +19,7 @@ export const adminApi = {
     sourceId?: string;
     scanFrom?: string;
     scanTo?: string;
+    flagged?: boolean;
     page?: number;
     pageSize?: number;
     sortBy?: JobSortKey;
@@ -28,12 +29,16 @@ export const adminApi = {
       source_id: params.sourceId,
       scan_from: params.scanFrom,
       scan_to: params.scanTo,
+      flagged: params.flagged,
       page: params.page ?? 1,
       page_size: params.pageSize ?? PAGE_SIZE,
       sort_by: params.sortBy ?? "discovered",
       sort_order: params.sortOrder ?? "desc",
     }),
   deleteListing: (urlId: string) => api.delete<void>(`/admin/listings/${urlId}`),
+  // Clears a listing's open flag report (see jobsApi.flag) once it's been
+  // looked into.
+  dismissListingFlag: (urlId: string) => api.post<JobDetail>(`/admin/listings/${urlId}/flag/dismiss`),
   deleteCrawlSource: (sourceId: string) => api.delete<void>(`/admin/crawl-sources/${sourceId}`),
   updateCrawlSource: (sourceId: string, payload: CrawlSourceUpdatePayload) =>
     api.patch<CrawlSource>(`/admin/crawl-sources/${sourceId}`, payload),
