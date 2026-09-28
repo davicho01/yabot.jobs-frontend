@@ -566,7 +566,11 @@ export function Header() {
   return (
     <header className={`site-header${hidden ? " site-header--hidden" : ""}`} ref={headerRef}>
       <div className="site-header__row">
-        <Link to={BOARD_PATH} className="site-header__brand">
+        {/* A plain <a>, not <Link>: "/" is the static marketing landing page
+            (see index.html), not one of this SPA's own routes — a client-side
+            <Link> would just hit the router's catch-all and bounce straight
+            back to BOARD_PATH instead of actually reaching it. */}
+        <a href="/" className="site-header__brand">
           <span className="site-header__mark" aria-hidden="true">
             <svg viewBox="0 0 48 48" fill="none" width="20" height="20">
               <path
@@ -579,7 +583,7 @@ export function Header() {
             </svg>
           </span>
           <span className="site-header__title">Yabot Jobs</span>
-        </Link>
+        </a>
 
         <div className="site-header__center">
           <form className="site-header__searchbar" role="search" onSubmit={handleSearchSubmit}>
