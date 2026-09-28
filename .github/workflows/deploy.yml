@@ -34,7 +34,15 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Sync to S3
-        run: aws s3 sync dist/ "s3://${S3_BUCKET}" --delete
+        # --exclude protects the SEO static-job-pages tree (jobs/, _meta/,
+        # sitemap-jobs.xml) published separately by generate_static_job_pages.py
+        # into this same bucket — none of it comes from dist/, so without these
+        # excludes --delete wipes all accumulated history on every deploy.
+        run: |
+          aws s3 sync dist/ "s3://${S3_BUCKET}" --delete \
+            --exclude "jobs/*" \
+            --exclude "_meta/*" \
+            --exclude "sitemap-jobs.xml"
 
       - name: Invalidate CloudFront cache
         run: aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths "/*"
