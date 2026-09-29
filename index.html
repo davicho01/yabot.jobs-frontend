@@ -41,7 +41,7 @@
     <title>Free Tech Job Search and Application Tracker | Yabot Jobs</title>
     <meta
       name="description"
-      content="Search tech and product jobs by title, city, or remote. Track every application and tailor your resume and cover letter for each posting. Free to use."
+      content="A free, open-source job board for tech and product roles, grown by the people who use it. Share postings, track every application, and tailor your resume and cover letter."
     />
     <link rel="canonical" href="https://yabot.jobs/" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
@@ -52,7 +52,7 @@
     <meta property="og:title" content="Free Tech Job Search and Application Tracker | Yabot Jobs" />
     <meta
       property="og:description"
-      content="Search tech and product jobs, track every application, and tailor your resume and cover letter. You shouldn't have to pay to get a job."
+      content="A free, open-source job board grown by the people who use it. Share the postings you find, track every application, and tailor your resume. You shouldn't have to pay to get a job."
     />
     <meta property="og:url" content="https://yabot.jobs/" />
     <meta property="og:image" content="https://yabot.jobs/og-image.png" />
@@ -63,7 +63,7 @@
     <meta name="twitter:title" content="Free Tech Job Search and Application Tracker | Yabot Jobs" />
     <meta
       name="twitter:description"
-      content="Search tech and product jobs, track every application, and tailor your resume and cover letter. You shouldn't have to pay to get a job."
+      content="A free, open-source job board grown by the people who use it. Share the postings you find, track every application, and tailor your resume. You shouldn't have to pay to get a job."
     />
     <meta name="twitter:image" content="https://yabot.jobs/og-image.png" />
 
@@ -103,7 +103,7 @@
       "@id": "https://yabot.jobs/#website",
       "url": "https://yabot.jobs/",
       "name": "Yabot Jobs",
-      "description": "A free job search site for tech and product roles, with an application tracker, resume tailoring tools, and an MCP server for ChatGPT and Claude.",
+      "description": "A free, open-source, community-grown job board for tech and product roles, with an application tracker and resume tailoring tools.",
       "publisher": {
         "@id": "https://yabot.jobs/#organization"
       },
@@ -142,6 +142,22 @@
         },
         {
           "@type": "Question",
+          "name": "If it's free, who pays for it?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Running it isn't free: servers and job scanning cost real money, and for now that comes out of the pocket of the person who built it. Down the road, employers may be able to pay to feature a job posting, which would help keep the lights on. Featured postings will be clearly marked, and job seekers will never pay to search the board or read a posting."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How can I help?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Share postings you come across by pasting their link, and report any listing that looks wrong. Both take a few seconds and help everyone else who's looking. If you write code or have ideas, open an issue or a pull request on GitHub. Telling a friend who's job hunting helps too."
+          }
+        },
+        {
+          "@type": "Question",
           "name": "Do I need an account to search for jobs?",
           "acceptedAnswer": {
             "@type": "Answer",
@@ -153,7 +169,7 @@
           "name": "Where do the job postings come from?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yabot Jobs scans public job postings and reads the details out of the page: title, company, location, work type, and pay. Once you are signed in you can also add any posting by pasting its link, and Yabot Jobs scans it for you."
+            "text": "Two places. Yabot Jobs scans public job postings and reads the details out of each page: title, company, location, work type, and pay. And people using the site share postings they find by pasting a link. Every shared posting joins the same board, so one person's find helps everyone."
           }
         },
         {
@@ -161,7 +177,7 @@
           "name": "Can I track jobs I found on other job boards?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. Once you're signed in, paste the link to a posting from another job board or a company's careers page. Yabot Jobs scans it, reads the title, company, location, work type, and pay, and adds it to your jobs. From there you can check your fit, tailor your resume, and track the application with everything else. If a page can't be read, rescan it later. Your AI assistant can add a posting from its link too."
+            "text": "Yes. Once you're signed in, paste the link to a posting from another job board or a company's careers page. Yabot Jobs scans it, reads the title, company, location, work type, and pay, and adds it to your jobs. From there you can check your fit, tailor your resume, and track the application with everything else. If a page can't be read, rescan it later."
           }
         },
         {
@@ -185,7 +201,7 @@
           "name": "Can I use Yabot Jobs from ChatGPT or Claude?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. Yabot Jobs has an MCP server, so ChatGPT, Claude, and any other assistant that supports the Model Context Protocol (MCP) can connect to it. Add https://mcp.yabot.jobs/mcp as a custom connector in your assistant's settings and approve access on Yabot Jobs. Your assistant can then search postings, track applications, and upload tailored resumes and cover letters for you."
+            "text": "Not right now. Yabot Jobs has an MCP server that lets ChatGPT, Claude, and other assistants search the board for you, but it costs real money to run, so it's switched off until there's a way to pay for it. The job board and everything else on this page work the same as before."
           }
         },
         {
@@ -599,6 +615,137 @@
         margin-top: 1.1rem;
         font-size: 0.9rem;
         color: var(--ink-soft);
+      }
+
+      .eyebrow {
+        display: inline-block;
+        margin: 0 0 1.25rem;
+        padding: 0.35em 1em;
+        border-radius: var(--radius-pill);
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--accent-deep);
+        background: color-mix(in srgb, var(--accent) 12%, transparent);
+      }
+
+      /* ---------- notice: when the board refreshes ---------- */
+
+      .notice {
+        padding-block: clamp(1.5rem, 4vw, 3rem) clamp(2rem, 4vw, 3rem);
+      }
+
+      .notice__box {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        max-width: 46rem;
+        margin-inline: auto;
+        padding: 1.1rem 1.4rem;
+        border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+        border-radius: var(--radius-card);
+        background: color-mix(in srgb, var(--accent) 6%, var(--paper));
+      }
+
+      .notice__icon {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 50%;
+        color: var(--accent-deep);
+        background: color-mix(in srgb, var(--accent) 14%, transparent);
+      }
+
+      .notice__icon svg {
+        width: 1.2rem;
+        height: 1.2rem;
+      }
+
+      .notice__title {
+        margin: 0 0 0.2rem;
+        font-size: 1.1rem;
+        line-height: 1.3;
+      }
+
+      .notice p {
+        margin: 0;
+        color: var(--ink-soft);
+        font-size: 0.975rem;
+        line-height: 1.5;
+      }
+
+      .notice strong {
+        color: var(--ink);
+      }
+
+      .notice__link {
+        display: inline-block;
+        margin-top: 0.5rem;
+        font-weight: 600;
+        font-size: 0.975rem;
+        color: var(--accent-deep);
+        text-decoration: none;
+      }
+
+      .notice__link:hover {
+        text-decoration: underline;
+      }
+
+      /* ---------- pitch in: the ways people keep the board going ---------- */
+
+      .section--tight {
+        padding-top: clamp(1rem, 3vw, 2.5rem);
+      }
+
+      .pitch {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: clamp(0.85rem, 2vw, 1.4rem);
+        margin: clamp(2.5rem, 5vw, 4rem) 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .pitch__card {
+        display: grid;
+        align-content: start;
+        gap: 0.7rem;
+        padding: clamp(1.6rem, 3vw, 2.25rem);
+        background: var(--surface);
+        border-radius: var(--radius-tile);
+      }
+
+      .pitch__icon {
+        display: grid;
+        place-items: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 50%;
+        color: var(--accent-deep);
+        background: color-mix(in srgb, var(--accent) 14%, transparent);
+      }
+
+      .pitch__icon svg {
+        width: 1.35rem;
+        height: 1.35rem;
+      }
+
+      .pitch__card p {
+        margin: 0;
+        color: var(--ink-soft);
+        font-size: 0.975rem;
+        line-height: 1.55;
+      }
+
+      .pitch__card a {
+        color: var(--accent-deep);
+      }
+
+      @media (max-width: 54rem) {
+        .pitch {
+          grid-template-columns: minmax(0, 1fr);
+        }
       }
 
       /* The "product shot": a raw posting, and the job card Yabot builds from it */
@@ -2217,16 +2364,18 @@
     <main id="main">
       <section class="hero" aria-labelledby="hero-title">
         <div class="wrap">
+          <p class="eyebrow">For job seekers, by job seekers</p>
           <h1 id="hero-title">You shouldn't have to pay to get a job.</h1>
           <p class="lede">
-            Yabot Jobs is a free job search site for tech and product roles. Look through postings it has already read for
-            you, keep every application in one place, and get help tailoring your resume and cover letter.
+            Yabot Jobs is a free, open-source job board for tech and product roles, and it grows with the people who
+            use it. Found a good posting? Share it and it's on the board for everyone. Spotted a broken one? Flag it
+            and it gets fixed for the next person.
           </p>
           <div class="cta-row">
-            <a class="btn btn--accent btn--lg" href="/jobs">Search the job board</a>
-            <a class="btn btn--line btn--lg" href="/login">Create a free account</a>
+            <a class="btn btn--accent btn--lg" href="/jobs/us">Browse the board</a>
+            <a class="btn btn--line btn--lg" href="/login">Join for free</a>
           </div>
-          <p class="fineprint">No password. We email you a sign-in link.</p>
+          <p class="fineprint">No password, no paywall. We email you a sign-in link.</p>
 
           <figure class="showcase">
             <div class="showcase__tile">
@@ -2295,17 +2444,85 @@
               </div>
             </div>
             <figcaption>
-              A posting as it appears on an employer's site, and the details Yabot Jobs reads out of it. (Example.)
+              Someone pastes a link to a posting they found. Yabot Jobs reads out the details, and now everyone can
+              find it. (Example.)
             </figcaption>
           </figure>
+        </div>
+      </section>
+
+      <section class="notice" aria-labelledby="notice-title">
+        <div class="wrap">
+          <div class="notice__box">
+            <span class="notice__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" /><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            </span>
+            <div>
+              <h2 id="notice-title" class="notice__title">New jobs arrive twice a day</h2>
+              <p>
+                Yabot Jobs scans for new postings every day at <strong>1 PM</strong> and <strong>9 PM</strong> Eastern
+                Time. Links people share are scanned right away.
+              </p>
+              <a class="notice__link" href="/jobs/us">Browse the board <span aria-hidden="true">&rarr;</span></a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--tight" id="pitch-in" aria-labelledby="pitch-in-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="pitch-in-title">A job board that belongs to the people using it.</h2>
+            <p class="lede">
+              You'll never pay to search the board or read a posting. It's job seekers helping each other. Here's
+              how you can help, and none of it takes long.
+            </p>
+          </div>
+
+          <ul class="pitch">
+            <li class="pitch__card">
+              <span class="pitch__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+              </span>
+              <h3>Share a posting</h3>
+              <p>
+                Found a good job on a company's careers page or another board? Paste the link. Yabot Jobs reads it once
+                and puts it on the board, so the next person doesn't have to go looking.
+              </p>
+            </li>
+            <li class="pitch__card">
+              <span class="pitch__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M5 21V4m0 0h11l-2 4 2 4H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              </span>
+              <h3>Flag what's wrong</h3>
+              <p>
+                Wrong salary, dead link, garbled description? Report it from the job's page. A person reviews every
+                report, so it's fixed for everyone after you.
+              </p>
+            </li>
+            <li class="pitch__card">
+              <span class="pitch__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M13.5 4l-3 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              </span>
+              <h3>Build it with us</h3>
+              <p>
+                The whole thing is open source. Suggest a feature, report a bug, or send a pull request for the
+                <a href="https://github.com/davicho01/yabot.jobs-frontend">website</a> or the
+                <a href="https://github.com/davicho01/yabot.jobs-backend">API</a>.
+              </p>
+            </li>
+          </ul>
         </div>
       </section>
 
       <section class="section" id="how-it-works" aria-labelledby="steps-title">
         <div class="wrap">
           <div class="section-head">
-            <h2 id="steps-title">How Yabot Jobs works</h2>
-            <p class="lede">From finding a posting to keeping track of the interview, in the order you'd actually do it.</p>
+            <h2 id="steps-title">Everything you need for your own search</h2>
+            <p class="lede">
+              Once you've found something worth going after, these tools are free for everyone, from the first search
+              to the interview.
+            </p>
           </div>
 
           <ol class="bento">
@@ -2531,7 +2748,7 @@
                 <ul class="tile__highlights">
                   <li>Move it along: saved, applied, interviewing, offer</li>
                   <li>Notes and a follow-up reminder on every one</li>
-                  <li>Paste a link to add a job from anywhere</li>
+                  <li>Paste a link to add a job from anywhere, and it's shared with everyone</li>
                 </ul>
               </div>
               <div class="tile__art">
@@ -2572,87 +2789,25 @@
         </div>
       </section>
 
-      <section class="section" id="ai-assistant" aria-labelledby="assistant-title">
-        <div class="wrap">
-          <div class="assistant">
-            <div class="assistant__text">
-              <h2 id="assistant-title">Search for jobs from ChatGPT or Claude.</h2>
-              <p class="lede">
-                Yabot Jobs has an MCP server. Connect it to your ChatGPT or Claude account and ask for jobs in plain
-                language while your assistant does the searching.
-              </p>
-              <ul class="can" aria-label="What your assistant can do with Yabot Jobs">
-                <li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>Search the job board and open any posting for the full details</li>
-                <li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>Read your resume and score how well it fits a posting</li>
-                <li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>Write a tailored resume and cover letter and save them to your account as Word documents</li>
-                <li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>Log applications as applied, then update their status and notes</li>
-                <li><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>Add a posting from its link</li>
-              </ul>
-
-              <p class="assistant__note">
-                Your assistant does the writing and scoring itself and saves the results to your account, so you don't
-                need to add an API key to Yabot Jobs to use it this way.
-              </p>
-            </div>
-
-            <div class="assistant__side">
-              <div class="chat" aria-hidden="true">
-                <div class="bubble bubble--me">Find remote senior product manager jobs posted this week and tell me which ones fit my resume.</div>
-                <div class="bubble bubble--ai">
-                  <span class="bubble__tool">Searched Yabot Jobs</span>
-                  <span class="bubble__tool">Read your resume</span>
-                  <p>I found a few remote roles from the last 7 days and compared each one with your resume. These two are your best fits:</p>
-                  <div class="mini">
-                    <div>
-                      <strong>Senior Product Manager</strong>
-                      <span class="meta">Brightwave, Remote</span>
-                    </div>
-                    <span class="stamp stamp--good">Qualified</span>
-                  </div>
-                  <div class="mini">
-                    <div>
-                      <strong>Group Product Manager</strong>
-                      <span class="meta">Alder Cloud, Remote</span>
-                    </div>
-                    <span class="stamp stamp--maybe">Maybe</span>
-                  </div>
-                </div>
-                <p class="chat__caption">Example conversation.</p>
-              </div>
-              <div class="connectcard">
-                <h3 class="connect__title">Connect it in three steps</h3>
-                <ol class="connect">
-                <li>
-                  <div>
-                    In your assistant's settings, add a custom connector (a remote MCP server) with this address:
-                    <code class="addr">https://mcp.yabot.jobs/mcp</code>
-                  </div>
-                </li>
-                <li><div>Sign in to Yabot Jobs when your assistant opens the sign-in page. We email you a link, same as always.</div></li>
-                <li><div>Approve access. Your assistant can now work with your Yabot Jobs account.</div></li>
-              </ol>
-                <p class="connectcard__cc">
-                  Using Claude Code? Run this instead:
-                  <code class="block">claude mcp add --transport http yabot-jobs https://mcp.yabot.jobs/mcp</code>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section class="free" aria-labelledby="free-title">
         <div class="wrap">
           <div class="section-head">
             <h2 id="free-title">Looking for work costs enough already.</h2>
             <p>
-              Yabot Jobs has no subscription and no paywalled listings. Searching, saving, and tracking are free. The
-              AI tools work with a key you bring yourself, so the only bill you might ever see is from your own AI
-              provider, for what you actually use.
+              People who are between jobs shouldn't be the ones paying for a job board. There's no subscription and
+              no paywalled listings. The AI tools use a key you bring yourself, so the only bill you might ever see is
+              from your own AI provider, for what you actually use.
             </p>
             <p>
-              The code is open, too. Read the <a href="https://github.com/davicho01/yabot.jobs-frontend">website</a>
-              and the <a href="https://github.com/davicho01/yabot.jobs-backend">API</a> on GitHub.
+              Free to you isn't free to run, though. Servers and job scanning cost real money, and right now that
+              comes out of the builder's own pocket. That's why the ChatGPT and Claude connection is built but switched
+              off until there's a way to pay for it. Down the road, employers may be able to pay to feature a job posting. If that happens, those
+              postings will be clearly marked, and everything you see today stays free.
+            </p>
+            <p>
+              And because the code is open, you don't have to take our word for any of it. Read the
+              <a href="https://github.com/davicho01/yabot.jobs-frontend">website</a> and the
+              <a href="https://github.com/davicho01/yabot.jobs-backend">API</a> on GitHub.
             </p>
           </div>
 
@@ -2674,11 +2829,15 @@
                 </li>
                 <li>
                   <svg class="good" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                  Adding jobs from other boards by pasting a link
+                  Sharing jobs from other boards by pasting a link
                 </li>
                 <li>
                   <svg class="good" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
                   Signing in with an emailed link
+                </li>
+                <li>
+                  <svg class="good" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                  Reporting listings that are wrong or out of date
                 </li>
               </ul>
             </div>
@@ -2712,8 +2871,9 @@
           <div class="faq__intro">
             <h2 id="faq-title">Common questions</h2>
             <p>
-              Anything else? The project is public on
-              <a href="https://github.com/davicho01/yabot.jobs-frontend">GitHub</a>.
+              Anything else? Ask in the open on
+              <a href="https://github.com/davicho01/yabot.jobs-frontend/issues">GitHub</a>, where everyone can see
+              the answer.
             </p>
           </div>
 
@@ -2731,6 +2891,28 @@
               </div>
             </details>
             <details>
+              <summary>If it's free, who pays for it?</summary>
+              <div class="answer">
+                <p>
+                  Running it isn't free: servers and job scanning cost real money, and for now that comes out of the pocket of the person who built it. Down the road, employers may be able to pay to feature a job posting, which would help keep the lights on. Featured postings will be clearly marked, and job seekers will never pay to search the board or read a posting.
+                </p>
+              </div>
+            </details>
+            <details>
+              <summary>How can I help?</summary>
+              <div class="answer">
+                <p>
+                  Share postings you come across by pasting their link, and report any listing that looks wrong.
+                  Both take a few seconds and help everyone else who's looking.
+                </p>
+                <p>
+                  If you write code or have ideas, open an issue or a pull request on
+                  <a href="https://github.com/davicho01/yabot.jobs-frontend">GitHub</a>. Telling a friend who's job
+                  hunting helps too.
+                </p>
+              </div>
+            </details>
+            <details>
               <summary>Do I need an account to search for jobs?</summary>
               <div class="answer">
                 <p>
@@ -2744,9 +2926,9 @@
               <summary>Where do the job postings come from?</summary>
               <div class="answer">
                 <p>
-                  Yabot Jobs scans public job postings and reads the details out of the page: title, company, location,
-                  work type, and pay. Once you're signed in, you can also add any posting by pasting its link, and Yabot
-                  Jobs scans it for you.
+                  Two places. Yabot Jobs scans public job postings and reads the details out of each page: title,
+                  company, location, work type, and pay. And people using the site share postings they find by pasting
+                  a link. Every shared posting joins the same board, so one person's find helps everyone.
                 </p>
               </div>
             </details>
@@ -2754,7 +2936,7 @@
               <summary>Can I track jobs I found on other job boards?</summary>
               <div class="answer">
                 <p>
-                  Yes. Once you're signed in, paste the link to a posting from another job board or a company's careers page. Yabot Jobs scans it, reads the title, company, location, work type, and pay, and adds it to your jobs. From there you can check your fit, tailor your resume, and track the application with everything else. If a page can't be read, rescan it later. Your AI assistant can add a posting from its link too.
+                  Yes. Once you're signed in, paste the link to a posting from another job board or a company's careers page. Yabot Jobs scans it, reads the title, company, location, work type, and pay, and adds it to your jobs. From there you can check your fit, tailor your resume, and track the application with everything else. If a page can't be read, rescan it later.
                 </p>
               </div>
             </details>
@@ -2778,7 +2960,7 @@
               <summary>Can I use Yabot Jobs from ChatGPT or Claude?</summary>
               <div class="answer">
                 <p>
-                  Yes. Yabot Jobs has an MCP server, so ChatGPT, Claude, and any other assistant that supports the Model Context Protocol (MCP) can connect to it. Add <code class="inline">https://mcp.yabot.jobs/mcp</code> as a custom connector in your assistant's settings and approve access on Yabot Jobs. Your assistant can then search postings, track applications, and upload tailored resumes and cover letters for you.
+                  Not right now. Yabot Jobs has an MCP server that lets ChatGPT, Claude, and other assistants search the board for you, but it costs real money to run, so it's switched off until there's a way to pay for it. The job board and everything else on this page work the same as before.
                 </p>
               </div>
             </details>
@@ -2799,11 +2981,13 @@
       <section class="closing" aria-labelledby="closing-title">
         <div class="wrap">
           <div class="closing__tile">
-            <h2 id="closing-title">Start with one search.</h2>
-            <p class="lede">It's free, and you don't need an account to look around.</p>
+            <h2 id="closing-title">Nobody should job hunt alone.</h2>
+            <p class="lede">
+              Look around without an account. When you find something good, share it and help the next person.
+            </p>
             <div class="cta-row">
-              <a class="btn btn--accent btn--lg" href="/jobs">Search the job board</a>
-              <a class="btn btn--line btn--lg" href="/login">Log in</a>
+              <a class="btn btn--accent btn--lg" href="/jobs/us">Browse the board</a>
+              <a class="btn btn--line btn--lg" href="/login">Join for free</a>
             </div>
           </div>
         </div>
@@ -2822,7 +3006,7 @@
               </span>
               Yabot Jobs
             </a>
-            <p class="foot__statement">You shouldn't have to pay to get a job.</p>
+            <p class="foot__statement">You shouldn't have to pay to get a job. Free, open, and shaped by the people who use it.</p>
           </div>
 
           <nav aria-labelledby="foot-jobs">
@@ -2839,11 +3023,12 @@
           <nav aria-labelledby="foot-about">
             <h2 id="foot-about">About</h2>
             <ul>
+              <li><a href="#pitch-in">How to help</a></li>
               <li><a href="#how-it-works">How it works</a></li>
-              <li><a href="#ai-assistant">Use it with ChatGPT or Claude</a></li>
               <li><a href="#questions">Common questions</a></li>
               <li><a href="https://github.com/davicho01/yabot.jobs-frontend">Website code</a></li>
               <li><a href="https://github.com/davicho01/yabot.jobs-backend">API code</a></li>
+              <li><a href="https://github.com/davicho01/yabot.jobs-frontend/issues">Suggest an idea</a></li>
             </ul>
           </nav>
 
@@ -2855,7 +3040,7 @@
           </nav>
         </div>
 
-        <p class="foot__legal">&copy; 2026 Yabot Jobs. Free to use. The website is open source under the MIT license.</p>
+        <p class="foot__legal">&copy; 2026 Yabot Jobs. Free to use, built in the open. The website is open source under the MIT license.</p>
       </div>
     </footer>
   </body>
