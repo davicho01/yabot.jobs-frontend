@@ -109,16 +109,6 @@ export function AdminCrawlSourceStatsPage() {
   const stats = statsQuery.data;
   const { confirm, dialog } = useConfirm();
   const [isEditing, setIsEditing] = useState(false);
-  const scansByDayQuery = useQuery({
-    queryKey: ["admin", "crawl-source-scans-by-day", sourceId],
-    queryFn: () => adminApi.crawlSourceScansByDay(sourceId!, 180),
-    enabled: !!sourceId,
-  });
-  const scansByHourQuery = useQuery({
-    queryKey: ["admin", "crawl-source-scans-by-hour", sourceId],
-    queryFn: () => adminApi.crawlSourceScansByHour(sourceId!, 24),
-    enabled: !!sourceId,
-  });
 
   const deleteSourceMutation = useMutation({
     mutationFn: () => adminApi.deleteCrawlSource(sourceId!),
@@ -238,14 +228,7 @@ export function AdminCrawlSourceStatsPage() {
             </div>
           </section>
 
-          <ScanActivityChart
-            title="Listings scanned"
-            data={scansByDayQuery.data}
-            isLoading={scansByDayQuery.isLoading}
-            hourlyData={scansByHourQuery.data}
-            isHourlyLoading={scansByHourQuery.isLoading}
-            sourceId={sourceId}
-          />
+          <ScanActivityChart title="Listings scanned" sourceId={sourceId} />
 
           <section className="admin-section">
             <AdminWindowStats title="Listings added" counts={stats.listings_added} />

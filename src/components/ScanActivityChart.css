@@ -40,6 +40,38 @@
   background: var(--accent);
 }
 
+.scan-chart__hour-nav {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.scan-chart__hour-nav-btn {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ink-soft);
+  background: transparent;
+  border: none;
+  padding: 0.4rem 0.65rem;
+  cursor: pointer;
+}
+
+.scan-chart__hour-nav-btn:first-child {
+  border-right: 1px solid var(--line);
+}
+
+.scan-chart__hour-nav-btn:hover:not(:disabled) {
+  background: var(--surface);
+}
+
+.scan-chart__hour-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 .scan-chart__table-toggle {
   font-family: var(--font-body);
   font-size: 0.8rem;

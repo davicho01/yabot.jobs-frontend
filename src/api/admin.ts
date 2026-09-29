@@ -1,6 +1,16 @@
 import { api } from "./client";
 import { PAGE_SIZE } from "./jobs";
-import type { AdminDashboard, CrawlSource, CrawlSourceStats, JobDetail, JobList, ScanDayCount, ScanHourCount } from "./types";
+import type {
+  AdminDashboard,
+  CrawlSource,
+  CrawlSourceStats,
+  JobDetail,
+  JobList,
+  ScanDayCount,
+  ScanHourCount,
+  ScanMonthCount,
+  ScanWeekCount,
+} from "./types";
 
 export interface CrawlSourceUpdatePayload {
   name?: string;
@@ -47,7 +57,13 @@ export const adminApi = {
   scansByDay: (days = 180) => api.get<ScanDayCount[]>(`/admin/scans-by-day?days=${days}`),
   crawlSourceScansByDay: (sourceId: string, days = 180) =>
     api.get<ScanDayCount[]>(`/admin/crawl-sources/${sourceId}/scans-by-day?days=${days}`),
-  scansByHour: (hours = 24) => api.get<ScanHourCount[]>(`/admin/scans-by-hour?hours=${hours}`),
-  crawlSourceScansByHour: (sourceId: string, hours = 24) =>
-    api.get<ScanHourCount[]>(`/admin/crawl-sources/${sourceId}/scans-by-hour?hours=${hours}`),
+  scansByHour: (hours = 24, end?: string) => api.get<ScanHourCount[]>("/admin/scans-by-hour", { hours, end }),
+  crawlSourceScansByHour: (sourceId: string, hours = 24, end?: string) =>
+    api.get<ScanHourCount[]>(`/admin/crawl-sources/${sourceId}/scans-by-hour`, { hours, end }),
+  scansByWeek: (weeks = 26) => api.get<ScanWeekCount[]>(`/admin/scans-by-week?weeks=${weeks}`),
+  crawlSourceScansByWeek: (sourceId: string, weeks = 26) =>
+    api.get<ScanWeekCount[]>(`/admin/crawl-sources/${sourceId}/scans-by-week?weeks=${weeks}`),
+  scansByMonth: (months = 6) => api.get<ScanMonthCount[]>(`/admin/scans-by-month?months=${months}`),
+  crawlSourceScansByMonth: (sourceId: string, months = 6) =>
+    api.get<ScanMonthCount[]>(`/admin/crawl-sources/${sourceId}/scans-by-month?months=${months}`),
 };

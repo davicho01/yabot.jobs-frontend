@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
-import type { ScanDayCount, ScanHourCount } from "../api/types";
+import { useQuery } from "@tanstack/react-query";
+import { adminApi } from "../api/admin";
+import type { ScanDayCount, ScanHourCount, ScanMonthCount, ScanWeekCount } from "../api/types";
 import "./ScanActivityChart.css";
 
 type Granularity = "hr" | "day" | "week" | "month";
@@ -12,23 +14,15 @@ const GRANULARITIES: { key: Granularity; label: string }[] = [
   { key: "month", label: "Month" },
 ];
 
-// How many trailing buckets each granularity shows — hourly is a fixed 24h
-// window, daily stays a 30-bar window (180 would be unreadable), week/month
-// use everything fetched.
-const VISIBLE_COUNT: Record<Granularity, number> = { hr: 24, day: 30, week: 26, month: 6 };
+// How many trailing buckets each granularity requests from the backend —
+// hourly is a fixed 24h window (paged via the nav arrows), the others are
+// however many bars the chart shows at once.
+const REQUEST_COUNT: Record<Granularity, number> = { hr: 24, day: 30, week: 26, month: 6 };
 
 type Bucket = { key: string; label: string; rangeLabel: string; count: number; from: string; to: string };
 
 function parseDay(dateStr: string): Date {
   return new Date(`${dateStr}T00:00:00Z`);
-}
-
-function isoWeekStart(date: Date): Date {
-  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const day = d.getUTCDay();
-  const diff = (day === 0 ? -6 : 1) - day;
-  d.setUTCDate(d.getUTCDate() + diff);
-  return d;
 }
 
 const DAY_FMT: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", timeZone: "UTC" };
@@ -51,50 +45,38 @@ function bucketHourlyData(data: ScanHourCount[]): Bucket[] {
   });
 }
 
-function bucketData(data: ScanDayCount[], granularity: Granularity): Bucket[] {
-  if (granularity === "day") {
-    return data.map((d) => {
-      const date = parseDay(d.date);
-      const to = new Date(date.getTime() + 24 * 60 * 60 * 1000);
-      const label = date.toLocaleDateString("en-US", DAY_FMT);
-      return { key: d.date, label, rangeLabel: label, count: d.count, from: date.toISOString(), to: to.toISOString() };
-    });
-  }
-
-  const buckets = new Map<string, Bucket>();
-  for (const d of data) {
+function bucketDayData(data: ScanDayCount[]): Bucket[] {
+  return data.map((d) => {
     const date = parseDay(d.date);
-    if (granularity === "week") {
-      const start = isoWeekStart(date);
-      const key = start.toISOString().slice(0, 10);
-      const existing = buckets.get(key);
-      if (existing) {
-        existing.count += d.count;
-      } else {
-        const to = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
-        buckets.set(key, {
-          key,
-          label: start.toLocaleDateString("en-US", DAY_FMT),
-          rangeLabel: `Week of ${start.toLocaleDateString("en-US", DAY_FMT)}`,
-          count: d.count,
-          from: start.toISOString(),
-          to: to.toISOString(),
-        });
-      }
-    } else {
-      const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
-      const existing = buckets.get(key);
-      if (existing) {
-        existing.count += d.count;
-      } else {
-        const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
-        const to = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1));
-        const label = date.toLocaleDateString("en-US", MONTH_FMT);
-        buckets.set(key, { key, label, rangeLabel: label, count: d.count, from: start.toISOString(), to: to.toISOString() });
-      }
-    }
-  }
-  return [...buckets.values()].sort((a, b) => a.key.localeCompare(b.key));
+    const to = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+    const label = date.toLocaleDateString("en-US", DAY_FMT);
+    return { key: d.date, label, rangeLabel: label, count: d.count, from: date.toISOString(), to: to.toISOString() };
+  });
+}
+
+function bucketWeekData(data: ScanWeekCount[]): Bucket[] {
+  return data.map((d) => {
+    const start = parseDay(d.week);
+    const to = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const label = start.toLocaleDateString("en-US", DAY_FMT);
+    return {
+      key: d.week,
+      label,
+      rangeLabel: `Week of ${label}`,
+      count: d.count,
+      from: start.toISOString(),
+      to: to.toISOString(),
+    };
+  });
+}
+
+function bucketMonthData(data: ScanMonthCount[]): Bucket[] {
+  return data.map((d) => {
+    const start = parseDay(d.month);
+    const to = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 1));
+    const label = start.toLocaleDateString("en-US", MONTH_FMT);
+    return { key: d.month, label, rangeLabel: label, count: d.count, from: start.toISOString(), to: to.toISOString() };
+  });
 }
 
 function niceTicks(max: number, targetCount = 4): number[] {
@@ -143,25 +125,62 @@ const MIN_LABEL_SPACING = 56;
 // left over its neighbor.
 const TOOLTIP_OVERHANG = 12;
 
-export function ScanActivityChart({
-  title,
-  data,
-  isLoading,
-  hourlyData,
-  isHourlyLoading,
-  sourceId,
-}: {
-  title: string;
-  data: ScanDayCount[] | undefined;
-  isLoading: boolean;
-  hourlyData?: ScanHourCount[] | undefined;
-  isHourlyLoading?: boolean;
-  sourceId?: string;
-}) {
+export function ScanActivityChart({ title, sourceId }: { title: string; sourceId?: string }) {
   const navigate = useNavigate();
-  const [granularity, setGranularity] = useState<Granularity>("day");
+  const [granularity, setGranularity] = useState<Granularity>("hr");
   const [showTable, setShowTable] = useState(false);
   const [hovered, setHovered] = useState<number | null>(null);
+  // The right edge of the hourly window — null means "live" (always the
+  // current hour), a fixed ISO string means the back/forward arrows have
+  // paged away from live.
+  const [hourEnd, setHourEnd] = useState<string | null>(null);
+
+  const hourQuery = useQuery({
+    queryKey: ["admin", "scans-by-hour", sourceId ?? "all", hourEnd],
+    queryFn: () =>
+      sourceId
+        ? adminApi.crawlSourceScansByHour(sourceId, REQUEST_COUNT.hr, hourEnd ?? undefined)
+        : adminApi.scansByHour(REQUEST_COUNT.hr, hourEnd ?? undefined),
+    enabled: granularity === "hr",
+  });
+  const dayQuery = useQuery({
+    queryKey: ["admin", "scans-by-day", sourceId ?? "all"],
+    queryFn: () =>
+      sourceId ? adminApi.crawlSourceScansByDay(sourceId, REQUEST_COUNT.day) : adminApi.scansByDay(REQUEST_COUNT.day),
+    enabled: granularity === "day",
+  });
+  const weekQuery = useQuery({
+    queryKey: ["admin", "scans-by-week", sourceId ?? "all"],
+    queryFn: () =>
+      sourceId
+        ? adminApi.crawlSourceScansByWeek(sourceId, REQUEST_COUNT.week)
+        : adminApi.scansByWeek(REQUEST_COUNT.week),
+    enabled: granularity === "week",
+  });
+  const monthQuery = useQuery({
+    queryKey: ["admin", "scans-by-month", sourceId ?? "all"],
+    queryFn: () =>
+      sourceId
+        ? adminApi.crawlSourceScansByMonth(sourceId, REQUEST_COUNT.month)
+        : adminApi.scansByMonth(REQUEST_COUNT.month),
+    enabled: granularity === "month",
+  });
+
+  function goBackHour() {
+    const first = hourQuery.data?.[0];
+    if (!first) return;
+    setHourEnd(new Date(new Date(first.hour).getTime() - 60 * 60 * 1000).toISOString());
+  }
+
+  function goForwardHour() {
+    const data = hourQuery.data;
+    if (!data || data.length === 0) return;
+    const last = new Date(data[data.length - 1].hour);
+    const candidate = new Date(last.getTime() + REQUEST_COUNT.hr * 60 * 60 * 1000);
+    const currentHour = new Date();
+    currentHour.setUTCMinutes(0, 0, 0);
+    setHourEnd(candidate.getTime() >= currentHour.getTime() ? null : candidate.toISOString());
+  }
 
   // The SVG is drawn at the container's real pixel width (rather than a fixed
   // viewBox stretched to fit) so text and bars keep their proportions on a
@@ -194,17 +213,14 @@ export function ScanActivityChart({
     navigate(`/admin/jobs?${params.toString()}`);
   }
 
-  const loading = granularity === "hr" ? Boolean(isHourlyLoading) : isLoading;
+  const loading = { hr: hourQuery, day: dayQuery, week: weekQuery, month: monthQuery }[granularity].isLoading;
 
   const buckets = useMemo(() => {
-    if (granularity === "hr") {
-      if (!hourlyData) return [];
-      return bucketHourlyData(hourlyData).slice(-VISIBLE_COUNT.hr);
-    }
-    if (!data) return [];
-    const all = bucketData(data, granularity);
-    return all.slice(-VISIBLE_COUNT[granularity]);
-  }, [data, hourlyData, granularity]);
+    if (granularity === "hr") return hourQuery.data ? bucketHourlyData(hourQuery.data) : [];
+    if (granularity === "day") return dayQuery.data ? bucketDayData(dayQuery.data) : [];
+    if (granularity === "week") return weekQuery.data ? bucketWeekData(weekQuery.data) : [];
+    return monthQuery.data ? bucketMonthData(monthQuery.data) : [];
+  }, [granularity, hourQuery.data, dayQuery.data, weekQuery.data, monthQuery.data]);
 
   const maxCount = Math.max(0, ...buckets.map((b) => b.count));
   const ticks = niceTicks(maxCount);
@@ -241,6 +257,22 @@ export function ScanActivityChart({
               </button>
             ))}
           </div>
+          {granularity === "hr" && (
+            <div className="scan-chart__hour-nav" role="group" aria-label="Shift 24-hour window">
+              <button type="button" className="scan-chart__hour-nav-btn" onClick={goBackHour} aria-label="Back 24 hours">
+                ‹
+              </button>
+              <button
+                type="button"
+                className="scan-chart__hour-nav-btn"
+                onClick={goForwardHour}
+                disabled={hourEnd === null}
+                aria-label="Forward 24 hours"
+              >
+                ›
+              </button>
+            </div>
+          )}
           <button type="button" className="scan-chart__table-toggle" onClick={() => setShowTable((v) => !v)}>
             {showTable ? "View chart" : "View table"}
           </button>

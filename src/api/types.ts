@@ -369,6 +369,16 @@ export interface ScanHourCount {
   count: number;
 }
 
+export interface ScanWeekCount {
+  week: string;
+  count: number;
+}
+
+export interface ScanMonthCount {
+  month: string;
+  count: number;
+}
+
 export interface ApiKey {
   id: string;
   provider: string;
