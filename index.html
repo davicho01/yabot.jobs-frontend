@@ -13,13 +13,35 @@
         var l = location;
         var path = l.pathname;
         if (path === "/" && /[?&](q|location|metro|radius|company|posted|workplace|page|jobId)=/.test(l.search)) {
+          window.yabotRedirecting = true;
           l.replace("/jobs" + l.search + l.hash);
         } else if (path !== "/" && path !== "/index.html") {
+          window.yabotRedirecting = true;
           try {
             sessionStorage.setItem("yabot-restore-path", path + l.search + l.hash);
           } catch (e) {}
           l.replace("/app.html");
         }
+      })();
+    </script>
+    <script>
+      // Google Analytics 4, same property as the app (src/utils/analytics.ts).
+      // Skipped when the script above is sending the visitor on: those URLs can be
+      // app deep links like /auth/callback?token=…, which must never reach GA, and
+      // the app reports the visit itself once it loads.
+      (function () {
+        if (window.yabotRedirecting) return;
+        var id = "G-CDDT9RZ59T";
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () {
+          window.dataLayer.push(arguments);
+        };
+        window.gtag("js", new Date());
+        window.gtag("config", id);
+        var s = document.createElement("script");
+        s.async = true;
+        s.src = "https://www.googletagmanager.com/gtag/js?id=" + id;
+        document.head.appendChild(s);
       })();
     </script>
     <script>

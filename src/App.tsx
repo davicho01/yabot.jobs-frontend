@@ -21,6 +21,7 @@ import { AdminRoute } from "./components/AdminRoute";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { PageShell } from "./components/PageShell";
+import { usePageViews } from "./hooks/usePageViews";
 
 // Rendered once for every route (via the layout Route below) rather than
 // per-page, so Header — and the search/filter/add-job controls it owns —
@@ -37,6 +38,8 @@ function RootLayout() {
 }
 
 export default function App() {
+  usePageViews();
+
   return (
     <Routes>
       <Route element={<RootLayout />}>

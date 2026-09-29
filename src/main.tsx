@@ -5,6 +5,9 @@ import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App.tsx";
 import { AuthProvider } from "./auth/AuthContext.tsx";
+import { initAnalytics } from "./utils/analytics.ts";
+
+initAnalytics();
 
 const queryClient = new QueryClient({
   defaultOptions: {
