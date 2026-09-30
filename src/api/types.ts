@@ -467,6 +467,10 @@ export interface AiAccess {
   free_evaluations_remaining: number;
   // Jobs unlocked with a free evaluation: every AI feature for these is free.
   free_trial_job_ids: string[];
+  // Free resume restructures (the AI turning an upload into editable
+  // sections). free_restructure_limit is 0 when they're off.
+  free_restructure_limit: number;
+  free_restructures_remaining: number;
   // The paid plan (Stripe). subscription_status is Stripe's own value
   // ("active", "past_due", "canceled", …), null if never subscribed.
   subscription_available: boolean;
