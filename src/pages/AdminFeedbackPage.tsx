@@ -30,7 +30,12 @@ function statusStampClass(status: FeedbackStatus): string {
 }
 
 function formatDate(value: string): string {
-  return new Date(value).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  return new Date(value).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 // Triage queue for POST /feedback submissions (the in-app "Send feedback"
