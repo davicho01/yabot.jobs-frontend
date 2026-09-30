@@ -56,7 +56,7 @@ export function HelpPage() {
       answer: (
         <>
           Scoring your resume, tailoring it, and writing cover letters all run on an AI model. You add a key from
-          Anthropic, OpenAI, Google, DeepSeek, or Mistral on the <Link to="/api-keys">AI API Keys</Link> page, and
+          Anthropic, OpenAI, Google, DeepSeek, or Mistral on the <Link to="/api-keys">AI access</Link> page, and
           your provider bills you directly for what you use. That's usually a few cents per job. Yabot Jobs adds
           nothing on top.
           {aiAccess?.subscription_available &&
@@ -72,7 +72,7 @@ export function HelpPage() {
               <>
                 Every AI feature (scoring, full evaluations, tailored resumes, cover letters, and interview prep)
                 runs on Yabot Jobs' AI, so you don't need an account with an AI provider. Subscribe or manage your
-                plan on <Link to="/api-keys">AI API Keys</Link>. Payments go through Stripe, and you can cancel
+                plan on <Link to="/api-keys">AI access</Link>. Payments go through Stripe, and you can cancel
                 anytime; you keep the plan until the end of the period you paid for.
               </>
             ),
@@ -91,7 +91,7 @@ export function HelpPage() {
         <>
           The message comes straight from your provider. The usual causes are a key without billing or credit set
           up, a key that was revoked, or a model your account can't use. Check your provider's console, then update
-          the key on <Link to="/api-keys">AI API Keys</Link>.
+          the key on <Link to="/api-keys">AI access</Link>.
         </>
       ),
     },

@@ -456,6 +456,11 @@ export interface AdminFeedbackList {
 
 export interface AiAccess {
   has_own_key: boolean;
+  // What the next AI request runs on. An active plan outranks a saved key.
+  active_source: "subscription" | "own_key" | "free_trial" | null;
+  // The user's default key, reported even while the plan outranks it.
+  own_key_provider: string | null;
+  own_key_model: string | null;
   free_trial_enabled: boolean;
   free_evaluation_limit: number;
   free_evaluations_used: number;

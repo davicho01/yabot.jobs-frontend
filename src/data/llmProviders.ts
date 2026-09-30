@@ -1,6 +1,6 @@
 /**
  * Single source of truth for the LLM providers and models offered on the
- * "AI API Keys" page (see ../pages/ApiKeysPage.tsx). Update this file when a
+ * "AI access" page (see ../pages/ApiKeysPage.tsx). Update this file when a
  * provider ships a new model or retires an old one — nothing else needs to
  * change, the page renders whatever's listed here.
  *

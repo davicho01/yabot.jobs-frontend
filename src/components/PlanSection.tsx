@@ -23,7 +23,7 @@ const PAYMENT_ISSUE_STATUSES = new Set(["past_due", "unpaid", "incomplete"]);
 const CONFIRM_POLL_MS = 2000;
 const CONFIRM_POLL_ATTEMPTS = 15;
 
-// The paid plan on the AI API Keys page: subscribe (Stripe Checkout) or,
+// The paid plan on the AI access page: subscribe (Stripe Checkout) or,
 // once subscribed, see the plan and manage it (Stripe customer portal).
 // Renders nothing when the plan isn't offered and the user isn't on it.
 export function PlanSection({ access }: { access: AiAccess }) {
@@ -95,12 +95,12 @@ export function PlanSection({ access }: { access: AiAccess }) {
       {access.subscribed ? (
         <>
           <div className="plan-section__header">
-            <h2>AI plan</h2>
+            <h2>{access.subscription_price_label} plan</h2>
             <span className="stamp stamp--positive">Active</span>
           </div>
           <p className="settings-section__hint">
-            {access.subscription_price_label}. Scoring, tailoring, and cover letters run on Yabot Jobs' AI, so you
-            don't need a key of your own.
+            Scoring, tailoring, cover letters, and interview prep run on Yabot Jobs' AI, so you don't need a key of
+            your own.
             {access.subscription_current_period_end &&
               (access.subscription_cancel_at_period_end
                 ? ` Ends on ${formatDate(access.subscription_current_period_end)} and won't renew.`
@@ -124,11 +124,12 @@ export function PlanSection({ access }: { access: AiAccess }) {
       ) : (
         <>
           <div className="plan-section__header">
-            <h2>Skip the key for {access.subscription_price_label}</h2>
+            <h2>{access.subscription_price_label} plan</h2>
           </div>
           <p className="settings-section__hint">
-            Don't want to set up an AI provider account? Subscribe and every AI feature (scoring, tailoring, cover
-            letters, interview prep) runs on Yabot Jobs' AI. Cancel anytime.
+            No AI provider account needed. Every AI feature (scoring, tailoring, cover letters, interview prep) runs
+            on Yabot Jobs' AI. Cancel anytime.
+            {access.has_own_key && " While it's active, your saved key is paused so your provider isn't billed."}
           </p>
           {PAYMENT_ISSUE_STATUSES.has(access.subscription_status ?? "") ? (
             <>

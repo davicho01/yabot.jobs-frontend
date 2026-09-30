@@ -13,7 +13,7 @@ export function PrerequisiteNotice({ message }: { message: string }) {
   const isResumeIssue = !/api key/i.test(message) && /resume/i.test(message);
   const fixLink = isResumeIssue
     ? { to: "/resume", label: "Fix this in Resume →" }
-    : { to: "/api-keys", label: "Fix this in AI API Keys →" };
+    : { to: "/api-keys", label: "Fix this in AI access →" };
   return (
     <p className="dossier-action__prereq">
       {message} <Link to={fixLink.to}>{fixLink.label}</Link>

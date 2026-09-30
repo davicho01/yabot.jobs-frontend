@@ -742,7 +742,7 @@ export function Header() {
                   Resume optimization
                 </Link>
                 <Link to="/api-keys" role="menuitem" onClick={() => setMenuOpen(false)}>
-                  AI API Keys
+                  AI access
                 </Link>
                 <Link to="/access-tokens" role="menuitem" onClick={() => setMenuOpen(false)}>
                   Access tokens
