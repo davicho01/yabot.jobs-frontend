@@ -201,3 +201,23 @@
     padding: 1.1rem;
   }
 }
+.settings-key-form__get-key {
+  align-self: flex-start;
+  margin-top: -0.4rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.ai-access-trial__title {
+  font-size: 1.05rem;
+  margin: 0 0 0.4rem;
+}
+
+.ai-access-trial .settings-section__hint {
+  margin: 0;
+}
+
+.ai-access-trial--empty {
+  border-color: var(--amber);
+}

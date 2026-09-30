@@ -23,6 +23,9 @@ import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { PageShell } from "./components/PageShell";
 import { FeedbackProvider } from "./components/FeedbackModal";
+import { GettingStartedBanner } from "./components/GettingStarted";
+import { GETTING_STARTED_PATH } from "./utils/onboarding";
+import { GettingStartedPage } from "./pages/GettingStartedPage";
 import { usePageViews } from "./hooks/usePageViews";
 
 // Rendered once for every route (via the layout Route below) rather than
@@ -34,6 +37,7 @@ function RootLayout() {
     <PageShell>
       <FeedbackProvider>
         <Header />
+        <GettingStartedBanner />
         <Outlet />
         <Footer />
       </FeedbackProvider>
@@ -64,6 +68,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ApplyPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={GETTING_STARTED_PATH}
+          element={
+            <ProtectedRoute>
+              <GettingStartedPage />
             </ProtectedRoute>
           }
         />

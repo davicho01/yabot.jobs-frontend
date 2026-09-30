@@ -1,5 +1,6 @@
 import { useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ONBOARDING_QUERY_KEY } from "../api/onboarding";
 import { Link } from "react-router-dom";
 import { resumesApi, type ResumeDetail } from "../api/resumes";
 import { ApiError } from "../api/client";
@@ -224,6 +225,7 @@ export function ResumePage() {
     mutationFn: (file: File) => resumesApi.upload(file),
     onSuccess: (resume) => {
       queryClient.invalidateQueries({ queryKey: ["resumes"] });
+      queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
       if (fileInput.current) fileInput.current.value = "";
       showPreview(resume);
     },

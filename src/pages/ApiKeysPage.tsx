@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiKeysApi } from "../api/apiKeys";
+import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY, onboardingApi } from "../api/onboarding";
+import { freeEvaluationsPhrase } from "../utils/onboarding";
 import { ApiError } from "../api/client";
 import { LLM_PROVIDERS, getLlmProvider } from "../data/llmProviders";
 import type { ApiKey } from "../api/types";
@@ -24,6 +26,16 @@ function modelLabelFor(key: ApiKey): string {
 export function ApiKeysPage() {
   const queryClient = useQueryClient();
   const keysQuery = useQuery({ queryKey: ["api-keys"], queryFn: apiKeysApi.list });
+  const aiAccessQuery = useQuery({ queryKey: AI_ACCESS_QUERY_KEY, queryFn: onboardingApi.aiAccess });
+  const aiAccess = aiAccessQuery.data;
+
+  // A key changes whether the free trial applies and ticks off a
+  // getting-started step, so those refresh along with the list.
+  function invalidateKeys() {
+    queryClient.invalidateQueries({ queryKey: ["api-keys"] });
+    queryClient.invalidateQueries({ queryKey: AI_ACCESS_QUERY_KEY });
+    queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
+  }
 
   const [provider, setProvider] = useState("anthropic");
   const [model, setModel] = useState("");
@@ -48,7 +60,7 @@ export function ApiKeysPage() {
         is_default: isDefault,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["api-keys"] });
+      invalidateKeys();
       setApiKeyValue("");
       setModel(defaultModelFor(provider));
       setBaseUrl("");
@@ -57,12 +69,12 @@ export function ApiKeysPage() {
 
   const deleteKeyMutation = useMutation({
     mutationFn: (id: string) => apiKeysApi.remove(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["api-keys"] }),
+    onSuccess: invalidateKeys,
   });
 
   const setDefaultMutation = useMutation({
     mutationFn: (id: string) => apiKeysApi.update(id, { is_default: true }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["api-keys"] }),
+    onSuccess: invalidateKeys,
   });
 
   function handleCreateKey(event: FormEvent) {
@@ -76,6 +88,27 @@ export function ApiKeysPage() {
       <p className="settings-page__intro">
         Bring your own LLM API key — used only for your resume review, scoring, and generation requests.
       </p>
+
+      {aiAccess && !aiAccess.has_own_key && aiAccess.free_trial_enabled && (
+        <section
+          className={`settings-section ai-access-trial${
+            aiAccess.free_evaluations_remaining === 0 ? " ai-access-trial--empty" : ""
+          }`}
+        >
+          <h2 className="ai-access-trial__title">
+            {aiAccess.free_evaluations_remaining > 0
+              ? `${freeEvaluationsPhrase(aiAccess.free_evaluations_remaining)} left`
+              : "Free evaluations used up"}
+          </h2>
+          <p className="settings-section__hint">
+            {aiAccess.free_evaluations_remaining > 0
+              ? `Everyone gets ${freeEvaluationsPhrase(aiAccess.free_evaluation_limit)} to try Yabot Jobs. After that, `
+              : "You've used your free evaluations. "}
+            job scoring, resume tailoring, and cover letters run on your own API key. You only pay your provider
+            for what you use, usually a few cents per job.
+          </p>
+        </section>
+      )}
 
       <section className="settings-section">
         <form onSubmit={handleCreateKey} className="settings-key-form">
@@ -91,6 +124,16 @@ export function ApiKeysPage() {
               </select>
             </div>
           </label>
+          {selectedProvider?.keysUrl && (
+            <a
+              className="settings-key-form__get-key"
+              href={selectedProvider.keysUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Get a {selectedProvider.label} API key ↗
+            </a>
+          )}
           <label>
             Model {!selectedProvider?.defaultModel && <span className="settings-key-form__required">required</span>}
             {selectedProvider && selectedProvider.models.length > 0 ? (

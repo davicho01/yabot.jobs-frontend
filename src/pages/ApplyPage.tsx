@@ -24,6 +24,8 @@ import { NotesEditor } from "../components/NotesEditor";
 import { TailoredDownloadMenu } from "../components/TailoredDownloadMenu";
 import { CoverLetterDownloadMenu } from "../components/CoverLetterDownloadMenu";
 import { PrerequisiteNotice } from "../components/PrerequisiteNotice";
+import { FreeEvaluationNote } from "../components/FreeEvaluationNote";
+import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY } from "../api/onboarding";
 import { fitLabel, fitTier } from "../utils/fitScore";
 import { prerequisiteMessage, genericErrorMessage } from "../utils/apiErrors";
 import { scannedPosting, formatSalary, formatPostedAt } from "../utils/jobPosting";
@@ -438,7 +440,10 @@ function ApplyPageContent({
 
   const recordApplication = useMutation({
     mutationFn: (url: string) => applicationsApi.create(url),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
+    },
   });
 
   // Auto-save on visit: a job seen through this dashboard is tracked in
@@ -488,9 +493,19 @@ function ApplyPageContent({
   // evaluation just fills in the row's category_scores in place), so
   // whichever ran most recently is always the right thing to show.
   const [freshScore, setFreshScore] = useState<ResumeScore | null>(null);
+  // A score can spend a free evaluation and tick off the last
+  // getting-started step, so both of those refresh after one.
+  const refreshAiAccess = () => {
+    queryClient.invalidateQueries({ queryKey: AI_ACCESS_QUERY_KEY });
+    queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
+  };
   const scoreMutation = useMutation<ResumeScore, ApiError>({
     mutationFn: () => resumesApi.generateScore(jobPostingId!, resumeIdParam),
-    onSuccess: setFreshScore,
+    onSuccess: (score) => {
+      setFreshScore(score);
+      refreshAiAccess();
+    },
+    onError: refreshAiAccess,
   });
   const evaluationMutation = useMutation<ResumeScore, ApiError>({
     mutationFn: () => resumesApi.generateEvaluation(jobPostingId!, resumeIdParam),
@@ -976,7 +991,8 @@ function ApplyPageContent({
                 />
               </div>
             )}
-            {prerequisiteMessage(scoreError) && <p className="job-dashboard__error">{prerequisiteMessage(scoreError)}</p>}
+            <FreeEvaluationNote />
+            {prerequisiteMessage(scoreError) && <PrerequisiteNotice message={prerequisiteMessage(scoreError)!} />}
             {genericErrorMessage(scoreError) && !prerequisiteMessage(scoreError) && (
               <p className="job-dashboard__error">{genericErrorMessage(scoreError)}</p>
             )}

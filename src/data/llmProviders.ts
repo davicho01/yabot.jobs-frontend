@@ -27,12 +27,16 @@ export interface LlmProviderOption {
    *  that (currently only Anthropic, per the backend's UserApiKey.model
    *  default-fallback behavior — see app/schemas/api_key.py). */
   defaultModel?: string;
+  /** Where to create an API key for this provider — linked from the AI API
+   *  Keys page so a first-time user isn't left searching for it. */
+  keysUrl?: string;
 }
 
 export const LLM_PROVIDERS: LlmProviderOption[] = [
   {
     id: "anthropic",
     label: "Anthropic",
+    keysUrl: "https://console.anthropic.com/settings/keys",
     defaultModel: "claude-sonnet-5",
     models: [
       { value: "claude-opus-5", label: "Claude Opus 5" },
@@ -44,6 +48,7 @@ export const LLM_PROVIDERS: LlmProviderOption[] = [
   {
     id: "openai",
     label: "OpenAI",
+    keysUrl: "https://platform.openai.com/api-keys",
     models: [
       { value: "gpt-5.1", label: "GPT-5.1" },
       { value: "gpt-5.1-mini", label: "GPT-5.1 mini" },
@@ -54,6 +59,7 @@ export const LLM_PROVIDERS: LlmProviderOption[] = [
   {
     id: "deepseek",
     label: "DeepSeek",
+    keysUrl: "https://platform.deepseek.com/api_keys",
     models: [
       { value: "deepseek-flash", label: "DeepSeek v4.1 Flash" },
       { value: "deepseek-v4-pro", label: "DeepSeek v4 Pro" },
@@ -62,6 +68,7 @@ export const LLM_PROVIDERS: LlmProviderOption[] = [
   {
     id: "google",
     label: "Google",
+    keysUrl: "https://aistudio.google.com/app/apikey",
     models: [
       { value: "gemini-3-pro", label: "Gemini 3 Pro" },
       { value: "gemini-2.5-pro", label: "Gemini 2.5 Pro" },
@@ -71,6 +78,7 @@ export const LLM_PROVIDERS: LlmProviderOption[] = [
   {
     id: "mistral",
     label: "Mistral",
+    keysUrl: "https://console.mistral.ai/api-keys",
     models: [
       { value: "mistral-large-latest", label: "Mistral Large" },
       { value: "mistral-small-latest", label: "Mistral Small" },

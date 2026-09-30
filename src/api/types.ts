@@ -453,3 +453,20 @@ export interface AdminFeedbackList {
   total: number;
   new_count: number;
 }
+
+export interface AiAccess {
+  has_own_key: boolean;
+  free_trial_enabled: boolean;
+  free_evaluation_limit: number;
+  free_evaluations_used: number;
+  free_evaluations_remaining: number;
+}
+
+export type OnboardingStepKey = "resume" | "ai_access" | "application" | "evaluation";
+
+export interface Onboarding {
+  steps: { key: OnboardingStepKey; done: boolean }[];
+  completed_at: string | null;
+  dismissed_at: string | null;
+  ai_access: AiAccess;
+}

@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation, useSearchParams } from "react-router-do
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
 import { useFeedback } from "./FeedbackModal";
+import { GETTING_STARTED_PATH } from "../utils/onboarding";
 import { jobsApi } from "../api/jobs";
 import { describeSavedSearch, paramsToSavedSearchPayload, savedSearchesApi } from "../api/savedSearches";
 import { ApiError } from "../api/client";
@@ -722,6 +723,9 @@ export function Header() {
                   </div>
                   <div className="site-header__dropdown-email">{user.email}</div>
                 </div>
+                <Link to={GETTING_STARTED_PATH} role="menuitem" onClick={() => setMenuOpen(false)}>
+                  Getting started
+                </Link>
                 <Link to="/profile" role="menuitem" onClick={() => setMenuOpen(false)}>
                   Profile
                 </Link>

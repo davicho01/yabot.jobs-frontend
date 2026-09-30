@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ONBOARDING_QUERY_KEY } from "../api/onboarding";
 import ReactMarkdown from "react-markdown";
 import { applicationsApi } from "../api/applications";
 import { jobsApi } from "../api/jobs";
@@ -152,7 +153,10 @@ export function JobCaseFile({
   // look at it).
   const recordApplication = useMutation({
     mutationFn: (url: string) => applicationsApi.create(url),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
+    },
   });
 
   return (
