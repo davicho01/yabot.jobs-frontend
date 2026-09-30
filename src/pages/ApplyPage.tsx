@@ -1075,7 +1075,10 @@ function ApplyPageContent({
             footer={
               <StepNextButton
                 nextTitle={STEP_TITLES[3]}
-                currentDone={step2Done}
+                // Tailoring isn't really finished until the new version has
+                // been scored — until then "Score this version" is the thing
+                // to do, so this stays the quieter "Skip to".
+                currentDone={step2Done && !!displayedTailoredScore}
                 onClick={() => goToStep(3)}
               />
             }
