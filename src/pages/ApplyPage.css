@@ -231,6 +231,21 @@
 .apply__tailor-actions {
   justify-content: space-between;
   flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* A report's score actions side by side: "Get full evaluation" (until it's
+   been run) first, then Re-score / Re-evaluate. */
+.apply__action-group {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.apply__action-group > .job-dashboard__evaluate-button {
+  /* Its standalone margin/alignment would sit it lower than its neighbors. */
+  margin-top: 0;
+  align-self: center;
 }
 
 /* "Write a cover letter" step's download menu — no left-side action to

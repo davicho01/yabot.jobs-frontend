@@ -65,8 +65,6 @@ function FitnessReportBody({
   score,
   title,
   description,
-  onRequestEvaluation,
-  isEvaluationPending,
 }: {
   score: {
     overall_score: number;
@@ -78,11 +76,6 @@ function FitnessReportBody({
   };
   title: string;
   description: string;
-  // Comprehensive category breakdown is opt-in — omitted category_scores
-  // means "not evaluated yet" (see app.models.resume.ResumeScore's
-  // docstring), and this CTA is how the candidate requests it.
-  onRequestEvaluation: () => void;
-  isEvaluationPending: boolean;
 }) {
   // Collapsed by default (same "keep it concise" pattern as the Job
   // description toggle above the resume picker) — keyed by category so
@@ -193,7 +186,8 @@ function FitnessReportBody({
         // hasn't been through the slower, opt-in comprehensive evaluation
         // yet (empty category_scores is exactly that signal — see
         // app.models.resume.ResumeScore's docstring) — plain matched/missing
-        // keyword lists plus a CTA to request the full breakdown.
+        // keyword lists. The "Get full evaluation" button that requests the
+        // breakdown lives in the caller's action row, next to Re-score.
         <>
           <div className="job-dashboard__columns">
             <section className="job-dashboard__section">
@@ -220,13 +214,6 @@ function FitnessReportBody({
                 </ul>
               )}
             </section>
-          </div>
-          <div className="job-dashboard__actions job-dashboard__actions--spaced">
-            <EvaluateButton
-              label="Get full evaluation"
-              onClick={onRequestEvaluation}
-              isPending={isEvaluationPending}
-            />
           </div>
         </>
       )}
@@ -1033,10 +1020,15 @@ function ApplyPageContent({
                   score={displayedScore}
                   title="Fitness report"
                   description="See how your resume stacks up against this posting's requirements."
-                  onRequestEvaluation={() => evaluationMutation.mutate()}
-                  isEvaluationPending={evaluationMutation.isPending}
                 />
-                <div className="job-dashboard__actions job-dashboard__actions--spaced">
+                <div className="job-dashboard__actions job-dashboard__actions--spaced apply__action-group">
+                  {displayedScore.category_scores.length === 0 && (
+                    <EvaluateButton
+                      label="Get full evaluation"
+                      onClick={() => evaluationMutation.mutate()}
+                      isPending={evaluationMutation.isPending}
+                    />
+                  )}
                   <EvaluateButton
                     label="Re-score"
                     pendingLabel="Scoring…"
@@ -1137,8 +1129,6 @@ function ApplyPageContent({
                     score={displayedTailoredScore}
                     title="Fitness report for this version"
                     description="See how this tailored resume stacks up against this posting's requirements."
-                    onRequestEvaluation={() => tailoredEvaluationMutation.mutate()}
-                    isEvaluationPending={tailoredEvaluationMutation.isPending}
                   />
                 ) : (
                   <div className="dossier-action__header">
@@ -1146,25 +1136,35 @@ function ApplyPageContent({
                     <p>Check this tailored resume's fit to see its report here.</p>
                   </div>
                 )}
-                {/* Bottom-right of the card: Score/Re-score (plus Re-evaluate
-                    once evaluated) on the left, download (with regenerate in
-                    its menu) on the right. */}
+                {/* Bottom of the card: Get full evaluation (until it's been
+                    run), then Score/Re-score (plus Re-evaluate once
+                    evaluated) on the left, download (with regenerate in its
+                    menu) on the right. */}
                 <div className="job-dashboard__actions job-dashboard__actions--spaced apply__tailor-actions">
-                  <EvaluateButton
-                    label={displayedTailoredScore ? "Re-score" : "Score this version"}
-                    pendingLabel="Scoring…"
-                    onClick={() => tailoredScoreMutation.mutate()}
-                    isPending={tailoredScoreMutation.isPending}
-                    variant={displayedTailoredScore ? "secondary" : "primary"}
-                  />
-                  {displayedTailoredScore && displayedTailoredScore.category_scores.length > 0 && (
+                  <div className="job-dashboard__actions apply__action-group">
+                    {displayedTailoredScore && displayedTailoredScore.category_scores.length === 0 && (
+                      <EvaluateButton
+                        label="Get full evaluation"
+                        onClick={() => tailoredEvaluationMutation.mutate()}
+                        isPending={tailoredEvaluationMutation.isPending}
+                      />
+                    )}
                     <EvaluateButton
-                      label="Re-evaluate"
-                      onClick={() => tailoredEvaluationMutation.mutate()}
-                      isPending={tailoredEvaluationMutation.isPending}
-                      variant="secondary"
+                      label={displayedTailoredScore ? "Re-score" : "Score this version"}
+                      pendingLabel="Scoring…"
+                      onClick={() => tailoredScoreMutation.mutate()}
+                      isPending={tailoredScoreMutation.isPending}
+                      variant={displayedTailoredScore ? "secondary" : "primary"}
                     />
-                  )}
+                    {displayedTailoredScore && displayedTailoredScore.category_scores.length > 0 && (
+                      <EvaluateButton
+                        label="Re-evaluate"
+                        onClick={() => tailoredEvaluationMutation.mutate()}
+                        isPending={tailoredEvaluationMutation.isPending}
+                        variant="secondary"
+                      />
+                    )}
+                  </div>
                   <TailoredDownloadMenu
                     tailoredResume={displayedTailored}
                     onRegenerate={() => tailorMutation.mutate()}
