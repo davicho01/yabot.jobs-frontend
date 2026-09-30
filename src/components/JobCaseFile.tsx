@@ -138,7 +138,7 @@ export function JobCaseFile({
 
   // Same list ApplyPage/ApplicationsPage query (same ["applications"]
   // cache key), just to answer one question here: has this posting already
-  // been saved/applied to? (So "Apply" is the wrong label the
+  // been saved/applied to? (So "Add for evaluation" is the wrong label the
   // moment that's true.)
   const { data: applications } = useQuery({
     queryKey: ["applications"],
@@ -147,7 +147,7 @@ export function JobCaseFile({
   });
   const currentApplication = applications?.find((a) => a.job_posting.url_id === job.url.id) ?? null;
 
-  // "Apply" just tracks the posting in Applications — it shouldn't
+  // "Add for evaluation" just tracks the posting in Applications — it shouldn't
   // also navigate there. Once it exists, the label swaps to "View
   // application →", which does navigate (that's an explicit request to go
   // look at it).
@@ -208,7 +208,7 @@ export function JobCaseFile({
               )}
               {currentApplication || !user ? (
                 <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
-                  <span>{currentApplication ? "View application →" : "Apply →"}</span>
+                  <span>{currentApplication ? "View application →" : "Add for evaluation →"}</span>
                   {currentApplication && (
                     <span className="apply-button__meta">{formatApplicationDate(currentApplication)}</span>
                   )}
@@ -220,7 +220,7 @@ export function JobCaseFile({
                   disabled={recordApplication.isPending || !job.url.url}
                   onClick={() => job.url.url && recordApplication.mutate(job.url.url)}
                 >
-                  <span>{recordApplication.isPending ? "Adding…" : "Apply →"}</span>
+                  <span>{recordApplication.isPending ? "Adding…" : "Add for evaluation →"}</span>
                 </button>
               )}
             </div>

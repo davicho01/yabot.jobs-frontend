@@ -665,7 +665,7 @@ export function ApplicationsPage() {
         {isLoading && <p>Loading…</p>}
         {!isLoading && applications?.length === 0 && (
           <p className="applications-page__empty">
-            Nothing here yet — <Link to={BOARD_PATH}>browse postings</Link> and hit Apply on one that fits.
+            Nothing here yet — <Link to={BOARD_PATH}>browse postings</Link> and hit Add for evaluation on one that fits.
           </p>
         )}
 

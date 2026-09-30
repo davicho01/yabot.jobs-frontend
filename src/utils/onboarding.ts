@@ -66,7 +66,7 @@ export function stepContent(
     case "application":
       return {
         title: "Pick a job to apply for",
-        body: "Find a job on the board and click Apply →. It's saved to My applications, where you work through it step by step.",
+        body: "Find a job on the board and click Add for evaluation →. It's saved to My applications, where you work through it step by step.",
         cta: { to: BOARD_PATH, label: "Browse jobs" },
       };
     case "evaluation":
