@@ -493,8 +493,8 @@ function ApplyPageContent({
   // evaluation just fills in the row's category_scores in place), so
   // whichever ran most recently is always the right thing to show.
   const [freshScore, setFreshScore] = useState<ResumeScore | null>(null);
-  // A score can spend a free evaluation and tick off the last
-  // getting-started step, so both of those refresh after one.
+  // Any AI step here can unlock this job with a free evaluation (and a score
+  // ticks off the last getting-started step), so both refresh after one.
   const refreshAiAccess = () => {
     queryClient.invalidateQueries({ queryKey: AI_ACCESS_QUERY_KEY });
     queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
@@ -509,7 +509,10 @@ function ApplyPageContent({
   });
   const evaluationMutation = useMutation<ResumeScore, ApiError>({
     mutationFn: () => resumesApi.generateEvaluation(jobPostingId!, resumeIdParam),
-    onSuccess: setFreshScore,
+    onSuccess: (score) => {
+      setFreshScore(score);
+      refreshAiAccess();
+    },
   });
   const displayedScore = freshScore?.resume_id === selectedResumeId ? freshScore : scoreQuery.data;
   // scoreQuery 404s on the very first load of a job never scored yet —
@@ -528,7 +531,10 @@ function ApplyPageContent({
   });
   const tailorMutation = useMutation<TailoredResume, ApiError>({
     mutationFn: () => resumesApi.generateTailored(jobPostingId!, resumeIdParam),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tailored", jobPostingId, resumeIdParam] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tailored", jobPostingId, resumeIdParam] });
+      refreshAiAccess();
+    },
   });
   const displayedTailored =
     tailorMutation.data?.resume_id === selectedResumeId ? tailorMutation.data : tailoredQuery.data;
@@ -560,7 +566,10 @@ function ApplyPageContent({
   });
   const coverLetterMutation = useMutation<CoverLetter, ApiError>({
     mutationFn: () => resumesApi.generateCoverLetter(jobPostingId!, resumeIdParam),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cover-letter", jobPostingId, resumeIdParam] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cover-letter", jobPostingId, resumeIdParam] });
+      refreshAiAccess();
+    },
   });
   const displayedCoverLetter =
     coverLetterMutation.data?.resume_id === selectedResumeId ? coverLetterMutation.data : coverLetterQuery.data;
@@ -577,7 +586,10 @@ function ApplyPageContent({
   });
   const interviewPrepMutation = useMutation<InterviewPrep, ApiError>({
     mutationFn: () => resumesApi.generateInterviewPrep(jobPostingId!, resumeIdParam),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["interview-prep", jobPostingId, resumeIdParam] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["interview-prep", jobPostingId, resumeIdParam] });
+      refreshAiAccess();
+    },
   });
   const displayedInterviewPrep =
     interviewPrepMutation.data?.resume_id === selectedResumeId ? interviewPrepMutation.data : interviewPrepQuery.data;
@@ -943,6 +955,8 @@ function ApplyPageContent({
           />
         </section>
 
+        <FreeEvaluationNote jobPostingId={jobPostingId} />
+
         <ol className="process-steps">
           <ProcessStep
             index={1}
@@ -991,7 +1005,6 @@ function ApplyPageContent({
                 />
               </div>
             )}
-            <FreeEvaluationNote />
             {prerequisiteMessage(scoreError) && <PrerequisiteNotice message={prerequisiteMessage(scoreError)!} />}
             {genericErrorMessage(scoreError) && !prerequisiteMessage(scoreError) && (
               <p className="job-dashboard__error">{genericErrorMessage(scoreError)}</p>

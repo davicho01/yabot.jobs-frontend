@@ -1,5 +1,8 @@
 .free-evaluation-note {
-  margin: 0.6rem 0 0;
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
   font-size: 0.82rem;
   color: var(--ink-soft);
   line-height: 1.5;
@@ -11,8 +14,6 @@
 }
 
 .free-evaluation-note--empty {
-  padding: 0.6rem 0.8rem;
-  border: 1px solid var(--amber);
-  border-radius: var(--radius-field);
+  border-color: var(--amber);
   color: var(--ink);
 }

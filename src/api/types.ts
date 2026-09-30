@@ -465,6 +465,8 @@ export interface AiAccess {
   free_evaluation_limit: number;
   free_evaluations_used: number;
   free_evaluations_remaining: number;
+  // Jobs unlocked with a free evaluation: every AI feature for these is free.
+  free_trial_job_ids: string[];
   // The paid plan (Stripe). subscription_status is Stripe's own value
   // ("active", "past_due", "canceled", …), null if never subscribed.
   subscription_available: boolean;

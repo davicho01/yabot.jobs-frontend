@@ -32,7 +32,7 @@ export function ActiveSourceNotice({ access }: { access: AiAccess }) {
     case "free_trial":
       title = `Free evaluations: ${access.free_evaluations_remaining} of ${access.free_evaluation_limit} left`;
       detail =
-        "They cover job scoring. For tailoring, cover letters, and unlimited scoring, add a key" +
+        "Each one unlocks every AI feature for one job. For unlimited jobs, add a key" +
         (access.subscription_available ? ` or subscribe for ${access.subscription_price_label}.` : ".");
       break;
     default:

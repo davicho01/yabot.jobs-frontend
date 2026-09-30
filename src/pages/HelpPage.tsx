@@ -40,7 +40,8 @@ export function HelpPage() {
             answer: (
               <>
                 Every account gets {freeEvaluationsPhrase(aiAccess.free_evaluation_limit)}, so you can try Yabot Jobs
-                without an API key. Each one scores your resume against one job and breaks the score down by category.
+                without an API key. Each one unlocks every AI feature for one job: the fit score and its breakdown, a
+                tailored resume, a cover letter, and interview prep.
                 {aiAccess.has_own_key
                   ? " You've added your own key, so your evaluations are unlimited."
                   : aiAccess.subscribed
