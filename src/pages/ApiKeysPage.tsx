@@ -15,6 +15,10 @@ function defaultModelFor(providerId: string): string {
   return provider.defaultModel ?? provider.models[0].value;
 }
 
+function providerLabel(key: ApiKey): string {
+  return getLlmProvider(key.provider)?.label ?? key.provider;
+}
+
 function modelLabelFor(key: ApiKey): string {
   const provider = getLlmProvider(key.provider);
   if (!key.model) {
@@ -86,6 +90,11 @@ export function ApiKeysPage() {
   }
 
   const planOutranksKeys = !!aiAccess?.subscribed;
+  // Alphabetical by provider, then model — the API returns them in no fixed
+  // order, which made rows swap places when the default changed.
+  const sortedKeys = [...(keysQuery.data ?? [])].sort(
+    (a, b) => providerLabel(a).localeCompare(providerLabel(b)) || modelLabelFor(a).localeCompare(modelLabelFor(b)),
+  );
 
   return (
     <main className="settings-page ai-access-page">
@@ -105,13 +114,13 @@ export function ApiKeysPage() {
           encrypted and only used for your own requests.
         </p>
 
-        {keysQuery.data && keysQuery.data.length > 0 && (
+        {sortedKeys.length > 0 && (
           <ul className="ai-access-keys__list">
-            {keysQuery.data.map((key) => (
+            {sortedKeys.map((key) => (
               <li key={key.id} className="ai-access-keys__item">
                 <span className="ai-access-keys__label">
                   <span className="ai-access-keys__provider">
-                    {getLlmProvider(key.provider)?.label ?? key.provider}
+                    {providerLabel(key)}
                   </span>
                   <span className="ai-access-keys__meta">
                     {modelLabelFor(key)} · {key.masked_key}

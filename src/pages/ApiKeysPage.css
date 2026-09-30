@@ -221,12 +221,14 @@
   background: var(--paper);
 }
 
+/* Fixed-width action columns, so "Default · paused" / "Make default" and
+   Remove line up in the same spot on every row — a long model name wraps
+   inside the first column instead of pushing the buttons onto a new line. */
 .ai-access-keys__item {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8.5rem 5.25rem;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem 1rem;
+  gap: 0.6rem;
   padding: 0.75rem 0.9rem;
 }
 
@@ -253,11 +255,15 @@
   font-family: var(--font-mono);
 }
 
+/* Its two children sit directly in the row's grid columns. */
 .ai-access-keys__actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
+  display: contents;
+}
+
+.ai-access-keys__actions > * {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
 }
 
 .ai-access-keys__button {
@@ -309,4 +315,16 @@
 .ai-access-page .settings-key-form label.ai-access-keys__checkbox input {
   width: auto;
   margin: 0;
+}
+
+/* Phones: the label gets the full width, and the two action columns sit
+   underneath it, still the same size on every row. */
+@media (max-width: 480px) {
+  .ai-access-keys__item {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ai-access-keys__label {
+    grid-column: 1 / -1;
+  }
 }
