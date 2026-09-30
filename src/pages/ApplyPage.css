@@ -422,59 +422,45 @@
   gap: 1rem;
 }
 
-/* The "Next: …" control closing out each open step — same spot on every
-   step (bottom right, under a hairline), so moving on is always where the
-   eye ends up once the step's work is done. */
+/* The "Next: …" link closing out each open step — same spot on every step
+   (bottom right), styled as a quiet text link rather than a button so it
+   points the way without competing with the step's own actions. */
 .process-step__footer {
   display: flex;
   justify-content: flex-end;
-  padding-top: 1rem;
-  border-top: 1px solid var(--line);
 }
 
 .process-step__next {
   display: inline-flex;
   align-items: center;
-  max-width: 100%;
-  background: var(--accent);
-  color: #fff;
-  border: 1px solid var(--accent);
-  padding: 0.6rem 1.15rem;
-  border-radius: var(--radius-pill);
+  gap: 0.3rem;
+  background: none;
+  border: none;
+  padding: 0.25rem 0;
+  color: var(--accent);
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 0.88rem;
-  text-align: left;
+  font-size: 0.85rem;
+  text-align: right;
   text-decoration: none;
   cursor: pointer;
 }
 
 .process-step__next:hover {
-  background: var(--accent-deep);
-  border-color: var(--accent-deep);
-  color: #fff;
+  background: none;
+  color: var(--accent-deep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-/* Step not done yet: a quieter "Skip to", so the step's own main action
-   stays the one that stands out. */
+/* Step not done yet: "Skip to" in the muted text color, so it reads as an
+   option rather than the next thing to do. */
 .process-step__next--skip {
-  background: transparent;
   color: var(--ink-soft);
-  border-color: var(--line);
 }
 
 .process-step__next--skip:hover {
-  background: transparent;
   color: var(--ink);
-  border-color: var(--ink-soft);
-}
-
-@media (max-width: 520px) {
-  .process-step__next {
-    width: 100%;
-    justify-content: center;
-    text-align: center;
-  }
 }
 
 .dossier-action__lede {
