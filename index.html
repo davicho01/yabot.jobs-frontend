@@ -159,7 +159,7 @@
           "name": "Is Yabot Jobs really free?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. Searching the job board, reading postings, saving jobs, and tracking applications cost nothing. Your first 5 job evaluations are free too, with no API key needed. After that, the AI tools (fitness reports, tailored resumes, and cover letters) run on an API key you add yourself, so any charge comes from your AI provider for what you use. Yabot Jobs adds no fee on top."
+            "text": "Yes. Searching the job board, reading postings, saving jobs, and tracking applications cost nothing. You can also try every AI tool on your first 5 jobs for free, with no API key or credit card. After that, the AI tools (fitness reports, tailored resumes, cover letters, and interview prep) run on an API key you add yourself, so any charge comes from your AI provider for what you use, and Yabot Jobs adds no fee on top. If you'd rather not manage a key, there's an optional $5/month plan."
           }
         },
         {
@@ -648,6 +648,78 @@
         font-size: 0.9rem;
         color: var(--accent-deep);
         background: color-mix(in srgb, var(--accent) 12%, transparent);
+      }
+
+      /* ---------- try it free: the 5-job trial ---------- */
+
+      .try .eyebrow {
+        margin-bottom: 1rem;
+      }
+
+      .try__steps {
+        list-style: none;
+        margin: clamp(2rem, 5vw, 3rem) auto 0;
+        padding: 0;
+        max-width: 64rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+        gap: 1rem;
+      }
+
+      .try__step {
+        padding: 1.5rem 1.4rem 1.6rem;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+        background: var(--surface);
+        text-align: left;
+      }
+
+      .try__num {
+        display: inline-grid;
+        place-items: center;
+        width: 2rem;
+        height: 2rem;
+        margin-bottom: 1rem;
+        border-radius: 50%;
+        font-weight: 700;
+        color: #fff;
+        background: var(--accent-fill);
+      }
+
+      .try__step h3 {
+        font-size: 1.15rem;
+        margin: 0 0 0.45rem;
+      }
+
+      .try__step p {
+        margin: 0;
+        color: var(--ink-soft);
+        line-height: 1.55;
+      }
+
+      .try__after {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem 1.5rem;
+        max-width: 64rem;
+        margin: 1rem auto 0;
+        padding: 1.2rem 1.4rem;
+        border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+        border-radius: var(--radius-card);
+        background: color-mix(in srgb, var(--accent) 6%, var(--paper));
+      }
+
+      .try__after p {
+        flex: 1 1 26rem;
+        margin: 0;
+        color: var(--ink-soft);
+        line-height: 1.55;
+      }
+
+      .try__after strong {
+        color: var(--ink);
       }
 
       /* ---------- notice: when the board refreshes ---------- */
@@ -2394,10 +2466,13 @@
             and it gets fixed for the next person.
           </p>
           <div class="cta-row">
-            <a class="btn btn--accent btn--lg" href="/jobs/us">Browse the board</a>
-            <a class="btn btn--line btn--lg" href="/login">Join for free</a>
+            <a class="btn btn--accent btn--lg" href="/login">Start free: 5 jobs on us</a>
+            <a class="btn btn--line btn--lg" href="/jobs/us">Browse the board</a>
           </div>
-          <p class="fineprint">No password, no paywall. We email you a sign-in link.</p>
+          <p class="fineprint">
+            Try every AI tool on your first 5 jobs. No AI key, no credit card, no password: we email you a sign-in
+            link.
+          </p>
 
           <figure class="showcase">
             <div class="showcase__tile">
@@ -2470,6 +2545,46 @@
               find it. (Example.)
             </figcaption>
           </figure>
+        </div>
+      </section>
+
+      <section class="section try" id="try-free" aria-labelledby="try-title">
+        <div class="wrap">
+          <div class="section-head">
+            <p class="eyebrow">Free to try</p>
+            <h2 id="try-title">Try every AI tool on your first 5 jobs.</h2>
+            <p class="lede">
+              No AI key, no credit card. Sign up, pick five jobs you actually want, and let Yabot Jobs do the heavy
+              lifting on each one.
+            </p>
+          </div>
+
+          <ol class="try__steps">
+            <li class="try__step">
+              <span class="try__num" aria-hidden="true">1</span>
+              <h3>Upload your resume</h3>
+              <p>We turn it into clean, editable sections you can download as Word or PDF.</p>
+            </li>
+            <li class="try__step">
+              <span class="try__num" aria-hidden="true">2</span>
+              <h3>See how well you fit</h3>
+              <p>A fit score for each job, what you already match, and the gaps worth addressing.</p>
+            </li>
+            <li class="try__step">
+              <span class="try__num" aria-hidden="true">3</span>
+              <h3>Tailor, write, and prep</h3>
+              <p>A resume rewritten for the role, a matching cover letter, and interview prep, all included.</p>
+            </li>
+          </ol>
+
+          <div class="try__after">
+            <p>
+              <strong>After your 5 jobs,</strong> keep going with your own AI key from Anthropic, OpenAI, or
+              DeepSeek (you pay the provider directly, usually a few cents per job), or with the optional
+              $5/month plan if you'd rather not deal with a key at all.
+            </p>
+            <a class="btn btn--accent btn--lg" href="/login">Start free</a>
+          </div>
         </div>
       </section>
 
@@ -2705,7 +2820,7 @@
                 <div class="byok">
                   <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="7" cy="12" r="3.6" stroke="currentColor" stroke-width="2" /><path d="m9.6 9.4 6.4-6.4M13.4 5.6l2 2M11.6 7.4l1.6 1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
                   <div>
-                    <p class="byok__title">Bring your own AI key</p>
+                    <p class="byok__title">Free on your first 5 jobs, then bring your own AI key</p>
                     <ul class="providers" aria-label="Supported AI providers">
                       <li class="provider">
                         <svg class="provider__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z" /></svg>
@@ -2721,7 +2836,7 @@
                       </li>
                       <li class="provider provider--muted">+ any OpenAI-compatible service</li>
                     </ul>
-                    <p class="byok__note">Your first 5 job evaluations are on us. After that, Yabot Jobs adds no fee &mdash; you pay your provider directly.</p>
+                    <p class="byok__note">No key needed to try it. After 5 jobs, Yabot Jobs adds no fee &mdash; you pay your provider directly, or use the optional $5/month plan.</p>
                   </div>
                 </div>
               </div>
@@ -2816,9 +2931,10 @@
           <div class="section-head">
             <h2 id="free-title">Looking for work costs enough already.</h2>
             <p>
-              People who are between jobs shouldn't be the ones paying for a job board. There's no subscription and
-              no paywalled listings. The AI tools use a key you bring yourself, so the only bill you might ever see is
-              from your own AI provider, for what you actually use.
+              People who are between jobs shouldn't be the ones paying for a job board. There are no paywalled
+              listings, and you can try every AI tool on your first 5 jobs without a key or a card. After that the AI
+              tools run on a key you bring yourself, so the only bill you might see is from your own AI provider, for
+              what you actually use. If you'd rather not manage a key, there's an optional $5/month plan instead.
             </p>
             <p>
               Free to you isn't free to run, though. Servers and job scanning cost real money, and right now that
@@ -2864,7 +2980,7 @@
               </ul>
             </div>
             <div class="ledger__col">
-              <h3>Runs on your own AI key</h3>
+              <h3>Free on 5 jobs, then your own AI key</h3>
               <ul>
                 <li>
                   <svg class="key" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="7" cy="12" r="3.6" stroke="currentColor" stroke-width="2" /><path d="m9.6 9.4 6.4-6.4M13.4 5.6l2 2M11.6 7.4l1.6 1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
@@ -2880,8 +2996,9 @@
                 </li>
               </ul>
               <p class="note-small">
-                Use a key from Anthropic, OpenAI, DeepSeek, or any OpenAI-compatible service. Your provider bills you
-                directly. Yabot Jobs adds no fee.
+                Your first 5 jobs are on us. Then use a key from Anthropic, OpenAI, DeepSeek, or any OpenAI-compatible
+                service: your provider bills you directly and Yabot Jobs adds no fee. Or skip the key with the
+                optional $5/month plan.
               </p>
             </div>
           </div>
@@ -2907,9 +3024,10 @@
                   Yes. Searching the job board, reading postings, saving jobs, and tracking applications cost nothing.
                 </p>
                 <p>
-                  Your first 5 job evaluations are free too, with no API key needed. After that, the AI tools
-                  (fitness reports, tailored resumes, and cover letters) run on an API key you add yourself, so any
-                  charge comes from your AI provider for what you use. Yabot Jobs adds no fee on top.
+                  You can also try every AI tool on your first 5 jobs for free, with no API key or credit card. After
+                  that, the AI tools (fitness reports, tailored resumes, cover letters, and interview prep) run on an
+                  API key you add yourself, so any charge comes from your AI provider for what you use, and Yabot Jobs
+                  adds no fee on top. If you'd rather not manage a key, there's an optional $5/month plan.
                 </p>
               </div>
             </details>
@@ -3006,11 +3124,12 @@
           <div class="closing__tile">
             <h2 id="closing-title">Nobody should job hunt alone.</h2>
             <p class="lede">
-              Look around without an account. When you find something good, share it and help the next person.
+              Look around without an account, or sign up and try the AI tools on your next 5 applications for free.
+              When you find something good, share it and help the next person.
             </p>
             <div class="cta-row">
-              <a class="btn btn--accent btn--lg" href="/jobs/us">Browse the board</a>
-              <a class="btn btn--line btn--lg" href="/login">Join for free</a>
+              <a class="btn btn--accent btn--lg" href="/login">Start free: 5 jobs on us</a>
+              <a class="btn btn--line btn--lg" href="/jobs/us">Browse the board</a>
             </div>
           </div>
         </div>
