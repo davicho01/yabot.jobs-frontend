@@ -4,6 +4,9 @@ import type { AiAccess, Onboarding } from "./types";
 export const onboardingApi = {
   get: () => api.get<Onboarding>("/onboarding"),
   dismiss: () => api.post<Onboarding>("/onboarding/dismiss"),
+  // Opening AI access is what completes getting started's "Set up AI access"
+  // step for someone on the free trial.
+  aiAccessSeen: () => api.post<Onboarding>("/onboarding/ai-access-seen"),
   aiAccess: () => api.get<AiAccess>("/ai-access"),
 };
 

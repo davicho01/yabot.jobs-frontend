@@ -20,8 +20,8 @@ function aiAccessBody(access: AiAccess): string {
   const orSubscribe = access.subscription_available ? `, or subscribe for ${access.subscription_price_label},` : "";
   if (access.free_evaluations_remaining > 0) {
     return (
-      `You have ${freeEvaluationsPhrase(access.free_evaluations_remaining)} on us, so there's nothing to set up ` +
-      `yet. Add your own API key${orSubscribe} whenever you like for unlimited evaluations.`
+      `You have ${freeEvaluationsPhrase(access.free_evaluations_remaining)} on us to start with. See how they ` +
+      `work, and where to add your own API key${orSubscribe} for unlimited use.`
     );
   }
   if (access.free_trial_enabled) {
@@ -56,9 +56,11 @@ export function stepContent(
           label:
             onboarding.ai_access.has_own_key || onboarding.ai_access.subscribed
               ? "Manage AI access"
-              : onboarding.ai_access.subscription_available
-                ? "Add a key or subscribe"
-                : "Add an API key",
+              : onboarding.ai_access.free_evaluations_remaining > 0
+                ? "See your options"
+                : onboarding.ai_access.subscription_available
+                  ? "Add a key or subscribe"
+                  : "Add an API key",
         },
       };
     case "application":

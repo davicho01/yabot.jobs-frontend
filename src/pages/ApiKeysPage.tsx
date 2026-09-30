@@ -4,6 +4,7 @@ import { apiKeysApi } from "../api/apiKeys";
 import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY, onboardingApi } from "../api/onboarding";
 import { PlanSection } from "../components/PlanSection";
 import { ActiveSourceNotice } from "../components/ActiveSourceNotice";
+import { useMarkAiAccessSeen } from "../hooks/useOnboarding";
 import { ApiError } from "../api/client";
 import { LLM_PROVIDERS, getLlmProvider } from "../data/llmProviders";
 import type { ApiKey } from "../api/types";
@@ -32,6 +33,7 @@ const PAUSED_KEY_TOOLTIP = "Not used while your plan is active. Takes over again
 
 export function ApiKeysPage() {
   const queryClient = useQueryClient();
+  useMarkAiAccessSeen();
   const keysQuery = useQuery({ queryKey: ["api-keys"], queryFn: apiKeysApi.list });
   const aiAccessQuery = useQuery({ queryKey: AI_ACCESS_QUERY_KEY, queryFn: onboardingApi.aiAccess });
   const aiAccess = aiAccessQuery.data;

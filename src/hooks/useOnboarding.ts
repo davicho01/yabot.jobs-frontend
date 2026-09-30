@@ -36,3 +36,26 @@ export function useDismissOnboarding() {
     onSuccess: (data) => queryClient.setQueryData(ONBOARDING_QUERY_KEY, data),
   });
 }
+
+// Records that the user has opened the AI access page, once, while its
+// getting-started step is still open — seeing the options (free
+// evaluations, own key, plan) is what completes that step on the free trial.
+export function useMarkAiAccessSeen() {
+  const queryClient = useQueryClient();
+  const { data: onboarding } = useOnboarding();
+  const pending =
+    !!onboarding &&
+    !onboarding.completed_at &&
+    !onboarding.dismissed_at &&
+    onboarding.steps.some((step) => step.key === "ai_access" && !step.done);
+  const { mutate } = useMutation({
+    mutationFn: onboardingApi.aiAccessSeen,
+    onSuccess: (data) => queryClient.setQueryData(ONBOARDING_QUERY_KEY, data),
+  });
+  const sent = useRef(false);
+  useEffect(() => {
+    if (!pending || sent.current) return;
+    sent.current = true;
+    mutate();
+  }, [pending, mutate]);
+}
