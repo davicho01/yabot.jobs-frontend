@@ -747,6 +747,9 @@ export function Header() {
                 <Link to="/access-tokens" role="menuitem" onClick={() => setMenuOpen(false)}>
                   Access tokens
                 </Link>
+                <Link to="/help" role="menuitem" onClick={() => setMenuOpen(false)}>
+                  Help &amp; support
+                </Link>
                 <button
                   type="button"
                   role="menuitem"

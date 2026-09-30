@@ -1,0 +1,142 @@
+.help-page {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+.help-page h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.4rem;
+}
+
+.help-page__intro {
+  color: var(--ink-soft);
+  margin: 0 0 2rem;
+}
+
+.help-page__section {
+  margin-bottom: 2.25rem;
+}
+
+.help-page__section h2 {
+  font-size: 1.15rem;
+  margin: 0 0 0.9rem;
+}
+
+.help-faq {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.help-faq__item + .help-faq__item {
+  border-top: 1px solid var(--line);
+}
+
+.help-faq__item summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+}
+
+.help-faq__item summary::-webkit-details-marker {
+  display: none;
+}
+
+.help-faq__item summary::after {
+  content: "+";
+  flex-shrink: 0;
+  color: var(--ink-soft);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.help-faq__item[open] summary::after {
+  content: "−";
+}
+
+.help-faq__item summary:hover {
+  background: var(--surface);
+}
+
+.help-faq__answer {
+  padding: 0 1.25rem 1.1rem;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+.help-faq__answer a,
+.help-page__more a,
+.help-contact a {
+  color: var(--accent);
+}
+
+.help-page__more {
+  margin: 0.9rem 0 0;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.help-contact {
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+}
+
+.help-contact p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.help-contact__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.help-contact__primary,
+.help-contact__secondary {
+  padding: 0.55rem 1.15rem;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.help-contact__primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+}
+
+.help-contact__primary:hover {
+  background: var(--accent-deep);
+}
+
+.help-contact__secondary {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.help-contact__secondary:hover {
+  background: var(--paper);
+  border-color: var(--ink-soft);
+}
+
+@media (max-width: 640px) {
+  .help-page {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .help-contact {
+    padding: 1.1rem;
+  }
+}

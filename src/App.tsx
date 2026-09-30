@@ -26,6 +26,7 @@ import { FeedbackProvider } from "./components/FeedbackModal";
 import { GettingStartedBanner } from "./components/GettingStarted";
 import { GETTING_STARTED_PATH } from "./utils/onboarding";
 import { GettingStartedPage } from "./pages/GettingStartedPage";
+import { HelpPage } from "./pages/HelpPage";
 import { usePageViews } from "./hooks/usePageViews";
 
 // Rendered once for every route (via the layout Route below) rather than
@@ -54,6 +55,7 @@ export default function App() {
         <Route path={BOARD_PATH} element={<JobBoardPage />} />
         <Route path="/jobs/:urlId" element={<JobDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/help" element={<HelpPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route
           path="/oauth/authorize"
