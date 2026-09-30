@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
 import { ONBOARDING_QUERY_KEY, onboardingApi } from "../api/onboarding";
+import type { Onboarding, OnboardingStepKey } from "../api/types";
 
 // Shared by the banner and the page: the checklist, refetched on every
 // navigation while it's still open — a step usually gets done on some
@@ -35,4 +36,18 @@ export function useDismissOnboarding() {
     mutationFn: onboardingApi.dismiss,
     onSuccess: (data) => queryClient.setQueryData(ONBOARDING_QUERY_KEY, data),
   });
+}
+
+// Getting started doubles as a tour: finishing a step for the first time,
+// while the checklist is still open, carries the user on to the next step's
+// page. This answers "is completing `key` right now that first time?" —
+// read at click time (use it in a mutation's onMutate), before the action
+// itself ticks the step off.
+export function useIsTourStep() {
+  const queryClient = useQueryClient();
+  return (key: OnboardingStepKey): boolean => {
+    const onboarding = queryClient.getQueryData<Onboarding>(ONBOARDING_QUERY_KEY);
+    if (!onboarding || onboarding.completed_at || onboarding.dismissed_at) return false;
+    return onboarding.steps.some((step) => step.key === key && !step.done);
+  };
 }

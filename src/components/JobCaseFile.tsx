@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ONBOARDING_QUERY_KEY } from "../api/onboarding";
 import ReactMarkdown from "react-markdown";
@@ -8,6 +8,7 @@ import { jobsApi } from "../api/jobs";
 import type { Application, JobDetail, JobPosting, User } from "../api/types";
 import { highlightQuery } from "../utils/searchHighlight";
 import { FlagJobModal } from "./FlagJobModal";
+import { useIsTourStep } from "../hooks/useOnboarding";
 
 // A JobPosting row exists from the moment its URL is submitted (see
 // get_or_create_job_posting) so job_posting_id is available right away —
@@ -134,6 +135,8 @@ export function JobCaseFile({
   const posting = scannedPosting(job);
   const scanFailed = job.url.scan_status === "failed";
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const isTourStep = useIsTourStep();
   const [flagModalOpen, setFlagModalOpen] = useState(false);
 
   // Same list ApplyPage/ApplicationsPage query (same ["applications"]
@@ -150,12 +153,16 @@ export function JobCaseFile({
   // "Apply" just tracks the posting in Applications — it shouldn't
   // also navigate there. Once it exists, the label swaps to "View
   // application →", which does navigate (that's an explicit request to go
-  // look at it).
+  // look at it). The one exception is someone's first application while
+  // getting started is open: that carries on to the apply page, where the
+  // last step (the evaluation) happens — see useIsTourStep.
   const recordApplication = useMutation({
     mutationFn: (url: string) => applicationsApi.create(url),
-    onSuccess: () => {
+    onMutate: () => ({ continueTour: isTourStep("application") }),
+    onSuccess: (_application, _url, context) => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
       queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
+      if (context?.continueTour) navigate(`/jobs/${job.url.id}/apply`);
     },
   });
 
