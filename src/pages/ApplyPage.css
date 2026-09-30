@@ -423,13 +423,11 @@
 }
 
 /* The "Next: …" control closing out each open step — same spot on every
-   step (bottom right, under a hairline), so moving on is always where the
-   eye ends up once the step's work is done. */
+   step (bottom right), so moving on is always where the eye ends up once
+   the step's work is done. */
 .process-step__footer {
   display: flex;
   justify-content: flex-end;
-  padding-top: 1rem;
-  border-top: 1px solid var(--line);
 }
 
 .process-step__next {
