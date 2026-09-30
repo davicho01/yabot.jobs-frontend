@@ -663,8 +663,10 @@ function ApplyPageContent({
   ) : (
     "Not started"
   );
-  const step2Done = !!displayedTailored;
-  const step2Status = !step2Done ? (
+  // Tailoring counts as done once the new version has been scored, not
+  // just generated — until then "Score this version" is the next thing to do.
+  const step2Done = !!displayedTailored && !!displayedTailoredScore;
+  const step2Status = !displayedTailored ? (
     "Not started"
   ) : displayedTailoredScore ? (
     <>
@@ -676,7 +678,7 @@ function ApplyPageContent({
       </span>
     </>
   ) : (
-    "Tailored resume ready"
+    "Tailored resume ready · score it to finish"
   );
   const step3Done = !!displayedCoverLetter;
   const step3Status = step3Done ? "Drafted" : "Not started";
@@ -1075,10 +1077,7 @@ function ApplyPageContent({
             footer={
               <StepNextButton
                 nextTitle={STEP_TITLES[3]}
-                // Tailoring isn't really finished until the new version has
-                // been scored — until then "Score this version" is the thing
-                // to do, so this stays the quieter "Skip to".
-                currentDone={step2Done && !!displayedTailoredScore}
+                currentDone={step2Done}
                 onClick={() => goToStep(3)}
               />
             }
