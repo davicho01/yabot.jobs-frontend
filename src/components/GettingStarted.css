@@ -69,6 +69,24 @@
   color: var(--accent-deep);
 }
 
+/* Finished: the same strip, in the success color, pointing on to more jobs. */
+.getting-started-banner--done {
+  border-color: var(--teal);
+}
+
+.getting-started-banner__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  background: var(--teal);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
 .getting-started-banner__close {
   background: none;
   border: none;

@@ -3,31 +3,67 @@ import { useQuery } from "@tanstack/react-query";
 import { applicationsApi } from "../api/applications";
 import { useDismissOnboarding, useOnboarding } from "../hooks/useOnboarding";
 import { GETTING_STARTED_PATH, latestOf, stepContent } from "../utils/onboarding";
+import { BOARD_PATH } from "../routes";
 import "./GettingStarted.css";
 
-// Pages where a "finish setting up" nudge would be noise: the walkthrough
-// itself, sign-in, and admin.
-const HIDDEN_ON = [GETTING_STARTED_PATH, "/login", "/auth/", "/oauth/", "/admin"];
+// Sign-in pages: nobody's signed in there yet, so there's nothing to show.
+const HIDDEN_ON = ["/login", "/auth/", "/oauth/"];
 
-// Slim, dismissible strip under the header while the checklist is still
-// open — shows progress and the one next thing to do.
+// Slim strip under the header on every page for a new account until they
+// close it: progress and the one next thing to do while getting started is
+// open, then — rather than vanishing the moment the last step is done — a
+// success message pointing them on to more jobs, until they close that too.
 export function GettingStartedBanner() {
   const location = useLocation();
   const onboardingQuery = useOnboarding();
   const dismissMutation = useDismissOnboarding();
   const onboarding = onboardingQuery.data;
+  const allDone = !!onboarding && (!!onboarding.completed_at || onboarding.steps.every((step) => step.done));
   const applicationsQuery = useQuery({
     queryKey: ["applications"],
     queryFn: applicationsApi.list,
-    enabled: !!onboarding && !onboarding.completed_at && !onboarding.dismissed_at,
+    enabled: !!onboarding && !allDone && !onboarding.dismissed_at,
   });
 
-  if (!onboarding || onboarding.completed_at || onboarding.dismissed_at) return null;
+  if (!onboarding || onboarding.dismissed_at) return null;
   if (HIDDEN_ON.some((prefix) => location.pathname.startsWith(prefix))) return null;
 
+  const closeButton = (
+    <button
+      type="button"
+      className="getting-started-banner__close"
+      aria-label={allDone ? "Close" : "Hide getting started"}
+      title={allDone ? "Close" : "Hide. The guide stays in the account menu under Getting started."}
+      disabled={dismissMutation.isPending}
+      onClick={() => dismissMutation.mutate()}
+    >
+      ×
+    </button>
+  );
+
+  if (allDone) {
+    return (
+      <aside className="getting-started-banner getting-started-banner--done" aria-label="Getting started" role="status">
+        <div className="getting-started-banner__progress">
+          <span className="getting-started-banner__check" aria-hidden="true">
+            ✓
+          </span>
+          <span className="getting-started-banner__title">You're all set</span>
+          <span className="getting-started-banner__count">Getting started complete</span>
+        </div>
+        <div className="getting-started-banner__next">
+          <span className="getting-started-banner__next-label">Keep going: apply to more jobs</span>
+          <Link to={BOARD_PATH} className="getting-started-banner__cta">
+            Browse jobs →
+          </Link>
+          {closeButton}
+        </div>
+      </aside>
+    );
+  }
+
   const doneCount = onboarding.steps.filter((step) => step.done).length;
-  const nextStep = onboarding.steps.find((step) => !step.done);
-  if (!nextStep) return null;
+  const nextStep = onboarding.steps.find((step) => !step.done)!;
   const next = stepContent(nextStep.key, onboarding, latestOf(applicationsQuery.data));
 
   return (
@@ -44,20 +80,12 @@ export function GettingStartedBanner() {
         </span>
       </div>
       <div className="getting-started-banner__next">
-        <span className="getting-started-banner__next-label">Next: {next.title.toLowerCase()}</span>
+        {/* The step title as written — lowercasing it turned "AI" into "ai". */}
+        <span className="getting-started-banner__next-label">Next: {next.title}</span>
         <Link to={next.cta.to} className="getting-started-banner__cta">
           {next.cta.label} →
         </Link>
-        <button
-          type="button"
-          className="getting-started-banner__close"
-          aria-label="Hide getting started"
-          title="Hide. You can reopen it from the account menu."
-          disabled={dismissMutation.isPending}
-          onClick={() => dismissMutation.mutate()}
-        >
-          ×
-        </button>
+        {closeButton}
       </div>
     </aside>
   );
