@@ -11,6 +11,10 @@ import type { Metro } from "../api/types";
 import { BOARD_PATH } from "../routes";
 import "./Header.css";
 
+// The board's location when nothing else says otherwise — see the effect in
+// Header that applies it. Must match a GET /jobs/places label exactly.
+const DEFAULT_LOCATION = "United States";
+
 const PLACE_SUGGESTION_LIMIT = 10;
 
 // On a phone the header is tall and covers a lot of the screen, so once it has
@@ -250,45 +254,27 @@ export function Header() {
     [onBoard, setSearchParams, navigate],
   );
 
-  // Defaults the location box to "near you" on a fresh visit to the board —
-  // set via both the URL and setLocationInput, exactly as selectPlace does
-  // for a picked suggestion, so the box actually shows it rather than just
-  // quietly filtering behind an empty-looking field. Never overrides an
-  // explicit search or a shared link's own ?location=/?metro=. Silently does
-  // nothing without geolocation support, on denial/error, or when nothing's
-  // close enough to guess (see GET /jobs/places/nearest).
+  // Defaults the location box to the United States on a fresh visit to the
+  // board — set via both the URL and setLocationInput, exactly as
+  // selectPlace does for a picked suggestion, so the box actually shows it
+  // rather than quietly filtering behind an empty-looking field. Never
+  // overrides an explicit search or a shared link's own ?location=/?metro=.
+  // (This used to guess the nearest city from browser geolocation, which
+  // meant a permission prompt on first visit and a single metro area that
+  // often had few or no matches.)
   useEffect(() => {
     if (!onBoard || locationFilter || metroSlug) return;
-    if (typeof navigator === "undefined" || !navigator.geolocation) return;
-    let cancelled = false;
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        if (cancelled) return;
-        jobsApi
-          .nearestPlace(position.coords.latitude, position.coords.longitude)
-          .then((label) => {
-            if (cancelled || !label) return;
-            setLocationInput(label);
-            updateBoardParams((next) => {
-              // Someone may have typed their own search while this was in flight.
-              if (next.get("location") || next.get("metro")) return;
-              next.set("location", label);
-              next.delete("radius");
-              next.delete("page");
-            });
-          })
-          .catch(() => {}); // best-effort — no default is fine
-      },
-      () => {}, // denied or unavailable — no default, same as not knowing
-      { maximumAge: 30 * 60_000, timeout: 8000 },
-    );
-    return () => {
-      cancelled = true;
-    };
-    // Re-attempts whenever arriving at the board fresh (onBoard flips to
-    // true), not on every keystroke that changes locationFilter/metroSlug
-    // afterward (including from this effect's own update) — deliberately
-    // not in deps.
+    setLocationInput(DEFAULT_LOCATION);
+    updateBoardParams((next) => {
+      if (next.get("location") || next.get("metro")) return;
+      next.set("location", DEFAULT_LOCATION);
+      next.delete("radius");
+      next.delete("page");
+    });
+    // Re-applies whenever arriving at the board fresh (onBoard flips to
+    // true), not on every change to locationFilter/metroSlug afterward
+    // (including from this effect's own update, or the user clearing the
+    // box to search everywhere) — deliberately not in deps.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onBoard]);
 
