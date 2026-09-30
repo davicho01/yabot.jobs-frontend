@@ -1027,6 +1027,7 @@ function ApplyPageContent({
                       label="Get full evaluation"
                       onClick={() => evaluationMutation.mutate()}
                       isPending={evaluationMutation.isPending}
+                      variant="secondary"
                     />
                   )}
                   <EvaluateButton
@@ -1147,6 +1148,7 @@ function ApplyPageContent({
                         label="Get full evaluation"
                         onClick={() => tailoredEvaluationMutation.mutate()}
                         isPending={tailoredEvaluationMutation.isPending}
+                        variant="secondary"
                       />
                     )}
                     <EvaluateButton
