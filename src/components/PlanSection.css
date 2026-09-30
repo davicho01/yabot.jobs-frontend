@@ -1,0 +1,75 @@
+.plan-section--active {
+  border-color: var(--teal);
+}
+
+.plan-section__header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.plan-section__header h2 {
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.plan-section .settings-section__hint {
+  margin-bottom: 0.9rem;
+}
+
+.plan-section__usage {
+  margin: -0.4rem 0 0.9rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.plan-section__notice {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--amber);
+  border-radius: var(--radius-field);
+  font-size: 0.88rem;
+}
+
+.plan-section__notice--success {
+  border-color: var(--teal);
+}
+
+.plan-section__notice button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.plan-section__primary,
+.plan-section__secondary {
+  padding: 0.55rem 1.2rem;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.plan-section__primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+}
+
+.plan-section__primary:hover:not(:disabled) {
+  background: var(--accent-deep);
+}
+
+.plan-section__secondary {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.plan-section__secondary:hover:not(:disabled) {
+  border-color: var(--ink-soft);
+}

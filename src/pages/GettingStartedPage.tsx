@@ -61,7 +61,8 @@ export function GettingStartedPage() {
                   {step.done && <span className="visually-hidden"> (done)</span>}
                 </h2>
                 <p>{content.body}</p>
-                {(isNext || (step.key === "ai_access" && !onboarding.ai_access.has_own_key)) && (
+                {(isNext ||
+                  (step.key === "ai_access" && !onboarding.ai_access.has_own_key && !onboarding.ai_access.subscribed)) && (
                   <Link
                     to={content.cta.to}
                     className={`getting-started-step__cta${isNext ? "" : " getting-started-step__cta--secondary"}`}

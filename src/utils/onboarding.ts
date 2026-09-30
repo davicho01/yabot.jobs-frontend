@@ -16,18 +16,22 @@ export function freeEvaluationsPhrase(count: number): string {
 
 function aiAccessBody(access: AiAccess): string {
   if (access.has_own_key) return "You're set: evaluations run on your own API key.";
+  if (access.subscribed) return `You're set: you're on the ${access.subscription_price_label} plan.`;
+  const orSubscribe = access.subscription_available ? `, or subscribe for ${access.subscription_price_label},` : "";
   if (access.free_evaluations_remaining > 0) {
     return (
       `You have ${freeEvaluationsPhrase(access.free_evaluations_remaining)} on us, so there's nothing to set up ` +
-      "yet. Add your own API key whenever you like for unlimited evaluations."
+      `yet. Add your own API key${orSubscribe} whenever you like for unlimited evaluations.`
     );
   }
   if (access.free_trial_enabled) {
-    return "You've used your free evaluations. Add your own AI API key to keep evaluating jobs.";
+    return `You've used your free evaluations. Add your own AI API key${orSubscribe} to keep evaluating jobs.`;
   }
   return (
     "Yabot Jobs uses an AI model to score your resume against each job. Add an API key from Anthropic, " +
-    "OpenAI, Google, DeepSeek, or Mistral. It's only used for your own requests."
+    `OpenAI, Google, DeepSeek, or Mistral${
+      access.subscription_available ? `, or subscribe for ${access.subscription_price_label}` : ""
+    }.`
   );
 }
 
@@ -47,7 +51,15 @@ export function stepContent(
       return {
         title: "Set up AI access",
         body: aiAccessBody(onboarding.ai_access),
-        cta: { to: "/api-keys", label: onboarding.ai_access.has_own_key ? "Manage keys" : "Add an API key" },
+        cta: {
+          to: "/api-keys",
+          label:
+            onboarding.ai_access.has_own_key || onboarding.ai_access.subscribed
+              ? "Manage AI access"
+              : onboarding.ai_access.subscription_available
+                ? "Add a key or subscribe"
+                : "Add an API key",
+        },
       };
     case "application":
       return {

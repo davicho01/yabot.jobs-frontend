@@ -460,6 +460,17 @@ export interface AiAccess {
   free_evaluation_limit: number;
   free_evaluations_used: number;
   free_evaluations_remaining: number;
+  // The paid plan (Stripe). subscription_status is Stripe's own value
+  // ("active", "past_due", "canceled", …), null if never subscribed.
+  subscription_available: boolean;
+  subscription_price_label: string;
+  subscribed: boolean;
+  subscription_status: string | null;
+  subscription_current_period_end: string | null;
+  subscription_cancel_at_period_end: boolean;
+  subscription_requests_used: number;
+  // 0 means unlimited.
+  subscription_request_limit: number;
 }
 
 export type OnboardingStepKey = "resume" | "ai_access" | "application" | "evaluation";

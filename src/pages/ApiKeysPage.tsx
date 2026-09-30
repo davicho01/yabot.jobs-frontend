@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiKeysApi } from "../api/apiKeys";
 import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY, onboardingApi } from "../api/onboarding";
 import { freeEvaluationsPhrase } from "../utils/onboarding";
+import { PlanSection } from "../components/PlanSection";
 import { ApiError } from "../api/client";
 import { LLM_PROVIDERS, getLlmProvider } from "../data/llmProviders";
 import type { ApiKey } from "../api/types";
@@ -89,7 +90,7 @@ export function ApiKeysPage() {
         Bring your own LLM API key — used only for your resume review, scoring, and generation requests.
       </p>
 
-      {aiAccess && !aiAccess.has_own_key && aiAccess.free_trial_enabled && (
+      {aiAccess && !aiAccess.has_own_key && !aiAccess.subscribed && aiAccess.free_trial_enabled && (
         <section
           className={`settings-section ai-access-trial${
             aiAccess.free_evaluations_remaining === 0 ? " ai-access-trial--empty" : ""
@@ -104,11 +105,14 @@ export function ApiKeysPage() {
             {aiAccess.free_evaluations_remaining > 0
               ? `Everyone gets ${freeEvaluationsPhrase(aiAccess.free_evaluation_limit)} to try Yabot Jobs. After that, `
               : "You've used your free evaluations. "}
-            job scoring, resume tailoring, and cover letters run on your own API key. You only pay your provider
-            for what you use, usually a few cents per job.
+            job scoring, resume tailoring, and cover letters run on your own API key (you only pay your provider
+            for what you use, usually a few cents per job)
+            {aiAccess.subscription_available ? ` or on a ${aiAccess.subscription_price_label} plan.` : "."}
           </p>
         </section>
       )}
+
+      {aiAccess && <PlanSection access={aiAccess} />}
 
       <section className="settings-section">
         <form onSubmit={handleCreateKey} className="settings-key-form">

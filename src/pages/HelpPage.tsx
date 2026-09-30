@@ -43,7 +43,9 @@ export function HelpPage() {
                 without an API key. Each one scores your resume against one job and breaks the score down by category.
                 {aiAccess.has_own_key
                   ? " You've added your own key, so your evaluations are unlimited."
-                  : ` You have ${aiAccess.free_evaluations_remaining} left.`}
+                  : aiAccess.subscribed
+                    ? " You're on the paid plan, so your evaluations are unlimited."
+                    : ` You have ${aiAccess.free_evaluations_remaining} left.`}
               </>
             ),
           },
@@ -57,9 +59,26 @@ export function HelpPage() {
           Anthropic, OpenAI, Google, DeepSeek, or Mistral on the <Link to="/api-keys">AI API Keys</Link> page, and
           your provider bills you directly for what you use. That's usually a few cents per job. Yabot Jobs adds
           nothing on top.
+          {aiAccess?.subscription_available &&
+            ` If you'd rather not deal with a key, the ${aiAccess.subscription_price_label} plan covers it instead.`}
         </>
       ),
     },
+    ...(aiAccess?.subscription_available || aiAccess?.subscribed
+      ? [
+          {
+            question: `What do I get for ${aiAccess.subscription_price_label}?`,
+            answer: (
+              <>
+                Every AI feature (scoring, full evaluations, tailored resumes, cover letters, and interview prep)
+                runs on Yabot Jobs' AI, so you don't need an account with an AI provider. Subscribe or manage your
+                plan on <Link to="/api-keys">AI API Keys</Link>. Payments go through Stripe, and you can cancel
+                anytime; you keep the plan until the end of the period you paid for.
+              </>
+            ),
+          },
+        ]
+      : []),
     {
       question: "Is my API key safe?",
       answer:

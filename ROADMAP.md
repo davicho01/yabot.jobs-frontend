@@ -44,9 +44,21 @@ A step-by-step flow for new users:
 - [x] **Backend:** a usage counter per user, a check before each evaluation, and a clear "out of free credits" response.
 - [x] **Frontend:** a "3 of 5 free evaluations left" meter and a paywall/key prompt when they run out.
   The meter is next to the Score button and on AI API Keys. The key form now links to each provider's key console.
-- [ ] **Subscription:** (not started, decision needed) Stripe checkout, a webhook for status updates, and a page to manage billing. This can come later than the trial and key prompt.
+- [x] **Subscription:** Stripe checkout, a webhook for status updates, and a page to manage billing. This can come later than the trial and key prompt.
+  Subscribers run every AI feature on the system key. The plan card on AI API Keys opens Stripe Checkout, and
+  after subscribing it shows the renewal date and a "Manage billing" link to the Stripe customer portal. The
+  plan stays off until `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID` and `STRIPE_WEBHOOK_SECRET` are set on the backend
+  (setup steps are in the backend README). `SUBSCRIPTION_MONTHLY_REQUEST_LIMIT` can add a cap later; it's off by
+  default, per the pricing decision below.
 
-**Open question:** what does one evaluation cost on the in-house LLM? That decides whether $5/month covers heavy users, or whether you need a monthly cap.
+**Pricing decision (2026-09-30):** $5/month, no monthly cap. The in-house LLM is DeepSeek (`deepseek-v4-pro` for
+quality, or `deepseek-flash` if it turns out good enough), not Claude. At DeepSeek's per-token pricing, one
+evaluation (~3K input / ~1K output tokens) costs roughly $0.004-$0.008 on `deepseek-v4-pro` (off-peak to peak) or
+$0.001-$0.002 on `deepseek-flash` — 5-20x cheaper than the Claude estimate this was originally scoped against. Even
+a heavy user running 300 evals/month costs $1-3 in tokens, well inside $5/month, so a hard cap isn't needed for cost
+reasons; only add one later if abuse/scraping shows up. DeepSeek's peak-hours window (01:00-04:00 and 06:00-10:00
+UTC weekdays) roughly doubles the per-token price, worth rechecking against actual usage patterns once there's
+traffic. Source: [DeepSeek API pricing](https://api-docs.deepseek.com/quick_start/pricing/).
 
 **Repos:** frontend, backend
 
