@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { flushSync } from "react-dom";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "../auth/AuthContext";
@@ -277,6 +278,7 @@ function ProcessStep({
   done,
   isOpen,
   onToggle,
+  footer,
   children,
 }: {
   index: number;
@@ -285,6 +287,8 @@ function ProcessStep({
   done: boolean;
   isOpen: boolean;
   onToggle: () => void;
+  // Rendered at the bottom of the open step — see StepNextButton.
+  footer?: ReactNode;
   children: ReactNode;
 }) {
   const bodyId = `process-step-body-${index}`;
@@ -297,6 +301,7 @@ function ProcessStep({
       <div className="process-step__content">
         <button
           type="button"
+          id={processStepHeaderId(index)}
           className="process-step__header"
           onClick={onToggle}
           aria-expanded={isOpen}
@@ -313,10 +318,47 @@ function ProcessStep({
         {isOpen && (
           <div className="process-step__body" id={bodyId}>
             {children}
+            {footer && <div className="process-step__footer">{footer}</div>}
           </div>
         )}
       </div>
     </li>
+  );
+}
+
+const STEP_TITLES: Record<number, string> = {
+  1: "Review your skills",
+  2: "Address gaps & tailor your resume",
+  3: "Write a cover letter",
+  4: "Apply for the job",
+  5: "Prep for the interview",
+};
+
+function processStepHeaderId(index: number): string {
+  return `process-step-header-${index}`;
+}
+
+// The "move on" control at the bottom of each open step. Named after where
+// it goes, so the flow is obvious; filled once this step is done (the next
+// step is now the thing to do), outlined as a "Skip to" while it isn't, so
+// the step's own main action stays the one that stands out.
+function StepNextButton({
+  nextTitle,
+  currentDone,
+  onClick,
+}: {
+  nextTitle: string;
+  currentDone: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={`process-step__next${currentDone ? "" : " process-step__next--skip"}`}
+      onClick={onClick}
+    >
+      {currentDone ? "Next" : "Skip to"}: {nextTitle} →
+    </button>
   );
 }
 
@@ -382,6 +424,18 @@ function ApplyPageContent({
   const toggleStep = (step: number) => {
     hasAutoSelectedStep.current = true;
     setActiveStep((prev) => (prev === step ? null : step));
+  };
+  // Opens the next step and brings it into view (just below the fixed
+  // header — see .process-step__header's scroll-margin-top), moving focus
+  // there too so keyboard and screen-reader users land in the same place.
+  const goToStep = (step: number) => {
+    hasAutoSelectedStep.current = true;
+    // Rendered synchronously so the step's new position (the one above it
+    // just collapsed) is what gets scrolled to.
+    flushSync(() => setActiveStep(step));
+    const header = document.getElementById(processStepHeaderId(step));
+    header?.scrollIntoView({ behavior: "smooth", block: "start" });
+    header?.focus({ preventScroll: true });
   };
   // Collapsed by default — the full posting text can be long, and keeping
   // it tucked away by default matches the "keep it concise" brief.
@@ -960,11 +1014,18 @@ function ApplyPageContent({
         <ol className="process-steps">
           <ProcessStep
             index={1}
-            title="Review your skills"
+            title={STEP_TITLES[1]}
             status={step1Status}
             done={step1Done}
             isOpen={activeStep === 1}
             onToggle={() => toggleStep(1)}
+            footer={
+              <StepNextButton
+                nextTitle={STEP_TITLES[2]}
+                currentDone={step1Done}
+                onClick={() => goToStep(2)}
+              />
+            }
           >
             {displayedScore ? (
               <section className="dossier-action">
@@ -1013,11 +1074,18 @@ function ApplyPageContent({
 
           <ProcessStep
             index={2}
-            title="Address gaps & tailor your resume"
+            title={STEP_TITLES[2]}
             status={step2Status}
             done={step2Done}
             isOpen={activeStep === 2}
             onToggle={() => toggleStep(2)}
+            footer={
+              <StepNextButton
+                nextTitle={STEP_TITLES[3]}
+                currentDone={step2Done}
+                onClick={() => goToStep(3)}
+              />
+            }
           >
             {displayedScore &&
               displayedScore.missing_keywords.length > 0 &&
@@ -1126,11 +1194,18 @@ function ApplyPageContent({
 
           <ProcessStep
             index={3}
-            title="Write a cover letter"
+            title={STEP_TITLES[3]}
             status={step3Status}
             done={step3Done}
             isOpen={activeStep === 3}
             onToggle={() => toggleStep(3)}
+            footer={
+              <StepNextButton
+                nextTitle={STEP_TITLES[4]}
+                currentDone={step3Done}
+                onClick={() => goToStep(4)}
+              />
+            }
           >
             <section className="dossier-action">
               <p className="dossier-action__lede">Draft a cover letter that speaks directly to this posting.</p>
@@ -1175,11 +1250,18 @@ function ApplyPageContent({
 
           <ProcessStep
             index={4}
-            title="Apply for the job"
+            title={STEP_TITLES[4]}
             status={step4Status}
             done={step4Done}
             isOpen={activeStep === 4}
             onToggle={() => toggleStep(4)}
+            footer={
+              <StepNextButton
+                nextTitle={STEP_TITLES[5]}
+                currentDone={step4Done}
+                onClick={() => goToStep(5)}
+              />
+            }
           >
             <section className="dossier-action">
               <p className="dossier-action__lede">
@@ -1220,11 +1302,24 @@ function ApplyPageContent({
 
           <ProcessStep
             index={5}
-            title="Prep for the interview"
+            title={STEP_TITLES[5]}
             status={step5Status}
             done={step5Done}
             isOpen={activeStep === 5}
             onToggle={() => toggleStep(5)}
+            footer={
+              // The last step: send them on to the next job in their list,
+              // or back to the list once there's nowhere else to go.
+              nextApplicationUrlId ? (
+                <Link to={`/jobs/${nextApplicationUrlId}/apply`} className="process-step__next">
+                  Next application →
+                </Link>
+              ) : (
+                <Link to="/applications" className="process-step__next">
+                  Back to applications →
+                </Link>
+              )
+            }
           >
             <section className="dossier-action">
               <p className="dossier-action__lede">
