@@ -16,11 +16,13 @@ import { SavedSearchesPage } from "./pages/SavedSearchesPage";
 import { AdminDashboardPage } from "./pages/AdminDashboardPage";
 import { AdminCrawlSourceStatsPage } from "./pages/AdminCrawlSourceStatsPage";
 import { AdminJobsPage } from "./pages/AdminJobsPage";
+import { AdminFeedbackPage } from "./pages/AdminFeedbackPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { PageShell } from "./components/PageShell";
+import { FeedbackProvider } from "./components/FeedbackModal";
 import { usePageViews } from "./hooks/usePageViews";
 
 // Rendered once for every route (via the layout Route below) rather than
@@ -30,9 +32,11 @@ import { usePageViews } from "./hooks/usePageViews";
 function RootLayout() {
   return (
     <PageShell>
-      <Header />
-      <Outlet />
-      <Footer />
+      <FeedbackProvider>
+        <Header />
+        <Outlet />
+        <Footer />
+      </FeedbackProvider>
     </PageShell>
   );
 }
@@ -140,6 +144,14 @@ export default function App() {
           element={
             <AdminRoute>
               <AdminJobsPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/feedback"
+          element={
+            <AdminRoute>
+              <AdminFeedbackPage />
             </AdminRoute>
           }
         />

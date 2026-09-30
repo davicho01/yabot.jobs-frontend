@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, type FormEvent, type Keyboard
 import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
+import { useFeedback } from "./FeedbackModal";
 import { jobsApi } from "../api/jobs";
 import { describeSavedSearch, paramsToSavedSearchPayload, savedSearchesApi } from "../api/savedSearches";
 import { ApiError } from "../api/client";
@@ -128,6 +129,7 @@ function FilterDropdown({
 
 export function Header() {
   const { user, logout } = useAuth();
+  const { openFeedback } = useFeedback();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
@@ -741,6 +743,16 @@ export function Header() {
                 <Link to="/access-tokens" role="menuitem" onClick={() => setMenuOpen(false)}>
                   Access tokens
                 </Link>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    openFeedback();
+                  }}
+                >
+                  Send feedback
+                </button>
                 {user.role === "admin" && (
                   <Link to="/admin" role="menuitem" onClick={() => setMenuOpen(false)}>
                     Admin dashboard

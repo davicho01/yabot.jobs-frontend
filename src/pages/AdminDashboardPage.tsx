@@ -62,6 +62,12 @@ function statusStampClass(status: string): string {
 export function AdminDashboardPage() {
   const dashboardQuery = useQuery({ queryKey: ["admin", "dashboard"], queryFn: adminApi.dashboard });
   const sourcesQuery = useQuery({ queryKey: ["admin", "crawl-sources"], queryFn: adminApi.crawlSources });
+  // Just the unfiltered new_count — the queue itself lives on /admin/feedback.
+  const feedbackQuery = useQuery({
+    queryKey: ["admin", "feedback", "new-count"],
+    queryFn: () => adminApi.feedback({ status: "new", pageSize: 1 }),
+  });
+  const newFeedback = feedbackQuery.data?.new_count ?? 0;
   const dashboard = dashboardQuery.data;
 
   const [sortKey, setSortKey] = useState<SortKey>("name");
@@ -202,6 +208,20 @@ export function AdminDashboardPage() {
               <span className="admin-totals__value">{dashboard.totals.users.toLocaleString()}</span>
               <span className="admin-totals__label">Users</span>
             </div>
+            <Link
+              to="/admin/feedback"
+              className={`admin-totals__tile admin-totals__tile--button${
+                newFeedback === 0 ? " admin-totals__tile--empty" : ""
+              }`}
+            >
+              <span
+                className="admin-totals__value"
+                style={newFeedback > 0 ? { color: "var(--amber)" } : undefined}
+              >
+                {newFeedback.toLocaleString()}
+              </span>
+              <span className="admin-totals__label">New feedback →</span>
+            </Link>
           </section>
 
           <section className="admin-section">

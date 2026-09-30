@@ -428,3 +428,28 @@ export interface SavedSearch {
   created_at: string;
   last_alerted_at: string | null;
 }
+
+export type FeedbackKind = "bug" | "question" | "idea" | "other";
+export type FeedbackStatus = "new" | "read" | "resolved";
+
+export interface Feedback {
+  id: string;
+  kind: FeedbackKind;
+  message: string;
+  rating: number | null;
+  page_url: string | null;
+  status: FeedbackStatus;
+  created_at: string;
+}
+
+export interface AdminFeedback extends Feedback {
+  user_id: string;
+  user_email: string;
+  user_agent: string | null;
+}
+
+export interface AdminFeedbackList {
+  items: AdminFeedback[];
+  total: number;
+  new_count: number;
+}
