@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
@@ -18,7 +18,12 @@ export function useOnboarding() {
   });
   const isOpen = !!query.data && !query.data.completed_at && !query.data.dismissed_at;
   const { refetch } = query;
+  // Only on an actual path change — not when isOpen first flips true as the
+  // initial load lands, which would just fetch the same thing twice.
+  const lastPathname = useRef(location.pathname);
   useEffect(() => {
+    if (lastPathname.current === location.pathname) return;
+    lastPathname.current = location.pathname;
     if (isOpen) refetch();
   }, [location.pathname, isOpen, refetch]);
   return query;
