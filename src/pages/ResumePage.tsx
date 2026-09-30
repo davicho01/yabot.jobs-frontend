@@ -1,13 +1,12 @@
 import { useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ONBOARDING_QUERY_KEY } from "../api/onboarding";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { resumesApi, type ResumeDetail } from "../api/resumes";
 import { ApiError } from "../api/client";
 import type { DocumentFormat, Resume } from "../api/types";
 import { DownloadDropdown } from "../components/DownloadDropdown";
 import { useConfirm } from "../components/ConfirmDialog";
-import { useIsTourStep } from "../hooks/useOnboarding";
 import "./ResumePage.css";
 
 // created_at here is a real timestamp, formatted in the viewer's own local
@@ -188,8 +187,6 @@ function StructureControl({
 
 export function ResumePage() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const isTourStep = useIsTourStep();
   const { confirm, dialog } = useConfirm();
   const fileInput = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -226,17 +223,10 @@ export function ResumePage() {
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) => resumesApi.upload(file),
-    // First resume while getting started is open: carry on to step 2 (AI
-    // access) instead of staying here — see useIsTourStep.
-    onMutate: () => ({ continueTour: isTourStep("resume") }),
-    onSuccess: (resume, _file, context) => {
+    onSuccess: (resume) => {
       queryClient.invalidateQueries({ queryKey: ["resumes"] });
       queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
       if (fileInput.current) fileInput.current.value = "";
-      if (context?.continueTour) {
-        navigate("/api-keys");
-        return;
-      }
       showPreview(resume);
     },
   });
