@@ -62,7 +62,7 @@ export function ResumeOptimizationPage() {
     <main className="resume-optimization-page">
       <h1>Resume optimization</h1>
       <p className="resume-optimization-page__intro">
-        Skills that keep showing up as missing across the jobs you've scored — with any of your resumes — some of
+        Skills that keep showing up as missing across the jobs you've scored, with any of your resumes. Some of
         these might already be on it in different words, or genuine gaps worth addressing.
       </p>
       {resumes.length > 1 && (
@@ -74,12 +74,12 @@ export function ResumeOptimizationPage() {
       {isLoading && <p className="resume-optimization-page__empty">Loading…</p>}
       {!isLoading && selectedResumeId && entries.length === 0 && (
         <p className="resume-optimization-page__empty">
-          Nothing recurring yet — score a few more jobs and patterns will show up here.
+          Nothing recurring yet. Score a few more jobs and patterns will show up here.
         </p>
       )}
       {!resumesQuery.isLoading && !selectedResumeId && (
         <p className="resume-optimization-page__empty">
-          Upload a resume first — see <Link to="/resume">My resume</Link>.
+          Upload a resume first, see <Link to="/resume">My resume</Link>.
         </p>
       )}
 
@@ -87,7 +87,7 @@ export function ResumeOptimizationPage() {
         <>
           {applyMutation.isSuccess && applyMutation.data ? (
             <p className="resume-optimization-page__success">
-              Done — this became version {applyMutation.data.version_number} of your resume and is now set as your
+              Done. This became version {applyMutation.data.version_number} of your resume and is now set as your
               default resume automatically. Head to <Link to="/resume">My resume</Link> to see it, or check its
               version history there.
             </p>

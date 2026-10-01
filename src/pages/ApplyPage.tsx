@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { flushSync } from "react-dom";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "../auth/AuthContext";
@@ -24,6 +25,8 @@ import { NotesEditor } from "../components/NotesEditor";
 import { TailoredDownloadMenu } from "../components/TailoredDownloadMenu";
 import { CoverLetterDownloadMenu } from "../components/CoverLetterDownloadMenu";
 import { PrerequisiteNotice } from "../components/PrerequisiteNotice";
+import { FreeEvaluationNote } from "../components/FreeEvaluationNote";
+import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY } from "../api/onboarding";
 import { fitLabel, fitTier } from "../utils/fitScore";
 import { prerequisiteMessage, genericErrorMessage } from "../utils/apiErrors";
 import { scannedPosting, formatSalary, formatPostedAt } from "../utils/jobPosting";
@@ -62,8 +65,6 @@ function FitnessReportBody({
   score,
   title,
   description,
-  onRequestEvaluation,
-  isEvaluationPending,
 }: {
   score: {
     overall_score: number;
@@ -75,11 +76,6 @@ function FitnessReportBody({
   };
   title: string;
   description: string;
-  // Comprehensive category breakdown is opt-in — omitted category_scores
-  // means "not evaluated yet" (see app.models.resume.ResumeScore's
-  // docstring), and this CTA is how the candidate requests it.
-  onRequestEvaluation: () => void;
-  isEvaluationPending: boolean;
 }) {
   // Collapsed by default (same "keep it concise" pattern as the Job
   // description toggle above the resume picker) — keyed by category so
@@ -190,7 +186,8 @@ function FitnessReportBody({
         // hasn't been through the slower, opt-in comprehensive evaluation
         // yet (empty category_scores is exactly that signal — see
         // app.models.resume.ResumeScore's docstring) — plain matched/missing
-        // keyword lists plus a CTA to request the full breakdown.
+        // keyword lists. The "Get full evaluation" button that requests the
+        // breakdown lives in the caller's action row, next to Re-score.
         <>
           <div className="job-dashboard__columns">
             <section className="job-dashboard__section">
@@ -217,13 +214,6 @@ function FitnessReportBody({
                 </ul>
               )}
             </section>
-          </div>
-          <div className="job-dashboard__actions job-dashboard__actions--spaced">
-            <EvaluateButton
-              label="Get full evaluation"
-              onClick={onRequestEvaluation}
-              isPending={isEvaluationPending}
-            />
           </div>
         </>
       )}
@@ -275,6 +265,7 @@ function ProcessStep({
   done,
   isOpen,
   onToggle,
+  footer,
   children,
 }: {
   index: number;
@@ -283,6 +274,8 @@ function ProcessStep({
   done: boolean;
   isOpen: boolean;
   onToggle: () => void;
+  // Rendered at the bottom of the open step — see StepNextButton.
+  footer?: ReactNode;
   children: ReactNode;
 }) {
   const bodyId = `process-step-body-${index}`;
@@ -295,6 +288,7 @@ function ProcessStep({
       <div className="process-step__content">
         <button
           type="button"
+          id={processStepHeaderId(index)}
           className="process-step__header"
           onClick={onToggle}
           aria-expanded={isOpen}
@@ -311,10 +305,47 @@ function ProcessStep({
         {isOpen && (
           <div className="process-step__body" id={bodyId}>
             {children}
+            {footer && <div className="process-step__footer">{footer}</div>}
           </div>
         )}
       </div>
     </li>
+  );
+}
+
+const STEP_TITLES: Record<number, string> = {
+  1: "Review your skills",
+  2: "Address gaps & tailor your resume",
+  3: "Write a cover letter",
+  4: "Apply for the job",
+  5: "Prep for the interview",
+};
+
+function processStepHeaderId(index: number): string {
+  return `process-step-header-${index}`;
+}
+
+// The "move on" control at the bottom of each open step. Named after where
+// it goes, so the flow is obvious; filled once this step is done (the next
+// step is now the thing to do), outlined as a "Skip to" while it isn't, so
+// the step's own main action stays the one that stands out.
+function StepNextButton({
+  nextTitle,
+  currentDone,
+  onClick,
+}: {
+  nextTitle: string;
+  currentDone: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={`process-step__next${currentDone ? "" : " process-step__next--skip"}`}
+      onClick={onClick}
+    >
+      {currentDone ? "Next" : "Skip to"}: {nextTitle} →
+    </button>
   );
 }
 
@@ -381,6 +412,18 @@ function ApplyPageContent({
     hasAutoSelectedStep.current = true;
     setActiveStep((prev) => (prev === step ? null : step));
   };
+  // Opens the next step and brings it into view (just below the fixed
+  // header — see .process-step__header's scroll-margin-top), moving focus
+  // there too so keyboard and screen-reader users land in the same place.
+  const goToStep = (step: number) => {
+    hasAutoSelectedStep.current = true;
+    // Rendered synchronously so the step's new position (the one above it
+    // just collapsed) is what gets scrolled to.
+    flushSync(() => setActiveStep(step));
+    const header = document.getElementById(processStepHeaderId(step));
+    header?.scrollIntoView({ behavior: "smooth", block: "start" });
+    header?.focus({ preventScroll: true });
+  };
   // Collapsed by default — the full posting text can be long, and keeping
   // it tucked away by default matches the "keep it concise" brief.
   const [descriptionOpen, setDescriptionOpen] = useState(false);
@@ -438,7 +481,10 @@ function ApplyPageContent({
 
   const recordApplication = useMutation({
     mutationFn: (url: string) => applicationsApi.create(url),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
+    },
   });
 
   // Auto-save on visit: a job seen through this dashboard is tracked in
@@ -488,13 +534,26 @@ function ApplyPageContent({
   // evaluation just fills in the row's category_scores in place), so
   // whichever ran most recently is always the right thing to show.
   const [freshScore, setFreshScore] = useState<ResumeScore | null>(null);
+  // Any AI step here can unlock this job with a free evaluation (and a score
+  // ticks off the last getting-started step), so both refresh after one.
+  const refreshAiAccess = () => {
+    queryClient.invalidateQueries({ queryKey: AI_ACCESS_QUERY_KEY });
+    queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
+  };
   const scoreMutation = useMutation<ResumeScore, ApiError>({
     mutationFn: () => resumesApi.generateScore(jobPostingId!, resumeIdParam),
-    onSuccess: setFreshScore,
+    onSuccess: (score) => {
+      setFreshScore(score);
+      refreshAiAccess();
+    },
+    onError: refreshAiAccess,
   });
   const evaluationMutation = useMutation<ResumeScore, ApiError>({
     mutationFn: () => resumesApi.generateEvaluation(jobPostingId!, resumeIdParam),
-    onSuccess: setFreshScore,
+    onSuccess: (score) => {
+      setFreshScore(score);
+      refreshAiAccess();
+    },
   });
   const displayedScore = freshScore?.resume_id === selectedResumeId ? freshScore : scoreQuery.data;
   // scoreQuery 404s on the very first load of a job never scored yet —
@@ -513,7 +572,10 @@ function ApplyPageContent({
   });
   const tailorMutation = useMutation<TailoredResume, ApiError>({
     mutationFn: () => resumesApi.generateTailored(jobPostingId!, resumeIdParam),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tailored", jobPostingId, resumeIdParam] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tailored", jobPostingId, resumeIdParam] });
+      refreshAiAccess();
+    },
   });
   const displayedTailored =
     tailorMutation.data?.resume_id === selectedResumeId ? tailorMutation.data : tailoredQuery.data;
@@ -545,7 +607,10 @@ function ApplyPageContent({
   });
   const coverLetterMutation = useMutation<CoverLetter, ApiError>({
     mutationFn: () => resumesApi.generateCoverLetter(jobPostingId!, resumeIdParam),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cover-letter", jobPostingId, resumeIdParam] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cover-letter", jobPostingId, resumeIdParam] });
+      refreshAiAccess();
+    },
   });
   const displayedCoverLetter =
     coverLetterMutation.data?.resume_id === selectedResumeId ? coverLetterMutation.data : coverLetterQuery.data;
@@ -562,7 +627,10 @@ function ApplyPageContent({
   });
   const interviewPrepMutation = useMutation<InterviewPrep, ApiError>({
     mutationFn: () => resumesApi.generateInterviewPrep(jobPostingId!, resumeIdParam),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["interview-prep", jobPostingId, resumeIdParam] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["interview-prep", jobPostingId, resumeIdParam] });
+      refreshAiAccess();
+    },
   });
   const displayedInterviewPrep =
     interviewPrepMutation.data?.resume_id === selectedResumeId ? interviewPrepMutation.data : interviewPrepQuery.data;
@@ -595,8 +663,10 @@ function ApplyPageContent({
   ) : (
     "Not started"
   );
-  const step2Done = !!displayedTailored;
-  const step2Status = !step2Done ? (
+  // Tailoring counts as done once the new version has been scored, not
+  // just generated — until then "Score this version" is the next thing to do.
+  const step2Done = !!displayedTailored && !!displayedTailoredScore;
+  const step2Status = !displayedTailored ? (
     "Not started"
   ) : displayedTailoredScore ? (
     <>
@@ -608,7 +678,7 @@ function ApplyPageContent({
       </span>
     </>
   ) : (
-    "Tailored resume ready"
+    "Tailored resume ready · score it to finish"
   );
   const step3Done = !!displayedCoverLetter;
   const step3Status = step3Done ? "Drafted" : "Not started";
@@ -621,7 +691,7 @@ function ApplyPageContent({
         }`
       : "Not applied yet";
   const step5Done = !!displayedInterviewPrep;
-  const step5Status = step5Done ? "Prepared" : "Optional — do this once an interview is scheduled";
+  const step5Status = step5Done ? "Prepared" : "Optional, do this once an interview is scheduled";
 
   // Jump to the candidate's actual next step once the data that decides
   // that has settled — but only the first time, and only if they haven't
@@ -714,7 +784,7 @@ function ApplyPageContent({
       <main className="job-dashboard">
         {dialog}
         <span className="stamp stamp--neutral">Still scanning</span>
-        <p>This posting hasn't finished being scanned yet — check back shortly.</p>
+        <p>This posting hasn't finished being scanned yet. Check back shortly.</p>
         <button type="button" className="rescan-button" disabled={isFetching} onClick={() => void refetch()}>
           {isFetching ? "Refreshing…" : "Refresh job content ↻"}
         </button>
@@ -854,7 +924,7 @@ function ApplyPageContent({
               <span
                 className={`job-dashboard__alignment-pct${bestScoreValue !== null ? ` job-dashboard__alignment-pct--${fitTier(bestScoreValue)}` : ""}`}
               >
-                {bestScoreValue !== null ? `${bestScoreValue}` : "—"}
+                {bestScoreValue !== null ? `${bestScoreValue}` : "-"}
               </span>
               {bestScoreValue !== null && (
                 <span className={`stamp ${fitLabel(bestScoreValue).stampClass}`}>{fitLabel(bestScoreValue).text}</span>
@@ -928,14 +998,23 @@ function ApplyPageContent({
           />
         </section>
 
+        <FreeEvaluationNote jobPostingId={jobPostingId} />
+
         <ol className="process-steps">
           <ProcessStep
             index={1}
-            title="Review your skills"
+            title={STEP_TITLES[1]}
             status={step1Status}
             done={step1Done}
             isOpen={activeStep === 1}
             onToggle={() => toggleStep(1)}
+            footer={
+              <StepNextButton
+                nextTitle={STEP_TITLES[2]}
+                currentDone={step1Done}
+                onClick={() => goToStep(2)}
+              />
+            }
           >
             {displayedScore ? (
               <section className="dossier-action">
@@ -943,10 +1022,16 @@ function ApplyPageContent({
                   score={displayedScore}
                   title="Fitness report"
                   description="See how your resume stacks up against this posting's requirements."
-                  onRequestEvaluation={() => evaluationMutation.mutate()}
-                  isEvaluationPending={evaluationMutation.isPending}
                 />
-                <div className="job-dashboard__actions job-dashboard__actions--spaced">
+                <div className="job-dashboard__actions job-dashboard__actions--spaced apply__action-group">
+                  {displayedScore.category_scores.length === 0 && (
+                    <EvaluateButton
+                      label="Get full evaluation"
+                      onClick={() => evaluationMutation.mutate()}
+                      isPending={evaluationMutation.isPending}
+                      variant="secondary"
+                    />
+                  )}
                   <EvaluateButton
                     label="Re-score"
                     pendingLabel="Scoring…"
@@ -976,7 +1061,7 @@ function ApplyPageContent({
                 />
               </div>
             )}
-            {prerequisiteMessage(scoreError) && <p className="job-dashboard__error">{prerequisiteMessage(scoreError)}</p>}
+            {prerequisiteMessage(scoreError) && <PrerequisiteNotice message={prerequisiteMessage(scoreError)!} />}
             {genericErrorMessage(scoreError) && !prerequisiteMessage(scoreError) && (
               <p className="job-dashboard__error">{genericErrorMessage(scoreError)}</p>
             )}
@@ -984,11 +1069,18 @@ function ApplyPageContent({
 
           <ProcessStep
             index={2}
-            title="Address gaps & tailor your resume"
+            title={STEP_TITLES[2]}
             status={step2Status}
             done={step2Done}
             isOpen={activeStep === 2}
             onToggle={() => toggleStep(2)}
+            footer={
+              <StepNextButton
+                nextTitle={STEP_TITLES[3]}
+                currentDone={step2Done}
+                onClick={() => goToStep(3)}
+              />
+            }
           >
             {displayedScore &&
               displayedScore.missing_keywords.length > 0 &&
@@ -1000,7 +1092,7 @@ function ApplyPageContent({
                 <div className="dossier-action__header">
                   <h2>Gaps this fit check found</h2>
                   <p>
-                    Speak to these directly in your resume below if you have relevant experience — otherwise they'll
+                    Speak to these directly in your resume below if you have relevant experience, otherwise they'll
                     likely come up again in the interview.
                   </p>
                 </div>
@@ -1040,8 +1132,6 @@ function ApplyPageContent({
                     score={displayedTailoredScore}
                     title="Fitness report for this version"
                     description="See how this tailored resume stacks up against this posting's requirements."
-                    onRequestEvaluation={() => tailoredEvaluationMutation.mutate()}
-                    isEvaluationPending={tailoredEvaluationMutation.isPending}
                   />
                 ) : (
                   <div className="dossier-action__header">
@@ -1049,25 +1139,36 @@ function ApplyPageContent({
                     <p>Check this tailored resume's fit to see its report here.</p>
                   </div>
                 )}
-                {/* Bottom-right of the card: Score/Re-score (plus Re-evaluate
-                    once evaluated) on the left, download (with regenerate in
-                    its menu) on the right. */}
+                {/* Bottom of the card: Get full evaluation (until it's been
+                    run), then Score/Re-score (plus Re-evaluate once
+                    evaluated) on the left, download (with regenerate in its
+                    menu) on the right. */}
                 <div className="job-dashboard__actions job-dashboard__actions--spaced apply__tailor-actions">
-                  <EvaluateButton
-                    label={displayedTailoredScore ? "Re-score" : "Score this version"}
-                    pendingLabel="Scoring…"
-                    onClick={() => tailoredScoreMutation.mutate()}
-                    isPending={tailoredScoreMutation.isPending}
-                    variant={displayedTailoredScore ? "secondary" : "primary"}
-                  />
-                  {displayedTailoredScore && displayedTailoredScore.category_scores.length > 0 && (
+                  <div className="job-dashboard__actions apply__action-group">
+                    {displayedTailoredScore && displayedTailoredScore.category_scores.length === 0 && (
+                      <EvaluateButton
+                        label="Get full evaluation"
+                        onClick={() => tailoredEvaluationMutation.mutate()}
+                        isPending={tailoredEvaluationMutation.isPending}
+                        variant="secondary"
+                      />
+                    )}
                     <EvaluateButton
-                      label="Re-evaluate"
-                      onClick={() => tailoredEvaluationMutation.mutate()}
-                      isPending={tailoredEvaluationMutation.isPending}
-                      variant="secondary"
+                      label={displayedTailoredScore ? "Re-score" : "Score this version"}
+                      pendingLabel="Scoring…"
+                      onClick={() => tailoredScoreMutation.mutate()}
+                      isPending={tailoredScoreMutation.isPending}
+                      variant={displayedTailoredScore ? "secondary" : "primary"}
                     />
-                  )}
+                    {displayedTailoredScore && displayedTailoredScore.category_scores.length > 0 && (
+                      <EvaluateButton
+                        label="Re-evaluate"
+                        onClick={() => tailoredEvaluationMutation.mutate()}
+                        isPending={tailoredEvaluationMutation.isPending}
+                        variant="secondary"
+                      />
+                    )}
+                  </div>
                   <TailoredDownloadMenu
                     tailoredResume={displayedTailored}
                     onRegenerate={() => tailorMutation.mutate()}
@@ -1097,11 +1198,18 @@ function ApplyPageContent({
 
           <ProcessStep
             index={3}
-            title="Write a cover letter"
+            title={STEP_TITLES[3]}
             status={step3Status}
             done={step3Done}
             isOpen={activeStep === 3}
             onToggle={() => toggleStep(3)}
+            footer={
+              <StepNextButton
+                nextTitle={STEP_TITLES[4]}
+                currentDone={step3Done}
+                onClick={() => goToStep(4)}
+              />
+            }
           >
             <section className="dossier-action">
               <p className="dossier-action__lede">Draft a cover letter that speaks directly to this posting.</p>
@@ -1146,11 +1254,18 @@ function ApplyPageContent({
 
           <ProcessStep
             index={4}
-            title="Apply for the job"
+            title={STEP_TITLES[4]}
             status={step4Status}
             done={step4Done}
             isOpen={activeStep === 4}
             onToggle={() => toggleStep(4)}
+            footer={
+              <StepNextButton
+                nextTitle={STEP_TITLES[5]}
+                currentDone={step4Done}
+                onClick={() => goToStep(5)}
+              />
+            }
           >
             <section className="dossier-action">
               <p className="dossier-action__lede">
@@ -1180,7 +1295,7 @@ function ApplyPageContent({
                     <p className="job-dashboard__panel-empty">
                       Status: {currentApplication.status}
                       {currentApplication.applied_at && (
-                        <> — marked applied {formatAppliedAt(currentApplication.applied_at)}</>
+                        <>, marked applied {formatAppliedAt(currentApplication.applied_at)}</>
                       )}
                       . Change it any time from the Notes card above.
                     </p>
@@ -1191,11 +1306,24 @@ function ApplyPageContent({
 
           <ProcessStep
             index={5}
-            title="Prep for the interview"
+            title={STEP_TITLES[5]}
             status={step5Status}
             done={step5Done}
             isOpen={activeStep === 5}
             onToggle={() => toggleStep(5)}
+            footer={
+              // The last step: send them on to the next job in their list,
+              // or back to the list once there's nowhere else to go.
+              nextApplicationUrlId ? (
+                <Link to={`/jobs/${nextApplicationUrlId}/apply`} className="process-step__next">
+                  Next application →
+                </Link>
+              ) : (
+                <Link to="/applications" className="process-step__next">
+                  Back to applications →
+                </Link>
+              )
+            }
           >
             <section className="dossier-action">
               <p className="dossier-action__lede">

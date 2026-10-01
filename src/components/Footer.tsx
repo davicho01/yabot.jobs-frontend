@@ -1,10 +1,15 @@
 import { Link } from "react-router-dom";
 import { useTheme } from "../hooks/useTheme";
+import { useAuth } from "../auth/AuthContext";
+import { useFeedback } from "./FeedbackModal";
+import { GETTING_STARTED_PATH } from "../utils/onboarding";
 import "./Footer.css";
 import { BOARD_PATH } from "../routes";
 
 export function Footer() {
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
+  const { openFeedback } = useFeedback();
   const year = new Date().getFullYear();
 
   return (
@@ -25,8 +30,29 @@ export function Footer() {
             </span>
             <span className="site-footer__title">Yabot Jobs</span>
           </Link>
-          <span className="site-footer__statement">You shouldn't have to pay to get a job.</span>
+          <span className="site-footer__statement">Searching for a job should be free.</span>
         </div>
+
+        <nav className="site-footer__help" aria-label="Help">
+          <span className="site-footer__nav-heading">Help</span>
+          <Link to="/help" className="site-footer__social-link">
+            Help &amp; support
+          </Link>
+          {user && (
+            <>
+              <Link to={GETTING_STARTED_PATH} className="site-footer__social-link">
+                Getting started
+              </Link>
+              <button
+                type="button"
+                className="site-footer__social-link site-footer__link-button"
+                onClick={() => openFeedback()}
+              >
+                Send feedback
+              </button>
+            </>
+          )}
+        </nav>
 
         <div className="site-footer__social">
           <span className="site-footer__nav-heading">Code</span>

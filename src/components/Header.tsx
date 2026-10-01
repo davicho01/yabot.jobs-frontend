@@ -2,12 +2,18 @@ import { useState, useRef, useEffect, useCallback, type FormEvent, type Keyboard
 import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
+import { useFeedback } from "./FeedbackModal";
+import { GETTING_STARTED_PATH } from "../utils/onboarding";
 import { jobsApi } from "../api/jobs";
 import { describeSavedSearch, paramsToSavedSearchPayload, savedSearchesApi } from "../api/savedSearches";
 import { ApiError } from "../api/client";
 import type { Metro } from "../api/types";
 import { BOARD_PATH } from "../routes";
 import "./Header.css";
+
+// The board's location when nothing else says otherwise — see the effect in
+// Header that applies it. Must match a GET /jobs/places label exactly.
+const DEFAULT_LOCATION = "United States";
 
 const PLACE_SUGGESTION_LIMIT = 10;
 
@@ -128,6 +134,7 @@ function FilterDropdown({
 
 export function Header() {
   const { user, logout } = useAuth();
+  const { openFeedback } = useFeedback();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
@@ -247,45 +254,27 @@ export function Header() {
     [onBoard, setSearchParams, navigate],
   );
 
-  // Defaults the location box to "near you" on a fresh visit to the board —
-  // set via both the URL and setLocationInput, exactly as selectPlace does
-  // for a picked suggestion, so the box actually shows it rather than just
-  // quietly filtering behind an empty-looking field. Never overrides an
-  // explicit search or a shared link's own ?location=/?metro=. Silently does
-  // nothing without geolocation support, on denial/error, or when nothing's
-  // close enough to guess (see GET /jobs/places/nearest).
+  // Defaults the location box to the United States on a fresh visit to the
+  // board — set via both the URL and setLocationInput, exactly as
+  // selectPlace does for a picked suggestion, so the box actually shows it
+  // rather than quietly filtering behind an empty-looking field. Never
+  // overrides an explicit search or a shared link's own ?location=/?metro=.
+  // (This used to guess the nearest city from browser geolocation, which
+  // meant a permission prompt on first visit and a single metro area that
+  // often had few or no matches.)
   useEffect(() => {
     if (!onBoard || locationFilter || metroSlug) return;
-    if (typeof navigator === "undefined" || !navigator.geolocation) return;
-    let cancelled = false;
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        if (cancelled) return;
-        jobsApi
-          .nearestPlace(position.coords.latitude, position.coords.longitude)
-          .then((label) => {
-            if (cancelled || !label) return;
-            setLocationInput(label);
-            updateBoardParams((next) => {
-              // Someone may have typed their own search while this was in flight.
-              if (next.get("location") || next.get("metro")) return;
-              next.set("location", label);
-              next.delete("radius");
-              next.delete("page");
-            });
-          })
-          .catch(() => {}); // best-effort — no default is fine
-      },
-      () => {}, // denied or unavailable — no default, same as not knowing
-      { maximumAge: 30 * 60_000, timeout: 8000 },
-    );
-    return () => {
-      cancelled = true;
-    };
-    // Re-attempts whenever arriving at the board fresh (onBoard flips to
-    // true), not on every keystroke that changes locationFilter/metroSlug
-    // afterward (including from this effect's own update) — deliberately
-    // not in deps.
+    setLocationInput(DEFAULT_LOCATION);
+    updateBoardParams((next) => {
+      if (next.get("location") || next.get("metro")) return;
+      next.set("location", DEFAULT_LOCATION);
+      next.delete("radius");
+      next.delete("page");
+    });
+    // Re-applies whenever arriving at the board fresh (onBoard flips to
+    // true), not on every change to locationFilter/metroSlug afterward
+    // (including from this effect's own update, or the user clearing the
+    // box to search everywhere) — deliberately not in deps.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onBoard]);
 
@@ -720,6 +709,9 @@ export function Header() {
                   </div>
                   <div className="site-header__dropdown-email">{user.email}</div>
                 </div>
+                <Link to={GETTING_STARTED_PATH} role="menuitem" onClick={() => setMenuOpen(false)}>
+                  Getting started
+                </Link>
                 <Link to="/profile" role="menuitem" onClick={() => setMenuOpen(false)}>
                   Profile
                 </Link>
@@ -736,11 +728,24 @@ export function Header() {
                   Resume optimization
                 </Link>
                 <Link to="/api-keys" role="menuitem" onClick={() => setMenuOpen(false)}>
-                  AI API Keys
+                  AI access
                 </Link>
                 <Link to="/access-tokens" role="menuitem" onClick={() => setMenuOpen(false)}>
                   Access tokens
                 </Link>
+                <Link to="/help" role="menuitem" onClick={() => setMenuOpen(false)}>
+                  Help &amp; support
+                </Link>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    openFeedback();
+                  }}
+                >
+                  Send feedback
+                </button>
                 {user.role === "admin" && (
                   <Link to="/admin" role="menuitem" onClick={() => setMenuOpen(false)}>
                     Admin dashboard

@@ -3,24 +3,33 @@
   <head>
     <meta charset="utf-8" />
     <script>
-      // Two jobs for old links, both before anything paints:
+      // Three jobs for incoming links, all before anything paints:
       //  1. Shared board links used to live on "/" (yabot.jobs/?q=…&jobId=…); the board is
       //     /jobs now, so carry those over.
-      //  2. The host answers unknown paths with this page (SPA fallback), so any other
-      //     path here is a deep link into the app (/login, /jobs/<id>, …): hand it to
-      //     the app shell, which puts the path back for its router.
+      //  2. The host answers unknown paths with this page (SPA fallback). The static
+      //     content pages are a known set, so send those to their own file instead. This
+      //     is the safety net for when the CloudFront rewrite (deploy/cloudfront-pretty-urls.js)
+      //     isn't attached yet, which would otherwise leave /questions and /privacy dead.
+      //  3. Anything else here is a deep link into the app (/login, /jobs/<id>, …): hand it
+      //     to the app shell, which puts the path back for its router.
       (function () {
+        var STATIC_PAGES = { "/questions": "/questions.html", "/privacy": "/privacy.html" };
         var l = location;
         var path = l.pathname;
         if (path === "/" && /[?&](q|location|metro|radius|company|posted|workplace|page|jobId)=/.test(l.search)) {
           window.yabotRedirecting = true;
           l.replace("/jobs" + l.search + l.hash);
         } else if (path !== "/" && path !== "/index.html") {
+          var staticPage = STATIC_PAGES[path.replace(/\/+$/, "")];
           window.yabotRedirecting = true;
-          try {
-            sessionStorage.setItem("yabot-restore-path", path + l.search + l.hash);
-          } catch (e) {}
-          l.replace("/app.html");
+          if (staticPage) {
+            l.replace(staticPage);
+          } else {
+            try {
+              sessionStorage.setItem("yabot-restore-path", path + l.search + l.hash);
+            } catch (e) {}
+            l.replace("/app.html");
+          }
         }
       })();
     </script>
@@ -44,48 +53,35 @@
         document.head.appendChild(s);
       })();
     </script>
-    <script>
-      // Applies the visitor's saved theme before first paint. Same "yabot-theme"
-      // key and default as index.html and src/hooks/useTheme.ts: "dark" is dark,
-      // "system" defers to the OS, and no choice yet means light.
-      (function () {
-        try {
-          var stored = localStorage.getItem("yabot-theme");
-          if (stored === "dark") {
-            document.documentElement.setAttribute("data-theme", "dark");
-          } else if (stored !== "system") {
-            document.documentElement.setAttribute("data-theme", "light");
-          }
-        } catch (e) {}
-      })();
-    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Free Tech Job Search and Application Tracker | Yabot Jobs</title>
+    <title>Free Job Search With AI Fit Scores | Yabot Jobs</title>
     <meta
       name="description"
-      content="A free, open-source job board for tech and product roles, grown by the people who use it. Share postings, track every application, and tailor your resume and cover letter."
+      content="Jobs from 3,000+ company career pages, around 30,000 a day in every sector. Score your fit, tailor your resume, write cover letters. 10 jobs free, no AI key needed."
     />
     <link rel="canonical" href="https://yabot.jobs/" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <meta name="theme-color" content="#1d1d1f" />
+    <meta name="theme-color" content="#ffffff" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Yabot Jobs" />
-    <meta property="og:title" content="Free Tech Job Search and Application Tracker | Yabot Jobs" />
+    <meta property="og:title" content="Stop searching. Start applying. | Yabot Jobs" />
     <meta
       property="og:description"
-      content="A free, open-source job board grown by the people who use it. Share the postings you find, track every application, and tailor your resume. You shouldn't have to pay to get a job."
+      content="Every job scored. Every resume tailored. Jobs pulled daily from thousands of company career pages, in every sector. 10 jobs free, no AI key needed."
     />
     <meta property="og:url" content="https://yabot.jobs/" />
+    <!-- TODO: og-image.png still carries the retired "You shouldn't have to pay to get a
+         job." tagline. Regenerate it around "Searching for a job should be free." -->
     <meta property="og:image" content="https://yabot.jobs/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Yabot Jobs: You shouldn't have to pay to get a job." />
+    <meta property="og:image:alt" content="Yabot Jobs: every job scored, every resume tailored." />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Free Tech Job Search and Application Tracker | Yabot Jobs" />
+    <meta name="twitter:title" content="Stop searching. Start applying. | Yabot Jobs" />
     <meta
       name="twitter:description"
-      content="A free, open-source job board grown by the people who use it. Share the postings you find, track every application, and tailor your resume. You shouldn't have to pay to get a job."
+      content="Every job scored. Every resume tailored. Jobs pulled daily from thousands of company career pages, in every sector. 10 jobs free, no AI key needed."
     />
     <meta name="twitter:image" content="https://yabot.jobs/og-image.png" />
 
@@ -98,13 +94,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
 
     <!--
-      Structured data. The FAQPage block must match the visible questions in
-      #questions below — update both together.
+      Structured data. The FAQPage block lives on /questions, alongside the visible
+      questions it describes — update both together, in questions.html.
     -->
     <script type="application/ld+json">
 {
@@ -125,7 +121,7 @@
       "@id": "https://yabot.jobs/#website",
       "url": "https://yabot.jobs/",
       "name": "Yabot Jobs",
-      "description": "A free, open-source, community-grown job board for tech and product roles, with an application tracker and resume tailoring tools.",
+      "description": "A free, open-source job search that scores your fit against every posting and tailors your resume for it. Jobs are pulled daily from thousands of company career pages, in every sector.",
       "publisher": {
         "@id": "https://yabot.jobs/#organization"
       },
@@ -142,7 +138,7 @@
       "@type": "WebPage",
       "@id": "https://yabot.jobs/",
       "url": "https://yabot.jobs/",
-      "name": "Free Tech Job Search and Application Tracker | Yabot Jobs",
+      "name": "Free Job Search With AI Fit Scores | Yabot Jobs",
       "isPartOf": {
         "@id": "https://yabot.jobs/#website"
       },
@@ -150,168 +146,54 @@
         "@id": "https://yabot.jobs/#organization"
       },
       "inLanguage": "en"
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Is Yabot Jobs really free?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. Searching the job board, reading postings, saving jobs, and tracking applications cost nothing. The AI tools (fitness reports, tailored resumes, and cover letters) run on an API key you add yourself, so any charge comes from your AI provider for what you use. Yabot Jobs adds no fee on top."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "If it's free, who pays for it?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Running it isn't free: servers and job scanning cost real money, and for now that comes out of the pocket of the person who built it. Down the road, employers may be able to pay to feature a job posting, which would help keep the lights on. Featured postings will be clearly marked, and job seekers will never pay to search the board or read a posting."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How can I help?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Share postings you come across by pasting their link, and report any listing that looks wrong. Both take a few seconds and help everyone else who's looking. If you write code or have ideas, open an issue or a pull request on GitHub. Telling a friend who's job hunting helps too."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Do I need an account to search for jobs?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "No. You can search and browse the job board without one. Create a free account to save postings, track applications, upload a resume, and use the AI tools. There is no password: enter your email and Yabot Jobs sends you a sign-in link that works for 15 minutes."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Where do the job postings come from?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Two places. Yabot Jobs scans public job postings and reads the details out of each page: title, company, location, work type, and pay. And people using the site share postings they find by pasting a link. Every shared posting joins the same board, so one person's find helps everyone."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Can I track jobs I found on other job boards?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. Once you're signed in, paste the link to a posting from another job board or a company's careers page. Yabot Jobs scans it, reads the title, company, location, work type, and pay, and adds it to your jobs. From there you can check your fit, tailor your resume, and track the application with everything else. If a page can't be read, rescan it later."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Which AI providers can I use?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Anthropic, OpenAI, DeepSeek, or any OpenAI-compatible service. Your key is used only for your own resume reviews, scoring, and generation requests."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Can I edit the resume and cover letter it writes?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. Download them as Word documents (.docx) and change anything you like before you send them."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Can I use Yabot Jobs from ChatGPT or Claude?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Not right now. Yabot Jobs has an MCP server that lets ChatGPT, Claude, and other assistants search the board for you, but it costs real money to run, so it's switched off until there's a way to pay for it. The job board and everything else on this page work the same as before."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Is Yabot Jobs open source?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. The website and the API behind it are both public on GitHub, and the website is released under the MIT license."
-          }
-        }
-      ]
     }
   ]
 }
     </script>
 
     <style>
-      /* Tokens mirror src/index.css so the landing page and the app read as one
-         product. Light is the default; dark follows the same data-theme switch. */
+      /* Ported from the signed-off design export (Main.dc.html). That file is a
+         reference mockup carrying the exact values — colors, type sizes, spacing,
+         radii, shadows — in inline styles; this is the same design expressed as
+         classes. The landing page is deliberately light only: dark mode was
+         deferred, so unlike the app (src/index.css) there is no data-theme switch
+         and no prefers-color-scheme block. /questions and /privacy match it. */
       :root {
         --paper: #ffffff;
         --surface: #f5f5f7;
         --ink: #1d1d1f;
         --ink-soft: #6e6e73;
-        --accent: #0071e3;
-        --accent-deep: #0058b0;
-        --accent-fill: #0071e3;
-        --accent-fill-hover: #0058b0;
-        --teal: #248a3d;
-        --rose: #d70015;
-        --amber: #b36500;
+        --ink-dim: #424245;
         --line: #e8e8ed;
 
-        /* The black stage used for the "free" section and the dark tile. */
+        --accent: #0071e3;
+        /* The accent lifted for dark bands, where #0071E3 reads too dim. */
+        --accent-bright: #2997ff;
+        /* Violet and cyan appear in the background glows only, never in text. */
+        --violet: #7b61ff;
+        --cyan: #00c2ff;
+        /* Scores only: 85 and above is green, below it amber. */
+        --score-good: #1f7a47;
+        --score-mid: #b4531a;
+
         --band: #000000;
         --band-tile: #1d1d1f;
         --band-ink: #f5f5f7;
         --band-soft: #a1a1a6;
-        --band-line: #2c2c2e;
-        --band-accent: #2997ff;
-        --band-good: #30d158;
+        --band-dim: #86868b;
 
-        --font-display: "Outfit", system-ui, -apple-system, sans-serif;
-        --font-body: "Manrope", system-ui, -apple-system, sans-serif;
+        --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Manrope", system-ui, sans-serif;
 
         --radius-pill: 980px;
-        --radius-field: 12px;
-        --radius-card: 18px;
-        --radius-tile: 28px;
-        --lift: 0 1px 2px rgba(0, 0, 0, 0.05), 0 18px 40px -18px rgba(0, 0, 0, 0.22);
+        --radius-card: 28px;
+        --radius-phone: 48px;
+        --radius-screen: 38px;
 
-        --wrap: 1180px;
-        --gutter: clamp(1.1rem, 4vw, 2rem);
+        --wrap: 1100px;
+        --gutter: 24px;
+        /* Every full-height band uses this; the hero and story bands differ. */
+        --band-pad: 128px;
         color-scheme: light;
-      }
-
-      @media (prefers-color-scheme: dark) {
-        :root:not([data-theme="light"]) {
-          --paper: #000000;
-          --surface: #1d1d1f;
-          --ink: #f5f5f7;
-          --ink-soft: #86868b;
-          --accent: #2997ff;
-          --accent-deep: #6cb4ff;
-          --teal: #30d158;
-          --rose: #ff453a;
-          --amber: #ff9f0a;
-          --line: #2c2c2e;
-          --band: #161617;
-          --lift: 0 1px 2px rgba(0, 0, 0, 0.5), 0 18px 40px -18px rgba(0, 0, 0, 0.8);
-          color-scheme: dark;
-        }
-      }
-
-      :root[data-theme="dark"] {
-        --paper: #000000;
-        --surface: #1d1d1f;
-        --ink: #f5f5f7;
-        --ink-soft: #86868b;
-        --accent: #2997ff;
-        --accent-deep: #6cb4ff;
-        --teal: #30d158;
-        --rose: #ff453a;
-        --amber: #ff9f0a;
-        --line: #2c2c2e;
-        --band: #161617;
-        --lift: 0 1px 2px rgba(0, 0, 0, 0.5), 0 18px 40px -18px rgba(0, 0, 0, 0.8);
-        color-scheme: dark;
       }
 
       *,
@@ -330,8 +212,8 @@
         margin: 0;
         background: var(--paper);
         color: var(--ink);
-        font-family: var(--font-body);
-        font-size: 1.0625rem;
+        font-family: var(--font);
+        font-size: 17px;
         line-height: 1.6;
         overflow-wrap: break-word;
         -webkit-font-smoothing: antialiased;
@@ -343,8 +225,6 @@
       p,
       ul,
       ol,
-      dl,
-      dd,
       figure {
         margin: 0;
       }
@@ -355,13 +235,17 @@
         list-style: none;
       }
 
+      img {
+        max-width: 100%;
+      }
+
       a {
         color: var(--accent);
       }
 
       :focus-visible {
-        outline: 2px solid var(--accent-deep);
-        outline-offset: 2px;
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
         border-radius: 4px;
       }
 
@@ -372,7 +256,7 @@
         margin: -1px;
         padding: 0;
         overflow: hidden;
-        clip: rect(0 0 0 0);
+        clip-path: inset(50%);
         white-space: nowrap;
         border: 0;
       }
@@ -401,1941 +285,850 @@
         padding-inline: var(--gutter);
       }
 
-      /* ---------- type ---------- */
+      /* ---------- shared band furniture ---------- */
 
-      h1,
-      h2,
-      h3 {
-        font-family: var(--font-display);
-        color: var(--ink);
-        text-wrap: balance;
+      .band {
+        position: relative;
+        overflow: hidden;
+        text-align: center;
       }
 
-      h1 {
-        font-size: clamp(2.9rem, 1rem + 7.4vw, 6.25rem);
-        line-height: 1;
-        letter-spacing: -0.036em;
-        word-spacing: 0.04em;
-        font-weight: 800;
+      .band__inner {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+        padding-block: var(--band-pad);
       }
 
-      h2 {
-        font-size: clamp(2.15rem, 1rem + 4.2vw, 4.25rem);
-        line-height: 1.04;
-        letter-spacing: -0.032em;
-        word-spacing: 0.03em;
-        font-weight: 800;
+      .band--dark {
+        background: var(--band);
+        color: var(--band-ink);
       }
 
-      h3 {
-        font-size: clamp(1.6rem, 1.2rem + 1.3vw, 2.15rem);
-        line-height: 1.1;
-        letter-spacing: -0.03em;
+      .band--soft {
+        background: var(--surface);
+      }
+
+      .band--narrow .band__inner {
+        max-width: 980px;
+      }
+
+      /* Blurred color washes behind the content. Decorative only, and the one
+         place violet and cyan are used. */
+      .glow {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(50px);
+        pointer-events: none;
+      }
+
+      .eyebrow {
+        font-size: 21px;
         font-weight: 700;
+        color: var(--accent);
+      }
+
+      .band--dark .eyebrow {
+        color: var(--accent-bright);
+      }
+
+      .display {
+        font-weight: 800;
+        font-size: clamp(40px, 7vw, 84px);
+        line-height: 1.03;
+        letter-spacing: -0.04em;
       }
 
       .lede {
-        font-size: clamp(1.15rem, 1rem + 0.7vw, 1.5rem);
-        line-height: 1.45;
+        font-size: clamp(19px, 2.4vw, 26px);
+        line-height: 1.35;
         font-weight: 500;
         color: var(--ink-soft);
-        letter-spacing: -0.01em;
+        max-width: 640px;
       }
 
-      .prose p {
-        max-width: 38rem;
+      .band--dark .lede {
+        color: var(--band-soft);
       }
 
-      .prose p + p {
-        margin-top: 1rem;
+      .fineprint {
+        font-size: 15px;
+        color: var(--ink-soft);
       }
 
-      /* ---------- buttons ---------- */
+      .band--dark .fineprint {
+        color: var(--band-dim);
+      }
+
+      .note {
+        font-size: 17px;
+        line-height: 1.5;
+        color: var(--ink-soft);
+        max-width: 560px;
+      }
 
       .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 2.6rem;
-        padding: 0.55rem 1.25rem;
-        border: 1px solid transparent;
-        border-radius: var(--radius-pill);
-        font-family: var(--font-body);
-        font-weight: 600;
-        font-size: 0.9rem;
-        line-height: 1.1;
+        display: inline-block;
         text-decoration: none;
-        white-space: nowrap;
-        cursor: pointer;
-        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        font-weight: 600;
+        font-size: 19px;
+        padding: 15px 30px;
+        border-radius: var(--radius-pill);
       }
 
-      .btn:active {
-        transform: translateY(1px);
-      }
-
-      .btn--lg {
-        min-height: 3.35rem;
-        padding: 0.8rem 1.9rem;
-        font-size: 1.05rem;
-      }
-
-      .btn--accent {
-        background: var(--accent-fill);
-        color: #fff;
-      }
-
-      .btn--accent:hover {
-        background: var(--accent-fill-hover);
-      }
-
-      .btn--line {
-        border-color: var(--line);
-        background: transparent;
-        color: var(--ink);
-      }
-
-      .btn--line:hover {
-        background: var(--ink);
-        border-color: var(--ink);
+      .btn--primary {
+        background: var(--accent);
         color: var(--paper);
       }
 
-      .btn--white {
-        background: #fff;
-        color: #1d1d1f;
+      /* On black the button inverts: bright fill, black label. */
+      .btn--bright {
+        background: var(--accent-bright);
+        color: var(--band);
+        font-weight: 700;
       }
 
-      .btn--white:hover {
-        background: #e8e8ed;
+      .btn--text {
+        color: var(--accent);
+        font-weight: 600;
+        font-size: 19px;
+        text-decoration: none;
       }
 
-      /* ---------- header ---------- */
+      .band--dark .btn--text {
+        color: var(--accent-bright);
+      }
 
-      .top {
-        background: var(--paper);
+      .cta-row {
+        display: flex;
+        gap: 22px;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+      }
+
+      /* ---------- nav ---------- */
+
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: saturate(180%) blur(20px);
         border-bottom: 1px solid var(--line);
       }
 
-      .top__row {
+      .nav__row {
         display: flex;
         align-items: center;
-        gap: 1.5rem;
-        padding-block: 0.8rem;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding-block: 14px;
       }
 
       .brand {
         display: inline-flex;
         align-items: center;
-        gap: 0.65rem;
-        color: var(--ink);
-        font-family: var(--font-display);
-        font-weight: 700;
-        font-size: 1.2rem;
+        gap: 8px;
+        font-weight: 800;
+        font-size: 21px;
         letter-spacing: -0.02em;
-        text-decoration: none;
-        flex-shrink: 0;
-      }
-
-      .brand__mark {
-        display: inline-flex;
-        width: 2rem;
-        height: 2rem;
-        align-items: center;
-        justify-content: center;
-        background: var(--ink);
-        color: var(--accent);
-        border-radius: 8px;
-      }
-
-      .search {
-        flex: 1;
-        min-width: 0;
-        max-width: 41rem;
-        margin-inline: auto;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr) auto;
-        align-items: center;
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-pill);
-        padding: 0.2rem 0.2rem 0.2rem 1.1rem;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-      }
-
-      .search:focus-within {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
-      }
-
-      .search input {
-        min-width: 0;
-        width: 100%;
-        border: 0;
-        outline: 0;
-        background: transparent;
-        padding: 0.55rem 0.75rem 0.55rem 0;
         color: var(--ink);
-        font-family: var(--font-body);
-        font-size: 0.92rem;
-        -webkit-appearance: none;
-        appearance: none;
+        text-decoration: none;
       }
 
-      .search input::-webkit-search-cancel-button {
-        -webkit-appearance: none;
+      /* The same pulse mark the app header and favicon use, so the landing page
+         and the app read as one product. */
+      .brand__mark {
+        flex: none;
+        width: 26px;
+        height: 26px;
+        color: var(--accent);
       }
 
-      .search input::placeholder {
-        color: var(--ink-soft);
-        opacity: 1;
+      .brand__accent {
+        color: var(--accent);
       }
 
-      .search__rule {
-        width: 1px;
-        height: 1.4rem;
-        background: var(--line);
-      }
-
-      .search .search__rule + label + input {
-        padding-left: 0.9rem;
-      }
-
-      .top__actions {
+      .nav__links {
         display: flex;
         align-items: center;
-        gap: 0.6rem;
-        flex-shrink: 0;
+        gap: 28px;
+        flex-wrap: wrap;
+      }
+
+      .nav__link {
+        text-decoration: none;
+        font-size: 14px;
+        color: var(--ink-dim);
+      }
+
+      .nav__cta {
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        background: var(--ink);
+        color: var(--paper);
+        padding: 10px 18px;
+        border-radius: var(--radius-pill);
       }
 
       /* ---------- hero ---------- */
 
-      .hero {
-        padding-block: clamp(3.5rem, 8vw, 7rem) clamp(3rem, 6vw, 5rem);
-        text-align: center;
+      .hero .band__inner {
+        padding-block: 88px 0;
+        gap: 28px;
       }
 
-      .hero h1 {
-        max-width: 12.5em;
-        margin-inline: auto;
+      .hero__title {
+        font-weight: 800;
+        font-size: clamp(52px, 10vw, 120px);
+        line-height: 1;
+        letter-spacing: -0.045em;
       }
 
-      .hero .lede {
-        max-width: 40rem;
-        margin: 1.75rem auto 0;
+      /* Second line only. Falls back to solid accent where background-clip
+         text is unsupported. */
+      .hero__title em {
+        font-style: normal;
+        color: var(--accent);
+        background: linear-gradient(90deg, var(--accent), var(--violet));
+        -webkit-background-clip: text;
+        background-clip: text;
       }
 
-      .cta-row {
+      @supports (-webkit-text-fill-color: transparent) {
+        .hero__title em {
+          -webkit-text-fill-color: transparent;
+        }
+      }
+
+      .hero__sub {
+        font-size: clamp(21px, 3vw, 32px);
+        line-height: 1.25;
+        font-weight: 600;
+        color: var(--ink-soft);
+        letter-spacing: -0.015em;
+      }
+
+      .hero .cta-row {
+        padding-top: 8px;
+      }
+
+      .hero__shot {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        padding-top: 56px;
+      }
+
+      /* Open at the bottom: the screenshot runs off the edge of the band. Wider
+         than the 360px elsewhere because the hero shot is a short crop, and at
+         360px it read as a small card against the oversized hero type. */
+      .hero__phone {
+        width: 100%;
+        max-width: 440px;
+        background: var(--band-tile);
+        border-radius: var(--radius-phone) var(--radius-phone) 0 0;
+        padding: 12px 12px 0;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.18);
+      }
+
+      .hero__phone img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: var(--radius-screen) var(--radius-screen) 0 0;
+        background: var(--surface);
+      }
+
+      /* ---------- find ---------- */
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 48px;
+        width: 100%;
+        padding-top: 56px;
+      }
+
+      .stat {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .stat__num {
+        font-weight: 800;
+        font-size: clamp(48px, 7vw, 80px);
+        line-height: 1;
+        letter-spacing: -0.04em;
+        /* A figure broken across two lines reads as two numbers. The columns are
+           ~279px at the widest and the longest figure sets to 264px, so this
+           only ever guards against a future longer one. */
+        white-space: nowrap;
+      }
+
+      /* "Every sector" is words, not a figure, so it sets smaller to sit level
+         and is meant to wrap onto its second line. */
+      .stat__num--text {
+        font-size: clamp(36px, 5.2vw, 64px);
+        line-height: 1.15;
+        white-space: normal;
+      }
+
+      .stat__label {
+        font-size: 19px;
+        color: var(--band-soft);
+      }
+
+      .find .btn {
+        margin-top: 16px;
+      }
+
+      /* ---------- score ---------- */
+
+      .score__layout {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        gap: 0.8rem;
-        margin-top: 2.25rem;
-      }
-
-      .fineprint {
-        margin-top: 1.1rem;
-        font-size: 0.9rem;
-        color: var(--ink-soft);
-      }
-
-      .eyebrow {
-        display: inline-block;
-        margin: 0 0 1.25rem;
-        padding: 0.35em 1em;
-        border-radius: var(--radius-pill);
-        font-weight: 600;
-        font-size: 0.9rem;
-        color: var(--accent-deep);
-        background: color-mix(in srgb, var(--accent) 12%, transparent);
-      }
-
-      /* ---------- notice: when the board refreshes ---------- */
-
-      .notice {
-        padding-block: clamp(1.5rem, 4vw, 3rem) clamp(2rem, 4vw, 3rem);
-      }
-
-      .notice__box {
-        display: flex;
-        align-items: flex-start;
-        gap: 1rem;
-        max-width: 46rem;
-        margin-inline: auto;
-        padding: 1.1rem 1.4rem;
-        border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
-        border-radius: var(--radius-card);
-        background: color-mix(in srgb, var(--accent) 6%, var(--paper));
-      }
-
-      .notice__icon {
-        flex: none;
-        display: grid;
-        place-items: center;
-        width: 2.25rem;
-        height: 2.25rem;
-        border-radius: 50%;
-        color: var(--accent-deep);
-        background: color-mix(in srgb, var(--accent) 14%, transparent);
-      }
-
-      .notice__icon svg {
-        width: 1.2rem;
-        height: 1.2rem;
-      }
-
-      .notice__title {
-        margin: 0 0 0.2rem;
-        font-size: 1.1rem;
-        line-height: 1.3;
-      }
-
-      .notice p {
-        margin: 0;
-        color: var(--ink-soft);
-        font-size: 0.975rem;
-        line-height: 1.5;
-      }
-
-      .notice strong {
-        color: var(--ink);
-      }
-
-      .notice__link {
-        display: inline-block;
-        margin-top: 0.5rem;
-        font-weight: 600;
-        font-size: 0.975rem;
-        color: var(--accent-deep);
-        text-decoration: none;
-      }
-
-      .notice__link:hover {
-        text-decoration: underline;
-      }
-
-      /* ---------- pitch in: the ways people keep the board going ---------- */
-
-      .section--tight {
-        padding-top: clamp(1rem, 3vw, 2.5rem);
-      }
-
-      .pitch {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: clamp(0.85rem, 2vw, 1.4rem);
-        margin: clamp(2.5rem, 5vw, 4rem) 0 0;
-        padding: 0;
-        list-style: none;
-      }
-
-      .pitch__card {
-        display: grid;
-        align-content: start;
-        gap: 0.7rem;
-        padding: clamp(1.6rem, 3vw, 2.25rem);
-        background: var(--surface);
-        border-radius: var(--radius-tile);
-      }
-
-      .pitch__icon {
-        display: grid;
-        place-items: center;
-        width: 2.75rem;
-        height: 2.75rem;
-        border-radius: 50%;
-        color: var(--accent-deep);
-        background: color-mix(in srgb, var(--accent) 14%, transparent);
-      }
-
-      .pitch__icon svg {
-        width: 1.35rem;
-        height: 1.35rem;
-      }
-
-      .pitch__card p {
-        margin: 0;
-        color: var(--ink-soft);
-        font-size: 0.975rem;
-        line-height: 1.55;
-      }
-
-      .pitch__card a {
-        color: var(--accent-deep);
-      }
-
-      @media (max-width: 54rem) {
-        .pitch {
-          grid-template-columns: minmax(0, 1fr);
-        }
-      }
-
-      /* The "product shot": a raw posting, and the job card Yabot builds from it */
-
-      .showcase {
-        margin-top: clamp(3rem, 7vw, 5.5rem);
-      }
-
-      .showcase__tile {
-        background: var(--surface);
-        border-radius: var(--radius-tile);
-        padding: clamp(1.5rem, 5vw, 4rem) clamp(1.25rem, 5vw, 4.5rem);
-      }
-
-      .showcase__grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.05fr) auto minmax(0, 0.95fr);
         align-items: center;
-        gap: clamp(1rem, 3vw, 2.5rem);
-        text-align: left;
-        max-width: 60rem;
-        margin-inline: auto;
+        gap: 64px;
+        padding-top: 64px;
+        width: 100%;
       }
 
-      .posting {
-        /* An employer's page, so it stays a light page in either theme. */
-        background: #fff;
-        color: #6a726d;
-        border: 1px solid #e3e3e8;
-        border-radius: 14px;
-        padding: 1.2rem 1.35rem 1.4rem;
-        box-shadow: var(--lift);
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: 0.75rem;
-        line-height: 1.5;
+      .phone {
+        width: 100%;
+        max-width: 360px;
+        background: var(--band-tile);
+        border-radius: var(--radius-phone);
+        padding: 10px;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.18);
       }
 
-      .posting p + p,
-      .posting p + ul,
-      .posting ul + p {
-        margin-top: 0.55rem;
-      }
-
-      .posting__crumbs {
-        display: block;
-        color: #8a918d;
-        font-size: 0.68rem;
-        padding-bottom: 0.65rem;
-        margin-bottom: 0.85rem;
-        border-bottom: 1px solid #e6e9e7;
-      }
-
-      .posting__title {
-        font-size: 1.35rem;
-        line-height: 1.25;
-        font-weight: 700;
-        color: #26302b;
-      }
-
-      .posting__company {
-        margin-top: 0.15rem;
-        font-size: 0.88rem;
-        font-weight: 700;
-        color: #3c4640;
-      }
-
-      .posting__facts {
-        margin-top: 0.7rem;
-        color: #3c4640;
-        font-size: 0.8rem;
-        line-height: 1.7;
-      }
-
-      .posting .posting__h {
-        margin: 0.9rem 0 0.2rem;
-        font-weight: 700;
-        font-size: 0.8rem;
-        color: #3c4640;
-      }
-
-      .posting ul {
-        list-style: disc;
-        padding-left: 1.1rem;
-      }
-
-      .posting__bar {
-        display: flex;
-        gap: 0.9rem;
-        margin-top: 0.9rem;
-        color: #8a918d;
-        font-size: 0.68rem;
-      }
-
-      .posting__apply {
-        display: inline-block;
-        margin-top: 0.7rem;
-        padding: 0.4rem 0.9rem;
-        background: #d9dedb;
-        color: #4b544f;
-        border-radius: 3px;
-        font-weight: 700;
-      }
-
-      /* Highlighter, swept over the fields Yabot reads */
-
-      .hl {
-        --i: 0;
-        background: linear-gradient(rgba(0, 113, 227, 0.22), rgba(0, 113, 227, 0.22)) no-repeat 0 0 / 100% 100%;
-        box-shadow: inset 0 -2px 0 rgba(0, 113, 227, 0.75);
-        border-radius: 3px;
-        padding: 0.05em 0.25em;
-        margin: 0 -0.25em;
-        -webkit-box-decoration-break: clone;
-        box-decoration-break: clone;
-        color: #1f2a25;
-        animation: sweep 0.55s cubic-bezier(0.3, 0.7, 0.2, 1) both;
-        animation-delay: calc(0.7s + var(--i) * 0.42s);
-      }
-
-      @keyframes sweep {
-        from {
-          background-size: 0% 100%;
-          box-shadow: inset 0 -2px 0 rgba(0, 113, 227, 0);
-        }
-      }
-
-      .showcase__arrow {
-        width: 5.5rem;
-        height: auto;
-        color: var(--accent);
-        overflow: visible;
-      }
-
-      .showcase__arrow path {
-        stroke-dasharray: 1;
-        stroke-dashoffset: 0;
-        animation: draw 0.7s ease-out 0.55s both;
-      }
-
-      @keyframes draw {
-        from {
-          stroke-dashoffset: 1;
-        }
-      }
-
-      .readout {
+      /* A fixed window onto the screenshots. The ratio is that of the
+         single-screen image; the taller stitched one slides behind it. */
+      .phone__screen {
         position: relative;
-        background: var(--paper);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-card);
-        padding: 2.1rem 1.6rem 1.6rem 1.9rem;
-        box-shadow: var(--lift);
+        width: 100%;
+        aspect-ratio: 1190 / 1691;
+        overflow: hidden;
+        border-radius: var(--radius-screen);
+        background: var(--surface);
       }
 
-      /* Same coloured left edge as the job cards in the app (hybrid is blue). */
-      .readout::before {
-        content: "";
+      .phone__still {
         position: absolute;
-        inset: -1px auto -1px -1px;
-        width: 6px;
-        background: var(--accent);
-        border-radius: var(--radius-card) 0 0 var(--radius-card);
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
       }
 
-      .readout__tab {
+      .phone__layer {
         position: absolute;
-        top: -0.9rem;
-        left: 1.75rem;
-        padding: 0.3rem 0.85rem;
-        background: var(--accent-fill);
-        color: #fff;
-        font-weight: 600;
-        font-size: 0.75rem;
-        line-height: 1.3;
-        border-radius: var(--radius-pill);
+        inset: 0;
+        overflow: hidden;
       }
 
-      .readout dl {
-        display: grid;
-        gap: 0.85rem;
+      .phone__layer > img {
+        display: block;
+        width: 100%;
+        height: auto;
       }
 
-      .readout__row {
-        display: grid;
-        grid-template-columns: 5.4rem minmax(0, 1fr);
-        align-items: baseline;
-        gap: 0.5rem;
-        animation: pop 0.4s ease-out both;
-        animation-delay: calc(0.95s + var(--i) * 0.42s);
+      .score__captions {
+        flex: 1 1 320px;
+        max-width: 460px;
+        display: flex;
+        flex-direction: column;
+        gap: 36px;
+        text-align: left;
       }
 
-      .readout dt {
-        font-size: 0.82rem;
-        font-weight: 500;
-        color: var(--ink-soft);
+      .caption {
+        border-left: 4px solid var(--accent);
+        padding-left: 24px;
       }
 
-      .readout dd {
-        font-weight: 600;
-        font-size: 1rem;
-        line-height: 1.3;
-      }
-
-      .readout__row--title dd {
-        font-family: var(--font-display);
-        font-weight: 700;
-        font-size: 1.65rem;
+      .caption__title {
+        font-weight: 800;
+        font-size: clamp(28px, 4vw, 40px);
         letter-spacing: -0.03em;
         line-height: 1.1;
       }
 
-      .readout__row--pay dd {
-        color: var(--accent-deep);
-      }
-
-      @keyframes pop {
-        from {
-          opacity: 0;
-          transform: translateY(6px);
-        }
-      }
-
-      .showcase figcaption {
-        margin-top: 1.1rem;
-        font-size: 0.92rem;
+      .caption__body {
+        font-size: 19px;
         color: var(--ink-soft);
-      }
-
-      /* ---------- sections ---------- */
-
-      .section {
-        padding-block: clamp(3.5rem, 8vw, 7rem);
-      }
-
-      .section-head {
-        max-width: 46rem;
-        margin-inline: auto;
-        text-align: center;
-      }
-
-      .section-head p {
-        margin-top: 1.1rem;
-      }
-
-      /* Status pills, the same tinted capsules the app uses */
-
-      .stamp {
-        display: inline-flex;
-        align-items: center;
-        justify-self: start;
-        padding: 0.3em 0.85em;
-        border-radius: var(--radius-pill);
-        font-weight: 600;
-        font-size: 0.8rem;
-        line-height: 1.3;
-        white-space: nowrap;
-        color: var(--accent-deep);
-        background: color-mix(in srgb, var(--accent) 14%, transparent);
-      }
-
-      .stamp--good {
-        color: var(--teal);
-        background: color-mix(in srgb, var(--teal) 14%, transparent);
-      }
-
-      .stamp--maybe {
-        color: var(--amber);
-        background: color-mix(in srgb, var(--amber) 14%, transparent);
-      }
-
-      .stamp--bad {
-        color: var(--rose);
-        background: color-mix(in srgb, var(--rose) 14%, transparent);
-      }
-
-      /* How it works: four big tiles */
-
-      .bento {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: clamp(0.85rem, 2vw, 1.4rem);
-        margin-top: clamp(2.5rem, 5vw, 4rem);
-      }
-
-      .tile {
-        display: grid;
-        grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-        gap: clamp(1.5rem, 4vw, 3rem);
-        align-items: center;
-        min-width: 0;
-        padding: clamp(1.6rem, 3.6vw, 2.9rem);
-        background: var(--surface);
-        border-radius: var(--radius-tile);
-        overflow: hidden;
-      }
-
-      .tile .stamp {
-        margin-bottom: 0.35rem;
-      }
-
-      .tile__text {
-        display: grid;
-        gap: 0.85rem;
-      }
-
-      .tile__highlights {
-        display: grid;
-        gap: 0.5rem;
-        margin: 0;
-      }
-
-      .tile__highlights li {
-        position: relative;
-        padding-left: 1.1rem;
-        color: var(--ink-soft);
-        font-size: 0.95rem;
+        padding-top: 8px;
         line-height: 1.4;
       }
 
-      .tile__highlights li::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0.5em;
-        width: 0.4rem;
-        height: 0.4rem;
-        border-radius: 50%;
-        background: var(--accent);
+      /* One 28s loop drives the whole demo: the still fades out, the stitched
+         strip slides through its three panels, and the captions light up in
+         step. The percentages are shared across all six keyframes, so changing
+         the duration in one place keeps them in sync. */
+      @keyframes score-still {
+        0% { opacity: 1; }
+        21.43% { opacity: 1; }
+        25% { opacity: 0; }
+        96.43% { opacity: 0; }
+        100% { opacity: 1; }
       }
 
-      .tile__art {
-        min-width: 0;
+      @keyframes score-strip-fade {
+        0% { opacity: 0; }
+        21.43% { opacity: 0; }
+        25% { opacity: 1; }
+        96.43% { opacity: 1; }
+        100% { opacity: 0; }
       }
 
-      .tile--dark {
-        background: var(--band-tile);
-        color: var(--band-ink);
+      @keyframes score-strip-slide {
+        0% { transform: translateY(-8.22%); }
+        39.29% { transform: translateY(-8.22%); animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1); }
+        48.21% { transform: translateY(-30.33%); }
+        66.07% { transform: translateY(-30.33%); animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1); }
+        75% { transform: translateY(-54.8%); }
+        100% { transform: translateY(-54.8%); }
       }
 
-      .tile--dark h3 {
-        color: var(--band-ink);
+      @keyframes score-caption-1 {
+        0% { opacity: 1; }
+        21.43% { opacity: 1; }
+        23.57% { opacity: 0.28; }
+        97.14% { opacity: 0.28; }
+        100% { opacity: 1; }
       }
 
-      .tile--dark .tile__highlights li {
-        color: var(--band-soft);
+      @keyframes score-caption-2 {
+        0% { opacity: 0.28; }
+        21.43% { opacity: 0.28; }
+        23.57% { opacity: 1; }
+        68.57% { opacity: 1; }
+        70.71% { opacity: 0.28; }
+        100% { opacity: 0.28; }
       }
 
-      .tile--dark .tile__highlights li::before {
-        background: var(--band-accent);
+      @keyframes score-caption-3 {
+        0% { opacity: 0.28; }
+        69.64% { opacity: 0.28; }
+        71.79% { opacity: 1; }
+        96.43% { opacity: 1; }
+        98.57% { opacity: 0.28; }
+        100% { opacity: 0.28; }
       }
 
-      .tile--dark .stamp {
-        color: var(--band-accent);
-        background: rgba(41, 151, 255, 0.18);
+      .is-still {
+        animation: score-still 28s linear infinite;
       }
 
-      @media (max-width: 62rem) {
-        .tile {
-          grid-template-columns: minmax(0, 1fr);
-        }
+      .is-strip {
+        opacity: 0;
+        animation: score-strip-fade 28s linear infinite;
       }
 
-      /* The "bring your own key" notice inside the dark tile */
-
-      .byok {
-        display: grid;
-        grid-template-columns: 1.6rem minmax(0, 1fr);
-        gap: 0.85rem;
-        align-items: start;
-        padding: 1.1rem 1.25rem 1.2rem;
-        background: rgba(41, 151, 255, 0.12);
-        border: 1px solid rgba(41, 151, 255, 0.4);
-        border-radius: var(--radius-card);
-        color: var(--band-ink);
+      .is-strip > img {
+        transform: translateY(-8.22%);
+        animation: score-strip-slide 28s linear infinite;
       }
 
-      .byok > svg {
-        width: 1.35rem;
-        height: 1.35rem;
-        margin-top: 0.1rem;
-        color: var(--band-accent);
+      .is-cap1 {
+        animation: score-caption-1 28s linear infinite;
       }
 
-      .byok__title {
-        font-family: var(--font-display);
-        font-weight: 700;
-        font-size: 1.1rem;
-        letter-spacing: -0.02em;
-        line-height: 1.3;
-        color: #fff;
+      .is-cap2 {
+        opacity: 0.28;
+        animation: score-caption-2 28s linear infinite;
       }
 
-      .byok__note {
-        margin-top: 0.6rem;
-        font-size: 0.95rem;
-        line-height: 1.55;
-        color: var(--band-ink);
+      .is-cap3 {
+        opacity: 0.28;
+        animation: score-caption-3 28s linear infinite;
       }
 
-      /* The provider badges inside the "bring your own key" notice */
+      /* ---------- tailor ---------- */
 
-      .providers {
+      .lift {
         display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: clamp(16px, 4vw, 48px);
+        padding: 40px 0 8px;
         flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 0.65rem;
       }
 
-      .provider {
-        display: inline-flex;
+      .lift__item {
+        display: flex;
+        flex-direction: column;
         align-items: center;
-        gap: 0.4rem;
-        padding: 0.35rem 0.7rem;
-        background: rgba(41, 151, 255, 0.14);
-        border: 1px solid rgba(41, 151, 255, 0.35);
-        border-radius: var(--radius-pill);
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: var(--band-ink);
-        white-space: nowrap;
+        gap: 6px;
       }
 
-      .provider__icon {
-        flex-shrink: 0;
-        width: 0.9rem;
-        height: 0.9rem;
-        color: var(--band-accent);
+      .lift__score {
+        font-weight: 800;
+        font-size: clamp(88px, 18vw, 220px);
+        line-height: 0.95;
+        letter-spacing: -0.06em;
       }
 
-      .provider--muted {
-        background: transparent;
-        border-style: dashed;
-        border-color: var(--band-line);
-        color: var(--band-soft);
-        font-weight: 500;
-        white-space: normal;
+      .lift__score--before {
+        color: var(--score-mid);
       }
 
-      /* Step 1: the search bar, with its exclude-a-word tip */
-
-      .searchmock {
-        margin-bottom: 2.75rem;
+      .lift__score--after {
+        color: var(--score-good);
       }
 
-      .searchmock__bar {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr) auto;
-        align-items: center;
-        background: var(--paper);
-        border: 1px solid var(--accent);
-        border-radius: var(--radius-pill);
-        padding: 0.2rem 0.2rem 0.2rem 1.1rem;
-        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
-      }
-
-      .searchmock__title {
-        padding: 0.55rem 0.75rem 0.55rem 0;
+      .lift__label {
+        font-size: 17px;
         color: var(--ink-soft);
-        font-size: 0.88rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
       }
 
-      .searchmock__rule {
-        width: 1px;
-        height: 1.4rem;
-        background: var(--line);
+      .lift__arrow {
+        font-weight: 800;
+        font-size: clamp(48px, 9vw, 110px);
+        line-height: 1;
+        color: var(--band-dim);
       }
 
-      .searchmock__location-wrap {
-        position: relative;
-        min-width: 0;
-      }
-
-      .searchmock__location {
-        display: block;
-        padding: 0.55rem 0.75rem 0.55rem 0.9rem;
-        color: var(--ink);
-        font-weight: 600;
-        font-size: 0.88rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .searchmock__cursor {
-        display: inline-block;
-        width: 1px;
-        height: 0.95em;
-        margin-left: 1px;
-        background: var(--ink);
-        vertical-align: -0.15em;
-      }
-
-      .searchmock__tip {
-        position: absolute;
-        left: 0.9rem;
-        top: calc(100% + 0.6rem);
-        padding: 0.45rem 0.7rem;
-        max-width: 15rem;
-        background: #1d1d1f;
-        color: #fff;
-        font-size: 0.72rem;
-        line-height: 1.35;
-        border-radius: 6px;
-        white-space: nowrap;
-        box-shadow: var(--lift);
-      }
-
-      .searchmock__tip::before {
-        content: "";
-        position: absolute;
-        left: 1.1rem;
-        top: -0.3rem;
-        width: 0.6rem;
-        height: 0.6rem;
-        background: #1d1d1f;
-        transform: rotate(45deg);
-      }
+      /* ---------- apply ---------- */
 
       .chips {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.55rem;
+        justify-content: center;
+        gap: 12px;
+        padding-top: 24px;
       }
 
       .chip {
-        display: inline-flex;
-        align-items: center;
-        min-height: 2.5rem;
-        padding: 0.4rem 1rem;
-        background: var(--paper);
-        border: 1px solid var(--line);
+        background: var(--surface);
         border-radius: var(--radius-pill);
-        color: var(--ink);
+        padding: 12px 22px;
+        font-size: 17px;
         font-weight: 600;
-        font-size: 0.88rem;
-        text-decoration: none;
-        transition: border-color 0.15s ease, color 0.15s ease;
       }
 
-      .chip:hover {
-        border-color: var(--accent);
-        color: var(--accent);
-      }
+      /* ---------- your AI ---------- */
 
-      .chips__break {
-        flex-basis: 100%;
-        height: 0;
-      }
-
-      .caption {
-        margin-top: 0.85rem;
-        font-size: 0.88rem;
-        color: var(--ink-soft);
-      }
-
-      /* Steps 2 and 4: little app-style lists */
-
-      .plate {
-        background: var(--paper);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-card);
-        overflow: hidden;
-      }
-
-      .plate li {
+      .providers {
         display: grid;
-        align-items: center;
-        gap: 1rem;
-        padding: 0.95rem 1.2rem;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 16px;
+        width: 100%;
+        padding-top: 48px;
       }
 
-      .plate li + li {
-        border-top: 1px solid var(--line);
-      }
-
-      /* Step 2's art: the real apply page's numbered/checkmark process
-         list, shown mid-way through an example application. */
-
-      .flow-card {
-        background: var(--paper);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-card);
-        padding: 1.1rem 1.2rem;
-      }
-
-      .flow-steps {
-        display: grid;
-      }
-
-      .flow-step {
-        display: flex;
-        gap: 0.85rem;
-      }
-
-      .flow-step__rail {
+      .provider {
+        background: var(--band-tile);
+        border-radius: 24px;
+        padding: 36px 24px;
         display: flex;
         flex-direction: column;
+        gap: 14px;
         align-items: center;
-        flex-shrink: 0;
       }
 
-      .flow-step__marker {
+      .provider svg {
+        color: var(--paper);
+      }
+
+      .provider__plus {
+        width: 48px;
+        height: 48px;
         display: flex;
         align-items: center;
         justify-content: center;
-        flex-shrink: 0;
-        width: 1.8rem;
-        height: 1.8rem;
-        border-radius: 50%;
-        border: 2px solid var(--line);
-        background: var(--paper);
-        color: var(--ink-soft);
-        font-family: var(--font-display);
-        font-weight: 700;
-        font-size: 0.85rem;
-      }
-
-      .flow-step--done .flow-step__marker {
-        border-color: var(--teal);
-        background: var(--teal);
-        color: #fff;
-      }
-
-      .flow-step__line {
-        width: 2px;
-        flex: 1;
-        min-height: 1.4rem;
-        margin: 0.25rem 0;
-        background: var(--line);
-      }
-
-      .flow-step__content {
-        flex: 1;
-        min-width: 0;
-        padding-bottom: 1.1rem;
-      }
-
-      .flow-step:last-child .flow-step__content {
-        padding-bottom: 0;
-      }
-
-      .flow-step__header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 0.75rem;
-      }
-
-      .flow-step__title {
-        display: block;
-        font-family: var(--font-display);
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: var(--ink);
-        margin-bottom: 0.2rem;
-      }
-
-      .flow-step__status {
-        display: block;
-        font-size: 0.8rem;
-        color: var(--ink-soft);
-      }
-
-      .flow-step__status--done {
-        color: var(--teal);
-      }
-
-      .flow-step__chevron {
-        flex-shrink: 0;
-        margin-top: 0.25rem;
-        font-size: 0.65rem;
-        color: var(--ink-soft);
-      }
-
-      .flow-step__body {
-        margin-top: 0.9rem;
-        padding: 1rem 1.1rem;
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-card);
-      }
-
-      .flow-step__body p {
-        color: var(--ink-soft);
-        font-size: 0.88rem;
-        line-height: 1.5;
-      }
-
-      .flow-step__body .btn {
-        margin-top: 0.85rem;
-      }
-
-      .flow-step__note {
-        margin-top: 0.85rem;
-      }
-
-      .tracker li {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        row-gap: 0.35rem;
-      }
-
-      .tracker li > div {
-        flex: 1 1 9rem;
-        min-width: 0;
-      }
-
-      .tracker strong {
-        display: block;
-        font-family: var(--font-display);
-        font-weight: 700;
-        font-size: 1.02rem;
-        letter-spacing: -0.01em;
-        line-height: 1.25;
-      }
-
-      .tracker .where {
-        display: block;
-        font-size: 0.85rem;
-        line-height: 1.4;
-        color: var(--ink-soft);
-      }
-
-      /* Step 4: the app's own "paste a job link" form */
-
-      .addjob {
-        margin-bottom: 0.9rem;
-        padding: 0.9rem 1.1rem 1rem;
-        background: var(--paper);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-card);
-      }
-
-      .addjob__label {
-        display: block;
-        margin-bottom: 0.45rem;
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: var(--ink-soft);
-      }
-
-      .addjob__row {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-      }
-
-      .addjob__field {
-        flex: 1;
-        min-width: 0;
-        padding: 0.6rem 1rem;
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-pill);
-        font-size: 0.88rem;
-        color: var(--ink);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .addjob__go {
-        flex-shrink: 0;
-        padding: 0.6rem 1.1rem;
-        background: var(--ink);
+        font-size: 44px;
+        font-weight: 300;
+        line-height: 1;
         color: var(--paper);
-        border-radius: var(--radius-pill);
-        font-size: 0.85rem;
-        font-weight: 600;
-        line-height: 1.2;
-        white-space: nowrap;
       }
 
-      /* Below this the field and the button no longer both fit on one line
-         wide enough to read a URL in — stack them instead, like the app's own
-         Add Job form does at the same width. */
-      @media (max-width: 26rem) {
-        .addjob__row {
-          flex-wrap: wrap;
-        }
-
-        .addjob__field {
-          flex-basis: 100%;
-        }
-
-        .addjob__go {
-          flex: 1;
-        }
-      }
-
-      .via {
-        display: inline-block;
-        margin-left: 0.3rem;
-        padding: 0.05em 0.6em;
-        background: var(--surface);
-        border-radius: var(--radius-pill);
-        font-size: 0.72rem;
-        font-weight: 600;
-        line-height: 1.5;
-        white-space: nowrap;
-      }
-
-      /* Step 3: a resume and a cover letter */
-
-      .sheets {
-        position: relative;
-        height: 15rem;
-        max-width: 22rem;
-      }
-
-      .sheet {
-        position: absolute;
-        width: 10.5rem;
-        height: 13.5rem;
-        padding: 1rem 0.95rem;
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 18px 34px -14px rgba(0, 0, 0, 0.6);
-      }
-
-      .sheet--letter {
-        left: 5.6rem;
-        top: 0.9rem;
-        transform: rotate(4deg);
-      }
-
-      .sheet--resume {
-        left: 0.2rem;
-        top: 0.5rem;
-        transform: rotate(-3deg);
-      }
-
-      .sheet i {
-        display: block;
-        height: 0.36rem;
-        margin-top: 0.5rem;
-        background: #e8e8ed;
-        border-radius: 2px;
-      }
-
-      .sheet i.w9 {
-        width: 90%;
-      }
-      .sheet i.w8 {
-        width: 78%;
-      }
-      .sheet i.w6 {
-        width: 60%;
-      }
-      .sheet i.w4 {
-        width: 40%;
-      }
-
-      .sheet i.head {
-        height: 0.7rem;
-        width: 55%;
-        margin-top: 0;
-        background: #1d1d1f;
-      }
-
-      .sheet i.rule {
-        height: 2px;
-        margin-top: 0.8rem;
-        background: #0071e3;
-      }
-
-      .sheet i.gap {
-        margin-top: 1rem;
-      }
-
-      .sheet__tag {
-        position: absolute;
-        right: -0.6rem;
-        bottom: 0.9rem;
-        padding: 0.28rem 0.7rem;
-        background: #0071e3;
-        color: #fff;
-        font-weight: 700;
-        font-size: 0.75rem;
-        border-radius: var(--radius-pill);
-      }
-
-      /* The three provider icons from the byok note, echoed here as small
-         floating discs pinned to .sheets' own right edge so they read as
-         hovering next to the paper rather than sitting in the text. The
-         accessible provider names stay put in .providers — these are a
-         decorative repeat (.sheets is already aria-hidden). */
-
-      .logo-float {
-        position: absolute;
-        display: grid;
-        place-items: center;
-        width: 4.8rem;
-        height: 4.8rem;
-        background: #fff;
-        border-radius: 50%;
-        box-shadow: 0 10px 20px -9px rgba(0, 0, 0, 0.6);
-        animation: logo-float-bob 4.5s ease-in-out infinite;
-      }
-
-      .logo-float svg {
-        width: 2.2rem;
-        height: 2.2rem;
-        color: var(--band-tile);
-      }
-
-      .logo-float--anthropic {
-        --rot: -9deg;
-        top: -0.5rem;
-        right: -1.8rem;
-        animation-delay: 0s;
-      }
-
-      .logo-float--openai {
-        --rot: 7deg;
-        top: 5.6rem;
-        right: -2.4rem;
-        animation-delay: 0.7s;
-      }
-
-      .logo-float--deepseek {
-        --rot: -5deg;
-        top: 11.4rem;
-        right: -1.2rem;
-        animation-delay: 1.4s;
-      }
-
-      @keyframes logo-float-bob {
-        0%,
-        100% {
-          transform: translateY(0) rotate(var(--rot));
-        }
-        50% {
-          transform: translateY(-0.5rem) rotate(var(--rot));
-        }
-      }
-
-      @media (max-width: 30rem) {
-        .logo-float {
-          display: none;
-        }
-      }
-
-      /* ---------- assistant (MCP) feature ---------- */
-
-      .assistant {
-        display: grid;
-        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-        gap: clamp(2rem, 5vw, 4rem);
-        align-items: center;
-        background: var(--surface);
-        border-radius: var(--radius-tile);
-        padding: clamp(1.75rem, 5vw, 4.5rem);
-      }
-
-      .assistant h2 {
-        font-size: clamp(2rem, 1.2rem + 2.8vw, 3.4rem);
-      }
-
-      .assistant .lede {
-        margin-top: 1.1rem;
-      }
-
-      .can {
-        margin-top: 1.5rem;
-      }
-
-      .can li {
-        display: grid;
-        grid-template-columns: 1.5rem minmax(0, 1fr);
-        gap: 0.7rem;
-        align-items: start;
-        padding-block: 0.6rem;
-        border-bottom: 1px solid var(--line);
-        line-height: 1.45;
-      }
-
-      .can li:first-child {
-        border-top: 1px solid var(--line);
-      }
-
-      .can svg {
-        width: 1.2rem;
-        height: 1.2rem;
-        margin-top: 0.18rem;
-        color: var(--teal);
-      }
-
-      .assistant__note {
-        margin-top: 1.5rem;
-        max-width: 34rem;
-        font-size: 0.95rem;
-        color: var(--ink-soft);
-      }
-
-      .assistant__side {
-        display: grid;
-        gap: 1rem;
-        align-self: start;
-      }
-
-      .connectcard {
-        padding: 1.5rem 1.5rem 1.6rem;
-        background: var(--paper);
-        border: 1px solid var(--line);
-        border-radius: 22px;
-      }
-
-      .connectcard__cc {
-        margin-top: 1.25rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--line);
-        font-size: 0.92rem;
-        color: var(--ink-soft);
-      }
-
-      .block {
-        display: block;
-        margin-top: 0.5rem;
-        padding: 0.6rem 0.8rem;
-        background: var(--surface);
-        border-radius: 10px;
-        font-size: 0.78rem;
-        line-height: 1.5;
-        color: var(--ink);
-        overflow-wrap: anywhere;
-        user-select: all;
-      }
-
-      .chat {
-        display: grid;
-        gap: 0.9rem;
-        padding: 1.25rem;
-        background: var(--paper);
-        border: 1px solid var(--line);
-        border-radius: 22px;
-        box-shadow: var(--lift);
-      }
-
-      .bubble {
-        max-width: 94%;
-        padding: 0.85rem 1.05rem;
-        font-size: 0.95rem;
-        line-height: 1.5;
-      }
-
-      .bubble--me {
-        justify-self: end;
-        background: var(--accent-fill);
-        color: #fff;
-        border-radius: 20px 20px 6px 20px;
-      }
-
-      .bubble--ai {
-        justify-self: start;
-        background: var(--surface);
-        border-radius: 20px 20px 20px 6px;
-      }
-
-      .bubble__tool {
-        display: inline-flex;
-        margin-bottom: 0.5rem;
-        padding: 0.2em 0.7em;
-        background: var(--paper);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-pill);
-        font-size: 0.75rem;
-        font-weight: 600;
-        line-height: 1.4;
-        color: var(--ink-soft);
-      }
-
-      .mini {
-        position: relative;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        row-gap: 0.35rem;
-        column-gap: 0.75rem;
-        margin-top: 0.6rem;
-        padding: 0.7rem 0.9rem 0.7rem 1.2rem;
-        background: var(--paper);
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        overflow: hidden;
-      }
-
-      .mini > div {
-        flex: 1 1 9rem;
-        min-width: 0;
-      }
-
-      /* Remote jobs get the app's green edge. */
-      .mini::before {
-        content: "";
-        position: absolute;
-        inset: 0 auto 0 0;
-        width: 5px;
-        background: var(--teal);
-      }
-
-      .mini strong {
-        display: block;
-        font-family: var(--font-display);
-        font-weight: 700;
-        font-size: 0.98rem;
-        letter-spacing: -0.01em;
-        line-height: 1.25;
-      }
-
-      .mini .meta {
-        display: block;
-        font-size: 0.82rem;
-        line-height: 1.4;
-        color: var(--ink-soft);
-      }
-
-      .chat__caption {
-        font-size: 0.85rem;
-        color: var(--ink-soft);
-        text-align: center;
-      }
-
-      .connect__title {
-        font-size: 1.35rem;
-      }
-
-      .connect {
-        counter-reset: step;
-        margin-top: 0.9rem;
-        display: grid;
-        gap: 0.85rem;
-      }
-
-      .connect li {
-        counter-increment: step;
-        display: grid;
-        grid-template-columns: 1.75rem minmax(0, 1fr);
-        gap: 0.8rem;
-        align-items: start;
-        line-height: 1.5;
-      }
-
-      .connect li::before {
-        content: counter(step);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 1.75rem;
-        height: 1.75rem;
-        background: var(--ink);
-        color: var(--paper);
-        border-radius: 50%;
-        font-family: var(--font-display);
-        font-weight: 700;
-        font-size: 0.85rem;
-      }
-
-      code {
-        font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-      }
-
-      .addr {
-        display: block;
-        width: fit-content;
-        max-width: 100%;
-        margin-top: 0.55rem;
-        padding: 0.45rem 0.9rem;
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-field);
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--ink);
-        overflow-wrap: anywhere;
-        user-select: all;
-      }
-
-      .inline {
-        display: inline;
-        padding: 0.1em 0.4em;
-        background: var(--paper);
-        border: 1px solid var(--line);
-        border-radius: 6px;
-        font-size: 0.85em;
-        color: var(--ink);
-        overflow-wrap: anywhere;
-      }
-
-      .bubble__tool + .bubble__tool {
-        margin-left: 0.3rem;
-      }
-
-      /* ---------- the free band ---------- */
-
-      .free {
-        background: var(--band);
-        color: var(--band-ink);
-        padding-block: clamp(4.5rem, 10vw, 8rem);
-      }
-
-      .free .section-head h2 {
-        color: #fff;
-      }
-
-      .free .section-head p {
-        color: var(--band-soft);
-        font-size: clamp(1.1rem, 1rem + 0.5vw, 1.35rem);
-        line-height: 1.5;
-        margin-inline: auto;
-        max-width: 38rem;
-      }
-
-      .free a {
-        color: var(--band-accent);
-      }
-
-      .free :focus-visible {
-        outline-color: var(--band-accent);
-      }
-
-      .ledger {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: clamp(0.85rem, 2vw, 1.4rem);
-        margin-top: clamp(2.5rem, 5vw, 4rem);
-      }
-
-      .ledger__col {
-        background: var(--band-tile);
-        border-radius: var(--radius-tile);
-        padding: clamp(1.6rem, 3.6vw, 2.75rem);
-      }
-
-      .ledger h3 {
-        color: #fff;
-        font-size: 1.6rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid var(--band-line);
-      }
-
-      .ledger li {
-        display: grid;
-        grid-template-columns: 1.6rem minmax(0, 1fr);
-        gap: 0.7rem;
-        align-items: start;
-        padding-block: 0.8rem;
-        border-bottom: 1px solid var(--band-line);
-        line-height: 1.45;
-        color: var(--band-ink);
-      }
-
-      .ledger svg {
-        width: 1.25rem;
-        height: 1.25rem;
-        margin-top: 0.17rem;
-      }
-
-      .ledger .good {
-        color: var(--band-good);
-      }
-
-      .ledger .key {
-        color: var(--band-accent);
-      }
-
-      .ledger .note-small {
-        margin-top: 1.1rem;
-        font-size: 0.95rem;
-        line-height: 1.55;
-        color: var(--band-soft);
-      }
-
-      /* ---------- questions ---------- */
-
-      .faq__grid {
-        display: grid;
-        grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-        gap: clamp(2rem, 6vw, 5rem);
-        align-items: start;
-      }
-
-      .faq__intro {
-        position: sticky;
-        top: 7rem;
-      }
-
-      .faq__intro p {
-        margin-top: 1rem;
-        max-width: 22rem;
-        color: var(--ink-soft);
-      }
-
-      .faq__list {
-        border-top: 1px solid var(--line);
-      }
-
-      details {
-        border-bottom: 1px solid var(--line);
-      }
-
-      summary {
-        position: relative;
-        display: block;
-        padding: 1.3rem 3rem 1.3rem 0;
-        font-family: var(--font-display);
-        font-weight: 600;
-        font-size: 1.25rem;
-        line-height: 1.25;
+      .provider__name {
+        font-weight: 800;
+        font-size: 26px;
         letter-spacing: -0.02em;
-        color: var(--ink);
-        cursor: pointer;
-        list-style: none;
       }
 
-      summary::-webkit-details-marker {
-        display: none;
+      .provider__note {
+        font-size: 16px;
+        color: var(--band-soft);
       }
 
-      summary::before,
-      summary::after {
-        content: "";
-        position: absolute;
-        right: 0.5rem;
-        top: 50%;
-        width: 1rem;
-        height: 2px;
-        margin-top: -1px;
-        background: var(--ink);
-        border-radius: 2px;
-        transition: transform 0.2s ease;
+      /* ---------- pricing ---------- */
+
+      .plans {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px;
+        width: 100%;
+        padding-top: 48px;
+        text-align: left;
       }
 
-      summary::after {
-        transform: rotate(90deg);
+      .plan {
+        background: var(--paper);
+        border-radius: var(--radius-card);
+        padding: 44px 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
 
-      details[open] summary::after {
-        transform: rotate(0deg);
+      .plan__price {
+        font-weight: 800;
+        font-size: 56px;
+        line-height: 1;
+        letter-spacing: -0.04em;
       }
 
-      summary:hover {
-        color: var(--accent);
+      .plan__name {
+        font-size: 21px;
+        font-weight: 700;
       }
 
-      .answer {
-        padding: 0 3rem 1.5rem 0;
+      .plan__desc {
+        font-size: 17px;
+        line-height: 1.45;
         color: var(--ink-soft);
       }
 
-      .answer p {
-        max-width: 36rem;
+      /* The $5 plan: a gradient border drawn as 2px of padding behind an inset
+         near-black card, plus its own glow. */
+      .plan--featured {
+        position: relative;
+        border-radius: 30px;
+        padding: 2px;
+        background: linear-gradient(135deg, var(--accent-bright), var(--violet) 55%, var(--cyan));
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.04),
+          0 20px 70px rgba(0, 113, 227, 0.3),
+          0 0 100px rgba(0, 113, 227, 0.2);
       }
 
-      .answer p + p {
-        margin-top: 0.75rem;
+      .plan--featured .plan {
+        height: 100%;
+        background: #0b0b0f;
+        color: var(--band-ink);
       }
 
-      /* ---------- closing call to action ---------- */
-
-      .closing {
-        padding-block: 0 clamp(3.5rem, 8vw, 6rem);
+      .plan--featured .plan__desc {
+        color: var(--band-soft);
       }
 
-      .closing__tile {
-        background: var(--surface);
-        border-radius: var(--radius-tile);
-        padding: clamp(3rem, 8vw, 6rem) var(--gutter);
-        text-align: center;
+      .plan__badge {
+        align-self: center;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: #0b0b0f;
+        background: var(--accent-bright);
+        padding: 5px 12px;
+        border-radius: var(--radius-pill);
+        margin-bottom: 6px;
       }
 
-      .closing__tile h2 {
-        max-width: 11em;
-        margin-inline: auto;
+      .plan__price--featured {
+        font-size: 80px;
+        letter-spacing: -0.045em;
+        color: var(--paper);
+        background: linear-gradient(90deg, #ffffff, var(--accent-bright));
+        -webkit-background-clip: text;
+        background-clip: text;
       }
 
-      .closing__tile p {
-        margin-top: 1.1rem;
+      @supports (-webkit-text-fill-color: transparent) {
+        .plan__price--featured {
+          -webkit-text-fill-color: transparent;
+        }
       }
 
-      .closing__tile .btn--line {
-        background: var(--paper);
+      .plan__per {
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: 0;
+        color: var(--band-soft);
+        -webkit-text-fill-color: var(--band-soft);
       }
 
-      .closing__tile .btn--line:hover {
-        background: var(--ink);
+      /* ---------- trust ---------- */
+
+      .trust__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 48px 32px;
+        width: 100%;
+        padding-top: 48px;
+        text-align: left;
+      }
+
+      .trust__item {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .trust__title {
+        font-size: 23px;
+        font-weight: 700;
+        letter-spacing: -0.015em;
+      }
+
+      .trust__body {
+        font-size: 17px;
+        line-height: 1.45;
+        color: var(--ink-soft);
+      }
+
+      .trust .band__inner {
+        padding-bottom: 72px;
+      }
+
+      .trust .btn--text {
+        padding-top: 8px;
+      }
+
+      .trust__privacy {
+        text-decoration: none;
+        color: var(--ink-soft);
+        font-size: 15px;
+      }
+
+      /* ---------- story ---------- */
+
+      .story .band__inner {
+        max-width: 760px;
+        padding-block: 96px;
+        gap: 16px;
+      }
+
+      .story__title {
+        font-weight: 800;
+        font-size: clamp(30px, 4.5vw, 48px);
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+      }
+
+      .story__body {
+        font-size: 21px;
+        line-height: 1.45;
+        color: var(--ink-soft);
+      }
+
+      /* ---------- final call to action ---------- */
+
+      .closing .band__inner {
+        gap: 36px;
       }
 
       /* ---------- footer ---------- */
 
       .foot {
+        background: var(--surface);
         border-top: 1px solid var(--line);
-        background: var(--paper);
-        padding-block: clamp(2.25rem, 5vw, 3.5rem) 1.5rem;
-        font-size: 0.9rem;
       }
 
-      .foot__grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
-        gap: 2rem;
+      .foot__inner {
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+        padding-block: 48px 32px;
       }
 
-      .foot .brand {
-        font-size: 1.05rem;
+      .foot__top {
+        display: flex;
+        justify-content: space-between;
+        gap: 40px;
+        flex-wrap: wrap;
       }
 
-      .foot .brand__mark {
-        width: 1.75rem;
-        height: 1.75rem;
-        border-radius: 7px;
+      .foot__brand {
+        max-width: 320px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
       }
 
-      .foot__statement {
-        margin-top: 0.85rem;
-        max-width: 18rem;
+      .foot__tagline {
+        font-size: 15px;
+        line-height: 1.45;
         color: var(--ink-soft);
-        font-weight: 500;
-        text-wrap: balance;
       }
 
-      .foot h2 {
-        font-family: var(--font-body);
-        font-size: 0.78rem;
-        letter-spacing: 0;
-        font-weight: 600;
-        color: var(--ink-soft);
-        line-height: 1.3;
+      .foot__cols {
+        display: flex;
+        gap: 48px;
+        flex-wrap: wrap;
       }
 
-      .foot ul {
-        margin-top: 0.7rem;
-        display: grid;
-        gap: 0.1rem;
+      .foot__col {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 150px;
       }
 
-      .foot li a {
-        display: inline-block;
-        padding-block: 0.28rem;
+      .foot__col h2 {
+        font-weight: 700;
+        font-size: 14px;
         color: var(--ink);
-        text-decoration: none;
       }
 
-      .foot li a:hover {
-        color: var(--accent);
+      .foot__col a {
+        text-decoration: none;
+        color: var(--ink-soft);
+        font-size: 14px;
       }
 
       .foot__legal {
-        margin-top: 2.25rem;
-        padding-top: 1.1rem;
-        border-top: 1px solid var(--line);
-        font-size: 0.82rem;
+        font-size: 13px;
+        line-height: 1.6;
         color: var(--ink-soft);
+        border-top: 1px solid var(--line);
+        padding-top: 20px;
+      }
+
+      .foot__legal a {
+        color: inherit;
       }
 
       /* ---------- responsive ---------- */
 
-      @media (max-width: 62rem) {
-        .showcase__grid {
-          grid-template-columns: minmax(0, 1fr);
-          justify-items: stretch;
-          max-width: 34rem;
+      @media (max-width: 600px) {
+        :root {
+          --band-pad: 88px;
         }
 
-        .showcase__arrow {
-          justify-self: center;
-          transform: rotate(90deg);
-          margin-block: 0.4rem;
+        .nav__links {
+          gap: 18px;
         }
 
-        .assistant {
-          grid-template-columns: minmax(0, 1fr);
-        }
-
-        .faq__grid {
-          grid-template-columns: minmax(0, 1fr);
-        }
-
-        .faq__intro {
-          position: static;
-        }
-
-        .foot__grid {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-
-        .foot__grid > :first-child {
-          grid-column: 1 / -1;
-        }
-      }
-
-      @media (max-width: 54rem) {
-        .bento,
-        .ledger {
-          grid-template-columns: minmax(0, 1fr);
-        }
-
-        .top__row {
-          flex-wrap: wrap;
-          gap: 0.6rem 1rem;
-        }
-
-        .top__actions {
-          margin-left: auto;
-        }
-
-        .search {
-          order: 3;
-          flex-basis: 100%;
-          max-width: none;
-        }
-      }
-
-      @media (max-width: 34rem) {
-        body {
-          font-size: 1rem;
-        }
-
-        .search {
-          grid-template-columns: minmax(0, 1fr) auto;
-          border-radius: 1.4rem;
-          padding: 0.2rem 0.2rem 0.2rem 1rem;
-        }
-
-        /* iOS Safari zooms the page when a field under 16px gets focus. */
-        .search input {
-          font-size: 1rem;
-        }
-
-        .search .btn {
-          min-height: 2.6rem;
-        }
-
-        .search__rule {
+        /* Brand plus four links wraps to three lines here, costing ~160px of
+           nav before any content. The two in-page anchors are the ones worth
+           losing: scrolling reaches both, while "Browse jobs" and "Try free"
+           are the actual exits. */
+        .nav__link[href^="#"] {
           display: none;
         }
 
-        .search input:first-of-type {
-          grid-column: 1 / -1;
-          border-bottom: 1px solid var(--line);
-          border-radius: 0;
+        .score__layout {
+          gap: 40px;
         }
 
-        .search .search__rule + label + input {
-          padding-left: 0;
+        .stats {
+          gap: 36px;
         }
 
-        .cta-row .btn {
-          flex: 1 1 100%;
-        }
-
-        .readout__row {
-          grid-template-columns: 4.6rem minmax(0, 1fr);
-        }
-
-        .answer,
-        summary {
-          padding-right: 2.25rem;
-        }
-
-        .foot__grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        .cta-row {
+          gap: 16px;
         }
       }
 
@@ -2344,11 +1137,20 @@
           scroll-behavior: auto;
         }
 
-        .hl,
-        .readout__row,
-        .showcase__arrow path,
-        .logo-float {
+        /* Settles on the first panel with every caption legible, rather than
+           freezing mid-slide with two of the three dimmed. */
+        .is-still,
+        .is-strip,
+        .is-strip > img,
+        .is-cap1,
+        .is-cap2,
+        .is-cap3 {
           animation: none;
+        }
+
+        .is-cap2,
+        .is-cap3 {
+          opacity: 1;
         }
       }
     </style>
@@ -2357,712 +1159,361 @@
   <body>
     <a class="skip" href="#main">Skip to content</a>
 
-    <header class="top">
-      <div class="wrap top__row">
-        <a class="brand" href="/" aria-label="Yabot Jobs home">
-          <span class="brand__mark" aria-hidden="true">
-            <svg viewBox="0 0 48 48" fill="none" width="20" height="20">
-              <path d="M9 24h6l4-10 6 20 4-10h10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </span>
-          Yabot Jobs
+    <header class="nav">
+      <div class="wrap nav__row">
+        <a class="brand" href="/">
+          <svg class="brand__mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <path d="M9 24h6l4-10 6 20 4-10h10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span>yabot<span class="brand__accent">.jobs</span></span>
         </a>
-
-        <form class="search" role="search" action="/jobs" method="get">
-          <label class="sr" for="search-q">Job title or keyword</label>
-          <input id="search-q" name="q" type="search" placeholder="Search postings by title…" autocomplete="off" enterkeyhint="search" />
-          <span class="search__rule" aria-hidden="true"></span>
-          <label class="sr" for="search-location">City or state</label>
-          <input id="search-location" name="location" type="search" placeholder="Search by city or state…" autocomplete="off" enterkeyhint="search" />
-          <button class="btn btn--accent" type="submit">Search</button>
-        </form>
-
-        <nav class="top__actions" aria-label="Account">
-          <a class="btn btn--line" href="/login">Log in</a>
+        <nav class="nav__links" aria-label="Main">
+          <a class="nav__link" href="#how-it-works">How it works</a>
+          <a class="nav__link" href="/jobs/us">Browse jobs</a>
+          <a class="nav__link" href="#pricing">Pricing</a>
+          <a class="nav__cta" href="/jobs">Try free</a>
         </nav>
       </div>
     </header>
 
     <main id="main">
-      <section class="hero" aria-labelledby="hero-title">
-        <div class="wrap">
-          <p class="eyebrow">For job seekers, by job seekers</p>
-          <h1 id="hero-title">You shouldn't have to pay to get a job.</h1>
-          <p class="lede">
-            Yabot Jobs is a free, open-source job board for tech and product roles, and it grows with the people who
-            use it. Found a good posting? Share it and it's on the board for everyone. Spotted a broken one? Flag it
-            and it gets fixed for the next person.
-          </p>
+      <!-- hero -->
+      <section class="band hero" id="try" aria-labelledby="hero-title">
+        <span class="glow" style="top: -220px; left: -160px; width: 760px; height: 760px; background: radial-gradient(circle, rgba(0, 113, 227, 0.25) 0%, rgba(0, 0, 0, 0) 68%)" aria-hidden="true"></span>
+        <span class="glow" style="top: -120px; right: -200px; width: 680px; height: 680px; background: radial-gradient(circle, rgba(123, 97, 255, 0.2) 0%, rgba(0, 0, 0, 0) 68%)" aria-hidden="true"></span>
+        <span class="glow" style="top: 420px; left: 30%; width: 620px; height: 620px; background: radial-gradient(circle, rgba(0, 194, 255, 0.2) 0%, rgba(0, 0, 0, 0) 68%)" aria-hidden="true"></span>
+
+        <div class="wrap band__inner">
+          <p class="eyebrow">Open source job search</p>
+          <h1 class="hero__title" id="hero-title">Stop searching.<br /><em>Start applying.</em></h1>
+          <p class="hero__sub">Every job scored. Every resume tailored.</p>
           <div class="cta-row">
-            <a class="btn btn--accent btn--lg" href="/jobs/us">Browse the board</a>
-            <a class="btn btn--line btn--lg" href="/login">Join for free</a>
+            <a class="btn btn--primary" href="/jobs">Try 10 jobs free</a>
+            <a class="btn--text" href="/jobs/us">Browse jobs &rsaquo;</a>
           </div>
-          <p class="fineprint">No password, no paywall. We email you a sign-in link.</p>
+          <p class="fineprint">10 jobs free. No AI key needed.</p>
+        </div>
 
-          <figure class="showcase">
-            <div class="showcase__tile">
-              <div class="addjob" aria-hidden="true">
-                <span class="addjob__label">Job Posting Url</span>
-                <div class="addjob__row">
-                  <span class="addjob__field">https://company.com/careers/job/123</span>
-                  <span class="addjob__go">Add &amp; Scan</span>
-                </div>
-              </div>
-              <div class="showcase__grid">
-                <div class="posting" aria-hidden="true">
-                  <span class="posting__crumbs">brightwave.example &rsaquo; careers &rsaquo; product</span>
-                  <p class="posting__title"><span class="hl" style="--i: 0">Senior Product Manager</span></p>
-                  <p class="posting__company"><span class="hl" style="--i: 1">Brightwave</span></p>
-                  <p class="posting__facts">
-                    <span class="hl" style="--i: 2">Austin, TX 78701</span> &nbsp;|&nbsp;
-                    <span class="hl" style="--i: 3">Hybrid</span> &nbsp;|&nbsp; Full time<br />
-                    <span class="hl" style="--i: 4">$150,000 &ndash; $185,000 per year</span>, plus equity
-                  </p>
-                  <p class="posting__h">About the role</p>
-                  <p>
-                    Own the roadmap for our scheduling platform. Work with design and engineering to ship, talk to
-                    customers every week, and define the metrics that tell us it is working.
-                  </p>
-                  <p class="posting__h">What you bring</p>
-                  <ul>
-                    <li>4+ years in product management</li>
-                    <li>B2B SaaS experience</li>
-                    <li>Comfortable with SQL and analytics tools</li>
-                  </ul>
-                  <div class="posting__bar"><span>Save job</span><span>Share</span><span>Report</span><span>212 applicants</span></div>
-                  <span class="posting__apply">Apply on company site</span>
-                </div>
-
-                <svg class="showcase__arrow" viewBox="0 0 76 40" fill="none" aria-hidden="true">
-                  <path pathLength="1" d="M3 26C22 6 48 4 70 20" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
-                  <path pathLength="1" d="M58 13L71 20L60 31" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-
-                <div class="readout">
-                  <span class="readout__tab">What Yabot read</span>
-                  <dl>
-                    <div class="readout__row readout__row--title" style="--i: 0">
-                      <dt>Title</dt>
-                      <dd>Senior Product Manager</dd>
-                    </div>
-                    <div class="readout__row" style="--i: 1">
-                      <dt>Company</dt>
-                      <dd>Brightwave</dd>
-                    </div>
-                    <div class="readout__row" style="--i: 2">
-                      <dt>Location</dt>
-                      <dd>Austin, Texas</dd>
-                    </div>
-                    <div class="readout__row" style="--i: 3">
-                      <dt>Work type</dt>
-                      <dd>Hybrid</dd>
-                    </div>
-                    <div class="readout__row readout__row--pay" style="--i: 4">
-                      <dt>Pay</dt>
-                      <dd>$150,000&ndash;185,000 a year</dd>
-                    </div>
-                  </dl>
-                </div>
-              </div>
-            </div>
-            <figcaption>
-              Someone pastes a link to a posting they found. Yabot Jobs reads out the details, and now everyone can
-              find it. (Example.)
-            </figcaption>
+        <div class="wrap hero__shot">
+          <figure class="hero__phone">
+            <img
+              src="/landing/hero-phone-steps.png"
+              width="1290"
+              height="1315"
+              alt="A job in Yabot Jobs showing a fit score of 82, a tailored resume score of 90, and steps for cover letter, apply, and interview prep."
+            />
           </figure>
         </div>
       </section>
 
-      <section class="notice" aria-labelledby="notice-title">
-        <div class="wrap">
-          <div class="notice__box">
-            <span class="notice__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" /><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
-            </span>
-            <div>
-              <h2 id="notice-title" class="notice__title">New jobs arrive twice a day</h2>
-              <p>
-                Yabot Jobs scans for new postings every day at <strong>1 PM</strong> and <strong>9 PM</strong> Eastern
-                Time. Links people share are scanned right away.
-              </p>
-              <a class="notice__link" href="/jobs/us">Browse the board <span aria-hidden="true">&rarr;</span></a>
+      <!-- find -->
+      <section class="band band--dark band--narrow find" id="how-it-works" aria-labelledby="find-title">
+        <span class="glow" style="top: -260px; left: 50%; margin-left: -380px; width: 760px; height: 760px; background: radial-gradient(circle, rgba(41, 151, 255, 0.4) 0%, rgba(0, 0, 0, 0) 68%)" aria-hidden="true"></span>
+        <span class="glow" style="bottom: -260px; right: -120px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(123, 97, 255, 0.33) 0%, rgba(0, 0, 0, 0) 68%)" aria-hidden="true"></span>
+
+        <div class="wrap band__inner">
+          <p class="eyebrow">Find</p>
+          <h2 class="display" id="find-title">New jobs.<br />Every day.</h2>
+          <p class="lede">Pulled straight from company career pages, so you see roles early.</p>
+
+          <ul class="stats">
+            <li class="stat">
+              <span class="stat__num">3,000+</span>
+              <span class="stat__label">companies scanned</span>
+            </li>
+            <li class="stat">
+              <span class="stat__num">30,000</span>
+              <span class="stat__label">jobs a day, on average</span>
+            </li>
+            <li class="stat">
+              <span class="stat__num stat__num--text">Every sector</span>
+              <span class="stat__label">not just tech</span>
+            </li>
+          </ul>
+
+          <a class="btn btn--bright" href="/jobs/us">Browse today's jobs</a>
+          <p class="fineprint">No sign up needed to look around.</p>
+        </div>
+      </section>
+
+      <!-- score -->
+      <section class="band score" aria-labelledby="score-title">
+        <div class="wrap band__inner" style="max-width: 1200px">
+          <p class="eyebrow">Score</p>
+          <h2 class="display" id="score-title">Know before<br />you apply.</h2>
+          <p class="lede">A fit score, the gaps, and the honest risks.</p>
+
+          <div class="score__layout">
+            <figure class="phone">
+              <div class="phone__screen">
+                <img
+                  class="phone__still is-still"
+                  src="/landing/score-gaps.png"
+                  width="1190"
+                  height="1691"
+                  loading="lazy"
+                  decoding="async"
+                  alt="Gaps found by the fit check: Angular, C#, BFF architecture, AI tools, cross-browser and mobile development, mobile accessibility, and leading engineers across geographies."
+                />
+                <div class="phone__layer is-strip">
+                  <img
+                    src="/landing/score-report.png"
+                    width="1190"
+                    height="5110"
+                    loading="lazy"
+                    decoding="async"
+                    alt="A fitness report for the tailored resume with a plain summary and an overqualified warning, then a score breakdown: required skills 47 of 50, responsibilities 28 of 30, role scope and seniority 15 of 15, preferred qualifications 0 of 5."
+                  />
+                </div>
+              </div>
+            </figure>
+
+            <div class="score__captions">
+              <div class="caption is-cap1">
+                <h3 class="caption__title">The gaps</h3>
+                <p class="caption__body">What the job wants that your resume does not show.</p>
+              </div>
+              <div class="caption is-cap2">
+                <h3 class="caption__title">The straight read</h3>
+                <p class="caption__body">A plain summary, including the honest risks.</p>
+              </div>
+              <div class="caption is-cap3">
+                <h3 class="caption__title">Where the points came from</h3>
+                <p class="caption__body">Every point, scored by category.</p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="section section--tight" id="pitch-in" aria-labelledby="pitch-in-title">
-        <div class="wrap">
-          <div class="section-head">
-            <h2 id="pitch-in-title">A job board that belongs to the people using it.</h2>
-            <p class="lede">
-              You'll never pay to search the board or read a posting. It's job seekers helping each other. Here's
-              how you can help, and none of it takes long.
+      <!-- tailor -->
+      <section class="band band--soft band--narrow tailor" aria-labelledby="tailor-title">
+        <span class="glow" style="top: 120px; right: -180px; width: 640px; height: 640px; background: radial-gradient(circle, rgba(31, 122, 71, 0.2) 0%, rgba(0, 0, 0, 0) 68%)" aria-hidden="true"></span>
+        <span class="glow" style="bottom: -100px; left: -200px; width: 640px; height: 640px; background: radial-gradient(circle, rgba(0, 113, 227, 0.18) 0%, rgba(0, 0, 0, 0) 68%)" aria-hidden="true"></span>
+
+        <div class="wrap band__inner">
+          <p class="eyebrow">Tailor</p>
+          <h2 class="display" id="tailor-title">Fix the gaps<br />in one click.</h2>
+
+          <div class="lift">
+            <p class="lift__item">
+              <span class="lift__score lift__score--before">82</span>
+              <span class="lift__label">fit score</span>
+            </p>
+            <span class="lift__arrow" aria-hidden="true">&rsaquo;</span>
+            <p class="lift__item">
+              <span class="lift__score lift__score--after">90</span>
+              <span class="lift__label">tailored score</span>
             </p>
           </div>
 
-          <ul class="pitch">
-            <li class="pitch__card">
-              <span class="pitch__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
-              </span>
-              <h3>Share a posting</h3>
-              <p>
-                Found a good job on a company's careers page or another board? Paste the link. Yabot Jobs reads it once
-                and puts it on the board, so the next person doesn't have to go looking.
-              </p>
+          <p class="lede">Your resume, rebuilt for the job, then scored again.</p>
+          <p class="note">
+            Review what the AI added and keep what you can speak to. Real scores from a public Progressive Leasing
+            posting.
+          </p>
+        </div>
+      </section>
+
+      <!-- apply -->
+      <section class="band band--narrow apply" aria-labelledby="apply-title">
+        <div class="wrap band__inner">
+          <p class="eyebrow">Apply</p>
+          <h2 class="display" id="apply-title">Cover letter.<br />Interview prep.<br />Done.</h2>
+          <p class="lede">Download your files and apply on the company's own site.</p>
+
+          <ul class="chips">
+            <li class="chip">Cover letter</li>
+            <li class="chip">Apply on their site</li>
+            <li class="chip">Interview prep</li>
+            <li class="chip">Notes</li>
+            <li class="chip">Follow-up reminders</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- your AI -->
+      <section class="band band--dark models" aria-labelledby="models-title">
+        <span class="glow" style="top: -240px; right: -160px; width: 700px; height: 700px; background: radial-gradient(circle, rgba(41, 151, 255, 0.33) 0%, rgba(0, 0, 0, 0) 68%)" aria-hidden="true"></span>
+        <span class="glow" style="bottom: -300px; left: -200px; width: 700px; height: 700px; background: radial-gradient(circle, rgba(123, 97, 255, 0.33) 0%, rgba(0, 0, 0, 0) 68%)" aria-hidden="true"></span>
+
+        <div class="wrap band__inner">
+          <p class="eyebrow">Your AI</p>
+          <h2 class="display" id="models-title">Use the AI<br />you prefer.</h2>
+          <p class="lede">Hosted AI included. Or bring your own key.</p>
+
+          <ul class="providers">
+            <li class="provider">
+              <svg viewBox="0 0 24 24" width="48" height="48" aria-hidden="true">
+                <path fill="currentColor" d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z" />
+              </svg>
+              <span class="provider__name">Anthropic</span>
+              <span class="provider__note">Claude models</span>
             </li>
-            <li class="pitch__card">
-              <span class="pitch__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none"><path d="M5 21V4m0 0h11l-2 4 2 4H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
-              </span>
-              <h3>Flag what's wrong</h3>
-              <p>
-                Wrong salary, dead link, garbled description? Report it from the job's page. A person reviews every
-                report, so it's fixed for everyone after you.
-              </p>
+            <li class="provider">
+              <svg viewBox="0 0 24 24" width="48" height="48" aria-hidden="true">
+                <path fill="currentColor" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z" />
+              </svg>
+              <span class="provider__name">OpenAI</span>
+              <span class="provider__note">GPT models</span>
             </li>
-            <li class="pitch__card">
-              <span class="pitch__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M13.5 4l-3 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
-              </span>
-              <h3>Build it with us</h3>
-              <p>
-                The whole thing is open source. Suggest a feature, report a bug, or send a pull request for the
-                <a href="https://github.com/davicho01/yabot.jobs-frontend">website</a> or the
-                <a href="https://github.com/davicho01/yabot.jobs-backend">API</a>.
-              </p>
+            <li class="provider">
+              <svg viewBox="0 0 24 24" width="48" height="48" aria-hidden="true">
+                <path fill="currentColor" d="M23.748 4.651c-.254-.124-.364.113-.512.233-.051.04-.094.09-.137.137-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.155-.708-.311-.955-.65-.172-.24-.219-.509-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.094.172.187.129.323-.082.28-.18.553-.266.833-.055.179-.137.218-.328.14a5.5 5.5 0 0 1-1.737-1.179c-.857-.828-1.631-1.743-2.597-2.46a12 12 0 0 0-.689-.47c-.985-.957.13-1.743.387-1.836.27-.098.094-.433-.778-.428-.872.003-1.67.295-2.687.685a3 3 0 0 1-.465.136 9.6 9.6 0 0 0-2.883-.101c-1.885.21-3.39 1.1-4.497 2.622C.082 8.776-.231 10.854.152 13.02c.403 2.284 1.568 4.175 3.36 5.653 1.857 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.132-.284 4.994-1.86.47.234.962.328 1.78.398.629.058 1.235-.031 1.705-.129.735-.155.684-.836.418-.961-2.155-1.004-1.682-.595-2.112-.926 1.095-1.295 2.768-3.598 3.284-6.733.05-.346.115-.834.108-1.114-.004-.171.035-.238.23-.257a4.2 4.2 0 0 0 1.545-.475c1.397-.763 1.96-2.016 2.093-3.517.02-.23-.004-.467-.247-.588M11.58 18.168c-2.088-1.642-3.101-2.183-3.52-2.16-.39.024-.32.472-.234.763.09.288.207.487.371.74.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.168-1.361-.801-2.5-1.86-3.301-3.306-.775-1.393-1.225-2.888-1.299-4.482-.02-.385.094-.522.477-.592a4.7 4.7 0 0 1 1.53-.038c2.131.311 3.946 1.264 5.467 2.774.868.86 1.525 1.887 2.202 2.89.72 1.066 1.494 2.082 2.48 2.915.348.291.626.513.892.677-.802.09-2.14.109-3.055-.615zm1.001-6.44a.306.306 0 0 1 .415-.287.3.3 0 0 1 .113.074.3.3 0 0 1 .086.214c0 .17-.136.307-.308.307a.303.303 0 0 1-.306-.307m3.11 1.596c-.2.081-.4.151-.591.16a1.25 1.25 0 0 1-.798-.254c-.274-.23-.47-.358-.551-.758a1.7 1.7 0 0 1 .015-.588c.07-.327-.007-.537-.238-.727-.188-.156-.426-.199-.689-.199a.6.6 0 0 1-.254-.078.253.253 0 0 1-.114-.358 1 1 0 0 1 .192-.21c.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.392.451.462.576.685.915.176.264.336.536.446.848.066.194-.02.353-.25.45" />
+              </svg>
+              <span class="provider__name">DeepSeek</span>
+              <span class="provider__note">Hosted for you</span>
+            </li>
+            <li class="provider">
+              <span class="provider__plus" aria-hidden="true">+</span>
+              <span class="provider__name">Any OpenAI-compatible</span>
+              <span class="provider__note">Bring your own key</span>
             </li>
           </ul>
         </div>
       </section>
 
-      <section class="section" id="how-it-works" aria-labelledby="steps-title">
-        <div class="wrap">
-          <div class="section-head">
-            <h2 id="steps-title">Everything you need for your own search</h2>
-            <p class="lede">
-              Once you've found something worth going after, these tools are free for everyone, from the first search
-              to the interview.
-            </p>
+      <!-- pricing -->
+      <section class="band band--soft pricing" id="pricing" aria-labelledby="pricing-title">
+        <span class="glow" style="top: -260px; left: 50%; margin-left: -350px; width: 700px; height: 700px; background: radial-gradient(circle, rgba(0, 113, 227, 0.18) 0%, rgba(0, 0, 0, 0) 68%)" aria-hidden="true"></span>
+        <span class="glow" style="bottom: -240px; right: -120px; width: 520px; height: 520px; background: radial-gradient(circle, rgba(123, 97, 255, 0.12) 0%, rgba(0, 0, 0, 0) 68%)" aria-hidden="true"></span>
+
+        <div class="wrap band__inner">
+          <p class="eyebrow">Pricing</p>
+          <h2 class="display" id="pricing-title">Free to start.<br />Fair after.</h2>
+
+          <div class="plans">
+            <div class="plan">
+              <p class="plan__price">10 jobs</p>
+              <h3 class="plan__name">Free</h3>
+              <p class="plan__desc">The full experience on 10 jobs, with our AI.</p>
+            </div>
+
+            <div class="plan--featured">
+              <div class="plan">
+                <p class="plan__badge">No key needed</p>
+                <p class="plan__price plan__price--featured">$5<span class="plan__per">/mo</span></p>
+                <h3 class="plan__name">Hosted AI</h3>
+                <p class="plan__desc">Up to 100 jobs a month. No key to manage.</p>
+              </div>
+            </div>
+
+            <div class="plan">
+              <p class="plan__price">$0</p>
+              <h3 class="plan__name">Your own key</h3>
+              <p class="plan__desc">As many jobs as you want. You pay your AI provider.</p>
+            </div>
           </div>
 
-          <ol class="bento">
-            <li class="tile">
-              <div class="tile__text">
-                <span class="stamp">Step 1</span>
-                <h3>Find a posting</h3>
-                <ul class="tile__highlights">
-                  <li>Search by title, city, or state</li>
-                  <li>Filter to remote, hybrid, or on-site</li>
-                  <li>Filter by how recently it was posted</li>
-                </ul>
-              </div>
-              <div class="tile__art">
-                <div class="searchmock" aria-hidden="true">
-                  <div class="searchmock__bar">
-                    <span class="searchmock__title">Search postings by title&hellip;</span>
-                    <span class="searchmock__rule"></span>
-                    <span class="searchmock__location-wrap">
-                      <span class="searchmock__location"
-                        >San Jose, California (metro area)<span class="searchmock__cursor"></span
-                      ></span>
-                      <span class="searchmock__tip">Add a word starting with &minus; to exclude it, e.g. &minus;senior</span>
-                    </span>
-                    <span class="btn btn--accent">Search</span>
-                  </div>
-                </div>
-                <div class="chips">
-                  <a class="chip" href="/jobs?workplace=remote">Remote jobs</a>
-                  <a class="chip" href="/jobs?workplace=hybrid">Hybrid jobs</a>
-                  <a class="chip" href="/jobs?workplace=onsite">On-site jobs</a>
-                  <span class="chips__break"></span>
-                  <a class="chip" href="/jobs?posted=1">Posted in the last 24 hours</a>
-                  <a class="chip" href="/jobs?posted=7">Last 7 days</a>
-                  <a class="chip" href="/jobs?posted=30">Last 30 days</a>
-                </div>
-                <p class="caption">Jump straight into a filtered search.</p>
-              </div>
-            </li>
-
-            <li class="tile">
-              <div class="tile__text">
-                <span class="stamp">Step 2</span>
-                <h3>Check how well you fit</h3>
-                <ul class="tile__highlights">
-                  <li>Upload your resume once, use it anywhere</li>
-                  <li>Get a fit score with a short explanation</li>
-                  <li>Then tailor it, write a cover letter, apply, and prep for the interview &mdash; all on one page</li>
-                </ul>
-              </div>
-              <div class="tile__art">
-                <div class="flow-card" aria-hidden="true">
-                  <ol class="flow-steps">
-                    <li class="flow-step flow-step--done">
-                      <div class="flow-step__rail">
-                        <span class="flow-step__marker">&check;</span>
-                        <span class="flow-step__line"></span>
-                      </div>
-                      <div class="flow-step__content">
-                        <div class="flow-step__header">
-                          <span>
-                            <span class="flow-step__title">Review your skills</span>
-                            <span class="flow-step__status flow-step__status--done">Done &middot; fit score 91</span>
-                          </span>
-                          <span class="flow-step__chevron">&#9660;</span>
-                        </div>
-                      </div>
-                    </li>
-
-                    <li class="flow-step flow-step--done">
-                      <div class="flow-step__rail">
-                        <span class="flow-step__marker">&check;</span>
-                        <span class="flow-step__line"></span>
-                      </div>
-                      <div class="flow-step__content">
-                        <div class="flow-step__header">
-                          <span>
-                            <span class="flow-step__title">Address gaps &amp; tailor your resume</span>
-                            <span class="flow-step__status flow-step__status--done">Done &middot; tailored score 94</span>
-                          </span>
-                          <span class="flow-step__chevron">&#9660;</span>
-                        </div>
-                      </div>
-                    </li>
-
-                    <li class="flow-step">
-                      <div class="flow-step__rail">
-                        <span class="flow-step__marker">3</span>
-                        <span class="flow-step__line"></span>
-                      </div>
-                      <div class="flow-step__content">
-                        <div class="flow-step__header">
-                          <span>
-                            <span class="flow-step__title">Write a cover letter</span>
-                            <span class="flow-step__status">Not started</span>
-                          </span>
-                          <span class="flow-step__chevron">&#9660;</span>
-                        </div>
-                      </div>
-                    </li>
-
-                    <li class="flow-step flow-step--done">
-                      <div class="flow-step__rail">
-                        <span class="flow-step__marker">&check;</span>
-                        <span class="flow-step__line"></span>
-                      </div>
-                      <div class="flow-step__content">
-                        <div class="flow-step__header">
-                          <span>
-                            <span class="flow-step__title">Apply for the job</span>
-                            <span class="flow-step__status flow-step__status--done">Status: applied &middot; applied Sep 21, 2026, 11:46 AM</span>
-                          </span>
-                          <span class="flow-step__chevron">&#9650;</span>
-                        </div>
-                        <div class="flow-step__body">
-                          <p>
-                            Submit your application on the employer's site, then mark it applied here to keep your
-                            status in sync.
-                          </p>
-                          <span class="btn btn--accent">Apply &rarr;</span>
-                          <p class="flow-step__note">
-                            Status: applied &mdash; marked applied Sep 21, 2026, 11:46 AM. Change it any time from
-                            the Notes card above.
-                          </p>
-                        </div>
-                      </div>
-                    </li>
-
-                    <li class="flow-step">
-                      <div class="flow-step__rail">
-                        <span class="flow-step__marker">5</span>
-                      </div>
-                      <div class="flow-step__content">
-                        <div class="flow-step__header">
-                          <span>
-                            <span class="flow-step__title">Prep for the interview</span>
-                            <span class="flow-step__status">Optional &mdash; do this once an interview is scheduled</span>
-                          </span>
-                          <span class="flow-step__chevron">&#9660;</span>
-                        </div>
-                      </div>
-                    </li>
-                  </ol>
-                </div>
-                <p class="caption">A real application, partway through. (Example.)</p>
-              </div>
-            </li>
-
-            <li class="tile tile--dark">
-              <div class="tile__text">
-                <span class="stamp">Step 3</span>
-                <h3>Tailor your resume and cover letter</h3>
-                <ul class="tile__highlights">
-                  <li>Rewritten for the posting, in an ATS-friendly layout</li>
-                  <li>A cover letter drafted to match</li>
-                  <li>Download both as Word documents (.docx) and edit freely</li>
-                </ul>
-                <div class="byok">
-                  <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="7" cy="12" r="3.6" stroke="currentColor" stroke-width="2" /><path d="m9.6 9.4 6.4-6.4M13.4 5.6l2 2M11.6 7.4l1.6 1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
-                  <div>
-                    <p class="byok__title">Bring your own AI key</p>
-                    <ul class="providers" aria-label="Supported AI providers">
-                      <li class="provider">
-                        <svg class="provider__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z" /></svg>
-                        Anthropic
-                      </li>
-                      <li class="provider">
-                        <svg class="provider__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z" /></svg>
-                        OpenAI
-                      </li>
-                      <li class="provider">
-                        <svg class="provider__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23.748 4.651c-.254-.124-.364.113-.512.233-.051.04-.094.09-.137.137-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.155-.708-.311-.955-.65-.172-.24-.219-.509-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.094.172.187.129.323-.082.28-.18.553-.266.833-.055.179-.137.218-.328.14a5.5 5.5 0 0 1-1.737-1.179c-.857-.828-1.631-1.743-2.597-2.46a12 12 0 0 0-.689-.47c-.985-.957.13-1.743.387-1.836.27-.098.094-.433-.778-.428-.872.003-1.67.295-2.687.685a3 3 0 0 1-.465.136 9.6 9.6 0 0 0-2.883-.101c-1.885.21-3.39 1.1-4.497 2.622C.082 8.776-.231 10.854.152 13.02c.403 2.284 1.568 4.175 3.36 5.653 1.857 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.132-.284 4.994-1.86.47.234.962.328 1.78.398.629.058 1.235-.031 1.705-.129.735-.155.684-.836.418-.961-2.155-1.004-1.682-.595-2.112-.926 1.095-1.295 2.768-3.598 3.284-6.733.05-.346.115-.834.108-1.114-.004-.171.035-.238.23-.257a4.2 4.2 0 0 0 1.545-.475c1.397-.763 1.96-2.016 2.093-3.517.02-.23-.004-.467-.247-.588M11.58 18.168c-2.088-1.642-3.101-2.183-3.52-2.16-.39.024-.32.472-.234.763.09.288.207.487.371.74.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.168-1.361-.801-2.5-1.86-3.301-3.306-.775-1.393-1.225-2.888-1.299-4.482-.02-.385.094-.522.477-.592a4.7 4.7 0 0 1 1.53-.038c2.131.311 3.946 1.264 5.467 2.774.868.86 1.525 1.887 2.202 2.89.72 1.066 1.494 2.082 2.48 2.915.348.291.626.513.892.677-.802.09-2.14.109-3.055-.615zm1.001-6.44a.306.306 0 0 1 .415-.287.3.3 0 0 1 .113.074.3.3 0 0 1 .086.214c0 .17-.136.307-.308.307a.303.303 0 0 1-.306-.307m3.11 1.596c-.2.081-.4.151-.591.16a1.25 1.25 0 0 1-.798-.254c-.274-.23-.47-.358-.551-.758a1.7 1.7 0 0 1 .015-.588c.07-.327-.007-.537-.238-.727-.188-.156-.426-.199-.689-.199a.6.6 0 0 1-.254-.078.253.253 0 0 1-.114-.358 1 1 0 0 1 .192-.21c.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.392.451.462.576.685.915.176.264.336.536.446.848.066.194-.02.353-.25.45" /></svg>
-                        DeepSeek
-                      </li>
-                      <li class="provider provider--muted">+ any OpenAI-compatible service</li>
-                    </ul>
-                    <p class="byok__note">Yabot Jobs adds no fee &mdash; you pay your provider directly.</p>
-                  </div>
-                </div>
-              </div>
-              <div class="tile__art">
-                <div class="sheets" aria-hidden="true">
-                  <div class="sheet sheet--letter">
-                    <i class="head w6"></i>
-                    <i class="gap w4"></i>
-                    <i class="w9"></i>
-                    <i class="w9"></i>
-                    <i class="w8"></i>
-                    <i class="gap w9"></i>
-                    <i class="w9"></i>
-                    <i class="w6"></i>
-                    <span class="sheet__tag">.docx</span>
-                  </div>
-                  <div class="sheet sheet--resume">
-                    <i class="head"></i>
-                    <i class="w6"></i>
-                    <i class="rule"></i>
-                    <i class="gap w4"></i>
-                    <i class="w9"></i>
-                    <i class="w8"></i>
-                    <i class="w9"></i>
-                    <i class="gap w4"></i>
-                    <i class="w9"></i>
-                    <i class="w6"></i>
-                  </div>
-                  <span class="logo-float logo-float--anthropic">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z" /></svg>
-                  </span>
-                  <span class="logo-float logo-float--openai">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z" /></svg>
-                  </span>
-                  <span class="logo-float logo-float--deepseek">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23.748 4.651c-.254-.124-.364.113-.512.233-.051.04-.094.09-.137.137-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.155-.708-.311-.955-.65-.172-.24-.219-.509-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.094.172.187.129.323-.082.28-.18.553-.266.833-.055.179-.137.218-.328.14a5.5 5.5 0 0 1-1.737-1.179c-.857-.828-1.631-1.743-2.597-2.46a12 12 0 0 0-.689-.47c-.985-.957.13-1.743.387-1.836.27-.098.094-.433-.778-.428-.872.003-1.67.295-2.687.685a3 3 0 0 1-.465.136 9.6 9.6 0 0 0-2.883-.101c-1.885.21-3.39 1.1-4.497 2.622C.082 8.776-.231 10.854.152 13.02c.403 2.284 1.568 4.175 3.36 5.653 1.857 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.132-.284 4.994-1.86.47.234.962.328 1.78.398.629.058 1.235-.031 1.705-.129.735-.155.684-.836.418-.961-2.155-1.004-1.682-.595-2.112-.926 1.095-1.295 2.768-3.598 3.284-6.733.05-.346.115-.834.108-1.114-.004-.171.035-.238.23-.257a4.2 4.2 0 0 0 1.545-.475c1.397-.763 1.96-2.016 2.093-3.517.02-.23-.004-.467-.247-.588M11.58 18.168c-2.088-1.642-3.101-2.183-3.52-2.16-.39.024-.32.472-.234.763.09.288.207.487.371.74.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.168-1.361-.801-2.5-1.86-3.301-3.306-.775-1.393-1.225-2.888-1.299-4.482-.02-.385.094-.522.477-.592a4.7 4.7 0 0 1 1.53-.038c2.131.311 3.946 1.264 5.467 2.774.868.86 1.525 1.887 2.202 2.89.72 1.066 1.494 2.082 2.48 2.915.348.291.626.513.892.677-.802.09-2.14.109-3.055-.615zm1.001-6.44a.306.306 0 0 1 .415-.287.3.3 0 0 1 .113.074.3.3 0 0 1 .086.214c0 .17-.136.307-.308.307a.303.303 0 0 1-.306-.307m3.11 1.596c-.2.081-.4.151-.591.16a1.25 1.25 0 0 1-.798-.254c-.274-.23-.47-.358-.551-.758a1.7 1.7 0 0 1 .015-.588c.07-.327-.007-.537-.238-.727-.188-.156-.426-.199-.689-.199a.6.6 0 0 1-.254-.078.253.253 0 0 1-.114-.358 1 1 0 0 1 .192-.21c.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.392.451.462.576.685.915.176.264.336.536.446.848.066.194-.02.353-.25.45" /></svg>
-                  </span>
-                </div>
-              </div>
-            </li>
-
-            <li class="tile">
-              <div class="tile__text">
-                <span class="stamp">Step 4</span>
-                <h3>Keep track of every application</h3>
-                <ul class="tile__highlights">
-                  <li>Move it along: saved, applied, interviewing, offer</li>
-                  <li>Notes and a follow-up reminder on every one</li>
-                  <li>Paste a link to add a job from anywhere, and it's shared with everyone</li>
-                </ul>
-              </div>
-              <div class="tile__art">
-                <div class="addjob" aria-hidden="true">
-                  <span class="addjob__label">Job Posting Url</span>
-                  <div class="addjob__row">
-                    <span class="addjob__field">https://jobs.northgate.example/staff-software-engineer</span>
-                    <span class="addjob__go">Add &amp; Scan</span>
-                  </div>
-                </div>
-                <ul class="plate tracker" aria-hidden="true">
-                  <li>
-                    <div>
-                      <strong>Senior Product Manager</strong>
-                      <span class="where">Brightwave, Austin, Texas</span>
-                    </div>
-                    <span class="stamp">Applied</span>
-                  </li>
-                  <li>
-                    <div>
-                      <strong>Staff Software Engineer</strong>
-                      <span class="where">Northgate Labs, Remote <span class="via">Added from a link</span></span>
-                    </div>
-                    <span class="stamp stamp--maybe">Interviewing</span>
-                  </li>
-                  <li>
-                    <div>
-                      <strong>Group Product Manager</strong>
-                      <span class="where">Alder Cloud, Seattle, Washington</span>
-                    </div>
-                    <span class="stamp stamp--good">Offer</span>
-                  </li>
-                </ul>
-                <p class="caption">Example. Adding jobs from a link needs a free account.</p>
-              </div>
-            </li>
-          </ol>
+          <p class="note">Searching, tracking, notes, and reminders are always free.</p>
         </div>
       </section>
 
-      <section class="free" aria-labelledby="free-title">
-        <div class="wrap">
-          <div class="section-head">
-            <h2 id="free-title">Looking for work costs enough already.</h2>
-            <p>
-              People who are between jobs shouldn't be the ones paying for a job board. There's no subscription and
-              no paywalled listings. The AI tools use a key you bring yourself, so the only bill you might ever see is
-              from your own AI provider, for what you actually use.
-            </p>
-            <p>
-              Free to you isn't free to run, though. Servers and job scanning cost real money, and right now that
-              comes out of the builder's own pocket. That's why the ChatGPT and Claude connection is built but switched
-              off until there's a way to pay for it. Down the road, employers may be able to pay to feature a job posting. If that happens, those
-              postings will be clearly marked, and everything you see today stays free.
-            </p>
-            <p>
-              And because the code is open, you don't have to take our word for any of it. Read the
-              <a href="https://github.com/davicho01/yabot.jobs-frontend">website</a> and the
-              <a href="https://github.com/davicho01/yabot.jobs-backend">API</a> on GitHub.
-            </p>
-          </div>
+      <!-- trust -->
+      <section class="band trust" aria-labelledby="trust-title">
+        <div class="wrap band__inner">
+          <p class="eyebrow">Trust</p>
+          <h2 class="display" id="trust-title">Built to be<br />trusted.</h2>
 
-          <div class="ledger">
-            <div class="ledger__col">
-              <h3>Free, always</h3>
-              <ul>
-                <li>
-                  <svg class="good" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                  Searching and filtering the job board
-                </li>
-                <li>
-                  <svg class="good" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                  Reading postings that Yabot Jobs has scanned
-                </li>
-                <li>
-                  <svg class="good" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                  Saving jobs and tracking applications
-                </li>
-                <li>
-                  <svg class="good" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                  Sharing jobs from other boards by pasting a link
-                </li>
-                <li>
-                  <svg class="good" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                  Signing in with an emailed link
-                </li>
-                <li>
-                  <svg class="good" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10.5 4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                  Reporting listings that are wrong or out of date
-                </li>
-              </ul>
-            </div>
-            <div class="ledger__col">
-              <h3>Runs on your own AI key</h3>
-              <ul>
-                <li>
-                  <svg class="key" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="7" cy="12" r="3.6" stroke="currentColor" stroke-width="2" /><path d="m9.6 9.4 6.4-6.4M13.4 5.6l2 2M11.6 7.4l1.6 1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
-                  Fitness reports
-                </li>
-                <li>
-                  <svg class="key" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="7" cy="12" r="3.6" stroke="currentColor" stroke-width="2" /><path d="m9.6 9.4 6.4-6.4M13.4 5.6l2 2M11.6 7.4l1.6 1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
-                  Tailored resumes
-                </li>
-                <li>
-                  <svg class="key" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="7" cy="12" r="3.6" stroke="currentColor" stroke-width="2" /><path d="m9.6 9.4 6.4-6.4M13.4 5.6l2 2M11.6 7.4l1.6 1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
-                  Cover letters
-                </li>
-              </ul>
-              <p class="note-small">
-                Use a key from Anthropic, OpenAI, DeepSeek, or any OpenAI-compatible service. Your provider bills you
-                directly. Yabot Jobs adds no fee.
-              </p>
-            </div>
-          </div>
+          <ul class="trust__grid">
+            <li class="trust__item">
+              <h3 class="trust__title">Open source</h3>
+              <p class="trust__body">Read exactly how it works.</p>
+            </li>
+            <li class="trust__item">
+              <h3 class="trust__title">Delete anything</h3>
+              <p class="trust__body">Anytime, from your account.</p>
+            </li>
+            <li class="trust__item">
+              <h3 class="trust__title">You hit apply</h3>
+              <p class="trust__body">Nothing is submitted for you.</p>
+            </li>
+            <li class="trust__item">
+              <h3 class="trust__title">Scores show their work</h3>
+              <p class="trust__body">Evidence, gaps, and risks.</p>
+            </li>
+          </ul>
+
+          <a class="btn--text" href="https://github.com/davicho01/yabot.jobs-frontend">Read the code on GitHub &rsaquo;</a>
+          <a class="trust__privacy" href="/privacy">Privacy details &rsaquo;</a>
         </div>
       </section>
 
-      <section class="section" id="questions" aria-labelledby="faq-title">
-        <div class="wrap faq__grid">
-          <div class="faq__intro">
-            <h2 id="faq-title">Common questions</h2>
-            <p>
-              Anything else? Ask in the open on
-              <a href="https://github.com/davicho01/yabot.jobs-frontend/issues">GitHub</a>, where everyone can see
-              the answer.
-            </p>
-          </div>
-
-          <div class="faq__list">
-            <details open>
-              <summary>Is Yabot Jobs really free?</summary>
-              <div class="answer">
-                <p>
-                  Yes. Searching the job board, reading postings, saving jobs, and tracking applications cost nothing.
-                </p>
-                <p>
-                  The AI tools (fitness reports, tailored resumes, and cover letters) run on an API key you add
-                  yourself, so any charge comes from your AI provider for what you use. Yabot Jobs adds no fee on top.
-                </p>
-              </div>
-            </details>
-            <details>
-              <summary>If it's free, who pays for it?</summary>
-              <div class="answer">
-                <p>
-                  Running it isn't free: servers and job scanning cost real money, and for now that comes out of the pocket of the person who built it. Down the road, employers may be able to pay to feature a job posting, which would help keep the lights on. Featured postings will be clearly marked, and job seekers will never pay to search the board or read a posting.
-                </p>
-              </div>
-            </details>
-            <details>
-              <summary>How can I help?</summary>
-              <div class="answer">
-                <p>
-                  Share postings you come across by pasting their link, and report any listing that looks wrong.
-                  Both take a few seconds and help everyone else who's looking.
-                </p>
-                <p>
-                  If you write code or have ideas, open an issue or a pull request on
-                  <a href="https://github.com/davicho01/yabot.jobs-frontend">GitHub</a>. Telling a friend who's job
-                  hunting helps too.
-                </p>
-              </div>
-            </details>
-            <details>
-              <summary>Do I need an account to search for jobs?</summary>
-              <div class="answer">
-                <p>
-                  No. You can search and browse the job board without one. Create a free account to save postings,
-                  track applications, upload a resume, and use the AI tools.
-                </p>
-                <p>There's no password. Enter your email and we send a sign-in link that works for 15 minutes.</p>
-              </div>
-            </details>
-            <details>
-              <summary>Where do the job postings come from?</summary>
-              <div class="answer">
-                <p>
-                  Two places. Yabot Jobs scans public job postings and reads the details out of each page: title,
-                  company, location, work type, and pay. And people using the site share postings they find by pasting
-                  a link. Every shared posting joins the same board, so one person's find helps everyone.
-                </p>
-              </div>
-            </details>
-            <details>
-              <summary>Can I track jobs I found on other job boards?</summary>
-              <div class="answer">
-                <p>
-                  Yes. Once you're signed in, paste the link to a posting from another job board or a company's careers page. Yabot Jobs scans it, reads the title, company, location, work type, and pay, and adds it to your jobs. From there you can check your fit, tailor your resume, and track the application with everything else. If a page can't be read, rescan it later.
-                </p>
-              </div>
-            </details>
-            <details>
-              <summary>Which AI providers can I use?</summary>
-              <div class="answer">
-                <p>
-                  Anthropic, OpenAI, DeepSeek, or any OpenAI-compatible service. Your key is used only for your own
-                  resume reviews, scoring, and generation requests. You add it on the AI API Keys page after you sign
-                  in.
-                </p>
-              </div>
-            </details>
-            <details>
-              <summary>Can I edit the resume and cover letter it writes?</summary>
-              <div class="answer">
-                <p>Yes. Download them as Word documents (.docx) and change anything you like before you send them.</p>
-              </div>
-            </details>
-            <details>
-              <summary>Can I use Yabot Jobs from ChatGPT or Claude?</summary>
-              <div class="answer">
-                <p>
-                  Not right now. Yabot Jobs has an MCP server that lets ChatGPT, Claude, and other assistants search the board for you, but it costs real money to run, so it's switched off until there's a way to pay for it. The job board and everything else on this page work the same as before.
-                </p>
-              </div>
-            </details>
-            <details>
-              <summary>Is Yabot Jobs open source?</summary>
-              <div class="answer">
-                <p>
-                  Yes. The <a href="https://github.com/davicho01/yabot.jobs-frontend">website</a> and the
-                  <a href="https://github.com/davicho01/yabot.jobs-backend">API behind it</a> are both public on GitHub,
-                  and the website is released under the MIT license.
-                </p>
-              </div>
-            </details>
-          </div>
+      <!-- story -->
+      <section class="band band--soft story" aria-labelledby="story-title">
+        <div class="wrap band__inner">
+          <h2 class="story__title" id="story-title">Built by a job seeker.</h2>
+          <p class="story__body">
+            I made yabot.jobs after a layoff, because job searching meant repeating the same work for every
+            application.
+          </p>
         </div>
       </section>
 
-      <section class="closing" aria-labelledby="closing-title">
-        <div class="wrap">
-          <div class="closing__tile">
-            <h2 id="closing-title">Nobody should job hunt alone.</h2>
-            <p class="lede">
-              Look around without an account. When you find something good, share it and help the next person.
-            </p>
-            <div class="cta-row">
-              <a class="btn btn--accent btn--lg" href="/jobs/us">Browse the board</a>
-              <a class="btn btn--line btn--lg" href="/login">Join for free</a>
-            </div>
+      <!-- final call to action -->
+      <section class="band band--dark band--narrow closing" aria-labelledby="closing-title">
+        <span class="glow" style="top: -300px; left: 50%; margin-left: -410px; width: 820px; height: 820px; background: radial-gradient(circle, rgba(41, 151, 255, 0.4) 0%, rgba(0, 0, 0, 0) 68%)" aria-hidden="true"></span>
+        <span class="glow" style="bottom: -240px; left: -120px; width: 560px; height: 560px; background: radial-gradient(circle, rgba(123, 97, 255, 0.33) 0%, rgba(0, 0, 0, 0) 68%)" aria-hidden="true"></span>
+        <span class="glow" style="bottom: -200px; right: -100px; width: 520px; height: 520px; background: radial-gradient(circle, rgba(0, 194, 255, 0.25) 0%, rgba(0, 0, 0, 0) 68%)" aria-hidden="true"></span>
+
+        <div class="wrap band__inner">
+          <h2 class="display" id="closing-title">Your next job search shouldn't be a second job.</h2>
+          <div class="cta-row">
+            <a class="btn btn--bright" href="/jobs">Try 10 jobs free</a>
           </div>
         </div>
       </section>
     </main>
 
     <footer class="foot">
-      <div class="wrap">
-        <div class="foot__grid">
-          <div>
-            <a class="brand" href="/" aria-label="Yabot Jobs home">
-              <span class="brand__mark" aria-hidden="true">
-                <svg viewBox="0 0 48 48" fill="none" width="18" height="18">
-                  <path d="M9 24h6l4-10 6 20 4-10h10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              </span>
-              Yabot Jobs
-            </a>
-            <p class="foot__statement">You shouldn't have to pay to get a job. Free, open, and shaped by the people who use it.</p>
+      <div class="wrap foot__inner">
+        <div class="foot__top">
+          <div class="foot__brand">
+            <span class="brand">
+              <svg class="brand__mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                <path d="M9 24h6l4-10 6 20 4-10h10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <span>yabot<span class="brand__accent">.jobs</span></span>
+            </span>
+            <p class="foot__tagline">Searching for a job should be free.</p>
           </div>
 
-          <nav aria-labelledby="foot-jobs">
-            <h2 id="foot-jobs">Browse jobs</h2>
-            <ul>
-              <li><a href="/jobs">All jobs</a></li>
-              <li><a href="/jobs?workplace=remote">Remote jobs</a></li>
-              <li><a href="/jobs?workplace=hybrid">Hybrid jobs</a></li>
-              <li><a href="/jobs?workplace=onsite">On-site jobs</a></li>
-              <li><a href="/jobs?posted=1">Posted in the last 24 hours</a></li>
-            </ul>
-          </nav>
+          <div class="foot__cols">
+            <nav class="foot__col" aria-labelledby="foot-browse">
+              <h2 id="foot-browse">Browse</h2>
+              <a href="/jobs">All jobs</a>
+              <a href="/jobs?workplace=remote">Remote jobs</a>
+              <a href="/jobs?workplace=hybrid">Hybrid jobs</a>
+              <a href="/jobs?workplace=onsite">On-site jobs</a>
+              <a href="/jobs?posted=1">Posted in the last 24 hours</a>
+            </nav>
 
-          <nav aria-labelledby="foot-about">
-            <h2 id="foot-about">About</h2>
-            <ul>
-              <li><a href="#pitch-in">How to help</a></li>
-              <li><a href="#how-it-works">How it works</a></li>
-              <li><a href="#questions">Common questions</a></li>
-              <li><a href="https://github.com/davicho01/yabot.jobs-frontend">Website code</a></li>
-              <li><a href="https://github.com/davicho01/yabot.jobs-backend">API code</a></li>
-              <li><a href="https://github.com/davicho01/yabot.jobs-frontend/issues">Suggest an idea</a></li>
-            </ul>
-          </nav>
+            <nav class="foot__col" aria-labelledby="foot-learn">
+              <h2 id="foot-learn">Learn</h2>
+              <a href="#how-it-works">How it works</a>
+              <a href="/getting-started">Getting started</a>
+              <a href="/questions">Common questions</a>
+            </nav>
 
-          <nav aria-labelledby="foot-account">
-            <h2 id="foot-account">Your account</h2>
-            <ul>
-              <li><a href="/login">Log in</a></li>
-            </ul>
-          </nav>
+            <nav class="foot__col" aria-labelledby="foot-help">
+              <h2 id="foot-help">Help</h2>
+              <a href="/help">Help &amp; feedback</a>
+              <a href="/privacy">Privacy</a>
+            </nav>
+
+            <nav class="foot__col" aria-labelledby="foot-code">
+              <h2 id="foot-code">Code</h2>
+              <a href="https://github.com/davicho01/yabot.jobs-frontend">Website code</a>
+              <a href="https://github.com/davicho01/yabot.jobs-backend">API code</a>
+            </nav>
+          </div>
         </div>
 
-        <p class="foot__legal">&copy; 2026 Yabot Jobs. Free to use, built in the open. The website is open source under the MIT license.</p>
+        <p class="foot__legal">
+          &copy; 2026 Yabot Jobs, a Vectorwell Technologies project. Free to use, built in the open. The website is
+          open source under the MIT license. Location data:
+          <a href="https://www.geonames.org">GeoNames</a> (CC BY 4.0), U.S. Census Bureau.
+        </p>
       </div>
     </footer>
   </body>

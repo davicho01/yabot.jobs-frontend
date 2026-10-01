@@ -435,3 +435,7 @@
   background: var(--rose);
   color: var(--surface);
 }
+
+.resume-page__restructures {
+  margin: 0.6rem 0 0;
+}

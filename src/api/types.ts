@@ -428,3 +428,67 @@ export interface SavedSearch {
   created_at: string;
   last_alerted_at: string | null;
 }
+
+export type FeedbackKind = "bug" | "question" | "idea" | "other";
+export type FeedbackStatus = "new" | "read" | "resolved";
+
+export interface Feedback {
+  id: string;
+  kind: FeedbackKind;
+  message: string;
+  rating: number | null;
+  page_url: string | null;
+  status: FeedbackStatus;
+  created_at: string;
+}
+
+export interface AdminFeedback extends Feedback {
+  user_id: string;
+  user_email: string;
+  user_agent: string | null;
+}
+
+export interface AdminFeedbackList {
+  items: AdminFeedback[];
+  total: number;
+  new_count: number;
+}
+
+export interface AiAccess {
+  has_own_key: boolean;
+  // What the next AI request runs on. An active plan outranks a saved key.
+  active_source: "subscription" | "own_key" | "free_trial" | null;
+  // The user's default key, reported even while the plan outranks it.
+  own_key_provider: string | null;
+  own_key_model: string | null;
+  free_trial_enabled: boolean;
+  free_evaluation_limit: number;
+  free_evaluations_used: number;
+  free_evaluations_remaining: number;
+  // Jobs unlocked with a free evaluation: every AI feature for these is free.
+  free_trial_job_ids: string[];
+  // Free resume restructures (the AI turning an upload into editable
+  // sections). free_restructure_limit is 0 when they're off.
+  free_restructure_limit: number;
+  free_restructures_remaining: number;
+  // The paid plan (Stripe). subscription_status is Stripe's own value
+  // ("active", "past_due", "canceled", …), null if never subscribed.
+  subscription_available: boolean;
+  subscription_price_label: string;
+  subscribed: boolean;
+  subscription_status: string | null;
+  subscription_current_period_end: string | null;
+  subscription_cancel_at_period_end: boolean;
+  subscription_requests_used: number;
+  // 0 means unlimited.
+  subscription_request_limit: number;
+}
+
+export type OnboardingStepKey = "resume" | "ai_access" | "application" | "evaluation";
+
+export interface Onboarding {
+  steps: { key: OnboardingStepKey; done: boolean }[];
+  completed_at: string | null;
+  dismissed_at: string | null;
+  ai_access: AiAccess;
+}

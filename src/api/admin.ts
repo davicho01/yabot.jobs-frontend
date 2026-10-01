@@ -2,8 +2,12 @@ import { api } from "./client";
 import { PAGE_SIZE } from "./jobs";
 import type {
   AdminDashboard,
+  AdminFeedback,
+  AdminFeedbackList,
   CrawlSource,
   CrawlSourceStats,
+  FeedbackKind,
+  FeedbackStatus,
   JobDetail,
   JobList,
   ScanDayCount,
@@ -22,6 +26,15 @@ export type JobSortKey = "company" | "title" | "status" | "discovered";
 export type JobSortOrder = "asc" | "desc";
 
 export const adminApi = {
+  feedback: (params: { status?: FeedbackStatus; kind?: FeedbackKind; page?: number; pageSize?: number }) =>
+    api.get<AdminFeedbackList>("/admin/feedback", {
+      status: params.status,
+      kind: params.kind,
+      page: params.page ?? 1,
+      page_size: params.pageSize ?? 20,
+    }),
+  updateFeedbackStatus: (feedbackId: string, status: FeedbackStatus) =>
+    api.patch<AdminFeedback>(`/admin/feedback/${feedbackId}`, { status }),
   dashboard: () => api.get<AdminDashboard>("/admin/dashboard"),
   crawlSources: () => api.get<CrawlSource[]>("/admin/crawl-sources"),
   crawlSourceStats: (sourceId: string) => api.get<CrawlSourceStats>(`/admin/crawl-sources/${sourceId}/stats`),

@@ -1,0 +1,84 @@
+.feedback-modal__kinds,
+.feedback-modal__rating {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.feedback-modal__kinds legend,
+.feedback-modal__rating legend {
+  margin-bottom: 0.5rem;
+}
+
+.feedback-modal__kinds {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.feedback-modal__kind {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.feedback-modal__kind input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.feedback-modal__kind:hover {
+  background: var(--surface);
+}
+
+.feedback-modal__kind.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.feedback-modal__kind:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.feedback-modal__rating-buttons {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.feedback-modal__rating-buttons button {
+  flex: 1;
+  padding: 0.45rem 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.feedback-modal__rating-buttons button:hover {
+  background: var(--surface);
+}
+
+.feedback-modal__rating-buttons button.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.feedback-modal__rating-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}

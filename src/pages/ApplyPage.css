@@ -231,6 +231,21 @@
 .apply__tailor-actions {
   justify-content: space-between;
   flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* A report's score actions side by side: "Get full evaluation" (until it's
+   been run) first, then Re-score / Re-evaluate. */
+.apply__action-group {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.apply__action-group > .job-dashboard__evaluate-button {
+  /* Its standalone margin/alignment would sit it lower than its neighbors. */
+  margin-top: 0;
+  align-self: center;
 }
 
 /* "Write a cover letter" step's download menu — no left-side action to
@@ -331,6 +346,9 @@
 }
 
 .process-step__header {
+  /* So "Next: …" scrolling a step into view stops just below the fixed
+     site header instead of underneath it. */
+  scroll-margin-top: calc(var(--header-height, 0px) + 1rem);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -402,6 +420,59 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+/* The "Next: …" control closing out each open step — same spot on every
+   step (bottom right), so moving on is always where the eye ends up once
+   the step's work is done. */
+.process-step__footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.process-step__next {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid var(--accent);
+  padding: 0.6rem 1.15rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.88rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.process-step__next:hover {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+  color: #fff;
+}
+
+/* Step not done yet: a quieter "Skip to", so the step's own main action
+   stays the one that stands out. */
+.process-step__next--skip {
+  background: transparent;
+  color: var(--ink-soft);
+  border-color: var(--line);
+}
+
+.process-step__next--skip:hover {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--ink-soft);
+}
+
+@media (max-width: 520px) {
+  .process-step__next {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
 }
 
 .dossier-action__lede {

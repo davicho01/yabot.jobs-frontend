@@ -201,3 +201,130 @@
     padding: 1.1rem;
   }
 }
+
+/* AI access page. Everything below is scoped under .ai-access-page, with its
+   own class names: every page's CSS is global, and the shared .record-list /
+   .settings-key-form label rules from the Resume, Saved searches and Access
+   tokens pages used to override this page's key list and checkbox layout. */
+
+.ai-access-page__option-title {
+  font-size: 1.05rem;
+  margin: 0 0 0.4rem;
+}
+
+.ai-access-keys__list {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  background: var(--paper);
+}
+
+/* Fixed-width action columns, so "Default · paused" / "Make default" and
+   Remove line up in the same spot on every row — a long model name wraps
+   inside the first column instead of pushing the buttons onto a new line. */
+.ai-access-keys__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8.5rem 5.25rem;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.ai-access-keys__item + .ai-access-keys__item {
+  border-top: 1px solid var(--line);
+}
+
+.ai-access-keys__label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ai-access-keys__provider {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.ai-access-keys__meta {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+}
+
+/* Its two children sit directly in the row's grid columns. */
+.ai-access-keys__actions {
+  display: contents;
+}
+
+.ai-access-keys__actions > * {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+}
+
+.ai-access-keys__button {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--line);
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ai-access-keys__button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.ai-access-keys__button--remove {
+  color: var(--rose);
+}
+
+.ai-access-keys__button--remove:hover:not(:disabled) {
+  border-color: var(--rose);
+}
+
+.ai-access-keys__form-title {
+  font-size: 0.95rem;
+  margin: 0 0 0.75rem;
+}
+
+.ai-access-page .settings-key-form .ai-access-keys__get-key {
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.ai-access-keys__get-key a {
+  color: var(--accent);
+}
+
+.ai-access-page .settings-key-form label.ai-access-keys__checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.ai-access-page .settings-key-form label.ai-access-keys__checkbox input {
+  width: auto;
+  margin: 0;
+}
+
+/* Phones: the label gets the full width, and the two action columns sit
+   underneath it, still the same size on every row. */
+@media (max-width: 480px) {
+  .ai-access-keys__item {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ai-access-keys__label {
+    grid-column: 1 / -1;
+  }
+}

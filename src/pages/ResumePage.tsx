@@ -1,5 +1,6 @@
 import { useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY, onboardingApi } from "../api/onboarding";
 import { Link } from "react-router-dom";
 import { resumesApi, type ResumeDetail } from "../api/resumes";
 import { ApiError } from "../api/client";
@@ -30,7 +31,7 @@ function ScoreHistoryPanel({ resumeId }: { resumeId: string }) {
   if (entries.length === 0) {
     return (
       <div className="resume-preview resume-preview--empty">
-        No scores yet for this resume — evaluate a posting on its apply page first.
+        No scores yet for this resume, evaluate a posting on its apply page first.
       </div>
     );
   }
@@ -61,7 +62,7 @@ function ScoreHistoryPanel({ resumeId }: { resumeId: string }) {
         <div className="score-history__recurring">
           <h2 className="score-history__heading">Keywords that keep coming up missing</h2>
           <p className="settings-page__intro score-history__recurring-hint">
-            Showed up as missing on 2 or more separate scores — worth adding to this resume if it's genuinely there.
+            Showed up as missing on 2 or more separate scores, worth adding to this resume if it's genuinely there.
           </p>
           <ul className="score-history__keyword-list">
             {recurring.map((k) => (
@@ -110,7 +111,7 @@ function VersionHistoryPanel({
   if (versions.length <= 1) {
     return (
       <div className="resume-preview resume-preview--empty">
-        Only one version so far — adding missing skills from{" "}
+        Only one version so far, adding missing skills from{" "}
         <Link to="/resume-optimization">Resume optimization</Link> creates a new version automatically.
       </div>
     );
@@ -176,11 +177,35 @@ function StructureControl({
       </button>
       {needsApiKey && (
         <p className="settings-section__hint">
-          <Link to="/api-keys">Add an LLM API key</Link> to enable docx/PDF downloads.
+          <Link to="/api-keys">Add an AI API key or subscribe</Link> to enable docx/PDF downloads.
         </p>
       )}
       {failedOtherwise && <p className="settings-page__error">Couldn't structure this resume. Try again.</p>}
     </div>
+  );
+}
+
+// For someone without their own key or the plan: uploads are structured
+// automatically using free restructures — say how many are left, and where
+// to go once they run out.
+function FreeRestructuresNote() {
+  const { data: access } = useQuery({ queryKey: AI_ACCESS_QUERY_KEY, queryFn: onboardingApi.aiAccess });
+  if (!access || access.has_own_key || access.subscribed || access.free_restructure_limit === 0) return null;
+  const left = access.free_restructures_remaining;
+  return (
+    <p className="settings-section__hint resume-page__restructures">
+      {left > 0 ? (
+        <>
+          Uploads are turned into editable sections automatically: {left} free{" "}
+          {left === 1 ? "restructure" : "restructures"} left.
+        </>
+      ) : (
+        <>
+          You've used your free restructures. New uploads are saved as-is until you{" "}
+          <Link to="/api-keys">add an AI API key or subscribe</Link>.
+        </>
+      )}
+    </p>
   );
 }
 
@@ -224,6 +249,9 @@ export function ResumePage() {
     mutationFn: (file: File) => resumesApi.upload(file),
     onSuccess: (resume) => {
       queryClient.invalidateQueries({ queryKey: ["resumes"] });
+      queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
+      // Structuring on upload may have used a free restructure.
+      queryClient.invalidateQueries({ queryKey: AI_ACCESS_QUERY_KEY });
       if (fileInput.current) fileInput.current.value = "";
       showPreview(resume);
     },
@@ -253,7 +281,10 @@ export function ResumePage() {
 
   const structureMutation = useMutation<ResumeDetail, ApiError, string>({
     mutationFn: (id: string) => resumesApi.structure(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["resumes"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["resumes"] });
+      queryClient.invalidateQueries({ queryKey: AI_ACCESS_QUERY_KEY });
+    },
   });
 
   const [downloadError, setDownloadError] = useState<string | null>(null);
@@ -319,7 +350,7 @@ export function ResumePage() {
             onKeyDown={handleDropzoneKeyDown}
             role="button"
             tabIndex={0}
-            aria-label="Upload resume — drag and drop a file here, or click to browse"
+            aria-label="Upload resume, drag and drop a file here, or click to browse"
           >
             <input
               ref={fileInput}
@@ -341,6 +372,7 @@ export function ResumePage() {
             </p>
             <p className="resume-dropzone__hint">PDF or DOCX, up to 5MB</p>
           </div>
+          <FreeRestructuresNote />
           {uploadMutation.error && (
             <p className="settings-page__error">
               {uploadMutation.error instanceof ApiError ? uploadMutation.error.message : "Upload failed."}
@@ -445,7 +477,7 @@ export function ResumePage() {
         )}
         {!historyId && !versionHistoryId && previewResume && previewResume.content_type !== "application/pdf" && !previewResume.has_structured_content && (
           <div className="resume-preview resume-preview--empty">
-            <p>No preview yet for this file — structure it first.</p>
+            <p>No preview yet for this file, structure it first.</p>
             <StructureControl resumeId={previewResume.id} mutation={structureMutation} />
           </div>
         )}

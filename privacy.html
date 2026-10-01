@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <script>
+      // Google Analytics 4, same property as the landing page and the app.
+      (function () {
+        var id = "G-CDDT9RZ59T";
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () {
+          window.dataLayer.push(arguments);
+        };
+        window.gtag("js", new Date());
+        window.gtag("config", id);
+        var s = document.createElement("script");
+        s.async = true;
+        s.src = "https://www.googletagmanager.com/gtag/js?id=" + id;
+        document.head.appendChild(s);
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy | Yabot Jobs</title>
+    <meta name="description" content="How Yabot Jobs handles your resume, your applications, and your data." />
+    <link rel="canonical" href="https://yabot.jobs/privacy" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#ffffff" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Yabot Jobs" />
+    <meta property="og:title" content="Privacy | Yabot Jobs" />
+    <meta property="og:description" content="How Yabot Jobs handles your resume, your applications, and your data." />
+    <meta property="og:url" content="https://yabot.jobs/privacy" />
+    <meta property="og:image" content="https://yabot.jobs/og-image.png" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="alternate icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* Shared layout for the static content pages (/questions, /privacy). Same
+         tokens and type as the landing page in index.html, and light only for
+         the same reason: dark mode was deferred, and a visitor arriving from a
+         white landing page shouldn't land on a black one. */
+      :root {
+        --paper: #ffffff;
+        --surface: #f5f5f7;
+        --ink: #1d1d1f;
+        --ink-soft: #6e6e73;
+        --line: #e8e8ed;
+        --accent: #0071e3;
+        --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Manrope", system-ui, sans-serif;
+        --radius-pill: 980px;
+        color-scheme: light;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--font);
+        font-size: 17px;
+        line-height: 1.6;
+        overflow-wrap: break-word;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      h1,
+      h2,
+      p,
+      ul {
+        margin: 0;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+        border-radius: 4px;
+      }
+
+      .skip {
+        position: absolute;
+        left: 1rem;
+        top: -4rem;
+        z-index: 50;
+        padding: 0.7rem 1.1rem;
+        background: var(--ink);
+        color: var(--paper);
+        font-weight: 600;
+        border-radius: var(--radius-pill);
+      }
+
+      .skip:focus {
+        top: 0.75rem;
+      }
+
+      .topbar {
+        border-bottom: 1px solid var(--line);
+      }
+
+      .topbar__row {
+        max-width: 760px;
+        margin-inline: auto;
+        padding: 14px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 800;
+        font-size: 21px;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+      }
+
+      /* The same pulse mark the app header and favicon use, so every page
+         reads as one product. */
+      .brand__mark {
+        flex: none;
+        width: 26px;
+        height: 26px;
+        color: var(--accent);
+      }
+
+      .brand__accent {
+        color: var(--accent);
+      }
+
+      .brand:hover {
+        text-decoration: none;
+      }
+
+      .topbar__link {
+        font-size: 14px;
+      }
+
+      main {
+        max-width: 760px;
+        margin-inline: auto;
+        padding: 72px 24px 96px;
+      }
+
+      .eyebrow {
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      h1 {
+        margin: 8px 0 12px;
+        font-weight: 800;
+        font-size: clamp(40px, 8vw, 64px);
+        line-height: 1.05;
+        letter-spacing: -0.04em;
+      }
+
+      .updated {
+        color: var(--ink-soft);
+        font-size: 15px;
+        margin-bottom: 40px;
+      }
+
+      h2 {
+        margin: 56px 0 12px;
+        font-weight: 800;
+        font-size: 28px;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+      }
+
+      p {
+        margin-bottom: 16px;
+      }
+
+      main ul {
+        margin-bottom: 16px;
+        padding-left: 22px;
+      }
+
+      li {
+        margin-bottom: 8px;
+      }
+
+      .summary {
+        background: var(--surface);
+        border-radius: 24px;
+        padding: 28px 28px 12px;
+      }
+
+      .summary h2 {
+        margin-top: 0;
+        font-size: 22px;
+      }
+
+      .table {
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        overflow: hidden;
+        margin: 8px 0 24px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 16px;
+        padding: 18px 22px;
+        border-top: 1px solid var(--line);
+      }
+
+      .row:first-child {
+        border-top: 0;
+      }
+
+      .row b {
+        font-weight: 700;
+      }
+
+      .row span {
+        color: var(--ink-soft);
+        font-size: 16px;
+      }
+
+      @media (max-width: 560px) {
+        .row {
+          grid-template-columns: 1fr;
+          gap: 4px;
+        }
+
+        main {
+          padding-top: 48px;
+        }
+      }
+
+      .note {
+        border-left: 4px solid var(--accent);
+        padding: 4px 0 4px 18px;
+        margin: 20px 0;
+        color: var(--ink-soft);
+        font-size: 16px;
+      }
+
+      /* ---------- footer ---------- */
+
+      footer {
+        background: var(--surface);
+        border-top: 1px solid var(--line);
+      }
+
+      .foot__inner {
+        max-width: 1100px;
+        margin-inline: auto;
+        padding: 48px 24px 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+      }
+
+      .foot__top {
+        display: flex;
+        justify-content: space-between;
+        gap: 40px;
+        flex-wrap: wrap;
+      }
+
+      .foot__brand {
+        max-width: 320px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .foot__tagline {
+        font-size: 15px;
+        line-height: 1.45;
+        color: var(--ink-soft);
+        margin: 0;
+      }
+
+      .foot__cols {
+        display: flex;
+        gap: 48px;
+        flex-wrap: wrap;
+      }
+
+      .foot__col {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 150px;
+      }
+
+      .foot__col h2 {
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--ink);
+        margin: 0;
+      }
+
+      .foot__col a {
+        color: var(--ink-soft);
+        font-size: 14px;
+      }
+
+      .foot__legal {
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--ink-soft);
+        border-top: 1px solid var(--line);
+        padding-top: 20px;
+        margin: 0;
+      }
+
+      .foot__legal a {
+        color: inherit;
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="topbar">
+      <div class="topbar__row">
+        <a class="brand" href="/">
+          <svg class="brand__mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <path d="M9 24h6l4-10 6 20 4-10h10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span>yabot<span class="brand__accent">.jobs</span></span>
+        </a>
+        <a class="topbar__link" href="/jobs/us">Browse jobs</a>
+      </div>
+    </header>
+
+    <main id="main">
+      <p class="eyebrow">Privacy</p>
+      <h1>Your resume is yours.</h1>
+      <p class="updated">Last updated October 1, 2026</p>
+
+      <div class="summary">
+        <h2>The short version</h2>
+        <ul>
+          <li>You can browse jobs without an account.</li>
+          <li>
+            Your resume and notes are used to score jobs, tailor resumes, and write cover letters for you. Nothing
+            else.
+          </li>
+          <li>To do that, your resume and the job posting are sent to an AI provider.</li>
+          <li>We do not use your data to train AI models, and we do not sell it.</li>
+          <li>You can delete anything on your account at any time.</li>
+          <li>The code is open source, so you can read exactly what it does.</li>
+        </ul>
+      </div>
+
+      <h2>What we store</h2>
+      <p>When you use Yabot Jobs with an account, we store what you add or create so the tool works:</p>
+      <ul>
+        <li>Your account details: your email address, and a display name if you set one.</li>
+        <li>The resumes you upload and the tailored versions we create for you.</li>
+        <li>The jobs you save, their fit scores, and the reports behind those scores.</li>
+        <li>Cover letters, interview prep, notes, and follow-up reminders.</li>
+        <li>Your application status, such as saved, applied, or archived.</li>
+        <li>Your saved searches and whether you want email alerts for them.</li>
+        <li>Any AI API key you add, stored encrypted, so your requests can run on it.</li>
+        <li>If you subscribe, your Stripe customer and subscription reference. Never your card details.</li>
+      </ul>
+      <p>Browsing jobs does not require an account.</p>
+
+      <h2>How AI uses your resume</h2>
+      <p>
+        Scoring, tailoring, and writing all need an AI model. When you evaluate a job, your resume and that job posting
+        are sent to an AI provider, which returns the result. Which provider handles it depends on how you use Yabot
+        Jobs:
+      </p>
+
+      <div class="table">
+        <div class="row">
+          <b>Hosted AI</b><span>Included with your free jobs and the $5 plan. Currently provided by DeepSeek.</span>
+        </div>
+        <div class="row">
+          <b>Your own key</b
+          ><span
+            >You connect Anthropic, OpenAI, DeepSeek, or any OpenAI-compatible service. Your resume goes to the
+            provider you chose, under the terms you have with them.</span
+          >
+        </div>
+      </div>
+
+      <p>
+        Each provider handles data under its own privacy policy. We encourage you to read the policy of whichever
+        provider you use.
+      </p>
+
+      <div class="note">
+        About the hosted AI: DeepSeek is operated from China. Its privacy policy says information may be stored on
+        servers there and may be used to improve its services. If that does not work for you, use your own key with a
+        provider you trust, or avoid putting sensitive details in your resume.
+      </div>
+
+      <p>On our side, Yabot Jobs does not use your data to train models.</p>
+
+      <h2>Who else handles your data</h2>
+      <p>
+        Yabot Jobs runs on services from other companies, and they process data on our behalf so the site works. We do
+        not share your data with anyone beyond these:
+      </p>
+      <ul>
+        <li>The AI provider that processes your request, as described above.</li>
+        <li>Amazon Web Services: the website itself, and storage for the resume files you upload.</li>
+        <li>Amazon Simple Email Service: sign-in links, job alerts, and reminder emails.</li>
+        <li>Google Cloud: the API behind the site and its database.</li>
+        <li>Stripe: payments, if you subscribe.</li>
+        <li>Google Analytics: anonymous usage statistics about which pages get visited.</li>
+      </ul>
+
+      <h2>What we do not do</h2>
+      <ul>
+        <li>We do not sell your personal data.</li>
+        <li>We do not use your resume or notes for advertising.</li>
+        <li>We do not apply to jobs for you. You always apply on the company's own site.</li>
+      </ul>
+
+      <h2>Payments</h2>
+      <p>
+        Paid plans are processed by Stripe, on a checkout page hosted by Stripe. Your card details go to Stripe, not to
+        Yabot Jobs. We only see that a payment was made and which plan you are on.
+      </p>
+
+      <h2>Deleting your data</h2>
+      <p>
+        You can delete resumes, jobs, notes, cover letters, applications, saved searches, and any API key you added
+        from your account whenever you want. If you want your whole account removed, ask us and we will delete it.
+      </p>
+      <p>
+        Data already sent to an AI provider is covered by that provider's retention policy, which we do not control.
+      </p>
+
+      <h2>Open source</h2>
+      <p>
+        Yabot Jobs is open source. You can read the code, see what is sent where, and run it yourself:
+        <a href="https://github.com/davicho01/yabot.jobs-frontend">frontend</a> and
+        <a href="https://github.com/davicho01/yabot.jobs-backend">backend</a> on GitHub.
+      </p>
+
+      <h2>Changes to this page</h2>
+      <p>
+        If we change how we handle data, we will update this page and the date at the top. If a change affects how your
+        resume is processed, we will say so clearly.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions or deletion requests: <a href="/help">get in touch from the help page</a>.
+      </p>
+    </main>
+
+    <footer>
+      <div class="foot__inner">
+        <div class="foot__top">
+          <div class="foot__brand">
+            <span class="brand">
+          <svg class="brand__mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <path d="M9 24h6l4-10 6 20 4-10h10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span>yabot<span class="brand__accent">.jobs</span></span>
+        </span>
+            <p class="foot__tagline">Searching for a job should be free.</p>
+          </div>
+
+          <div class="foot__cols">
+            <nav class="foot__col" aria-labelledby="foot-browse">
+              <h2 id="foot-browse">Browse</h2>
+              <a href="/jobs">All jobs</a>
+              <a href="/jobs?workplace=remote">Remote jobs</a>
+              <a href="/jobs?workplace=hybrid">Hybrid jobs</a>
+              <a href="/jobs?workplace=onsite">On-site jobs</a>
+              <a href="/jobs?posted=1">Posted in the last 24 hours</a>
+            </nav>
+
+            <nav class="foot__col" aria-labelledby="foot-learn">
+              <h2 id="foot-learn">Learn</h2>
+              <a href="/#how-it-works">How it works</a>
+              <a href="/getting-started">Getting started</a>
+              <a href="/questions">Common questions</a>
+            </nav>
+
+            <nav class="foot__col" aria-labelledby="foot-help">
+              <h2 id="foot-help">Help</h2>
+              <a href="/help">Help &amp; feedback</a>
+              <a href="/privacy">Privacy</a>
+            </nav>
+
+            <nav class="foot__col" aria-labelledby="foot-code">
+              <h2 id="foot-code">Code</h2>
+              <a href="https://github.com/davicho01/yabot.jobs-frontend">Website code</a>
+              <a href="https://github.com/davicho01/yabot.jobs-backend">API code</a>
+            </nav>
+          </div>
+        </div>
+
+        <p class="foot__legal">
+          &copy; 2026 Yabot Jobs, a Vectorwell Technologies project. Free to use, built in the open. The website is
+          open source under the MIT license. Location data:
+          <a href="https://www.geonames.org">GeoNames</a> (CC BY 4.0), U.S. Census Bureau.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

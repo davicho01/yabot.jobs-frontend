@@ -16,11 +16,17 @@ import { SavedSearchesPage } from "./pages/SavedSearchesPage";
 import { AdminDashboardPage } from "./pages/AdminDashboardPage";
 import { AdminCrawlSourceStatsPage } from "./pages/AdminCrawlSourceStatsPage";
 import { AdminJobsPage } from "./pages/AdminJobsPage";
+import { AdminFeedbackPage } from "./pages/AdminFeedbackPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { PageShell } from "./components/PageShell";
+import { FeedbackProvider } from "./components/FeedbackModal";
+import { GettingStartedBanner } from "./components/GettingStarted";
+import { GETTING_STARTED_PATH } from "./utils/onboarding";
+import { GettingStartedPage } from "./pages/GettingStartedPage";
+import { HelpPage } from "./pages/HelpPage";
 import { usePageViews } from "./hooks/usePageViews";
 
 // Rendered once for every route (via the layout Route below) rather than
@@ -30,9 +36,12 @@ import { usePageViews } from "./hooks/usePageViews";
 function RootLayout() {
   return (
     <PageShell>
-      <Header />
-      <Outlet />
-      <Footer />
+      <FeedbackProvider>
+        <Header />
+        <GettingStartedBanner />
+        <Outlet />
+        <Footer />
+      </FeedbackProvider>
     </PageShell>
   );
 }
@@ -46,6 +55,7 @@ export default function App() {
         <Route path={BOARD_PATH} element={<JobBoardPage />} />
         <Route path="/jobs/:urlId" element={<JobDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/help" element={<HelpPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route
           path="/oauth/authorize"
@@ -60,6 +70,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ApplyPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={GETTING_STARTED_PATH}
+          element={
+            <ProtectedRoute>
+              <GettingStartedPage />
             </ProtectedRoute>
           }
         />
@@ -140,6 +158,14 @@ export default function App() {
           element={
             <AdminRoute>
               <AdminJobsPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/feedback"
+          element={
+            <AdminRoute>
+              <AdminFeedbackPage />
             </AdminRoute>
           }
         />

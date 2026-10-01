@@ -67,13 +67,13 @@ export function AccessTokensPage() {
     <main className="settings-page">
       <h1>Access tokens</h1>
       <p className="settings-page__intro">
-        Personal access tokens let other tools — like the browser extension — act on your behalf without your
+        Personal access tokens let other tools, like the browser extension, act on your behalf without your
         password. Treat one like a password: anyone who has it can use your account through it.
       </p>
 
       {justCreatedToken && (
         <section className="settings-section access-token-reveal">
-          <p className="access-token-reveal__label">Copy this now — it won't be shown again.</p>
+          <p className="access-token-reveal__label">Copy this now, it won't be shown again.</p>
           <div className="access-token-reveal__row">
             <code className="access-token-reveal__value">{justCreatedToken}</code>
             <button type="button" onClick={copyToken}>
@@ -144,7 +144,7 @@ export function AccessTokensPage() {
       <section className="settings-section">
         <h2 className="access-tokens-page__section-heading">Browser extension</h2>
         <p className="settings-section__hint">
-          Create a token above — label it something like "Browser extension" — then paste it into the extension's
+          Create a token above, label it something like "Browser extension", then paste it into the extension's
           settings page. It adds a "Save to Yabot Jobs" button on any page you're browsing, so you can send a
           posting straight from a job board without copying the URL over yourself. See the extension's own README
           for install steps.

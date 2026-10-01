@@ -158,7 +158,7 @@ export function AdminCrawlSourceStatsPage() {
             {stats.source.coverage_flagged_at && (
               <p className="admin-source-header__warning">
                 Coverage dropped: last crawl found {stats.source.coverage_last_count ?? "?"} URL(s), well below the
-                usual ~{Math.round(stats.source.coverage_baseline ?? 0)} — flagged since{" "}
+                usual ~{Math.round(stats.source.coverage_baseline ?? 0)}, flagged since{" "}
                 {formatDate(stats.source.coverage_flagged_at)}.
               </p>
             )}

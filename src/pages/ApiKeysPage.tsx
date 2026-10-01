@@ -1,6 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiKeysApi } from "../api/apiKeys";
+import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY, onboardingApi } from "../api/onboarding";
+import { PlanSection } from "../components/PlanSection";
+import { ActiveSourceNotice } from "../components/ActiveSourceNotice";
+import { useMarkAiAccessSeen } from "../hooks/useOnboarding";
 import { ApiError } from "../api/client";
 import { LLM_PROVIDERS, getLlmProvider } from "../data/llmProviders";
 import type { ApiKey } from "../api/types";
@@ -12,6 +16,10 @@ function defaultModelFor(providerId: string): string {
   return provider.defaultModel ?? provider.models[0].value;
 }
 
+function providerLabel(key: ApiKey): string {
+  return getLlmProvider(key.provider)?.label ?? key.provider;
+}
+
 function modelLabelFor(key: ApiKey): string {
   const provider = getLlmProvider(key.provider);
   if (!key.model) {
@@ -21,9 +29,22 @@ function modelLabelFor(key: ApiKey): string {
   return match?.label ?? key.model;
 }
 
+const PAUSED_KEY_TOOLTIP = "Not used while your plan is active. Takes over again if the plan ends.";
+
 export function ApiKeysPage() {
   const queryClient = useQueryClient();
+  useMarkAiAccessSeen();
   const keysQuery = useQuery({ queryKey: ["api-keys"], queryFn: apiKeysApi.list });
+  const aiAccessQuery = useQuery({ queryKey: AI_ACCESS_QUERY_KEY, queryFn: onboardingApi.aiAccess });
+  const aiAccess = aiAccessQuery.data;
+
+  // A key changes whether the free trial applies and ticks off a
+  // getting-started step, so those refresh along with the list.
+  function invalidateKeys() {
+    queryClient.invalidateQueries({ queryKey: ["api-keys"] });
+    queryClient.invalidateQueries({ queryKey: AI_ACCESS_QUERY_KEY });
+    queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
+  }
 
   const [provider, setProvider] = useState("anthropic");
   const [model, setModel] = useState("");
@@ -48,7 +69,7 @@ export function ApiKeysPage() {
         is_default: isDefault,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["api-keys"] });
+      invalidateKeys();
       setApiKeyValue("");
       setModel(defaultModelFor(provider));
       setBaseUrl("");
@@ -57,12 +78,12 @@ export function ApiKeysPage() {
 
   const deleteKeyMutation = useMutation({
     mutationFn: (id: string) => apiKeysApi.remove(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["api-keys"] }),
+    onSuccess: invalidateKeys,
   });
 
   const setDefaultMutation = useMutation({
     mutationFn: (id: string) => apiKeysApi.update(id, { is_default: true }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["api-keys"] }),
+    onSuccess: invalidateKeys,
   });
 
   function handleCreateKey(event: FormEvent) {
@@ -70,14 +91,77 @@ export function ApiKeysPage() {
     createKeyMutation.mutate();
   }
 
+  const planOutranksKeys = !!aiAccess?.subscribed;
+  // Alphabetical by provider, then model — the API returns them in no fixed
+  // order, which made rows swap places when the default changed.
+  const sortedKeys = [...(keysQuery.data ?? [])].sort(
+    (a, b) => providerLabel(a).localeCompare(providerLabel(b)) || modelLabelFor(a).localeCompare(modelLabelFor(b)),
+  );
+
   return (
-    <main className="settings-page">
-      <h1>AI API Keys</h1>
+    <main className="settings-page ai-access-page">
+      <h1>AI access</h1>
       <p className="settings-page__intro">
-        Bring your own LLM API key — used only for your resume review, scoring, and generation requests.
+        Scoring, tailoring, cover letters, and interview prep run on an AI model. Choose what powers them.
       </p>
 
-      <section className="settings-section">
+      {aiAccess && <ActiveSourceNotice access={aiAccess} />}
+
+      {aiAccess && <PlanSection access={aiAccess} />}
+
+      <section className="settings-section ai-access-keys">
+        <h2 className="ai-access-page__option-title">Use your own API key</h2>
+        <p className="settings-section__hint">
+          Free on our side: your provider bills you directly for what you use, usually a few cents per job. Keys are
+          encrypted and only used for your own requests.
+        </p>
+
+        {sortedKeys.length > 0 && (
+          <ul className="ai-access-keys__list">
+            {sortedKeys.map((key) => (
+              <li key={key.id} className="ai-access-keys__item">
+                <span className="ai-access-keys__label">
+                  <span className="ai-access-keys__provider">
+                    {providerLabel(key)}
+                  </span>
+                  <span className="ai-access-keys__meta">
+                    {modelLabelFor(key)} · {key.masked_key}
+                  </span>
+                </span>
+                <span className="ai-access-keys__actions">
+                  {key.is_default ? (
+                    <span
+                      className={`stamp ${planOutranksKeys ? "stamp--neutral" : "stamp--positive"}`}
+                      title={planOutranksKeys ? PAUSED_KEY_TOOLTIP : undefined}
+                    >
+                      {planOutranksKeys ? "Default · paused" : "Default"}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="ai-access-keys__button"
+                      onClick={() => setDefaultMutation.mutate(key.id)}
+                      disabled={setDefaultMutation.isPending && setDefaultMutation.variables === key.id}
+                    >
+                      {setDefaultMutation.isPending && setDefaultMutation.variables === key.id
+                        ? "Setting…"
+                        : "Make default"}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="ai-access-keys__button ai-access-keys__button--remove"
+                    onClick={() => deleteKeyMutation.mutate(key.id)}
+                  >
+                    Remove
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <h3 className="ai-access-keys__form-title">Add a key</h3>
         <form onSubmit={handleCreateKey} className="settings-key-form">
           <label>
             Provider
@@ -90,6 +174,14 @@ export function ApiKeysPage() {
                 ))}
               </select>
             </div>
+            {selectedProvider?.keysUrl && (
+              <span className="ai-access-keys__get-key">
+                Don't have one?{" "}
+                <a href={selectedProvider.keysUrl} target="_blank" rel="noopener noreferrer">
+                  Create one at {selectedProvider.label} ↗
+                </a>
+              </span>
+            )}
           </label>
           <label>
             Model {!selectedProvider?.defaultModel && <span className="settings-key-form__required">required</span>}
@@ -127,7 +219,7 @@ export function ApiKeysPage() {
             API key
             <input type="password" value={apiKeyValue} onChange={(e) => setApiKeyValue(e.target.value)} required />
           </label>
-          <label className="settings-key-form__checkbox">
+          <label className="ai-access-keys__checkbox">
             <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} />
             Use this key by default
           </label>
@@ -140,34 +232,7 @@ export function ApiKeysPage() {
             {createKeyMutation.error instanceof ApiError ? createKeyMutation.error.message : "Couldn't save key."}
           </p>
         )}
-
-        <ul className="record-list">
-          {keysQuery.data?.map((key) => (
-            <li key={key.id} className="record-list__item">
-              <span>
-                {key.provider} · {modelLabelFor(key)} · {key.masked_key}
-              </span>
-              {key.is_default ? (
-                <span className="stamp stamp--positive">Default</span>
-              ) : (
-                <button
-                  type="button"
-                  className="record-list__make-default"
-                  onClick={() => setDefaultMutation.mutate(key.id)}
-                  disabled={setDefaultMutation.isPending && setDefaultMutation.variables === key.id}
-                >
-                  {setDefaultMutation.isPending && setDefaultMutation.variables === key.id
-                    ? "Setting…"
-                    : "Make default"}
-                </button>
-              )}
-              <button type="button" className="record-list__remove" onClick={() => deleteKeyMutation.mutate(key.id)}>
-                Remove
-              </button>
-            </li>
-          ))}
-          {keysQuery.data?.length === 0 && <li className="settings-section__hint">No keys added yet.</li>}
-        </ul>
+        {deleteKeyMutation.error && <p className="settings-page__error">Couldn't remove that key.</p>}
       </section>
     </main>
   );

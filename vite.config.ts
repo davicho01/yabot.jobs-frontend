@@ -2,10 +2,18 @@ import { resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
 
-// The site has two pages: index.html is the static landing page served at "/", and
-// app.html is the React app (the job board lives at /jobs). In production the host
-// decides which one a path gets; this does the same for `npm run dev`, where every
-// page-like path other than "/" belongs to the app.
+// Static pages served at a clean URL. In production a CloudFront Function does this
+// rewrite (deploy/cloudfront-pretty-urls.js); this keeps `npm run dev` matching it.
+// Keep the three lists in step: here, that Function, and index.html's STATIC_PAGES.
+const STATIC_PAGES: Record<string, string> = {
+  '/questions': '/questions.html',
+  '/privacy': '/privacy.html',
+}
+
+// The site is a static landing page (index.html) at "/", a couple of static content
+// pages, and the React app (app.html) for everything else — the job board lives at
+// /jobs. In production the host decides which one a path gets; this does the same for
+// `npm run dev`, where every remaining page-like path belongs to the app.
 function appShellFallback(): Plugin {
   return {
     name: 'app-shell-fallback',
@@ -15,7 +23,8 @@ function appShellFallback(): Plugin {
         const path = url.split('?')[0]
         const wantsPage = req.headers.accept?.includes('text/html')
         if (wantsPage && path !== '/' && !path.includes('.') && !path.startsWith('/@') && !path.startsWith('/src/')) {
-          req.url = '/app.html' + url.slice(path.length)
+          const staticPage = STATIC_PAGES[path.replace(/\/+$/, '')]
+          req.url = staticPage ? staticPage : '/app.html' + url.slice(path.length)
         }
         next()
       })
@@ -31,6 +40,8 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         app: resolve(__dirname, 'app.html'),
+        questions: resolve(__dirname, 'questions.html'),
+        privacy: resolve(__dirname, 'privacy.html'),
       },
     },
   },
