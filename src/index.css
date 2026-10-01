@@ -105,8 +105,8 @@ body::before {
   pointer-events: none;
   background:
     radial-gradient(60rem 42rem at 10% 50%, color-mix(in srgb, var(--accent) 17%, transparent) 0%, transparent 70%),
-    radial-gradient(55rem 40rem at 102% 50%, color-mix(in srgb, #7b61ff 14%, transparent) 0%, transparent 70%),
-    radial-gradient(52rem 36rem at 88% 50%, color-mix(in srgb, #00c2ff 12%, transparent) 0%, transparent 70%);
+    radial-gradient(55rem 40rem at 102% 18%, color-mix(in srgb, #7b61ff 18%, transparent) 0%, transparent 70%),
+    radial-gradient(52rem 36rem at 88% 82%, color-mix(in srgb, #00c2ff 12%, transparent) 0%, transparent 70%);
 }
 
 #root {
