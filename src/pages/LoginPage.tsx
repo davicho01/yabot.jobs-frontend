@@ -32,10 +32,11 @@ export function LoginPage() {
   return (
     <main className="login-page">
       <div className="login-card">
-        <div className="login-card__tab">Sign-in slip</div>
+        {/* Sign-up and sign-in are the same form, since there's no password. */}
+        <div className="login-card__tab">Sign-in</div>
         <h1 className="login-card__title">Find your next job.</h1>
         <p className="login-card__subtitle">
-          No password to remember, we email you a one-time link to sign in.
+          No password to remember, just a one-time sign-in link in your inbox.
         </p>
 
         {status === "sent" ? (

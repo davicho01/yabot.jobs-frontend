@@ -8,16 +8,48 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
+  /* Positioning context for the glow below; overflow keeps it from bleeding
+     into the header and footer. */
+  position: relative;
+  overflow: hidden;
+}
+
+/* A soft wash behind the card, the same blurred accent/violet treatment the
+   landing page uses behind its hero and pricing. Purely decorative: it sits
+   under the card and never takes a click. Both colors are theme-aware, so it
+   reads on white and on black. */
+.login-page::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  /* Narrower than the page so it fades out before the header and footer
+     edges instead of being clipped into a hard-edged band. */
+  width: min(620px, 92vw);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background:
+    radial-gradient(circle at 36% 34%, color-mix(in srgb, var(--accent) 34%, transparent) 0%, transparent 58%),
+    radial-gradient(circle at 66% 62%, color-mix(in srgb, #7b61ff 26%, transparent) 0%, transparent 60%);
+  filter: blur(56px);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .login-card {
   position: relative;
+  /* Above the glow. */
+  z-index: 1;
   width: 100%;
   max-width: 380px;
+  /* Stays --surface so the white (--paper) email field still reads as a
+     field against it; the glow and shadow below do the lifting instead. */
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
+  box-shadow:
+    var(--shadow-card),
+    0 24px 70px -32px color-mix(in srgb, var(--accent) 50%, transparent);
   padding: 2.25rem 2rem 2rem;
 }
 
