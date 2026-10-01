@@ -30,7 +30,7 @@ export function Footer() {
             </span>
             <span className="site-footer__title">Yabot Jobs</span>
           </Link>
-          <span className="site-footer__statement">You shouldn't have to pay to get a job.</span>
+          <span className="site-footer__statement">Searching for a job should be free.</span>
         </div>
 
         <nav className="site-footer__help" aria-label="Help">

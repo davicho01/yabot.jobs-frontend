@@ -691,7 +691,7 @@ function ApplyPageContent({
         }`
       : "Not applied yet";
   const step5Done = !!displayedInterviewPrep;
-  const step5Status = step5Done ? "Prepared" : "Optional — do this once an interview is scheduled";
+  const step5Status = step5Done ? "Prepared" : "Optional, do this once an interview is scheduled";
 
   // Jump to the candidate's actual next step once the data that decides
   // that has settled — but only the first time, and only if they haven't
@@ -784,7 +784,7 @@ function ApplyPageContent({
       <main className="job-dashboard">
         {dialog}
         <span className="stamp stamp--neutral">Still scanning</span>
-        <p>This posting hasn't finished being scanned yet — check back shortly.</p>
+        <p>This posting hasn't finished being scanned yet. Check back shortly.</p>
         <button type="button" className="rescan-button" disabled={isFetching} onClick={() => void refetch()}>
           {isFetching ? "Refreshing…" : "Refresh job content ↻"}
         </button>
@@ -924,7 +924,7 @@ function ApplyPageContent({
               <span
                 className={`job-dashboard__alignment-pct${bestScoreValue !== null ? ` job-dashboard__alignment-pct--${fitTier(bestScoreValue)}` : ""}`}
               >
-                {bestScoreValue !== null ? `${bestScoreValue}` : "—"}
+                {bestScoreValue !== null ? `${bestScoreValue}` : "-"}
               </span>
               {bestScoreValue !== null && (
                 <span className={`stamp ${fitLabel(bestScoreValue).stampClass}`}>{fitLabel(bestScoreValue).text}</span>
@@ -1092,7 +1092,7 @@ function ApplyPageContent({
                 <div className="dossier-action__header">
                   <h2>Gaps this fit check found</h2>
                   <p>
-                    Speak to these directly in your resume below if you have relevant experience — otherwise they'll
+                    Speak to these directly in your resume below if you have relevant experience, otherwise they'll
                     likely come up again in the interview.
                   </p>
                 </div>
@@ -1295,7 +1295,7 @@ function ApplyPageContent({
                     <p className="job-dashboard__panel-empty">
                       Status: {currentApplication.status}
                       {currentApplication.applied_at && (
-                        <> — marked applied {formatAppliedAt(currentApplication.applied_at)}</>
+                        <>, marked applied {formatAppliedAt(currentApplication.applied_at)}</>
                       )}
                       . Change it any time from the Notes card above.
                     </p>

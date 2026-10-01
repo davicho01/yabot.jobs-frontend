@@ -31,7 +31,7 @@ function ScoreHistoryPanel({ resumeId }: { resumeId: string }) {
   if (entries.length === 0) {
     return (
       <div className="resume-preview resume-preview--empty">
-        No scores yet for this resume — evaluate a posting on its apply page first.
+        No scores yet for this resume, evaluate a posting on its apply page first.
       </div>
     );
   }
@@ -62,7 +62,7 @@ function ScoreHistoryPanel({ resumeId }: { resumeId: string }) {
         <div className="score-history__recurring">
           <h2 className="score-history__heading">Keywords that keep coming up missing</h2>
           <p className="settings-page__intro score-history__recurring-hint">
-            Showed up as missing on 2 or more separate scores — worth adding to this resume if it's genuinely there.
+            Showed up as missing on 2 or more separate scores, worth adding to this resume if it's genuinely there.
           </p>
           <ul className="score-history__keyword-list">
             {recurring.map((k) => (
@@ -111,7 +111,7 @@ function VersionHistoryPanel({
   if (versions.length <= 1) {
     return (
       <div className="resume-preview resume-preview--empty">
-        Only one version so far — adding missing skills from{" "}
+        Only one version so far, adding missing skills from{" "}
         <Link to="/resume-optimization">Resume optimization</Link> creates a new version automatically.
       </div>
     );
@@ -350,7 +350,7 @@ export function ResumePage() {
             onKeyDown={handleDropzoneKeyDown}
             role="button"
             tabIndex={0}
-            aria-label="Upload resume — drag and drop a file here, or click to browse"
+            aria-label="Upload resume, drag and drop a file here, or click to browse"
           >
             <input
               ref={fileInput}
@@ -477,7 +477,7 @@ export function ResumePage() {
         )}
         {!historyId && !versionHistoryId && previewResume && previewResume.content_type !== "application/pdf" && !previewResume.has_structured_content && (
           <div className="resume-preview resume-preview--empty">
-            <p>No preview yet for this file — structure it first.</p>
+            <p>No preview yet for this file, structure it first.</p>
             <StructureControl resumeId={previewResume.id} mutation={structureMutation} />
           </div>
         )}

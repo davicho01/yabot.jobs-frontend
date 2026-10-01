@@ -184,7 +184,7 @@ export function JobCaseFile({
         </div>
       )}
       {scanFailed && job.url.scan_error && <p className="rescan-error">{job.url.scan_error}</p>}
-      {rescanFailed && <p className="rescan-error">Rescan failed — try again in a moment.</p>}
+      {rescanFailed && <p className="rescan-error">Rescan failed, try again in a moment.</p>}
       {posting && !scanFailed && (
         <>
           <div className="case-file__toolbar">

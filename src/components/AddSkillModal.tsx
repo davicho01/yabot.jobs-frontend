@@ -80,7 +80,7 @@ export function AddSkillModal({
           </button>
         </div>
         <p className="add-skill-modal__intro">
-          Explain the real experience behind this skill, and which of your past roles it belongs to — it'll be
+          Explain the real experience behind this skill, and which of your past roles it belongs to. It'll be
           turned into a bullet point when you apply your changes.
         </p>
 

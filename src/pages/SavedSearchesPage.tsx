@@ -31,7 +31,7 @@ export function SavedSearchesPage() {
       {dialog}
       <h1>Saved searches</h1>
       <p className="settings-page__intro">
-        Emailed whenever a new posting matches — <Link to={BOARD_PATH}>save one</Link> from the job board's filter
+        Emailed whenever a new posting matches. <Link to={BOARD_PATH}>Save one</Link> from the job board's filter
         panel.
       </p>
 
@@ -58,7 +58,7 @@ export function SavedSearchesPage() {
           })}
           {searchesQuery.data?.length === 0 && (
             <li className="settings-section__hint">
-              Nothing saved yet — search for something on the <Link to={BOARD_PATH}>job board</Link>, then use the
+              Nothing saved yet. Search for something on the <Link to={BOARD_PATH}>job board</Link>, then use the
               save icon next to the filters to keep it and get emailed about new matches.
             </li>
           )}

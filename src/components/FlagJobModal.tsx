@@ -45,7 +45,7 @@ export function FlagJobModal({ urlId, onClose }: { urlId: string; onClose: () =>
           </button>
         </div>
         <p className="flag-job-modal__intro">
-          Let us know what's wrong with this posting — we'll look into it.
+          Let us know what's wrong with this posting, and we'll look into it.
         </p>
 
         <label className="flag-job-modal__label" htmlFor="flag-job-modal-reason">

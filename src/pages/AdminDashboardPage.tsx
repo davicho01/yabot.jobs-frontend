@@ -295,13 +295,13 @@ export function AdminDashboardPage() {
                       {source.name}
                       {/* Phones drop the ATS/last-crawled/flagged columns (see AdminCommon.css) — this keeps that info, compactly, under the name. */}
                       <span className="admin-table__sub">
-                        {source.ats_type ?? "—"} · {formatDate(source.last_crawled_at)}
+                        {source.ats_type ?? "-"} · {formatDate(source.last_crawled_at)}
                         {source.coverage_flagged_at && (
                           <span className="admin-table__sub-flagged"> · Flagged</span>
                         )}
                       </span>
                     </td>
-                    <td>{source.ats_type ?? "—"}</td>
+                    <td>{source.ats_type ?? "-"}</td>
                     <td>
                       <span className={statusStampClass(source.status)}>{source.status}</span>
                     </td>
@@ -312,7 +312,7 @@ export function AdminDashboardPage() {
                           {formatDate(source.coverage_flagged_at)}
                         </span>
                       ) : (
-                        "—"
+                        "-"
                       )}
                     </td>
                     <td>

@@ -229,10 +229,10 @@ export function AdminJobsPage() {
                               {job.posting.company_name}
                             </Link>
                           ) : (
-                            (job.posting?.company_name ?? "—")
+                            (job.posting?.company_name ?? "-")
                           )}
                         </td>
-                        <td>{job.posting?.title ?? "—"}</td>
+                        <td>{job.posting?.title ?? "-"}</td>
                         <td>
                           <span className={statusStampClass(job.url.scan_status)}>{job.url.scan_status}</span>
                           {rescanFailed && <p className="rescan-error">Rescan failed.</p>}
@@ -247,7 +247,7 @@ export function AdminJobsPage() {
                               {job.url.flag_reason ? FLAG_REASON_LABELS[job.url.flag_reason] : "Flagged"}
                             </span>
                           ) : (
-                            "—"
+                            "-"
                           )}
                         </td>
                         <td>
