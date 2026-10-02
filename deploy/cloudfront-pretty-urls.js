@@ -1,5 +1,5 @@
 // CloudFront Function (viewer request) that serves the static content pages at
-// clean URLs: /questions -> /questions.html, /privacy -> /privacy.html.
+// clean URLs: /questions -> /questions.html, /privacy -> /privacy.html, /about -> /about.html.
 //
 // Why it is needed: the distribution answers unknown paths with /index.html (the
 // SPA fallback), so without this rewrite /questions never reaches questions.html.
@@ -26,6 +26,7 @@
 var PAGES = {
   "/questions": "/questions.html",
   "/privacy": "/privacy.html",
+  "/about": "/about.html",
 };
 
 function handler(event) {

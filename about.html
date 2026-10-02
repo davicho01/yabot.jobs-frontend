@@ -19,17 +19,23 @@
       })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Privacy | Yabot Jobs</title>
-    <meta name="description" content="How Yabot Jobs handles your resume, your applications, and your data." />
-    <link rel="canonical" href="https://yabot.jobs/privacy" />
+    <title>About | Yabot Jobs</title>
+    <meta
+      name="description"
+      content="Yabot Jobs is built and run by one engineer who needed a free way to search, track, and tailor his resume after a layoff."
+    />
+    <link rel="canonical" href="https://yabot.jobs/about" />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#ffffff" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Yabot Jobs" />
-    <meta property="og:title" content="Privacy | Yabot Jobs" />
-    <meta property="og:description" content="How Yabot Jobs handles your resume, your applications, and your data." />
-    <meta property="og:url" content="https://yabot.jobs/privacy" />
+    <meta property="og:title" content="About | Yabot Jobs" />
+    <meta
+      property="og:description"
+      content="Yabot Jobs is built and run by one engineer who needed a free way to search, track, and tailor his resume after a layoff."
+    />
+    <meta property="og:url" content="https://yabot.jobs/about" />
     <meta property="og:image" content="https://yabot.jobs/og-image.png" />
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -46,8 +52,8 @@
     />
 
     <style>
-      /* Shared layout for the static content pages (/questions, /privacy). Same
-         tokens and type as the landing page in index.html, and light only for
+      /* Shared layout for the static content pages (/questions, /privacy, /about).
+         Same tokens and type as the landing page in index.html, and light only for
          the same reason: dark mode was deferred, and a visitor arriving from a
          white landing page shouldn't land on a black one. */
       :root {
@@ -187,9 +193,8 @@
         letter-spacing: -0.04em;
       }
 
-      .updated {
+      .intro {
         color: var(--ink-soft);
-        font-size: 15px;
         margin-bottom: 40px;
       }
 
@@ -205,13 +210,30 @@
         margin-bottom: 16px;
       }
 
-      main ul {
-        margin-bottom: 16px;
-        padding-left: 22px;
+      .byline {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 40px;
       }
 
-      li {
-        margin-bottom: 8px;
+      .byline__photo {
+        flex: none;
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: var(--surface);
+      }
+
+      .byline__name {
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .byline__role {
+        color: var(--ink-soft);
+        font-size: 15px;
       }
 
       .summary {
@@ -225,51 +247,19 @@
         font-size: 22px;
       }
 
-      .table {
-        border: 1px solid var(--line);
-        border-radius: 20px;
-        overflow: hidden;
-        margin: 8px 0 24px;
+      main ul {
+        margin-bottom: 16px;
+        padding-left: 22px;
       }
 
-      .row {
-        display: grid;
-        grid-template-columns: 1fr 2fr;
-        gap: 16px;
-        padding: 18px 22px;
-        border-top: 1px solid var(--line);
-      }
-
-      .row:first-child {
-        border-top: 0;
-      }
-
-      .row b {
-        font-weight: 700;
-      }
-
-      .row span {
-        color: var(--ink-soft);
-        font-size: 16px;
+      li {
+        margin-bottom: 8px;
       }
 
       @media (max-width: 560px) {
-        .row {
-          grid-template-columns: 1fr;
-          gap: 4px;
-        }
-
         main {
           padding-top: 48px;
         }
-      }
-
-      .note {
-        border-left: 4px solid var(--accent);
-        padding: 4px 0 4px 18px;
-        margin: 20px 0;
-        color: var(--ink-soft);
-        font-size: 16px;
       }
 
       /* ---------- footer ---------- */
@@ -366,124 +356,73 @@
     </header>
 
     <main id="main">
-      <p class="eyebrow">Privacy</p>
-      <h1>Your resume is yours.</h1>
-      <p class="updated">Last updated October 1, 2026</p>
+      <p class="eyebrow">About</p>
+      <h1>Built by someone who needed it too.</h1>
+      <p class="intro">
+        Yabot Jobs isn't a company with a growth plan. It's one engineer's tool, opened up for anyone else on the
+        same job hunt.
+      </p>
+
+      <div class="byline">
+        <img class="byline__photo" src="/about-david.jpg" alt="David Garcia" width="72" height="72" />
+        <span>
+          <span class="byline__name">David Garcia</span><br />
+          <span class="byline__role">Software engineer, Utah &middot; builder of Yabot Jobs</span>
+        </span>
+      </div>
+
+      <p>
+        I was born in Peru and moved to the U.S. with my family when I was 15. These days I live in Utah, where my
+        three grown children, who I could not be prouder of, keep me honest about what actually matters. I've
+        been a software engineer for more than 15 years.
+      </p>
+
+      <h2>Why I built this</h2>
+      <p>
+        I built Yabot Jobs after getting laid off. I needed a way to search for jobs, track what I'd applied to, and
+        use modern AI tools to sharpen my resume for each posting, and I needed it to be affordable while I had no
+        income coming in. Nothing I found did all three without charging a subscription for the privilege.
+      </p>
+      <p>
+        So I built the tool I wished existed. Once it was working for me, it was obvious it could help anyone else
+        in the same spot, so I opened it up.
+      </p>
+
+      <h2>How it stays free</h2>
+      <p>
+        Searching the board, saving jobs, and tracking applications cost nothing, for anyone. The part that costs
+        real money is AI: scoring, tailoring, and writing all run on a model, and model usage isn't free. Every
+        account gets a handful of free evaluations to try all of it with no key and no card. After that, you can
+        bring your own AI API key (Anthropic, OpenAI, DeepSeek, or any OpenAI-compatible service) and keep using
+        every feature for free; you pay your provider directly for what you use, and I add nothing on top. If you'd
+        rather not manage a key, there's an optional $5/month plan that covers it for you.
+      </p>
+      <p>
+        I'd like to offer more for free outright. The honest constraint is that AI costs money, and bring-your-own-key
+        is how I can keep the whole thing free without running it at a loss.
+      </p>
 
       <div class="summary">
         <h2>The short version</h2>
         <ul>
-          <li>You can browse jobs without an account.</li>
-          <li>
-            Your resume and notes are used to score jobs, tailor resumes, and write cover letters for you. Nothing
-            else.
-          </li>
-          <li>To do that, your resume and the job posting are sent to an AI provider.</li>
-          <li>We do not use your data to train AI models, and we do not sell it.</li>
-          <li>You can delete anything on your account at any time.</li>
-          <li>The code is open source, so you can read exactly what it does.</li>
+          <li>One person builds and runs this, not a company with investors to answer to.</li>
+          <li>Searching, saving, and tracking jobs is free for everyone, no account required to browse.</li>
+          <li>Bring your own AI key and every AI feature is free of charge from me; you only pay your AI provider for what you use.</li>
+          <li>The code is open source, so you can see exactly what it does with your data.</li>
         </ul>
       </div>
 
-      <h2>What we store</h2>
-      <p>When you use Yabot Jobs with an account, we store what you add or create so the tool works:</p>
-      <ul>
-        <li>Your account details: your email address, and a display name if you set one.</li>
-        <li>The resumes you upload and the tailored versions we create for you.</li>
-        <li>The jobs you save, their fit scores, and the reports behind those scores.</li>
-        <li>Cover letters, interview prep, notes, and follow-up reminders.</li>
-        <li>Your application status, such as saved, applied, or archived.</li>
-        <li>Your saved searches and whether you want email alerts for them.</li>
-        <li>Any AI API key you add, stored encrypted, so your requests can run on it.</li>
-        <li>If you subscribe, your Stripe customer and subscription reference. Never your card details.</li>
-      </ul>
-      <p>Browsing jobs does not require an account.</p>
-
-      <h2>How AI uses your resume</h2>
-      <p>
-        Scoring, tailoring, and writing all need an AI model. When you evaluate a job, your resume and that job posting
-        are sent to an AI provider, which returns the result. Which provider handles it depends on how you use Yabot
-        Jobs:
-      </p>
-
-      <div class="table">
-        <div class="row">
-          <b>Hosted AI</b><span>Included with your free jobs and the $5 plan. Currently provided by DeepSeek.</span>
-        </div>
-        <div class="row">
-          <b>Your own AI account</b
-          ><span
-            >You connect Anthropic, OpenAI, DeepSeek, or any OpenAI-compatible service. Your resume goes to the
-            provider you chose, under the terms you have with them.</span
-          >
-        </div>
-      </div>
-
-      <p>
-        Each provider handles data under its own privacy policy. We encourage you to read the policy of whichever
-        provider you use.
-      </p>
-
-      <div class="note">
-        About the hosted AI: DeepSeek is operated from China. Its privacy policy says information may be stored on
-        servers there and may be used to improve its services. If that does not work for you, use your own key with a
-        provider you trust, or avoid putting sensitive details in your resume.
-      </div>
-
-      <p>On our side, Yabot Jobs does not use your data to train models.</p>
-
-      <h2>Who else handles your data</h2>
-      <p>
-        Yabot Jobs runs on services from other companies, and they process data on our behalf so the site works. We do
-        not share your data with anyone beyond these:
-      </p>
-      <ul>
-        <li>The AI provider that processes your request, as described above.</li>
-        <li>Amazon Web Services: the website itself, and storage for the resume files you upload.</li>
-        <li>Amazon Simple Email Service: sign-in links, job alerts, and reminder emails.</li>
-        <li>Google Cloud: the API behind the site and its database.</li>
-        <li>Stripe: payments, if you subscribe.</li>
-        <li>Google Analytics: anonymous usage statistics about which pages get visited.</li>
-      </ul>
-
-      <h2>What we do not do</h2>
-      <ul>
-        <li>We do not sell your personal data.</li>
-        <li>We do not use your resume or notes for advertising.</li>
-        <li>We do not apply to jobs for you. You always apply on the company's own site.</li>
-      </ul>
-
-      <h2>Payments</h2>
-      <p>
-        Paid plans are processed by Stripe, on a checkout page hosted by Stripe. Your card details go to Stripe, not to
-        Yabot Jobs. We only see that a payment was made and which plan you are on.
-      </p>
-
-      <h2>Deleting your data</h2>
-      <p>
-        You can delete resumes, jobs, notes, cover letters, applications, saved searches, and any API key you added
-        from your account whenever you want. If you want your whole account removed, ask us and we will delete it.
-      </p>
-      <p>
-        Data already sent to an AI provider is covered by that provider's retention policy, which we do not control.
-      </p>
-
       <h2>Open source</h2>
       <p>
-        Yabot Jobs is open source. You can read the code, see what is sent where, and run it yourself:
+        Yabot Jobs is open source. You can read the code, see what's sent where, and run it yourself:
         <a href="https://github.com/davicho01/yabot.jobs-frontend">frontend</a> and
         <a href="https://github.com/davicho01/yabot.jobs-backend">backend</a> on GitHub.
       </p>
 
-      <h2>Changes to this page</h2>
+      <h2>Say hello</h2>
       <p>
-        If we change how we handle data, we will update this page and the date at the top. If a change affects how your
-        resume is processed, we will say so clearly.
-      </p>
-
-      <h2>Contact</h2>
-      <p>
-        Questions or deletion requests: <a href="/help">get in touch from the help page</a>.
+        I read everything that comes in through <a href="/help">the help page</a>. You can also find me on
+        <a href="https://www.linkedin.com/in/johnydgarcia">LinkedIn</a>.
       </p>
     </main>
 

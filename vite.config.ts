@@ -8,6 +8,7 @@ import { defineConfig, type Plugin } from 'vite'
 const STATIC_PAGES: Record<string, string> = {
   '/questions': '/questions.html',
   '/privacy': '/privacy.html',
+  '/about': '/about.html',
 }
 
 // The site is a static landing page (index.html) at "/", a couple of static content
@@ -42,6 +43,7 @@ export default defineConfig({
         app: resolve(__dirname, 'app.html'),
         questions: resolve(__dirname, 'questions.html'),
         privacy: resolve(__dirname, 'privacy.html'),
+        about: resolve(__dirname, 'about.html'),
       },
     },
   },

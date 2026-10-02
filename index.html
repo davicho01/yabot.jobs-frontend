@@ -9,11 +9,15 @@
       //  2. The host answers unknown paths with this page (SPA fallback). The static
       //     content pages are a known set, so send those to their own file instead. This
       //     is the safety net for when the CloudFront rewrite (deploy/cloudfront-pretty-urls.js)
-      //     isn't attached yet, which would otherwise leave /questions and /privacy dead.
+      //     isn't attached yet, which would otherwise leave /questions, /privacy, and /about dead.
       //  3. Anything else here is a deep link into the app (/login, /jobs/<id>, …): hand it
       //     to the app shell, which puts the path back for its router.
       (function () {
-        var STATIC_PAGES = { "/questions": "/questions.html", "/privacy": "/privacy.html" };
+        var STATIC_PAGES = {
+          "/questions": "/questions.html",
+          "/privacy": "/privacy.html",
+          "/about": "/about.html",
+        };
         var l = location;
         var path = l.pathname;
         if (path === "/" && /[?&](q|location|metro|radius|company|posted|workplace|page|jobId)=/.test(l.search)) {
@@ -900,6 +904,13 @@
         color: var(--ink-soft);
       }
 
+      .plan__fineprint {
+        font-size: 13px;
+        line-height: 1.4;
+        color: var(--ink-soft);
+        opacity: 0.75;
+      }
+
       /* The $5 plan: a gradient border drawn as 2px of padding behind an inset
          near-black card, plus its own glow. */
       .plan--featured {
@@ -1400,6 +1411,7 @@
               <p class="plan__price">$0</p>
               <h3 class="plan__name">Use your own AI</h3>
               <p class="plan__desc">As many jobs as you want.</p>
+              <p class="plan__fineprint">Your AI provider may charge you for usage.</p>
             </div>
           </div>
 
@@ -1491,6 +1503,7 @@
               <a href="#how-it-works">How it works</a>
               <a href="/getting-started">Getting started</a>
               <a href="/questions">Common questions</a>
+              <a href="/about">About</a>
             </nav>
 
             <nav class="foot__col" aria-labelledby="foot-help">
@@ -1508,7 +1521,7 @@
         </div>
 
         <p class="foot__legal">
-          &copy; 2026 Yabot Jobs, a Vectorwell Technologies project. Free to use, built in the open. The website is
+          &copy; 2026 Yabot Jobs, a Vectorwell Technologies project. Free to search and track, built in the open. The website is
           open source under the MIT license. Location data:
           <a href="https://www.geonames.org">GeoNames</a> (CC BY 4.0), U.S. Census Bureau.
         </p>

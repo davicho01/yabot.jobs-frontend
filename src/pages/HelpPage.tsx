@@ -127,7 +127,7 @@ export function HelpPage() {
         </div>
         <p className="help-page__more">
           Questions about the project itself (who runs it, where jobs come from, open source) are answered on the{" "}
-          <a href="/#questions">home page</a>.
+          <a href="/questions">common questions page</a>.
         </p>
       </section>
 
