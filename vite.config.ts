@@ -1,3 +1,4 @@
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
@@ -33,9 +34,36 @@ function appShellFallback(): Plugin {
   }
 }
 
+// The backend's static SEO pages (/job/<id>, /jobs/us/..., their sitemaps) live in
+// the S3 bucket in production, where CloudFront serves a real object if one exists
+// and the SPA otherwise. Locally, generate_static_job_pages.py writes them to
+// .seo-pages/ instead (SEO_PAGES_OUTPUT_DIR in the backend's .env), storing an
+// extensionless key like jobs/us as jobs/us/index.html; this serves them the same
+// way. Runs ahead of appShellFallback, so a path with no generated page still
+// reaches the app.
+const SEO_PAGES_DIR = resolve(__dirname, '.seo-pages')
+
+function seoPages(): Plugin {
+  return {
+    name: 'seo-pages',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const path = decodeURIComponent((req.url ?? '').split('?')[0])
+        if (!/^\/(jobs?\/|sitemap-job)/.test(path) || path.includes('..')) return next()
+        const file = path.includes('.')
+          ? resolve(SEO_PAGES_DIR, '.' + path)
+          : resolve(SEO_PAGES_DIR, '.' + path.replace(/\/+$/, ''), 'index.html')
+        if (!existsSync(file) || !statSync(file).isFile()) return next()
+        res.setHeader('Content-Type', file.endsWith('.xml') ? 'application/xml' : 'text/html; charset=utf-8')
+        res.end(readFileSync(file))
+      })
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), appShellFallback()],
+  plugins: [react(), seoPages(), appShellFallback()],
   build: {
     rollupOptions: {
       input: {

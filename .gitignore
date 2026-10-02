@@ -10,6 +10,10 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+
+# Static SEO pages generate_static_job_pages.py writes in local dev (served by
+# vite.config.ts's seoPages middleware). In prod they live only in S3.
+.seo-pages
 *.local
 
 # Editor directories and files

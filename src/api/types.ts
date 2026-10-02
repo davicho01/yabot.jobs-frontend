@@ -53,6 +53,9 @@ export interface JobPostingUrl {
   crawl_source_id: string | null;
   last_scanned_at: string | null;
   created_at: string;
+  // Set once the listing is gone from its source board or found expired —
+  // it's out of search but still reachable by id (e.g. from Applications).
+  closed_at: string | null;
   // A user's report that this listing's scanned data looks wrong — always
   // null unless the caller is an admin viewing GET /admin/jobs (see
   // to_job_detail's include_flag). The reporter themselves never sees their

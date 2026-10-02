@@ -238,6 +238,7 @@ export function JobCaseFile({
           </div>
 
           <div className="case-file__tags">
+            {job.url.closed_at && <span className="tag tag--secondary">No longer listed</span>}
             <span className="tag">{posting.workplace_type}</span>
             <span className="tag">{posting.employment_type.replace("_", " ")}</span>
             {formatSalary(job) && <span className="tag tag--accent">{formatSalary(job)}</span>}

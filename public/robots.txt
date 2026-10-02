@@ -14,3 +14,4 @@ Disallow: /jobs/*/apply
 
 Sitemap: https://yabot.jobs/sitemap.xml
 Sitemap: https://yabot.jobs/sitemap-jobs.xml
+Sitemap: https://yabot.jobs/sitemap-job-pages.xml
