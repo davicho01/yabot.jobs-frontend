@@ -84,31 +84,6 @@ body {
   overflow-wrap: break-word;
 }
 
-/* Ambient wash behind every app page. The app was flat --paper edge to edge,
-   which read as clinical next to the landing page; this gives it the same
-   sense of depth without putting color near the content itself.
-
-   Deliberately far weaker than the landing page's glows: these pages carry
-   dense tables, cards and forms that have to stay legible, so the blooms are
-   pushed to the corners and kept in single digits to low teens of opacity.
-
-   Fixed, so it stays put instead of drifting or repeating as the page
-   scrolls. Plain radial gradients rather than filter: blur() on purpose — a
-   blurred full-viewport layer repaints on every scroll, and a gradient's
-   falloff is already soft. Accent is theme-aware, so this works on white and
-   on black; violet and cyan match the landing page's palette. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(60rem 42rem at 10% 50%, color-mix(in srgb, var(--accent) 17%, transparent) 0%, transparent 70%),
-    radial-gradient(55rem 40rem at 102% 18%, color-mix(in srgb, #7b61ff 18%, transparent) 0%, transparent 70%),
-    radial-gradient(52rem 36rem at 88% 82%, color-mix(in srgb, #00c2ff 12%, transparent) 0%, transparent 70%);
-}
-
 #root {
   min-height: 100vh;
 }
