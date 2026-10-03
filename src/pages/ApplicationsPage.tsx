@@ -10,6 +10,7 @@ import { STATUSES, statusTone } from "../utils/applicationStatus";
 import { formatFollowUp } from "../utils/followUp";
 import "./ApplicationsPage.css";
 import { BOARD_PATH } from "../routes";
+import CompanyLogo from "../components/CompanyLogo";
 
 const QUALIFY_THRESHOLD = 70;
 
@@ -675,7 +676,14 @@ export function ApplicationsPage() {
                 </span>
                 <div className="application-row__meta">
                   {application.job_posting.company_name && (
-                    <span className="application-row__company">{application.job_posting.company_name}</span>
+                    <span className="application-row__company">
+                      <CompanyLogo
+                        name={application.job_posting.company_name}
+                        logoUrl={application.job_posting.company_logo_url}
+                        size={16}
+                      />
+                      {application.job_posting.company_name}
+                    </span>
                   )}
                   {formatSalary(application.job_posting) ? (
                     <span className="application-row__pay">{formatSalary(application.job_posting)}</span>

@@ -1,0 +1,24 @@
+.company-logo {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  margin-right: 0.4em;
+  border-radius: 22%;
+  object-fit: contain;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px var(--line);
+  position: relative;
+  top: -0.08em;
+}
+
+.company-logo--avatar {
+  background: hsl(var(--avatar-hue) 45% 46%);
+  box-shadow: none;
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
+}

@@ -10,6 +10,7 @@ import { JobCaseFile } from "../components/JobCaseFile";
 import { highlightQuery } from "../utils/searchHighlight";
 import { employmentLabel, workplaceLabel } from "../utils/jobTags";
 import "./JobBoardPage.css";
+import CompanyLogo from "../components/CompanyLogo";
 
 // Must match the max-width of the phone breakpoint in JobBoardPage.css, where
 // the list and detail panes stop sitting side by side and take turns instead.
@@ -64,6 +65,7 @@ function JobCard({
           {posting?.title ? highlightQuery(posting.title, query) : "Scanning posting…"}
         </div>
         <div className="job-card__meta">
+          <CompanyLogo name={posting?.company_name ?? job.url.domain} logoUrl={posting?.company_logo_url} size={22} />
           {posting?.company_name ?? job.url.domain}
           {posting?.location ? ` · ${posting.location}` : ""}
         </div>

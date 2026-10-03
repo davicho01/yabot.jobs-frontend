@@ -8,6 +8,7 @@ import type { DocumentFormat, Resume } from "../api/types";
 import { DownloadDropdown } from "../components/DownloadDropdown";
 import { useConfirm } from "../components/ConfirmDialog";
 import "./ResumePage.css";
+import CompanyLogo from "../components/CompanyLogo";
 
 // created_at here is a real timestamp, formatted in the viewer's own local
 // time zone (unlike a job posting's date-only posted_at, which pins UTC).
@@ -46,6 +47,7 @@ function ScoreHistoryPanel({ resumeId }: { resumeId: string }) {
               <div className="score-history__row-label">
                 <span className="score-history__row-title">{entry.job_title ?? "Untitled role"}</span>
                 <span className="score-history__row-meta">
+                  <CompanyLogo name={entry.company_name} logoUrl={entry.company_logo_url} size={14} />
                   {entry.company_name ?? "Unknown company"} · {formatScoreHistoryDate(entry.created_at)}
                 </span>
               </div>

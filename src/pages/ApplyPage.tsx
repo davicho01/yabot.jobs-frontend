@@ -37,6 +37,7 @@ import { employmentLabel, workplaceLabel } from "../utils/jobTags";
 import "../components/JobDashboardShell.css";
 import "../components/DossierAction.css";
 import "./ApplyPage.css";
+import CompanyLogo from "../components/CompanyLogo";
 
 // Applied_at is a real timestamp (unlike the follow-up date, which is a
 // day with no time-of-day), so it's worth telling apart from "Sep 23,
@@ -962,6 +963,7 @@ function ApplyPageContent({
           <div className="job-dashboard__title-block">
             <h1>{posting.title ?? "Untitled role"}</h1>
             <p className="job-dashboard__subheader">
+              <CompanyLogo name={posting.company_name ?? job.url.domain} logoUrl={posting.company_logo_url} size={22} />
               {posting.company_name ?? job.url.domain}
               {posting.location ? ` · ${posting.location}` : ""}
             </p>

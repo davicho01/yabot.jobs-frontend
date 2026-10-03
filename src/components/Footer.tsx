@@ -81,7 +81,10 @@ export function Footer() {
           <a href="https://www.geonames.org" target="_blank" rel="noopener noreferrer">
             GeoNames
           </a>{" "}
-          (CC BY 4.0), U.S. Census Bureau
+          (CC BY 4.0), U.S. Census Bureau · Logos by{" "}
+          <a href="https://logo.dev" target="_blank" rel="noopener noreferrer">
+            Logo.dev
+          </a>
         </span>
         <div className="theme-toggle" role="group" aria-label="Theme">
           <button

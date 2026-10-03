@@ -17,6 +17,11 @@ export interface JobPosting {
   apply_url: string | null;
   title: string | null;
   company_name: string | null;
+  // null until the company's domain is known (or logos aren't configured) —
+  // CompanyLogo shows a letter avatar instead.
+  company_logo_url: string | null;
+  company_domain: string | null;
+  company_key: string | null;
   location: string | null;
   workplace_type: string;
   employment_type: string;
@@ -111,6 +116,7 @@ export interface ApplicationJobPosting {
   apply_url: string;
   title: string | null;
   company_name: string | null;
+  company_logo_url: string | null;
   salary_min: number | null;
   salary_max: number | null;
   salary_currency: string | null;
@@ -209,6 +215,7 @@ export interface ResumeScoreHistoryEntry {
   url_id: string;
   job_title: string | null;
   company_name: string | null;
+  company_logo_url: string | null;
   overall_score: number;
   missing_keywords: string[];
   created_at: string;
@@ -235,6 +242,7 @@ export interface MissingSkillJobRef {
   url_id: string;
   job_title: string | null;
   company_name: string | null;
+  company_logo_url: string | null;
 }
 
 export interface MissingSkillSummaryEntry {

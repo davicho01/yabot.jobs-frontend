@@ -1,35 +1,168 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { adminApi } from "../api/admin";
+import { adminApi, type AdminCompany } from "../api/admin";
 import { ApiError } from "../api/client";
 import type { CrawlSource } from "../api/types";
 import { AdminWindowStats } from "../components/AdminWindowStats";
+import CompanyLogo from "../components/CompanyLogo";
 import { ScanActivityChart } from "../components/ScanActivityChart";
 import { useConfirm } from "../components/ConfirmDialog";
 import "./AdminCommon.css";
 
 const CRAWL_SOURCE_STATUSES = ["pending", "active", "rejected", "delete"];
 
+const LOGO_ORIGIN_LABELS: Record<string, string> = {
+  logo_dev: "Automatic (logo.dev)",
+  url: "Copied from a URL",
+  upload: "Uploaded",
+};
+
+type LogoInput = { url: string; file: File | null };
+
+// One company's logo row in the Edit source dialog: the current logo, plus a
+// URL field or an upload — applied when the dialog is saved.
+function CompanyLogoField({
+  company,
+  input,
+  error,
+  onChange,
+  onUseAutomatic,
+  resetting,
+}: {
+  company: AdminCompany;
+  input: LogoInput;
+  error: string | undefined;
+  onChange: (input: LogoInput) => void;
+  onUseAutomatic: () => void;
+  resetting: boolean;
+}) {
+  const pinned = company.logo_origin === "url" || company.logo_origin === "upload";
+  const origin = company.logo_origin ? LOGO_ORIGIN_LABELS[company.logo_origin] : "No logo yet";
+  return (
+    <div className="edit-logo-field">
+      <div className="edit-logo-field__current">
+        <CompanyLogo name={company.display_name} logoUrl={company.logo_url} size={48} />
+        <div>
+          <div className="edit-logo-field__name">{company.display_name}</div>
+          <div className="edit-logo-field__origin">
+            {origin}
+            {pinned && (
+              <>
+                {" · "}
+                <button type="button" className="edit-logo-field__link" onClick={onUseAutomatic} disabled={resetting}>
+                  Use automatic logo
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="edit-logo-field__inputs">
+        <input
+          type="url"
+          inputMode="url"
+          placeholder="Paste a logo or website URL"
+          value={input.url}
+          disabled={input.file !== null}
+          onChange={(e) => onChange({ url: e.target.value, file: null })}
+        />
+        <span className="edit-logo-field__or">or</span>
+        <label className="rescan-button edit-logo-field__upload">
+          {input.file ? input.file.name : "Upload image"}
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"
+            hidden
+            onChange={(e) => onChange({ url: "", file: e.target.files?.[0] ?? null })}
+          />
+        </label>
+        {input.file && (
+          <button type="button" className="edit-logo-field__link" onClick={() => onChange({ url: "", file: null })}>
+            Clear
+          </button>
+        )}
+      </div>
+      {error && <p className="admin-source-header__error">{error}</p>}
+    </div>
+  );
+}
+
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof ApiError ? error.message : fallback;
+}
+
 function EditCrawlSourceDialog({ source, onClose }: { source: CrawlSource; onClose: () => void }) {
   const queryClient = useQueryClient();
   const [name, setName] = useState(source.name);
   const [boardUrl, setBoardUrl] = useState(source.board_url);
   const [sourceStatus, setSourceStatus] = useState(source.status);
+  const [logoInputs, setLogoInputs] = useState<Record<string, LogoInput>>({});
+  const [logoErrors, setLogoErrors] = useState<Record<string, string>>({});
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const updateMutation = useMutation({
-    mutationFn: () =>
-      adminApi.updateCrawlSource(source.id, { name, board_url: boardUrl, status: sourceStatus }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "crawl-source-stats", source.id] });
-      queryClient.invalidateQueries({ queryKey: ["admin", "crawl-sources"] });
-      onClose();
-    },
+  const companiesQuery = useQuery({
+    queryKey: ["admin", "crawl-source-companies", source.id],
+    queryFn: () => adminApi.crawlSourceCompanies(source.id),
   });
 
-  function handleSubmit(event: FormEvent) {
+  function refreshLogos() {
+    queryClient.invalidateQueries({ queryKey: ["admin", "crawl-source-companies", source.id] });
+    // Every list/page showing these companies' jobs picks up the new logo.
+    queryClient.invalidateQueries({ queryKey: ["admin", "jobs"] });
+    queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    queryClient.invalidateQueries({ queryKey: ["job"] });
+    queryClient.invalidateQueries({ queryKey: ["applications"] });
+  }
+
+  const resetMutation = useMutation({
+    mutationFn: (companyKey: string) => adminApi.clearCompanyLogo(companyKey),
+    onSuccess: refreshLogos,
+  });
+
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    updateMutation.mutate();
+    setSaving(true);
+    setSaveError(null);
+    setLogoErrors({});
+    try {
+      try {
+        await adminApi.updateCrawlSource(source.id, { name, board_url: boardUrl, status: sourceStatus });
+        queryClient.invalidateQueries({ queryKey: ["admin", "crawl-source-stats", source.id] });
+        queryClient.invalidateQueries({ queryKey: ["admin", "crawl-sources"] });
+      } catch (error) {
+        setSaveError(errorMessage(error, "Couldn't save changes."));
+        return;
+      }
+
+      // Logos are applied after the source itself, each on its own, so a
+      // bad logo URL never loses the other edits — it just keeps the dialog
+      // open with the reason.
+      const errors: Record<string, string> = {};
+      for (const company of companiesQuery.data ?? []) {
+        const input = logoInputs[company.company_key];
+        if (!input || (!input.file && !input.url.trim())) continue;
+        try {
+          if (input.file) {
+            await adminApi.uploadCompanyLogo(company.company_key, company.display_name, input.file);
+          } else {
+            await adminApi.setCompanyLogoUrl(company.company_key, company.display_name, input.url.trim());
+          }
+          setLogoInputs((prev) => ({ ...prev, [company.company_key]: { url: "", file: null } }));
+        } catch (error) {
+          errors[company.company_key] = errorMessage(error, "Couldn't use that logo.");
+        }
+      }
+      refreshLogos();
+      if (Object.keys(errors).length) {
+        setLogoErrors(errors);
+        return;
+      }
+      onClose();
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -62,17 +195,29 @@ function EditCrawlSourceDialog({ source, onClose }: { source: CrawlSource; onClo
               </select>
             </div>
           </label>
-          {updateMutation.isError && (
-            <p className="admin-source-header__error">
-              {updateMutation.error instanceof ApiError ? updateMutation.error.message : "Couldn't save changes."}
-            </p>
-          )}
+          <fieldset className="edit-logo-fieldset">
+            <legend>Logo</legend>
+            {companiesQuery.isLoading && <p className="admin-page__hint">Loading…</p>}
+            {companiesQuery.isError && <p className="admin-source-header__error">Couldn't load this source's companies.</p>}
+            {companiesQuery.data?.map((company) => (
+              <CompanyLogoField
+                key={company.company_key}
+                company={company}
+                input={logoInputs[company.company_key] ?? { url: "", file: null }}
+                error={logoErrors[company.company_key]}
+                onChange={(input) => setLogoInputs((prev) => ({ ...prev, [company.company_key]: input }))}
+                onUseAutomatic={() => resetMutation.mutate(company.company_key)}
+                resetting={resetMutation.isPending}
+              />
+            ))}
+          </fieldset>
+          {saveError && <p className="admin-source-header__error">{saveError}</p>}
           <div className="confirm-dialog__actions">
             <button type="button" className="confirm-dialog__button" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="confirm-dialog__button confirm-dialog__button--primary" disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? "Saving…" : "Save"}
+            <button type="submit" className="confirm-dialog__button confirm-dialog__button--primary" disabled={saving}>
+              {saving ? "Saving…" : "Save"}
             </button>
           </div>
         </form>

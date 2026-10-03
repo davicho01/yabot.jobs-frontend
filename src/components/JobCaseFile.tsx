@@ -9,6 +9,7 @@ import type { Application, JobDetail, JobPosting, User } from "../api/types";
 import { highlightQuery } from "../utils/searchHighlight";
 import { FlagJobModal } from "./FlagJobModal";
 import { employmentLabel, workplaceLabel } from "../utils/jobTags";
+import CompanyLogo from "./CompanyLogo";
 
 // A JobPosting row exists from the moment its URL is submitted (see
 // get_or_create_job_posting) so job_posting_id is available right away —
@@ -62,6 +63,7 @@ function SimilarJobsList({ items, onSelect }: { items: JobDetail[]; onSelect?: (
             </Link>
           )}
           <span className="case-file__similar-meta">
+            <CompanyLogo name={item.posting?.company_name ?? item.url.domain} logoUrl={item.posting?.company_logo_url} size={14} />
             {item.posting?.company_name ?? item.url.domain}
             {item.posting?.location ? ` · ${item.posting.location}` : ""}
           </span>
@@ -231,6 +233,7 @@ export function JobCaseFile({
             <h1>{posting.title ? highlightQuery(posting.title, titleHighlightQuery) : "Untitled role"}</h1>
             <p className="case-file__company">
               <span>
+                <CompanyLogo name={posting.company_name ?? job.url.domain} logoUrl={posting.company_logo_url} size={22} />
                 {posting.company_name ?? job.url.domain}
                 {posting.location ? ` · ${posting.location}` : ""}
               </span>

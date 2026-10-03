@@ -1,10 +1,11 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from "../api/admin";
 import { jobsApi } from "../api/jobs";
 import { AdminPagination } from "../components/AdminPagination";
 import { AdminSortMenu } from "../components/AdminSortMenu";
+import CompanyLogo from "../components/CompanyLogo";
 import type { JobSortKey } from "../api/admin";
 import { FLAG_REASON_LABELS } from "../api/types";
 import "./AdminCommon.css";
@@ -128,6 +129,17 @@ export function AdminJobsPage() {
     },
   });
 
+  // Inline "fix the logo" editor: which company's domain is being edited.
+  const [editingCompany, setEditingCompany] = useState<{ key: string; domain: string } | null>(null);
+  const companyDomainMutation = useMutation({
+    mutationFn: ({ key, domain }: { key: string; domain: string }) =>
+      adminApi.updateCompanyDomain(key, domain.trim() || null),
+    onSuccess: () => {
+      setEditingCompany(null);
+      queryClient.invalidateQueries({ queryKey: ["admin", "jobs"] });
+    },
+  });
+
   function toggleFlaggedOnly() {
     updateParams((next) => {
       if (flaggedOnly) next.delete("flagged");
@@ -224,6 +236,9 @@ export function AdminJobsPage() {
                     return (
                       <tr key={job.url.id}>
                         <td>
+                          {job.posting?.company_name && (
+                            <CompanyLogo name={job.posting.company_name} logoUrl={job.posting.company_logo_url} size={16} />
+                          )}
                           {job.posting?.company_name && job.url.crawl_source_id ? (
                             <Link to={`/admin/crawl-sources/${job.url.crawl_source_id}`}>
                               {job.posting.company_name}
@@ -231,6 +246,49 @@ export function AdminJobsPage() {
                           ) : (
                             (job.posting?.company_name ?? "-")
                           )}
+                          {job.posting?.company_key &&
+                            (editingCompany?.key === job.posting.company_key ? (
+                              <form
+                                className="admin-company-domain"
+                                onSubmit={(event) => {
+                                  event.preventDefault();
+                                  companyDomainMutation.mutate(editingCompany);
+                                }}
+                              >
+                                <input
+                                  autoFocus
+                                  value={editingCompany.domain}
+                                  placeholder="acme.com (blank = automatic)"
+                                  onChange={(event) =>
+                                    setEditingCompany({ key: editingCompany.key, domain: event.target.value })
+                                  }
+                                />
+                                <button type="submit" className="rescan-button" disabled={companyDomainMutation.isPending}>
+                                  Save
+                                </button>
+                                <button type="button" className="rescan-button" onClick={() => setEditingCompany(null)}>
+                                  Cancel
+                                </button>
+                                {companyDomainMutation.isError && (
+                                  <span className="admin-source-header__error">Not a valid domain.</span>
+                                )}
+                              </form>
+                            ) : (
+                              <button
+                                type="button"
+                                className="admin-company-domain__edit"
+                                title="Set the domain this company's logo comes from"
+                                onClick={() => {
+                                  companyDomainMutation.reset();
+                                  setEditingCompany({
+                                    key: job.posting!.company_key!,
+                                    domain: job.posting!.company_domain ?? "",
+                                  });
+                                }}
+                              >
+                                {job.posting.company_domain ?? "set logo domain"}
+                              </button>
+                            ))}
                         </td>
                         <td>{job.posting?.title ?? "-"}</td>
                         <td>

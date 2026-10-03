@@ -34,7 +34,8 @@ function appShellFallback(): Plugin {
   }
 }
 
-// The backend's static SEO pages (/job/<id>, /jobs/us/..., their sitemaps) live in
+// The backend's static SEO pages (/job/<id>, /jobs/us/..., their sitemaps) and
+// crawled company logos (/logos/<domain>-<hash>.png) live in
 // the S3 bucket in production, where CloudFront serves a real object if one exists
 // and the SPA otherwise. Locally, generate_static_job_pages.py writes them to
 // .seo-pages/ instead (SEO_PAGES_OUTPUT_DIR in the backend's .env), storing an
@@ -49,12 +50,15 @@ function seoPages(): Plugin {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const path = decodeURIComponent((req.url ?? '').split('?')[0])
-        if (!/^\/(jobs?\/|sitemap-(job|hubs))/.test(path) || path.includes('..')) return next()
+        if (!/^\/(jobs?\/|logos\/|sitemap-(job|hubs))/.test(path) || path.includes('..')) return next()
         const file = path.includes('.')
           ? resolve(SEO_PAGES_DIR, '.' + path)
           : resolve(SEO_PAGES_DIR, '.' + path.replace(/\/+$/, ''), 'index.html')
         if (!existsSync(file) || !statSync(file).isFile()) return next()
-        res.setHeader('Content-Type', file.endsWith('.xml') ? 'application/xml' : 'text/html; charset=utf-8')
+        res.setHeader(
+          'Content-Type',
+          file.endsWith('.xml') ? 'application/xml' : file.endsWith('.png') ? 'image/png' : 'text/html; charset=utf-8',
+        )
         res.end(readFileSync(file))
       })
     },

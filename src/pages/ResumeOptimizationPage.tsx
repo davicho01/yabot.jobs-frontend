@@ -6,6 +6,7 @@ import { ApiError } from "../api/client";
 import { AddSkillModal } from "../components/AddSkillModal";
 import { ResumeSelect } from "../components/ResumeSelect";
 import "./ResumeOptimizationPage.css";
+import CompanyLogo from "../components/CompanyLogo";
 
 // The cross-application analogue of ResumePage's ScoreHistoryPanel
 // "Keywords that keep coming up missing" panel — same idea, but with the
@@ -150,7 +151,9 @@ export function ResumeOptimizationPage() {
                       {entry.jobs.map((job) => (
                         <li key={job.job_posting_id}>
                           <Link to={`/jobs/${job.url_id}/apply`}>
-                            {job.job_title ?? "Untitled role"} · {job.company_name ?? "Unknown company"}
+                            {job.job_title ?? "Untitled role"} ·{" "}
+                            <CompanyLogo name={job.company_name} logoUrl={job.company_logo_url} size={14} />
+                            {job.company_name ?? "Unknown company"}
                           </Link>
                         </li>
                       ))}

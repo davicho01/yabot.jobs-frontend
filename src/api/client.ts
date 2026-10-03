@@ -128,5 +128,6 @@ export const api = {
     request<T>(path, { method: "POST", body, query }),
   postForm: <T>(path: string, body: FormData) => request<T>(path, { method: "POST", body, isFormData: true }),
   patch: <T>(path: string, body?: unknown) => request<T>(path, { method: "PATCH", body }),
+  put: <T>(path: string, body?: unknown) => request<T>(path, { method: "PUT", body }),
   delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
 };

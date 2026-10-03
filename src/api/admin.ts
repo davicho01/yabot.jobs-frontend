@@ -25,6 +25,20 @@ export interface CrawlSourceUpdatePayload {
 export type JobSortKey = "company" | "title" | "status" | "discovered";
 export type JobSortOrder = "asc" | "desc";
 
+export interface AdminCompany {
+  company_key: string;
+  display_name: string;
+  domain: string | null;
+  domain_source: string | null;
+  logo_url: string | null;
+  // "logo_dev" (automatic) or "url"/"upload" (set by an admin; the automatic
+  // sync never replaces those) — null when there's no logo.
+  logo_origin: string | null;
+  logo_status: string | null;
+  logo_source_url: string | null;
+  posting_count: number;
+}
+
 export const adminApi = {
   feedback: (params: { status?: FeedbackStatus; kind?: FeedbackKind; page?: number; pageSize?: number }) =>
     api.get<AdminFeedbackList>("/admin/feedback", {
@@ -62,6 +76,26 @@ export const adminApi = {
   // Clears a listing's open flag report (see jobsApi.flag) once it's been
   // looked into.
   dismissListingFlag: (urlId: string) => api.post<JobDetail>(`/admin/listings/${urlId}/flag/dismiss`),
+  // Sets (or, with an empty domain, clears) a company's logo domain by hand —
+  // see the backend's app.services.company_logos.set_manual_domain.
+  updateCompanyDomain: (companyKey: string, domain: string | null) =>
+    api.patch<AdminCompany>("/admin/companies", { company_key: companyKey, domain }),
+  // The companies a source's postings belong to (usually one) — what the Edit
+  // source dialog shows a logo field for.
+  crawlSourceCompanies: (sourceId: string) => api.get<AdminCompany[]>(`/admin/crawl-sources/${sourceId}/companies`),
+  // Copy the logo at `url` (an image, or a page it's on) as the company's logo.
+  setCompanyLogoUrl: (companyKey: string, displayName: string, url: string) =>
+    api.put<AdminCompany>("/admin/companies/logo", { company_key: companyKey, display_name: displayName, url }),
+  uploadCompanyLogo: (companyKey: string, displayName: string, file: File) => {
+    const form = new FormData();
+    form.append("company_key", companyKey);
+    form.append("display_name", displayName);
+    form.append("file", file);
+    return api.postForm<AdminCompany>("/admin/companies/logo-upload", form);
+  },
+  // Back to the automatic (logo.dev) logo, fetched on the next sync.
+  clearCompanyLogo: (companyKey: string) =>
+    api.delete<AdminCompany>(`/admin/companies/logo?company_key=${encodeURIComponent(companyKey)}`),
   deleteCrawlSource: (sourceId: string) => api.delete<void>(`/admin/crawl-sources/${sourceId}`),
   updateCrawlSource: (sourceId: string, payload: CrawlSourceUpdatePayload) =>
     api.patch<CrawlSource>(`/admin/crawl-sources/${sourceId}`, payload),
