@@ -1,4 +1,4 @@
-import { Routes, Route, Outlet, Navigate } from "react-router-dom";
+import { Routes, Route, Outlet, Navigate, useLocation, useParams } from "react-router-dom";
 import { BOARD_PATH } from "./routes";
 import { LoginPage } from "./pages/LoginPage";
 import { AuthCallbackPage } from "./pages/AuthCallbackPage";
@@ -46,6 +46,16 @@ function RootLayout() {
   );
 }
 
+// /job/<id> is the backend's static, crawlable page for a job, published into
+// the bucket a couple of times a day. A job found since the last publish has
+// no page yet, so the host hands the path to the app instead: show that job
+// here rather than an empty route.
+function StaticJobPageFallback() {
+  const { urlId } = useParams<{ urlId: string }>();
+  const { search, hash } = useLocation();
+  return <Navigate to={`/jobs/${urlId}${search}${hash}`} replace />;
+}
+
 export default function App() {
   usePageViews();
 
@@ -54,6 +64,7 @@ export default function App() {
       <Route element={<RootLayout />}>
         <Route path={BOARD_PATH} element={<JobBoardPage />} />
         <Route path="/jobs/:urlId" element={<JobDetailPage />} />
+        <Route path="/job/:urlId" element={<StaticJobPageFallback />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/help" element={<HelpPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
