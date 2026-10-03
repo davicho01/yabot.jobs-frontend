@@ -8,6 +8,7 @@ import { jobsApi } from "../api/jobs";
 import type { Application, JobDetail, JobPosting, User } from "../api/types";
 import { highlightQuery } from "../utils/searchHighlight";
 import { FlagJobModal } from "./FlagJobModal";
+import { employmentLabel, workplaceLabel } from "../utils/jobTags";
 
 // A JobPosting row exists from the moment its URL is submitted (see
 // get_or_create_job_posting) so job_posting_id is available right away —
@@ -239,8 +240,10 @@ export function JobCaseFile({
 
           <div className="case-file__tags">
             {job.url.closed_at && <span className="tag tag--secondary">No longer listed</span>}
-            <span className="tag">{posting.workplace_type}</span>
-            <span className="tag">{posting.employment_type.replace("_", " ")}</span>
+            {workplaceLabel(posting.workplace_type) && <span className="tag">{workplaceLabel(posting.workplace_type)}</span>}
+            {employmentLabel(posting.employment_type) && (
+              <span className="tag">{employmentLabel(posting.employment_type)}</span>
+            )}
             {formatSalary(job) && <span className="tag tag--accent">{formatSalary(job)}</span>}
           </div>
 

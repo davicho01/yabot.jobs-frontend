@@ -1,5 +1,6 @@
 import { api } from "./client";
 import type { SavedSearch } from "./types";
+import { WORKPLACE_LABELS } from "../utils/jobTags";
 
 // Every field always explicitly provided (never omitted) by the only
 // builder below, paramsToSavedSearchPayload — plain `| null`, not optional,
@@ -56,8 +57,6 @@ export function savedSearchToParams(search: SavedSearch): URLSearchParams {
   if (search.salary_max !== null) params.set("salaryMax", String(search.salary_max));
   return params;
 }
-
-const WORKPLACE_LABELS: Record<string, string> = { remote: "Remote", hybrid: "Hybrid", onsite: "On-site" };
 
 // Just the filter fields — a SavedSearch satisfies this structurally, and so
 // does a plain create payload, so describeSavedSearch below works both for

@@ -8,6 +8,7 @@ import type { JobDetail, JobPosting } from "../api/types";
 import { useConfirm } from "../components/ConfirmDialog";
 import { JobCaseFile } from "../components/JobCaseFile";
 import { highlightQuery } from "../utils/searchHighlight";
+import { employmentLabel, workplaceLabel } from "../utils/jobTags";
 import "./JobBoardPage.css";
 
 // Must match the max-width of the phone breakpoint in JobBoardPage.css, where
@@ -69,8 +70,10 @@ function JobCard({
         {formatSalary(job) && <div className="job-card__salary">{formatSalary(job)}</div>}
         {posting && (
           <div className="job-card__tags">
-            <span className="tag">{posting.workplace_type}</span>
-            <span className="tag">{posting.employment_type.replace("_", " ")}</span>
+            {workplaceLabel(posting.workplace_type) && <span className="tag">{workplaceLabel(posting.workplace_type)}</span>}
+            {employmentLabel(posting.employment_type) && (
+              <span className="tag">{employmentLabel(posting.employment_type)}</span>
+            )}
             {formatPostedAt(job) && <span className="job-card__posted">{formatPostedAt(job)}</span>}
           </div>
         )}
