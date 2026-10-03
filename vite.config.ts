@@ -49,7 +49,7 @@ function seoPages(): Plugin {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const path = decodeURIComponent((req.url ?? '').split('?')[0])
-        if (!/^\/(jobs?\/|sitemap-job)/.test(path) || path.includes('..')) return next()
+        if (!/^\/(jobs?\/|sitemap-(job|hubs))/.test(path) || path.includes('..')) return next()
         const file = path.includes('.')
           ? resolve(SEO_PAGES_DIR, '.' + path)
           : resolve(SEO_PAGES_DIR, '.' + path.replace(/\/+$/, ''), 'index.html')

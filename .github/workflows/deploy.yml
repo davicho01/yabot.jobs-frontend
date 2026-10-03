@@ -36,7 +36,7 @@ jobs:
 
       - name: Sync to S3
         # --exclude protects the SEO static-job-pages tree (jobs/, job/, _meta/,
-        # sitemap-jobs.xml, sitemap-job-pages*.xml) published separately by
+        # sitemap-jobs.xml, sitemap-job-pages*.xml, sitemap-hubs*.xml) published separately by
         # generate_static_job_pages.py into this same bucket — none of it comes
         # from dist/, so without these excludes --delete wipes all accumulated
         # history (and every per-job page) on every deploy.
@@ -46,7 +46,8 @@ jobs:
             --exclude "job/*" \
             --exclude "_meta/*" \
             --exclude "sitemap-jobs.xml" \
-            --exclude "sitemap-job-pages*"
+            --exclude "sitemap-job-pages*" \
+            --exclude "sitemap-hubs*"
 
       - name: Invalidate CloudFront cache
         run: aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths "/*"
