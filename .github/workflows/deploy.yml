@@ -35,11 +35,18 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Sync to S3
-        # --exclude protects the SEO static-job-pages tree (jobs/, job/, _meta/,
-        # sitemap-jobs.xml, sitemap-job-pages*.xml, sitemap-hubs*.xml) published separately by
-        # generate_static_job_pages.py into this same bucket — none of it comes
-        # from dist/, so without these excludes --delete wipes all accumulated
-        # history (and every per-job page) on every deploy.
+        # --exclude protects what the backend publishes separately into this
+        # same bucket: the SEO static-job-pages tree (jobs/, job/, _meta/,
+        # sitemap-jobs.xml, sitemap-job-pages*.xml, sitemap-hubs*.xml, from
+        # generate_static_job_pages.py) and company logos (logos/, from the
+        # logo sync and admin uploads — some exist nowhere else). None of it
+        # comes from dist/, so without these excludes --delete would wipe it.
+        # Belt and braces: the bucket policy also denies this deploy role any
+        # write/delete outside the frontend's own files (so a missing exclude
+        # fails the deploy with AccessDenied instead of deleting anything),
+        # and bucket versioning keeps deleted/overwritten files for 30 days.
+        # A new file in public/ at the bucket root must be added to that
+        # policy's allow-list (yabot.jobs-backend deploy/s3-frontend-bucket-policy.json).
         run: |
           aws s3 sync dist/ "s3://${S3_BUCKET}" --delete \
             --exclude "jobs/*" \
@@ -47,7 +54,8 @@ jobs:
             --exclude "_meta/*" \
             --exclude "sitemap-jobs.xml" \
             --exclude "sitemap-job-pages*" \
-            --exclude "sitemap-hubs*"
+            --exclude "sitemap-hubs*" \
+            --exclude "logos/*"
 
       - name: Invalidate CloudFront cache
         run: aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths "/*"
