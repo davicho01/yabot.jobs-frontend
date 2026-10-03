@@ -215,11 +215,6 @@
   background: none;
 }
 
-/* Status leads the row, follow-up date (if any) right after it. */
-.apply-page__notes-status {
-  text-transform: capitalize;
-}
-
 /* The saved note continues on the same line as the labels, taking the
    rest of the row and truncating with an ellipsis — set off from them by
    a thin vertical rule. */

@@ -29,7 +29,6 @@ import { FreeEvaluationNote } from "../components/FreeEvaluationNote";
 import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY } from "../api/onboarding";
 import { fitLabel, fitTier } from "../utils/fitScore";
 import { formatFollowUp } from "../utils/followUp";
-import { statusTone } from "../utils/applicationStatus";
 import { prerequisiteMessage, genericErrorMessage } from "../utils/apiErrors";
 import { scannedPosting, formatSalary, formatPostedAt } from "../utils/jobPosting";
 import { splitSentences } from "../utils/text";
@@ -1040,9 +1039,13 @@ function ApplyPageContent({
           {!notesOpen && (
             <div className="apply-page__notes-summary">
               <div className="apply-page__notes-labels">
-                <span className={`stamp stamp--${statusTone(applicationStatus)} apply-page__notes-status`}>
-                  {applicationStatus}
-                </span>
+                {/* The real status dropdown (styled like the label it replaced),
+                    so changing status is one tap even with Notes collapsed. */}
+                <StatusSelect
+                  value={applicationStatus}
+                  disabled={!currentApplication}
+                  onChange={(status) => updateApplicationMutation.mutate({ status })}
+                />
                 {followUp && (
                   <span
                     className={`stamp ${
@@ -1454,6 +1457,17 @@ function ApplyPageContent({
                 <p className="dossier-action__lede">
                   Submit your application on the employer's site, then mark it applied here to keep your status in
                   sync.
+                </p>
+              )}
+              {/* Once done, the natural next thing instead of the
+                  instructions (when they applied is already in the step's
+                  status line right above): the follow-up reminder, or a
+                  nudge to set one. */}
+              {step4Done && (
+                <p className="dossier-action__lede">
+                  {followUp
+                    ? `Follow-up reminder set for ${followUp.text}.`
+                    : "No follow-up reminder yet — set one in Notes above."}
                 </p>
               )}
               <div className="job-dashboard__actions apply__apply-actions">
