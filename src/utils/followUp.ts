@@ -2,13 +2,16 @@
 // formatted as UTC so the shown day doesn't shift west of UTC, plus
 // whether it's already due (today or earlier), matching the backend sweep's
 // own <= today check (app.services.follow_up_reminders) — compared in UTC
-// like that check is, not the viewer's own local "today".
-export function formatFollowUp(followUpAt: string): { text: string; overdue: boolean } {
+// like that check is, not the viewer's own local "today". dueSoon is the
+// day before that (tomorrow), for an early heads-up.
+export function formatFollowUp(followUpAt: string): { text: string; overdue: boolean; dueSoon: boolean } {
   const date = new Date(`${followUpAt}T00:00:00Z`);
   const now = new Date();
   const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const tomorrowUtc = todayUtc + 24 * 60 * 60 * 1000;
   return {
     text: date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }),
     overdue: date.getTime() <= todayUtc,
+    dueSoon: date.getTime() === tomorrowUtc,
   };
 }

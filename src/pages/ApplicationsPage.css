@@ -260,6 +260,11 @@
   color: var(--rose);
 }
 
+/* Due tomorrow — an early heads-up before it turns red. */
+.application-row__follow-up--soon {
+  color: var(--amber);
+}
+
 .application-row__company {
   font-size: 0.8rem;
   color: var(--ink-soft);

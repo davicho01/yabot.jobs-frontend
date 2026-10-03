@@ -345,6 +345,11 @@
   display: none;
 }
 
+/* Phone-only search icon (off the job board) — see .site-header__center--collapsed. */
+.site-header__search-toggle {
+  display: none;
+}
+
 .site-header__add-job-expand {
   display: flex;
   align-items: center;
@@ -551,6 +556,21 @@
      of taking its own full-width row under the search. */
   .site-header__center .site-header__add-job-toggle {
     display: none;
+  }
+
+  /* Off the job board, search hides behind the icon in the top row
+     until tapped, instead of taking two rows of every page. */
+  .site-header__center--collapsed {
+    display: none;
+  }
+
+  .site-header__search-toggle {
+    display: inline-flex;
+    margin-left: auto;
+  }
+
+  .site-header__search-toggle + .site-header__add-job-toggle--compact {
+    margin-left: 0.5rem;
   }
 
   .site-header__add-job-toggle--compact {

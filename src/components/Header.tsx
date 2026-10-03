@@ -149,6 +149,10 @@ export function Header() {
   const [saveSearchOpen, setSaveSearchOpen] = useState(false);
   const [saveSearchName, setSaveSearchName] = useState("");
   const [hidden, setHidden] = useState(false);
+  // Phones, off the job board: the search/filter area is tucked behind a
+  // search icon (it took a big chunk of the screen on every page) — this is
+  // whether it's been opened. On the board itself it's always shown.
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const lastScrollY = useRef(0);
 
   useEffect(() => {
@@ -574,7 +578,9 @@ export function Header() {
           <span className="site-header__title">Yabot Jobs</span>
         </a>
 
-        <div className="site-header__center">
+        <div
+          className={`site-header__center${!onBoard && !mobileSearchOpen ? " site-header__center--collapsed" : ""}`}
+        >
           <form className="site-header__searchbar" role="search" onSubmit={handleSearchSubmit}>
             <input
               className="site-header__search"
@@ -688,6 +694,23 @@ export function Header() {
             </button>
           )}
         </div>
+
+        {!onBoard && (
+          <button
+            type="button"
+            className={`site-header__filter-toggle site-header__search-toggle${
+              mobileSearchOpen ? " site-header__filter-toggle--active" : ""
+            }`}
+            onClick={() => setMobileSearchOpen((open) => !open)}
+            aria-expanded={mobileSearchOpen}
+            aria-label={mobileSearchOpen ? "Hide search" : "Search jobs"}
+          >
+            <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+              <circle cx="8.5" cy="8.5" r="5.25" stroke="currentColor" strokeWidth="1.6" />
+              <path d="M12.5 12.5L17 17" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
 
         {/* Phone-only copy of Add Job in the top row, beside the avatar —
             the one in the search area above is hidden at that width, where

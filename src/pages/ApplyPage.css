@@ -92,6 +92,18 @@
   white-space: nowrap;
 }
 
+.apply__nav-position {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.apply__nav-position-short {
+  display: none;
+}
+
 /* Same left / center / right row on phones too (it used to stack into a
    centered column) — just tighter spacing so all three fit. */
 @media (max-width: 640px) {
@@ -101,6 +113,15 @@
 
   .apply__nav-group {
     gap: 0.35rem;
+    flex-wrap: nowrap;
+  }
+
+  .apply__nav-position-long {
+    display: none;
+  }
+
+  .apply__nav-position-short {
+    display: inline;
   }
 }
 
@@ -109,6 +130,15 @@
    wraps around the button and the company line / tags expand full width. */
 .job-dashboard__header.apply__header {
   display: flow-root;
+}
+
+/* Long titles took three lines on phones; a notch smaller gets most of
+   them to two. */
+@media (max-width: 640px) {
+  .apply__header .job-dashboard__title-block h1 {
+    font-size: 1.2rem;
+    line-height: 1.3;
+  }
 }
 
 .apply__header-rescan {
@@ -287,10 +317,18 @@
 }
 
 .apply__score-source-detail {
+  white-space: nowrap;
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
+}
+
+/* Its own line under "Tailored resume", so neither phrase breaks mid-way. */
+.apply__score-delta {
+  display: block;
+  color: var(--teal);
+  white-space: nowrap;
 }
 
 .apply__score-number {
@@ -663,3 +701,54 @@
   gap: 0.6rem;
 }
 
+
+/* Shown under the steps once all five are done. */
+.apply__all-done {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-top: 1.25rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--teal) 10%, transparent);
+}
+
+.apply__all-done-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--teal);
+  color: #fff;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.apply__all-done-text {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.apply__all-done-text h2 {
+  font-size: 1.05rem;
+  margin: 0 0 0.15rem;
+}
+
+.apply__all-done-text p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+/* Back link + Prev/Next on the loading / failed / still-scanning versions
+   of the page, which don't have the full card toolbar. */
+.apply__state-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}

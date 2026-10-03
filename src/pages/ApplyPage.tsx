@@ -390,6 +390,16 @@ export function ApplyPage() {
     ? activeApplications[(baseActiveIndex + 1) % activeApplications.length].job_posting.url_id
     : null;
   const isJobAlreadySaved = currentApplication !== null;
+  // For the "all done" ending: the next application after this one (wrapping
+  // around) that hasn't been applied to yet — still at "saved".
+  const nextUnappliedUrlId =
+    activeApplications
+      .slice(baseActiveIndex + 1)
+      .concat(activeApplications.slice(0, baseActiveIndex))
+      .find((a) => a.status === "saved" && a.job_posting.url_id !== urlId)?.job_posting.url_id ?? null;
+  // "3 of 12" between Prev and Next — only when this job is one of them.
+  const applicationPosition =
+    currentActiveIndex === -1 ? null : { index: currentActiveIndex + 1, total: activeApplications.length };
 
   return (
     <ApplyPageContent
@@ -397,6 +407,8 @@ export function ApplyPage() {
       urlId={urlId}
       previousApplicationUrlId={previousApplicationUrlId}
       nextApplicationUrlId={nextApplicationUrlId}
+      applicationPosition={applicationPosition}
+      nextUnappliedUrlId={nextUnappliedUrlId}
       isJobAlreadySaved={isJobAlreadySaved}
       currentApplication={currentApplication}
     />
@@ -407,12 +419,16 @@ function ApplyPageContent({
   urlId,
   previousApplicationUrlId,
   nextApplicationUrlId,
+  applicationPosition,
+  nextUnappliedUrlId,
   isJobAlreadySaved,
   currentApplication,
 }: {
   urlId: string | undefined;
   previousApplicationUrlId: string | null;
   nextApplicationUrlId: string | null;
+  applicationPosition: { index: number; total: number } | null;
+  nextUnappliedUrlId: string | null;
   isJobAlreadySaved: boolean;
   currentApplication: Application | null;
 }) {
@@ -737,6 +753,7 @@ function ApplyPageContent({
       : "Not applied yet";
   const step5Done = !!displayedInterviewPrep;
   const step5Status = step5Done ? "Prepared" : "Optional, do this once an interview is scheduled";
+  const allStepsDone = step1Done && step2Done && step3Done && step4Done && step5Done;
 
   // Jump to the candidate's actual next step once the data that decides
   // that has settled — but only the first time, and only if they haven't
@@ -792,9 +809,57 @@ function ApplyPageContent({
     interviewPrepQuery.isPending,
   ]);
 
+  // Prev / position / Next through the applications list — built once and
+  // shown on every version of this page (loading, not found, failed or
+  // still-scanning too), so a job whose scan failed never strands you
+  // without a way on to the next one.
+  const navGroup = (
+    <div className="apply__nav-group">
+      {previousApplicationUrlId ? (
+        <Link to={`/jobs/${previousApplicationUrlId}/apply`} className="apply__back-link">
+          ‹ Prev
+        </Link>
+      ) : (
+        <span className="apply__back-link apply__back-link--disabled" aria-hidden="true">
+          ‹ Prev
+        </span>
+      )}
+      {applicationPosition && applicationPosition.total > 1 && (
+        <span className="apply__nav-position">
+          {/* "2 of 74", shortened to "2/74" on phones (see CSS) so Prev /
+              position / Next stay on one line. */}
+          <span className="apply__nav-position-long">
+            {applicationPosition.index} of {applicationPosition.total}
+          </span>
+          <span className="apply__nav-position-short" aria-hidden="true">
+            {applicationPosition.index}/{applicationPosition.total}
+          </span>
+        </span>
+      )}
+      {nextApplicationUrlId ? (
+        <Link to={`/jobs/${nextApplicationUrlId}/apply`} className="apply__back-link">
+          Next ›
+        </Link>
+      ) : (
+        <span className="apply__back-link apply__back-link--disabled" aria-hidden="true">
+          Next ›
+        </span>
+      )}
+    </div>
+  );
+  const stateNav = (
+    <div className="apply__state-nav">
+      <Link to="/applications" className="apply__back-link">
+        ‹ Back to applications
+      </Link>
+      {navGroup}
+    </div>
+  );
+
   if (isLoading) {
     return (
       <main className="job-dashboard">
+        {stateNav}
         <p>Loading job-fit dashboard…</p>
       </main>
     );
@@ -803,6 +868,7 @@ function ApplyPageContent({
   if (!job) {
     return (
       <main className="job-dashboard">
+        {stateNav}
         <p>Couldn't find that posting.</p>
       </main>
     );
@@ -812,6 +878,7 @@ function ApplyPageContent({
     return (
       <main className="job-dashboard">
         {dialog}
+        {stateNav}
         <span className="stamp stamp--neutral">Scan failed</span>
         <p>{job.url.scan_error ?? "This posting couldn't be scanned."}</p>
         <div className="job-dashboard__actions">
@@ -844,6 +911,7 @@ function ApplyPageContent({
     return (
       <main className="job-dashboard">
         {dialog}
+        {stateNav}
         <span className="stamp stamp--neutral">Still scanning</span>
         <p>This posting hasn't finished being scanned yet. Check back shortly.</p>
         <button type="button" className="rescan-button" disabled={isFetching} onClick={() => void refetch()}>
@@ -867,28 +935,10 @@ function ApplyPageContent({
           <Link to={`/jobs/${job.url.id}`} className="rescan-button apply__toolbar-view-job">
             View job ↑
           </Link>
-          <div className="apply__nav-group">
-            {previousApplicationUrlId ? (
-              <Link to={`/jobs/${previousApplicationUrlId}/apply`} className="apply__back-link">
-                ‹ Prev
-              </Link>
-            ) : (
-              <span className="apply__back-link apply__back-link--disabled" aria-hidden="true">
-                ‹ Prev
-              </span>
-            )}
-            {nextApplicationUrlId ? (
-              <Link to={`/jobs/${nextApplicationUrlId}/apply`} className="apply__back-link">
-                Next ›
-              </Link>
-            ) : (
-              <span className="apply__back-link apply__back-link--disabled" aria-hidden="true">
-                Next ›
-              </span>
-            )}
-          </div>
+          {navGroup}
+          {/* Same as step 4's: filled until applied, then secondary blue. */}
           <a
-            className="job-dashboard__view-button apply__apply-button apply__toolbar-apply"
+            className={`apply__toolbar-apply ${step4Done ? "rescan-button" : "job-dashboard__view-button apply__apply-button"}`}
             href={job.url.url ?? undefined}
             target="_blank"
             rel="noreferrer"
@@ -995,7 +1045,9 @@ function ApplyPageContent({
                 </span>
                 {followUp && (
                   <span
-                    className={`stamp ${followUp.overdue ? "stamp--negative" : "stamp--neutral"} apply-page__notes-follow-up`}
+                    className={`stamp ${
+                      followUp.overdue ? "stamp--negative" : followUp.dueSoon ? "stamp--warning" : "stamp--neutral"
+                    } apply-page__notes-follow-up`}
                   >
                     Follow up {followUp.text}
                   </span>
@@ -1064,6 +1116,13 @@ function ApplyPageContent({
               {bestScoreSource && (
                 <span className="apply__score-source-detail">
                   {bestScoreSource === "tailored" ? "Tailored resume" : "Your resume"}
+                  {/* What tailoring bought: only when the tailored version is
+                      the one shown, i.e. it beat the original. */}
+                  {bestScoreSource === "tailored" && displayedScore && bestScoreValue !== null && (
+                    <span className="apply__score-delta">
+                      ↑ {bestScoreValue - displayedScore.overall_score} from original
+                    </span>
+                  )}
                 </span>
               )}
             </span>
@@ -1433,8 +1492,10 @@ function ApplyPageContent({
             onToggle={() => toggleStep(5)}
             footer={
               // The last step: send them on to the next job in their list,
-              // or back to the list once there's nowhere else to go.
-              nextApplicationUrlId ? (
+              // or back to the list once there's nowhere else to go. Left
+              // out once every step is done — the "all set" panel below
+              // takes over then, rather than two buttons pointing onward.
+              allStepsDone ? undefined : nextApplicationUrlId ? (
                 <Link to={`/jobs/${nextApplicationUrlId}/apply`} className="process-step__next">
                   Next application →
                 </Link>
@@ -1517,6 +1578,30 @@ function ApplyPageContent({
             </section>
           </ProcessStep>
         </ol>
+
+        {/* Every step finished: a proper ending instead of five collapsed
+            green rows, pointing at the next job still waiting to be applied
+            for (or back to the list if there's none). */}
+        {allStepsDone && (
+          <section className="apply__all-done">
+            <span className="apply__all-done-mark" aria-hidden="true">
+              ✓
+            </span>
+            <div className="apply__all-done-text">
+              <h2>You're all set for this one</h2>
+              <p>Every step is done. Good luck with the interview!</p>
+            </div>
+            {nextUnappliedUrlId ? (
+              <Link to={`/jobs/${nextUnappliedUrlId}/apply`} className="process-step__next">
+                Next job to apply for →
+              </Link>
+            ) : (
+              <Link to="/applications" className="process-step__next">
+                Back to applications →
+              </Link>
+            )}
+          </section>
+        )}
 
       </div>
 

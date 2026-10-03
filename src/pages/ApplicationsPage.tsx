@@ -691,7 +691,11 @@ export function ApplicationsPage() {
                   {application.follow_up_at && (
                     <span
                       className={`application-row__follow-up${
-                        formatFollowUp(application.follow_up_at).overdue ? " application-row__follow-up--due" : ""
+                        formatFollowUp(application.follow_up_at).overdue
+                          ? " application-row__follow-up--due"
+                          : formatFollowUp(application.follow_up_at).dueSoon
+                            ? " application-row__follow-up--soon"
+                            : ""
                       }`}
                     >
                       Follow up {formatFollowUp(application.follow_up_at).text}
