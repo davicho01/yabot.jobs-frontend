@@ -339,6 +339,12 @@
   background: var(--accent-deep);
 }
 
+/* Phone-only top-row Add Job (see Header.tsx); hidden until the 520px
+   breakpoint below swaps it in for the one in the search area. */
+.site-header__add-job-toggle--compact {
+  display: none;
+}
+
 .site-header__add-job-expand {
   display: flex;
   align-items: center;
@@ -541,9 +547,18 @@
     padding-left: 0;
   }
 
-  /* Signed in: Add Job takes its own full-width row under the search. */
-  .site-header__add-job-toggle {
-    flex: 1 1 100%;
+  /* Signed in: Add Job moves up to the top row beside the avatar instead
+     of taking its own full-width row under the search. */
+  .site-header__center .site-header__add-job-toggle {
+    display: none;
+  }
+
+  .site-header__add-job-toggle--compact {
+    display: inline-flex;
+    margin-left: auto;
+    margin-right: 0.75rem;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
   }
 
   .site-header__add-job-label {

@@ -7,6 +7,7 @@ import { ApiError } from "../api/client";
 import type { Application, ApplicationJobPosting, ApplicationStatus } from "../api/types";
 import { StatusSelect } from "../components/StatusSelect";
 import { STATUSES, statusTone } from "../utils/applicationStatus";
+import { formatFollowUp } from "../utils/followUp";
 import "./ApplicationsPage.css";
 import { BOARD_PATH } from "../routes";
 
@@ -31,20 +32,6 @@ function formatPostedDate(postedAt: string): string {
 // viewer's local calendar day is the right one to show.
 function formatAppliedDate(appliedAt: string): string {
   return new Date(appliedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
-// follow_up_at is also a date-only string — same UTC-pinning as above, plus
-// whether it's already due (today or earlier), matching the backend sweep's
-// own <= today check (app.services.follow_up_reminders) — compared in UTC
-// like that check is, not the viewer's own local "today".
-function formatFollowUp(followUpAt: string): { text: string; overdue: boolean } {
-  const date = new Date(`${followUpAt}T00:00:00Z`);
-  const now = new Date();
-  const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  return {
-    text: date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }),
-    overdue: date.getTime() <= todayUtc,
-  };
 }
 
 function formatSalary(posting: ApplicationJobPosting): string | null {

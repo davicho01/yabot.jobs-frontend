@@ -65,11 +65,13 @@
 
 .apply__toolbar-view-job {
   grid-column: 1;
+  grid-row: 1;
   justify-self: start;
 }
 
 .apply__nav-group {
   grid-column: 2;
+  grid-row: 1;
   justify-self: center;
   display: flex;
   flex-wrap: wrap;
@@ -78,79 +80,142 @@
   gap: 0.5rem;
 }
 
-.apply__toolbar-apply {
+/* Pinned to row 1 explicitly: on phones JobDashboardShell.css gives
+   .job-dashboard__view-button order: -1, which (with these fixed columns)
+   placed Apply first and pushed View job / Prev-Next onto a second row.
+   Size comes from the shared .apply-page button rule below. */
+.apply__toolbar-row > .apply__toolbar-apply {
   grid-column: 3;
+  grid-row: 1;
   justify-self: end;
+  order: 0;
+  white-space: nowrap;
+}
+
+/* Same left / center / right row on phones too (it used to stack into a
+   centered column) — just tighter spacing so all three fit. */
+@media (max-width: 640px) {
+  .apply__toolbar-row {
+    gap: 0.4rem;
+  }
+
+  .apply__nav-group {
+    gap: 0.35rem;
+  }
+}
+
+/* Header as normal flow with Rescan floated right (instead of the shared
+   flex row that kept a whole column beside the title block): the title
+   wraps around the button and the company line / tags expand full width. */
+.job-dashboard__header.apply__header {
+  display: flow-root;
+}
+
+.apply__header-rescan {
+  float: right;
+  margin: 0 0 0.5rem 0.75rem;
+}
+
+/* Breathing room between the company · location line and the tag chips. */
+.apply__header .job-dashboard__tags {
+  margin-top: 0.65rem;
+}
+
+/* Workplace / employment type / pay range chips stay on one line; if a
+   phone is too narrow for all three, the pay range truncates with an
+   ellipsis instead of wrapping. The posted date after it can still wrap. */
+.apply__tag-group {
+  display: flex;
+  gap: 0.4rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.apply__tag-group .tag {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.apply__tag-group .apply__tag-salary {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (max-width: 640px) {
-  .apply__toolbar-row {
-    grid-template-columns: 1fr;
-  }
-
-  .apply__toolbar-view-job,
-  .apply__nav-group,
-  .apply__toolbar-apply {
-    grid-column: 1;
-    justify-self: center;
+  .job-dashboard__tags .apply__tag-group .tag {
+    padding-left: 0.65rem;
+    padding-right: 0.65rem;
   }
 }
 
-/* Resume picker + its one headline score, sitting above the Notes card —
-   see the comment at its JSX for why this is boxed and single-number now. */
-.apply__resume-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 1.75rem 1.5rem;
+/* One button size for the whole page — filled (Apply, Tailor, Generate,
+   Save, Next), outlined (View job, Download, Archive, Remove, Skip) and the
+   evaluate/re-score buttons all match instead of each carrying its own
+   padding. The resume picker is excluded: it's deliberately larger. */
+.apply-page
+  :is(
+    .rescan-button,
+    .job-dashboard__view-button,
+    .job-dashboard__evaluate-button,
+    .dossier-action__button,
+    .apply-page__notes-save,
+    .process-step__next
+  ):not(.resume-select__button) {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+  /* Links (View job, Apply) and <button>s otherwise get different line
+     heights and end up a couple of pixels apart. */
+  line-height: 1.4;
 }
 
-/* Centers and enlarges the shared ResumeSelect (label above button instead
-   of alongside it, bigger button) so it reads as this page's actual
-   starting point rather than a small inline control — see the comment at
-   its JSX. Scoped to this one spot; ResumeSelect's own default (compact,
-   label-beside-button) is unchanged everywhere else it's used. */
+/* The borderless filled buttons get an invisible 1px border so they come
+   out the same height as the outlined ones beside them. */
+.apply-page :is(.dossier-action__button, .apply-page__notes-save) {
+  border: 1px solid transparent;
+}
+
+/* Resume picker at the top of step 1: left-aligned, label beside the
+   button (ResumeSelect's own default layout), with a bigger button so it
+   reads as this page's actual starting point rather than a small inline
+   control. Scoped to this one spot. */
 .apply__resume-card-picker {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+  margin-bottom: 1.25rem;
 }
 
+/* The dropdown takes whatever room the label leaves (up to 400px), so it
+   fits narrow screens instead of a fixed width overflowing beside the label;
+   long filenames truncate with an ellipsis (see ResumeSelect.css). */
 .apply__resume-card-picker .resume-select {
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
 }
 
-/* Visually hidden, not display:none — the card's own "Resume" heading
-   above (added via .dossier-action__header) says this already, so
-   repeating it as a small caption over the picker button is redundant.
-   Kept in the accessibility tree since the button's aria-labelledby
-   still points at it. */
 .apply__resume-card-picker .resume-select__label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+  flex-shrink: 0;
+}
+
+.apply__resume-card-picker .resume-select__dropdown {
+  flex: 1;
+  min-width: 0;
+  max-width: 400px;
+}
+
+/* Menu matches the dropdown's width so it can't run off a phone screen. */
+.apply__resume-card-picker .resume-select__dropdown .action-dropdown-menu {
+  right: 0;
+  min-width: 0;
 }
 
 .apply__resume-card-picker .resume-select__button {
-  width: 400px;
-  max-width: 85vw;
+  width: 100%;
+  max-width: none;
   justify-content: center;
   padding: 0.8rem 1.4rem;
   font-size: 0.95rem;
-}
-
-/* Plain rule instead of a third block of text to separate the picker from
-   the score row underneath it. */
-.apply__resume-card-divider {
-  border-top: 1px solid var(--line);
-  margin: 0.25rem 0;
 }
 
 .apply__resume-score-label {
@@ -159,13 +224,96 @@
   gap: 0.5rem;
 }
 
-/* This card drops the shared .job-dashboard__alignment's first (label)
-   column — the bar comes first here, with the percentage + qualified
-   stamp grouped together after it instead of the label sitting before
-   the bar. */
-.apply__resume-card .job-dashboard__alignment {
-  grid-template-columns: 1fr auto;
+/* Sections inside the steps sit flush in the step, not boxed inside it;
+   the report's corner score badge moves into the corner to match. */
+.apply__flush {
+  border: none;
+  padding: 0;
 }
+
+.apply__flush .apply__report-score-badge {
+  top: 0;
+  right: 0;
+}
+
+/* Untitled report (Step 2's tailored version): the badge floats at the
+   description's right instead of being pinned in the corner, so the text
+   wraps around it rather than running underneath. */
+.apply__report-header--untitled {
+  display: flow-root;
+}
+
+.apply__report-score-badge--inline,
+.apply__flush .apply__report-score-badge--inline {
+  position: static;
+  float: right;
+  margin: 0 0 0.5rem 1rem;
+}
+
+/* Divider between the report and its action row (Re-score, Next, …). */
+.apply__fit-report > .apply__action-group {
+  border-top: 1px solid var(--line);
+  padding-top: 1.25rem;
+}
+
+.apply__score-card {
+  border: none;
+  /* Unboxed now, so the card's full vertical padding just read as a big
+     empty band between the Notes row and the bar. */
+  padding: 0.25rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* Headline score: label left; big tier-colored number + verdict right. */
+.apply__score-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.apply__score-source {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding-bottom: 0.35rem;
+}
+
+.apply__score-source-detail {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.apply__score-number {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.apply__score-out-of {
+  margin-left: 0.15rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--ink-soft);
+}
+
+.apply__score-bar {
+  height: 12px;
+}
+
 
 /* Fitness report card (Fit tab): the score sits next to the verdict stamp
    in the card's top-right corner (replacing .dossier-action__corner-stamp)
@@ -234,6 +382,12 @@
   gap: 0.6rem;
 }
 
+/* Step 1's not-yet-scored panel is a flex-start column — stretch the row
+   so space-between can push Skip to the right edge. */
+.job-dashboard__evaluate-panel > .apply__tailor-actions {
+  align-self: stretch;
+}
+
 /* A report's score actions side by side: "Get full evaluation" (until it's
    been run) first, then Re-score / Re-evaluate. */
 .apply__action-group {
@@ -248,10 +402,15 @@
   align-self: center;
 }
 
-/* "Write a cover letter" step's download menu — no left-side action to
-   balance against here (Regenerate lives inside the menu itself), so just
-   the one action sits in the card's lower-right corner, same convention as
-   .apply__tailor-actions above. */
+/* Step 1's Next button shares the report's action row, pushed to the
+   right edge where the step footer would otherwise put it. */
+.apply__action-group > .process-step__next {
+  margin-left: auto;
+}
+
+/* "Write a cover letter" step's download menu and the step's Next button,
+   together in the lower-right corner (Download first) — no left-side
+   action to balance against (Regenerate lives inside the menu itself). */
 .apply__cover-letter-actions {
   /* .fitness-result's own align-items: flex-start would otherwise shrink
      this row to the button's own width, leaving justify-content: flex-end
@@ -259,6 +418,9 @@
   align-self: stretch;
   justify-content: flex-end;
   margin-top: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 /* Space between Apply and Mark as applied/the status line so they don't
@@ -374,6 +536,16 @@
   box-shadow: none;
 }
 
+/* The click glow is off for the collapsible headers (step headers here,
+   the Notes and Job description toggles in DossierAction.css /
+   JobDashboardShell.css), but keyboard users still get a focus outline. */
+.apply-page .process-step__header:focus-visible,
+.apply-page .apply-page__notes-toggle:focus-visible,
+.apply-page .job-dashboard__description-toggle:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}
+
 .process-step__title {
   display: block;
   font-family: var(--font-display);
@@ -437,11 +609,11 @@
   background: var(--accent);
   color: #fff;
   border: 1px solid var(--accent);
-  padding: 0.6rem 1.15rem;
+  padding: 0.45rem 0.9rem;
   border-radius: var(--radius-pill);
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   text-align: left;
   text-decoration: none;
   cursor: pointer;
@@ -484,5 +656,10 @@
    background, rather than tucked next to routine actions like Archive. */
 .apply__remove-row {
   margin-top: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
 }
 

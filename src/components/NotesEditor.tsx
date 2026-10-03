@@ -21,9 +21,8 @@ export function NotesEditor({
   initialNotes: string;
   disabled: boolean;
   onSave: (notes: string) => void;
-  // Optional content placed in the same row as Save, to its left — e.g.
-  // ApplyPage's Archive button, which used to sit in its own row
-  // below this one instead of level with it.
+  // Optional content placed in the same row as Save, to its left (e.g. a
+  // secondary action that should sit level with Save, not below it).
   extraActions?: ReactNode;
 }) {
   const [notes, setNotes] = useState(initialNotes);

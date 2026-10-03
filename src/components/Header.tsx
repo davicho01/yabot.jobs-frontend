@@ -689,6 +689,21 @@ export function Header() {
           )}
         </div>
 
+        {/* Phone-only copy of Add Job in the top row, beside the avatar —
+            the one in the search area above is hidden at that width, where
+            it used to take a whole full-width row of the fixed header. */}
+        {user && (
+          <button
+            type="button"
+            className="site-header__add-job-toggle site-header__add-job-toggle--compact"
+            onClick={toggleAddJob}
+            aria-haspopup="true"
+            aria-expanded={addJobOpen}
+          >
+            + Add Job
+          </button>
+        )}
+
         {user ? (
           <div className="site-header__menu" ref={menuRef}>
             <button
