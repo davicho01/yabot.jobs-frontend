@@ -341,6 +341,8 @@ export interface CrawlSource {
   coverage_sample_count: number;
   coverage_flagged_at: string | null;
   created_at: string;
+  // Only in the sources list: the logo of the company the source is named after.
+  logo_url?: string | null;
 }
 
 export interface WindowCounts {

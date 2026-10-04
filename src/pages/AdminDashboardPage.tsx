@@ -8,6 +8,7 @@ import { AdminWindowStats } from "../components/AdminWindowStats";
 import { ScanActivityChart } from "../components/ScanActivityChart";
 import type { CrawlSource } from "../api/types";
 import "./AdminCommon.css";
+import CompanyLogo from "../components/CompanyLogo";
 
 const DEFAULT_PAGE_SIZE = 50;
 
@@ -292,6 +293,7 @@ export function AdminDashboardPage() {
                 {pageSources.map((source) => (
                   <tr key={source.id}>
                     <td>
+                      <CompanyLogo name={source.name} logoUrl={source.logo_url} size={20} />
                       {source.name}
                       {/* Phones drop the ATS/last-crawled/flagged columns (see AdminCommon.css) — this keeps that info, compactly, under the name. */}
                       <span className="admin-table__sub">
