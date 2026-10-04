@@ -367,6 +367,19 @@
   gap: 0.75rem 1rem;
 }
 
+.admin-source-header__title {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.admin-source-header__title .company-logo {
+  margin-right: 0;
+  top: 0;
+  border-radius: 14px;
+}
+
 .admin-source-header__row h1 {
   margin-bottom: 0;
   min-width: 0;

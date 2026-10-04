@@ -252,6 +252,14 @@ export function AdminCrawlSourceStatsPage() {
     enabled: !!sourceId,
   });
   const stats = statsQuery.data;
+  // Same query (and cache) as the Edit dialog's Logo field, so a logo set
+  // there shows up here right away. The first company has the most postings.
+  const companiesQuery = useQuery({
+    queryKey: ["admin", "crawl-source-companies", sourceId],
+    queryFn: () => adminApi.crawlSourceCompanies(sourceId!),
+    enabled: !!sourceId,
+  });
+  const mainCompany = companiesQuery.data?.[0];
   const { confirm, dialog } = useConfirm();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -291,7 +299,16 @@ export function AdminCrawlSourceStatsPage() {
         <>
           <div className="admin-source-header">
             <div className="admin-source-header__row">
-              <h1>{stats.source.name}</h1>
+              <div className="admin-source-header__title">
+                {companiesQuery.isSuccess && (
+                  <CompanyLogo
+                    name={mainCompany?.display_name ?? stats.source.name}
+                    logoUrl={mainCompany?.logo_url}
+                    size={56}
+                  />
+                )}
+                <h1>{stats.source.name}</h1>
+              </div>
               <div className="admin-source-header__total">
                 <span className="admin-totals__value">{stats.total_listings.toLocaleString()}</span>
                 <span className="admin-totals__label">Total listings</span>
