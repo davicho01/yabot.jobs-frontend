@@ -124,12 +124,38 @@
 .application-row {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
   padding: 0.9rem 1.1rem;
+}
+
+/* Status, Download, Score/Evaluate and Apply, kept together on one line. */
+.application-row__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Level with the job title rather than the top of the row: the title sits
+   under the 32px company line (.application-row__employer). The checkbox
+   lines up with it whenever it's beside the text (not on phones, where it
+   gets a line of its own); the controls only from 900px, below which the
+   row wraps them onto a line under the text. */
+@media (min-width: 641px) {
+  .application-row--with-employer .application-row__select {
+    margin-top: calc(32px + 0.3rem + 3px);
+  }
+}
+
+@media (min-width: 900px) {
+  .application-row--with-employer .application-row__controls {
+    margin-top: calc(32px + 0.3rem - 3px);
+  }
 }
 
 /* Shared by both the Score stamp and the Evaluate-button wrapper so the
@@ -204,7 +230,7 @@
   font-family: var(--font-display);
   font-weight: 700;
   text-decoration: none;
-  color: var(--ink);
+  color: var(--accent);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -243,15 +269,15 @@
 .application-row__applied {
   flex-shrink: 0;
   margin-left: auto;
-  font-size: 0.72rem;
-  color: var(--ink-soft);
-  opacity: 0.8;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--teal);
 }
 
 .application-row__follow-up {
   flex-shrink: 0;
   margin-left: auto;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--ink-soft);
 }
@@ -265,21 +291,31 @@
   color: var(--amber);
 }
 
-.application-row__company {
-  font-size: 0.8rem;
-  color: var(--ink-soft);
+.application-row__employer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  margin-bottom: 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.application-row__employer span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  min-width: 0;
 }
 
+/* CompanyLogo is styled to sit inline in a line of text; here it's a flex item. */
+.application-row__employer .company-logo {
+  margin-right: 0;
+  top: 0;
+}
+
+/* The blue .tag--accent label, same as the job page and the board's cards. */
 .application-row__pay {
-  font-family: var(--font-body);
   font-weight: 600;
-  font-size: 0.8rem;
-  letter-spacing: 0;
-  color: var(--accent);
   white-space: nowrap;
 }
 
@@ -379,6 +415,22 @@
     flex-basis: 100%;
   }
 
+  /* All four controls on one line on every row: no wrapping, Download
+     shrinks to its arrow, and the score loses its fixed desktop width. */
+  .application-row__controls {
+    flex: 1 1 100%;
+    gap: 0.4rem;
+    margin-left: 0;
+  }
+
+  .application-row__controls .application-row__score {
+    width: auto;
+  }
+
+  .application-row__action-label {
+    display: none;
+  }
+
   .application-row__download {
     margin-left: 0;
   }
@@ -387,9 +439,11 @@
     margin-left: auto;
   }
 
-  /* The Download button is now at the row's left edge, so its menu can't be
-     right-anchored to it (it would open off the left of the screen). The
-     toolbar's Sort menu, which is at the right edge, keeps its anchoring. */
+  /* The status picker and Download sit at the row's left side here, so their
+     menus can't be right-anchored to them (they would open off the left of
+     the screen). The toolbar's Sort menu, which is at the right edge, keeps
+     its anchoring. */
+  .application-row__status .action-dropdown-menu,
   .application-row__download .action-dropdown-menu {
     left: 0;
     right: auto;

@@ -45,9 +45,27 @@
   min-width: 0;
 }
 
-/* Company · location line, same plain style as the real job page's
-   .case-file__company — sits below the title as a sub-header, not above it
-   as a small-caps eyebrow. */
+/* Logo and company name above the title, same as the job page's
+   .case-file__employer. */
+.job-dashboard__employer {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.6rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* CompanyLogo is styled to sit inline in a line of text; here it's a flex item. */
+.job-dashboard__employer .company-logo {
+  margin-right: 0;
+  top: 0;
+  border-radius: 10px;
+}
+
+/* Location line under the title, same plain style as the job page's
+   .case-file__company. */
 .job-dashboard__subheader {
   color: var(--ink-soft);
   margin: 0.3rem 0 0;
@@ -131,8 +149,12 @@
   color: var(--ink);
 }
 
-.job-dashboard__description-toggle:hover {
-  color: var(--accent);
+/* Only with a real pointer: on a phone a tap counts as hover, and the color
+   stuck around after the tap until the page scrolled. */
+@media (hover: hover) {
+  .job-dashboard__description-toggle:hover {
+    color: var(--accent);
+  }
 }
 
 /* Opts out of index.css's global button focus glow, same as
@@ -294,6 +316,8 @@
 .job-dashboard__description h4 {
   font-family: var(--font-display);
   font-size: 1.05rem;
+  /* Same as the job page's .case-file__description headings. */
+  color: var(--accent);
   margin: 1.25rem 0 0.6rem;
 }
 

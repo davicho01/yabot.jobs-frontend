@@ -345,7 +345,7 @@
   display: none;
 }
 
-/* Phone-only search icon (off the job board) — see .site-header__center--collapsed. */
+/* Phone-only search icon, on every page — see .site-header__center--collapsed. */
 .site-header__search-toggle {
   display: none;
 }

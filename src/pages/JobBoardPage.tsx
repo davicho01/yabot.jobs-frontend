@@ -27,12 +27,28 @@ function scannedPosting(job: JobDetail): JobPosting | null {
   return job.posting && job.posting.extraction_status !== "pending" ? job.posting : null;
 }
 
-function formatSalary(job: JobDetail): string | null {
+// A card's pay label: "$184K–$288K" instead of the job page's "USD 184,000–287,500",
+// so it fits beside the other labels. Hourly amounts stay exact ("$20–$26").
+function formatSalaryShort(job: JobDetail): string | null {
   const p = scannedPosting(job);
   if (!p || (!p.salary_min && !p.salary_max)) return null;
-  const currency = p.salary_currency ?? "";
-  if (p.salary_min && p.salary_max) return `${currency} ${p.salary_min.toLocaleString()}–${p.salary_max.toLocaleString()}`;
-  return `${currency} ${(p.salary_min ?? p.salary_max)?.toLocaleString()}`;
+  let format: (n: number) => string;
+  try {
+    const compact = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: p.salary_currency || "USD",
+      notation: "compact",
+      maximumFractionDigits: 0,
+    });
+    format = (n) => compact.format(n);
+  } catch {
+    // Not a currency code Intl knows: plain numbers after the code, as before.
+    format = (n) => `${p.salary_currency ?? ""} ${n.toLocaleString()}`.trim();
+  }
+  if (p.salary_min && p.salary_max && p.salary_min !== p.salary_max) {
+    return `${format(p.salary_min)}–${format(p.salary_max)}`;
+  }
+  return format((p.salary_min || p.salary_max)!);
 }
 
 function formatPostedAt(job: JobDetail): string | null {
@@ -61,21 +77,26 @@ function JobCard({
     <button type="button" className={`job-card${active ? " job-card--active" : ""}`} onClick={onSelect}>
       <span className="job-card__edge" data-type={posting?.workplace_type ?? "unknown"} />
       <div className="job-card__body">
+        {/* Company first, logo beside its name, then the title — same order as the job page it opens. */}
+        <div className="job-card__employer">
+          <CompanyLogo name={posting?.company_name ?? job.url.domain} logoUrl={posting?.company_logo_url} size={32} />
+          <span>{posting?.company_name ?? job.url.domain}</span>
+        </div>
         <div className="job-card__title">
           {posting?.title ? highlightQuery(posting.title, query) : "Scanning posting…"}
         </div>
-        <div className="job-card__meta">
-          <CompanyLogo name={posting?.company_name ?? job.url.domain} logoUrl={posting?.company_logo_url} size={22} />
-          {posting?.company_name ?? job.url.domain}
-          {posting?.location ? ` · ${posting.location}` : ""}
-        </div>
-        {formatSalary(job) && <div className="job-card__salary">{formatSalary(job)}</div>}
+        {posting?.location && <div className="job-card__meta">{posting.location}</div>}
         {posting && (
           <div className="job-card__tags">
-            {workplaceLabel(posting.workplace_type) && <span className="tag">{workplaceLabel(posting.workplace_type)}</span>}
-            {employmentLabel(posting.employment_type) && (
+            {workplaceLabel(posting.workplace_type) && (
+              <span className={`tag tag--workplace-${posting.workplace_type}`}>{workplaceLabel(posting.workplace_type)}</span>
+            )}
+            {/* Full-time is most jobs, so a card only calls out the exceptions; the job page shows it. */}
+            {posting.employment_type !== "full_time" && employmentLabel(posting.employment_type) && (
               <span className="tag">{employmentLabel(posting.employment_type)}</span>
             )}
+            {/* Same blue label as the job page's pay tag, shortened to fit a card. */}
+            {formatSalaryShort(job) && <span className="tag tag--accent">{formatSalaryShort(job)}</span>}
             {formatPostedAt(job) && <span className="job-card__posted">{formatPostedAt(job)}</span>}
           </div>
         )}

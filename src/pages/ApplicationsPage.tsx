@@ -295,8 +295,9 @@ function DownloadMenu({ application }: { application: Application }) {
 
   return (
     <div className="action-dropdown application-row__download" ref={containerRef}>
-      <button type="button" className="application-row__action" onClick={() => setOpen((o) => !o)}>
-        Download ↓
+      <button type="button" className="application-row__action" aria-label="Download" onClick={() => setOpen((o) => !o)}>
+        {/* The word is dropped on phones, leaving the arrow, so a row's four controls fit on one line. */}
+        <span className="application-row__action-label">Download </span>↓
       </button>
       {open && (
         <div className="action-dropdown-menu">
@@ -659,7 +660,10 @@ export function ApplicationsPage() {
 
         <ul className="application-list">
           {applications?.map((application) => (
-            <li key={application.id} className="application-row">
+            <li
+              key={application.id}
+              className={`application-row${application.job_posting.company_name ? " application-row--with-employer" : ""}`}
+            >
               <input
                 type="checkbox"
                 className="application-row__select"
@@ -668,6 +672,17 @@ export function ApplicationsPage() {
                 onChange={() => toggleSelect(application.id)}
               />
               <div className="application-row__main">
+                {/* Company first, logo beside its name, then the title — same as the job board's cards. */}
+                {application.job_posting.company_name && (
+                  <span className="application-row__employer">
+                    <CompanyLogo
+                      name={application.job_posting.company_name}
+                      logoUrl={application.job_posting.company_logo_url}
+                      size={32}
+                    />
+                    <span>{application.job_posting.company_name}</span>
+                  </span>
+                )}
                 <span className="application-row__title-row">
                   <Link to={`/jobs/${application.job_posting.url_id}/apply`} className="application-row__title">
                     {application.job_posting.title ?? "Untitled role"}
@@ -675,18 +690,8 @@ export function ApplicationsPage() {
                   {application.is_archived && <span className="application-row__archived-badge">Archived</span>}
                 </span>
                 <div className="application-row__meta">
-                  {application.job_posting.company_name && (
-                    <span className="application-row__company">
-                      <CompanyLogo
-                        name={application.job_posting.company_name}
-                        logoUrl={application.job_posting.company_logo_url}
-                        size={16}
-                      />
-                      {application.job_posting.company_name}
-                    </span>
-                  )}
                   {formatSalary(application.job_posting) ? (
-                    <span className="application-row__pay">{formatSalary(application.job_posting)}</span>
+                    <span className="tag tag--accent application-row__pay">{formatSalary(application.job_posting)}</span>
                   ) : (
                     <span className="application-row__details-hint">Pay not listed</span>
                   )}
@@ -711,27 +716,29 @@ export function ApplicationsPage() {
                   )}
                 </div>
               </div>
-              <ApplicationStatusSelect application={application} />
-              <DownloadMenu application={application} />
-              {application.best_score !== null ? (
-                <span
-                  className={`stamp application-row__score ${
-                    application.best_score >= QUALIFY_THRESHOLD ? "stamp--positive" : "stamp--negative"
-                  }`}
+              <div className="application-row__controls">
+                <ApplicationStatusSelect application={application} />
+                <DownloadMenu application={application} />
+                {application.best_score !== null ? (
+                  <span
+                    className={`stamp application-row__score ${
+                      application.best_score >= QUALIFY_THRESHOLD ? "stamp--positive" : "stamp--negative"
+                    }`}
+                  >
+                    Score {application.best_score}
+                  </span>
+                ) : (
+                  <EvaluateButton jobPostingId={application.job_posting.id} />
+                )}
+                <a
+                  href={application.job_posting.apply_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="application-row__apply-button"
                 >
-                  Score {application.best_score}
-                </span>
-              ) : (
-                <EvaluateButton jobPostingId={application.job_posting.id} />
-              )}
-              <a
-                href={application.job_posting.apply_url}
-                target="_blank"
-                rel="noreferrer"
-                className="application-row__apply-button"
-              >
-                Apply →
-              </a>
+                  Apply →
+                </a>
+              </div>
             </li>
           ))}
         </ul>

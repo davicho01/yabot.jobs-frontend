@@ -286,6 +286,18 @@ textarea:focus-visible {
   background: color-mix(in srgb, var(--rose) 14%, transparent);
 }
 
+/* Workplace type, in the same colors as the job board cards' left edge
+   (.job-card__edge): remote green, hybrid blue, on-site stays neutral. */
+.tag--workplace-remote {
+  color: var(--teal);
+  background: color-mix(in srgb, var(--teal) 14%, transparent);
+}
+
+.tag--workplace-hybrid {
+  color: var(--accent-deep);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
 .rescan-button {
   font-family: var(--font-body);
   font-size: 0.85rem;

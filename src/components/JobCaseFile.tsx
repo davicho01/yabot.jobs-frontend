@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ONBOARDING_QUERY_KEY } from "../api/onboarding";
-import ReactMarkdown from "react-markdown";
+import { JobDescription } from "./JobDescription";
 import { applicationsApi } from "../api/applications";
 import { jobsApi } from "../api/jobs";
 import type { Application, JobDetail, JobPosting, User } from "../api/types";
@@ -206,7 +206,8 @@ export function JobCaseFile({
               )}
               {user && (
                 <button type="button" className="rescan-button" onClick={() => setFlagModalOpen(true)}>
-                  Report a problem
+                  {/* "a problem" is dropped on phones so the three small buttons fit on one line. */}
+                  Report<span className="case-file__label-extra"> a problem</span>
                 </button>
               )}
               {currentApplication || !user ? (
@@ -230,20 +231,25 @@ export function JobCaseFile({
           </div>
 
           <div className="case-file__header-title">
-            <h1>{posting.title ? highlightQuery(posting.title, titleHighlightQuery) : "Untitled role"}</h1>
-            <p className="case-file__company">
-              <span>
-                <CompanyLogo name={posting.company_name ?? job.url.domain} logoUrl={posting.company_logo_url} size={22} />
-                {posting.company_name ?? job.url.domain}
-                {posting.location ? ` · ${posting.location}` : ""}
-              </span>
-              {formatPostedAt(job) && <span className="case-file__posted">{formatPostedAt(job)}</span>}
+            {/* Company first, logo beside its name, then the title — same as the static job pages. */}
+            <p className="case-file__employer">
+              <CompanyLogo name={posting.company_name ?? job.url.domain} logoUrl={posting.company_logo_url} size={40} />
+              <span>{posting.company_name ?? job.url.domain}</span>
             </p>
+            <h1>{posting.title ? highlightQuery(posting.title, titleHighlightQuery) : "Untitled role"}</h1>
+            {(posting.location || formatPostedAt(job)) && (
+              <p className="case-file__company">
+                <span>{posting.location}</span>
+                {formatPostedAt(job) && <span className="case-file__posted">{formatPostedAt(job)}</span>}
+              </p>
+            )}
           </div>
 
           <div className="case-file__tags">
             {job.url.closed_at && <span className="tag tag--secondary">No longer listed</span>}
-            {workplaceLabel(posting.workplace_type) && <span className="tag">{workplaceLabel(posting.workplace_type)}</span>}
+            {workplaceLabel(posting.workplace_type) && (
+              <span className={`tag tag--workplace-${posting.workplace_type}`}>{workplaceLabel(posting.workplace_type)}</span>
+            )}
             {employmentLabel(posting.employment_type) && (
               <span className="tag">{employmentLabel(posting.employment_type)}</span>
             )}
@@ -252,7 +258,7 @@ export function JobCaseFile({
 
           <div className="case-file__description">
             {posting.description ? (
-              <ReactMarkdown>{posting.description}</ReactMarkdown>
+              <JobDescription markdown={posting.description} />
             ) : (
               "No description was extracted for this posting."
             )}

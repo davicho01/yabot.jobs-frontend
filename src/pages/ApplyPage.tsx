@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { flushSync } from "react-dom";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
+import { JobDescription } from "../components/JobDescription";
 import { useAuth } from "../auth/AuthContext";
 import { jobsApi } from "../api/jobs";
 import { applicationsApi } from "../api/applications";
@@ -961,17 +961,20 @@ function ApplyPageContent({
             </button>
           )}
           <div className="job-dashboard__title-block">
-            <h1>{posting.title ?? "Untitled role"}</h1>
-            <p className="job-dashboard__subheader">
-              <CompanyLogo name={posting.company_name ?? job.url.domain} logoUrl={posting.company_logo_url} size={22} />
-              {posting.company_name ?? job.url.domain}
-              {posting.location ? ` · ${posting.location}` : ""}
+            {/* Company first, logo beside its name, then the title — same as the job page. */}
+            <p className="job-dashboard__employer">
+              <CompanyLogo name={posting.company_name ?? job.url.domain} logoUrl={posting.company_logo_url} size={40} />
+              <span>{posting.company_name ?? job.url.domain}</span>
             </p>
+            <h1>{posting.title ?? "Untitled role"}</h1>
+            {posting.location && <p className="job-dashboard__subheader">{posting.location}</p>}
             <div className="job-dashboard__tags">
               {/* Kept on one line together (the pay range used to wrap
                   onto its own line on phones) — see .apply__tag-group. */}
               <span className="apply__tag-group">
-                {workplaceLabel(posting.workplace_type) && <span className="tag">{workplaceLabel(posting.workplace_type)}</span>}
+                {workplaceLabel(posting.workplace_type) && (
+                  <span className={`tag tag--workplace-${posting.workplace_type}`}>{workplaceLabel(posting.workplace_type)}</span>
+                )}
                 {employmentLabel(posting.employment_type) && (
                   <span className="tag">{employmentLabel(posting.employment_type)}</span>
                 )}
@@ -999,7 +1002,7 @@ function ApplyPageContent({
             <div className="job-dashboard__description-body" id="description-body">
               <div className="job-dashboard__description">
                 {posting.description ? (
-                  <ReactMarkdown>{posting.description}</ReactMarkdown>
+                  <JobDescription markdown={posting.description} />
                 ) : (
                   "No description was extracted for this posting."
                 )}
