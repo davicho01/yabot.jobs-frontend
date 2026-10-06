@@ -18,6 +18,8 @@ import type {
 
 export interface CrawlSourceUpdatePayload {
   name?: string;
+  sub_brands?: string[];
+  is_official?: boolean;
   board_url?: string;
   status?: string;
 }

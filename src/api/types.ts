@@ -328,7 +328,15 @@ export interface InterviewPrep {
 
 export interface CrawlSource {
   id: string;
+  // The company's official name: every job from this source shows it (or one
+  // of sub_brands, when the job's page names it).
   name: string;
+  // "placeholder" (an unconfirmed slug/hostname label, replaced by the first
+  // usable job page), "auto" (set from evidence) or "manual" (set by an admin).
+  name_source: "placeholder" | "auto" | "manual";
+  sub_brands: string[];
+  // The company's own careers site, vs a job board or aggregator.
+  is_official: boolean;
   ats_type: string | null;
   board_url: string;
   status: string;

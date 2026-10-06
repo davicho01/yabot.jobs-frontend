@@ -473,7 +473,8 @@
 }
 
 .edit-crawl-source-dialog__form input,
-.edit-crawl-source-dialog__form select {
+.edit-crawl-source-dialog__form select,
+.edit-crawl-source-dialog__form textarea {
   padding: 0.65rem 0.9rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-field);
@@ -481,6 +482,16 @@
   color: var(--ink);
   font-size: 0.9rem;
   font-family: var(--font-body);
+}
+
+.edit-crawl-source-dialog__form textarea {
+  resize: vertical;
+}
+
+.edit-crawl-source-dialog__form label.edit-crawl-source-dialog__checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .edit-crawl-source-dialog__form .select-field {

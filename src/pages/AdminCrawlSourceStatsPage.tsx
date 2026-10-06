@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { adminApi, type AdminCompany } from "../api/admin";
+import { adminApi, type AdminCompany, type CrawlSourceUpdatePayload } from "../api/admin";
 import { ApiError } from "../api/client";
 import type { CrawlSource } from "../api/types";
 import { AdminWindowStats } from "../components/AdminWindowStats";
@@ -95,6 +95,9 @@ function errorMessage(error: unknown, fallback: string): string {
 function EditCrawlSourceDialog({ source, onClose }: { source: CrawlSource; onClose: () => void }) {
   const queryClient = useQueryClient();
   const [name, setName] = useState(source.name);
+  // One sub-brand per line in the form; a list in the API.
+  const [subBrands, setSubBrands] = useState(source.sub_brands.join("\n"));
+  const [isOfficial, setIsOfficial] = useState(source.is_official);
   const [boardUrl, setBoardUrl] = useState(source.board_url);
   const [sourceStatus, setSourceStatus] = useState(source.status);
   const [logoInputs, setLogoInputs] = useState<Record<string, LogoInput>>({});
@@ -128,7 +131,13 @@ function EditCrawlSourceDialog({ source, onClose }: { source: CrawlSource; onClo
     setLogoErrors({});
     try {
       try {
-        await adminApi.updateCrawlSource(source.id, { name, board_url: boardUrl, status: sourceStatus });
+        // Name and sub-brands are only sent when changed: sending them confirms
+        // the name ("manual"). They apply to jobs scanned from now on.
+        const brands = subBrands.split("\n").map((b) => b.trim()).filter(Boolean);
+        const payload: CrawlSourceUpdatePayload = { board_url: boardUrl, status: sourceStatus, is_official: isOfficial };
+        if (name.trim() !== source.name) payload.name = name.trim();
+        if (brands.join("\n") !== source.sub_brands.join("\n")) payload.sub_brands = brands;
+        await adminApi.updateCrawlSource(source.id, payload);
         queryClient.invalidateQueries({ queryKey: ["admin", "crawl-source-stats", source.id] });
         queryClient.invalidateQueries({ queryKey: ["admin", "crawl-sources"] });
       } catch (error) {
@@ -176,8 +185,29 @@ function EditCrawlSourceDialog({ source, onClose }: { source: CrawlSource; onClo
         <h2 className="confirm-dialog__title">Edit crawl source</h2>
         <form onSubmit={handleSubmit} className="edit-crawl-source-dialog__form">
           <label>
-            Name
+            Company name (shown on every job)
             <input value={name} onChange={(e) => setName(e.target.value)} required />
+            <span className="admin-page__hint">
+              Changes to the name or sub-brands apply to jobs scanned from now on; existing jobs keep their name until
+              they're rescanned.
+            </span>
+            {source.name_source === "placeholder" && (
+              <span className="admin-page__hint">
+                Placeholder from the board's address — replaced by the company name its first job page gives, unless you
+                set it here.
+              </span>
+            )}
+          </label>
+          <label>
+            Sub-brands (one per line)
+            <textarea rows={3} value={subBrands} onChange={(e) => setSubBrands(e.target.value)} />
+            <span className="admin-page__hint">
+              A job whose page names one of these shows it instead of the company name (e.g. HomeGoods on TJX's site).
+            </span>
+          </label>
+          <label className="edit-crawl-source-dialog__checkbox">
+            <input type="checkbox" checked={isOfficial} onChange={(e) => setIsOfficial(e.target.checked)} />
+            Official company careers site (not a job board)
           </label>
           <label>
             Board URL
