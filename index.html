@@ -49,8 +49,16 @@
         window.gtag = function () {
           window.dataLayer.push(arguments);
         };
+        // Consent defaults, same as src/utils/analytics.ts (keep the region list in step):
+        // analytics cookies off in the EEA/UK/CH and for Global Privacy Control, never ads.
+        var noAds = { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" };
+        var euRegions = ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV",
+          "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO", "GB", "CH"];
+        window.gtag("consent", "default", Object.assign({ analytics_storage: "denied", region: euRegions }, noAds));
+        window.gtag("consent", "default", Object.assign(
+          { analytics_storage: navigator.globalPrivacyControl === true ? "denied" : "granted" }, noAds));
         window.gtag("js", new Date());
-        window.gtag("config", id);
+        window.gtag("config", id, { allow_google_signals: false, allow_ad_personalization_signals: false });
         var s = document.createElement("script");
         s.async = true;
         s.src = "https://www.googletagmanager.com/gtag/js?id=" + id;

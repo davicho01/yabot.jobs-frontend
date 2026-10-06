@@ -10,8 +10,16 @@
         window.gtag = function () {
           window.dataLayer.push(arguments);
         };
+        // Consent defaults, same as src/utils/analytics.ts (keep the region list in step):
+        // analytics cookies off in the EEA/UK/CH and for Global Privacy Control, never ads.
+        var noAds = { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" };
+        var euRegions = ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV",
+          "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO", "GB", "CH"];
+        window.gtag("consent", "default", Object.assign({ analytics_storage: "denied", region: euRegions }, noAds));
+        window.gtag("consent", "default", Object.assign(
+          { analytics_storage: navigator.globalPrivacyControl === true ? "denied" : "granted" }, noAds));
         window.gtag("js", new Date());
-        window.gtag("config", id);
+        window.gtag("config", id, { allow_google_signals: false, allow_ad_personalization_signals: false });
         var s = document.createElement("script");
         s.async = true;
         s.src = "https://www.googletagmanager.com/gtag/js?id=" + id;
@@ -375,7 +383,7 @@
     <main id="main">
       <p class="eyebrow">Privacy</p>
       <h1>Your resume is yours.</h1>
-      <p class="updated">Last updated October 1, 2026</p>
+      <p class="updated">Last updated October 6, 2026</p>
 
       <div class="summary">
         <h2>The short version</h2>
@@ -450,7 +458,30 @@
         <li>Amazon Simple Email Service: sign-in links, job alerts, and reminder emails.</li>
         <li>Google Cloud: the API behind the site and its database.</li>
         <li>Stripe: payments, if you subscribe.</li>
-        <li>Google Analytics: anonymous usage statistics about which pages get visited.</li>
+        <li>Google Analytics: statistics about how the site is used. See below.</li>
+      </ul>
+
+      <h2>Analytics</h2>
+      <p>
+        We use Google Analytics to see which pages people visit and which links they follow, so we know what is
+        useful. It sets a cookie with a random ID and records the pages you view, the links you click on our job
+        pages, your approximate location (from your IP address), and your browser and device type. Google collects
+        this on our behalf; it is not linked to your account, and we do not use it for advertising.
+      </p>
+      <ul>
+        <li>
+          If you visit from the European Economic Area, the UK, or Switzerland, analytics cookies are off. We only
+          receive cookieless, anonymous counts.
+        </li>
+        <li>
+          If your browser sends a Global Privacy Control signal, analytics cookies are off for you too, wherever you
+          are.
+        </li>
+        <li>
+          We do not respond to the older Do Not Track signal, because there is no agreed standard for it. Global
+          Privacy Control is the signal we honor.
+        </li>
+        <li>Google Signals and ad personalization are turned off, so this data is not used for ads.</li>
       </ul>
 
       <h2>What we do not do</h2>

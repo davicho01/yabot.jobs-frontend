@@ -13,6 +13,18 @@ const MEASUREMENT_ID = "G-CDDT9RZ59T";
 // Query parameters that carry credentials or one-time IDs and must never reach GA.
 const PRIVATE_PARAMS = ["token", "request_id", "code", "state"];
 
+// EEA + UK + Switzerland: analytics cookies are off by default there (GDPR/ePrivacy),
+// so those visitors are only counted by cookieless pings; Google resolves the region
+// from the IP. The inline snippets in index.html, about.html, questions.html and
+// privacy.html, and the backend's static pages (templates/seo/assets/analytics.js),
+// copy this list, so keep them in step.
+export const CONSENT_REGIONS = [
+  "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV",
+  "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO", "GB", "CH",
+];
+// Nothing is ever used for ads.
+const NO_ADS = { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" };
+
 declare global {
   interface Window {
     dataLayer: unknown[];
@@ -39,10 +51,16 @@ export function initAnalytics() {
     // eslint-disable-next-line prefer-rest-params
     window.dataLayer.push(arguments);
   };
+  window.gtag("consent", "default", { analytics_storage: "denied", region: CONSENT_REGIONS, ...NO_ADS });
+  // Global Privacy Control: the visitor asked not to be tracked, wherever they are.
+  const gpc = (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true;
+  window.gtag("consent", "default", { analytics_storage: gpc ? "denied" : "granted", ...NO_ADS });
   window.gtag("js", new Date());
   window.gtag("config", MEASUREMENT_ID, {
     send_page_view: false,
     page_location: cleanUrl(location.href),
+    allow_google_signals: false,
+    allow_ad_personalization_signals: false,
   });
 
   const script = document.createElement("script");

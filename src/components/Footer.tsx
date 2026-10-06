@@ -81,8 +81,9 @@ export function Footer() {
           <a href="https://www.geonames.org" target="_blank" rel="noopener noreferrer">
             GeoNames
           </a>{" "}
-          (CC BY 4.0), U.S. Census Bureau · Logos by{" "}
-          <a href="https://logo.dev" target="_blank" rel="noopener noreferrer">
+          (CC BY 4.0), U.S. Census Bureau · Logos provided by{" "}
+          {/* No noreferrer: Logo.dev's free plan needs a credit link that passes the referrer. */}
+          <a href="https://logo.dev" target="_blank" rel="noopener">
             Logo.dev
           </a>
         </span>
