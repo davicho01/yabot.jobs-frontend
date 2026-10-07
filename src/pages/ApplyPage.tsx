@@ -753,7 +753,10 @@ function ApplyPageContent({
       : "Not applied yet";
   const step5Done = !!displayedInterviewPrep;
   const step5Status = step5Done ? "Prepared" : "Optional, do this once an interview is scheduled";
-  const allStepsDone = step1Done && step2Done && step3Done && step4Done && step5Done;
+  // The closing panel is about having applied, not about every optional
+  // step (interview prep, which can't even start until one is scheduled)
+  // being checked off — so it follows step4Done alone.
+  const appliedDone = step4Done;
 
   // Jump to the candidate's actual next step once the data that decides
   // that has settled — but only the first time, and only if they haven't
@@ -1512,9 +1515,9 @@ function ApplyPageContent({
             footer={
               // The last step: send them on to the next job in their list,
               // or back to the list once there's nowhere else to go. Left
-              // out once every step is done — the "all set" panel below
+              // out once they've applied — the "all set" panel below
               // takes over then, rather than two buttons pointing onward.
-              allStepsDone ? undefined : nextApplicationUrlId ? (
+              appliedDone ? undefined : nextApplicationUrlId ? (
                 <Link to={`/jobs/${nextApplicationUrlId}/apply`} className="process-step__next">
                   Next application →
                 </Link>
@@ -1598,17 +1601,17 @@ function ApplyPageContent({
           </ProcessStep>
         </ol>
 
-        {/* Every step finished: a proper ending instead of five collapsed
-            green rows, pointing at the next job still waiting to be applied
+        {/* Applied: a proper ending instead of leaving them on the step
+            list, pointing at the next job still waiting to be applied
             for (or back to the list if there's none). */}
-        {allStepsDone && (
+        {appliedDone && (
           <section className="apply__all-done">
             <span className="apply__all-done-mark" aria-hidden="true">
               ✓
             </span>
             <div className="apply__all-done-text">
               <h2>You're all set for this one</h2>
-              <p>Every step is done. Good luck with the interview!</p>
+              <p>Good luck with the interview!</p>
             </div>
             {nextUnappliedUrlId ? (
               <Link to={`/jobs/${nextUnappliedUrlId}/apply`} className="process-step__next">
