@@ -344,6 +344,8 @@ export interface CrawlSource {
   last_crawled_at: string | null;
   last_job_count: number | null;
   last_error: string | null;
+  // Why the source is in its status (above all rejected/delete), set by an admin or agent.
+  notes: string | null;
   coverage_last_count: number | null;
   coverage_baseline: number | null;
   coverage_sample_count: number;

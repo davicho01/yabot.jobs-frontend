@@ -305,7 +305,9 @@ export function AdminDashboardPage() {
                     </td>
                     <td>{source.ats_type ?? "-"}</td>
                     <td>
-                      <span className={statusStampClass(source.status)}>{source.status}</span>
+                      <span className={statusStampClass(source.status)} title={source.notes ?? undefined}>
+                        {source.status}
+                      </span>
                     </td>
                     <td>{formatDate(source.last_crawled_at)}</td>
                     <td>

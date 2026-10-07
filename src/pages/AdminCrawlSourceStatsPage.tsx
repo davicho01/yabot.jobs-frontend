@@ -347,6 +347,11 @@ export function AdminCrawlSourceStatsPage() {
             {stats.source.last_error && (
               <p className="admin-source-header__error">Last crawl error: {stats.source.last_error}</p>
             )}
+            {stats.source.notes && (
+              <p className="admin-source-header__notes">
+                Notes ({stats.source.status}): {stats.source.notes}
+              </p>
+            )}
             {stats.source.coverage_flagged_at && (
               <p className="admin-source-header__warning">
                 Coverage dropped: last crawl found {stats.source.coverage_last_count ?? "?"} URL(s), well below the
