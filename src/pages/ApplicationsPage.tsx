@@ -8,11 +8,10 @@ import type { Application, ApplicationJobPosting, ApplicationStatus } from "../a
 import { StatusSelect } from "../components/StatusSelect";
 import { STATUSES, statusTone } from "../utils/applicationStatus";
 import { formatFollowUp } from "../utils/followUp";
+import { fitTier } from "../utils/fitScore";
 import "./ApplicationsPage.css";
 import { BOARD_PATH } from "../routes";
 import CompanyLogo from "../components/CompanyLogo";
-
-const QUALIFY_THRESHOLD = 70;
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof ApiError ? err.message : fallback;
@@ -721,9 +720,7 @@ export function ApplicationsPage() {
                 <DownloadMenu application={application} />
                 {application.best_score !== null ? (
                   <span
-                    className={`stamp application-row__score ${
-                      application.best_score >= QUALIFY_THRESHOLD ? "stamp--positive" : "stamp--negative"
-                    }`}
+                    className={`stamp application-row__score stamp--${fitTier(application.best_score)}`}
                   >
                     Score {application.best_score}
                   </span>
