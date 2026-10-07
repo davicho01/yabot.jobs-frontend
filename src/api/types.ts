@@ -25,6 +25,7 @@ export interface JobPosting {
   location: string | null;
   workplace_type: string;
   employment_type: string;
+  sector: string;
   salary_min: number | null;
   salary_max: number | null;
   salary_currency: string | null;
@@ -32,6 +33,9 @@ export interface JobPosting {
   extracted_fields: Record<string, unknown> | null;
   posted_at: string | null;
   scanned_at: string | null;
+  // Set once, the first time scanned_at itself is; never updated after
+  // that — unlike scanned_at, which every rescan moves forward.
+  first_scanned_at: string | null;
   extraction_status: string;
 }
 

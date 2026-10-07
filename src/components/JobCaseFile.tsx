@@ -8,7 +8,7 @@ import { jobsApi } from "../api/jobs";
 import type { Application, JobDetail, JobPosting, User } from "../api/types";
 import { highlightQuery } from "../utils/searchHighlight";
 import { FlagJobModal } from "./FlagJobModal";
-import { employmentLabel, workplaceLabel } from "../utils/jobTags";
+import { employmentLabel, sectorLabel, workplaceLabel } from "../utils/jobTags";
 import CompanyLogo from "./CompanyLogo";
 
 // A JobPosting row exists from the moment its URL is submitted (see
@@ -27,14 +27,52 @@ function formatSalary(job: JobDetail): string | null {
   return `${currency} ${(p.salary_min ?? p.salary_max)?.toLocaleString()}`;
 }
 
-function formatPostedAt(job: JobDetail): string | null {
+function postedDateLabel(job: JobDetail): string | null {
   const p = scannedPosting(job);
   if (!p?.posted_at) return null;
   // posted_at is a date-only string (YYYY-MM-DD) — parsing it as UTC and
   // formatting with the same zone keeps the displayed day from shifting
   // backward for anyone west of UTC.
   const date = new Date(`${p.posted_at}T00:00:00Z`);
-  return `Posted ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+}
+
+function formatPostedAt(job: JobDetail): string | null {
+  const label = postedDateLabel(job);
+  return label ? `Posted ${label}` : null;
+}
+
+// first_scanned_at is a real timestamp (not a date-only string like
+// posted_at), so this formats in the viewer's own local time zone — same as
+// formatApplicationDate below. Unlike scanned_at, it never moves once set,
+// so this date doesn't drift forward every time the posting is rescanned.
+function firstScannedDateLabel(job: JobDetail): string | null {
+  const p = scannedPosting(job);
+  if (!p?.first_scanned_at) return null;
+  const date = new Date(p.first_scanned_at);
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+// Mirrors the "Job at a glance" dl on the static /job/<id> SEO pages
+// (job_pages.py) — same fields, same order.
+function glanceItems(job: JobDetail, posting: JobPosting): { label: string; value: string }[] {
+  const items: { label: string; value: string }[] = [
+    { label: "Company", value: posting.company_name ?? job.url.domain },
+  ];
+  if (posting.location) items.push({ label: "Location", value: posting.location });
+  const pay = formatSalary(job);
+  if (pay) items.push({ label: "Pay", value: pay });
+  const workplace = workplaceLabel(posting.workplace_type);
+  if (workplace) items.push({ label: "Workplace", value: workplace });
+  const employment = employmentLabel(posting.employment_type);
+  if (employment) items.push({ label: "Employment", value: employment });
+  const sector = sectorLabel(posting.sector);
+  if (sector) items.push({ label: "Sector", value: sector });
+  const posted = postedDateLabel(job);
+  if (posted) items.push({ label: "Posted", value: posted });
+  const firstScanned = firstScannedDateLabel(job);
+  if (firstScanned) items.push({ label: "First scanned", value: firstScanned });
+  return items;
 }
 
 // created_at is a real timestamp (not a date-only string like posted_at), so
@@ -255,6 +293,18 @@ export function JobCaseFile({
             )}
             {formatSalary(job) && <span className="tag tag--accent">{formatSalary(job)}</span>}
           </div>
+
+          <section className="case-file__glance" aria-labelledby="case-file-glance-h">
+            <h2 id="case-file-glance-h">Job at a glance</h2>
+            <dl>
+              {glanceItems(job, posting).map((item) => (
+                <div key={item.label}>
+                  <dt>{item.label}</dt>
+                  <dd>{item.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
 
           <div className="case-file__description">
             {posting.description ? (

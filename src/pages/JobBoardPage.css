@@ -369,6 +369,38 @@
   margin-bottom: 1.5rem;
 }
 
+.case-file__glance {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.case-file__glance h2 {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  margin: 0 0 0.75rem;
+}
+
+.case-file__glance dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.75rem 1.5rem;
+  margin: 0;
+}
+
+.case-file__glance dt {
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.case-file__glance dd {
+  margin: 0.15rem 0 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
 .case-file__description {
   line-height: 1.65;
   color: var(--ink);
