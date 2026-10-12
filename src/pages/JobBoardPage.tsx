@@ -9,6 +9,7 @@ import { useConfirm } from "../components/ConfirmDialog";
 import { JobCaseFile } from "../components/JobCaseFile";
 import { highlightQuery } from "../utils/searchHighlight";
 import { employmentLabel, workplaceLabel } from "../utils/jobTags";
+import { jobAge, type JobAgeTone } from "../utils/jobPosting";
 import "./JobBoardPage.css";
 import CompanyLogo from "../components/CompanyLogo";
 
@@ -51,14 +52,23 @@ function formatSalaryShort(job: JobDetail): string | null {
   return format((p.salary_min || p.salary_max)!);
 }
 
-function formatPostedAt(job: JobDetail): string | null {
+// "Posted 1h ago" (green), "Posted 1d ago" (amber), "Posted 5d ago" (gray)
+// for a job under 7 days old — same age rule and colors as the job page's
+// "Found 20m ago!" badge (see jobAge) — and the date ("Posted Oct 1, 2026")
+// after that.
+function postedLabel(job: JobDetail): { text: string; tone: JobAgeTone | null } | null {
+  const age = jobAge(job);
+  if (age) return { text: `Posted ${age.ago}`, tone: age.tone };
   const p = scannedPosting(job);
   if (!p?.posted_at) return null;
   // posted_at is a date-only string (YYYY-MM-DD) — parsing it as UTC and
   // formatting with the same zone keeps the displayed day from shifting
   // backward for anyone west of UTC.
   const date = new Date(`${p.posted_at}T00:00:00Z`);
-  return `Posted ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`;
+  return {
+    text: `Posted ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`,
+    tone: null,
+  };
 }
 
 function JobCard({
@@ -97,7 +107,11 @@ function JobCard({
             )}
             {/* Same blue label as the job page's pay tag, shortened to fit a card. */}
             {formatSalaryShort(job) && <span className="tag tag--accent">{formatSalaryShort(job)}</span>}
-            {formatPostedAt(job) && <span className="job-card__posted">{formatPostedAt(job)}</span>}
+            {postedLabel(job) && (
+              <span className={`job-card__posted${postedLabel(job)!.tone ? ` job-card__posted--${postedLabel(job)!.tone}` : ""}`}>
+                {postedLabel(job)!.text}
+              </span>
+            )}
           </div>
         )}
       </div>

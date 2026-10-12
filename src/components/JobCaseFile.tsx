@@ -9,6 +9,7 @@ import type { Application, JobDetail, JobPosting, User } from "../api/types";
 import { highlightQuery } from "../utils/searchHighlight";
 import { FlagJobModal } from "./FlagJobModal";
 import { employmentLabel, sectorLabel, workplaceLabel } from "../utils/jobTags";
+import { jobAge, type JobAgeTone } from "../utils/jobPosting";
 import CompanyLogo from "./CompanyLogo";
 
 // A JobPosting row exists from the moment its URL is submitted (see
@@ -44,13 +45,28 @@ function formatPostedAt(job: JobDetail): string | null {
 
 // first_scanned_at is a real timestamp (not a date-only string like
 // posted_at), so this formats in the viewer's own local time zone — same as
-// formatApplicationDate below. Unlike scanned_at, it never moves once set,
-// so this date doesn't drift forward every time the posting is rescanned.
+// formatApplicationDate below — and includes the time of day, which
+// posted_at can't (sites publish a date only). Unlike scanned_at, it never
+// moves once set, so it doesn't drift forward every time the posting is
+// rescanned.
 function firstScannedDateLabel(job: JobDetail): string | null {
   const p = scannedPosting(job);
   if (!p?.first_scanned_at) return null;
   const date = new Date(p.first_scanned_at);
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+// The "Found 20m ago!" badge — see jobAge (utils/jobPosting) for the age rule
+// and colors, shared with the search cards' "Posted 1d ago".
+function foundBadge(job: JobDetail): { label: string; tone: JobAgeTone } | null {
+  const age = jobAge(job);
+  return age ? { label: `Found ${age.ago}!`, tone: age.tone } : null;
 }
 
 // Mirrors the "Job at a glance" dl on the static /job/<id> SEO pages
@@ -295,7 +311,14 @@ export function JobCaseFile({
           </div>
 
           <section className="case-file__glance" aria-labelledby="case-file-glance-h">
-            <h2 id="case-file-glance-h">Job at a glance</h2>
+            <div className="case-file__glance-head">
+              <h2 id="case-file-glance-h">Job at a glance</h2>
+              {foundBadge(job) && (
+                <strong className={`case-file__new case-file__new--${foundBadge(job)!.tone}`}>
+                  {foundBadge(job)!.label}
+                </strong>
+              )}
+            </div>
             <dl>
               {glanceItems(job, posting).map((item) => (
                 <div key={item.label}>
