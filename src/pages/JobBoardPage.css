@@ -433,6 +433,11 @@
   --found-color: var(--ink-soft);
 }
 
+/* "Closed Oct 12, 2026" — same rose as the "No longer listed" tag. */
+.case-file__new--closed {
+  --found-color: var(--rose);
+}
+
 .case-file__glance dl {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
