@@ -73,9 +73,9 @@
   position: relative;
   flex: 1 1 20rem;
   min-width: 0;
-  max-width: 41rem;
+  max-width: 46rem;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr) auto;
+  grid-template-columns: auto 1px minmax(0, 1fr) 1px minmax(0, 1fr) auto;
   align-items: center;
   padding: 0.2rem 0.2rem 0.2rem 1.1rem;
   border: 1px solid var(--line);
@@ -118,6 +118,36 @@
   width: 1px;
   height: 1.4rem;
   background: var(--line);
+}
+
+/* The sector dropdown as the pill's first segment: a borderless trigger like
+   the two fields beside it — the pill's own :focus-within glow is its focus
+   indicator, so it drops the bordered trigger's line and glow here. */
+.site-header__searchbar .site-header__filter-dropdown-trigger,
+.site-header__searchbar .site-header__filter-dropdown-trigger:hover,
+.site-header__searchbar .site-header__filter-dropdown-trigger[aria-expanded="true"],
+.site-header__searchbar .site-header__filter-dropdown-trigger:focus {
+  /* No left padding: the pill's own already puts it where the title used to start. */
+  padding: 0.55rem 0.75rem 0.55rem 0;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.92rem;
+  font-weight: 400;
+}
+
+.site-header__searchbar .site-header__filter-dropdown-trigger:hover {
+  color: var(--accent);
+}
+
+/* Wide enough that the two-word names don't wrap. */
+.site-header__searchbar .site-header__filter-dropdown .site-header__dropdown {
+  min-width: 12rem;
+}
+
+/* The title field now follows a divider, same as the location field does. */
+.site-header__search--title {
+  padding-left: 0.9rem;
 }
 
 .site-header__search-submit {
@@ -196,9 +226,17 @@
   cursor: pointer;
 }
 
+/* Same blue line as a hovered input, and its focus glow while the menu is
+   open — the global button:focus glow alone drops off once an option is
+   clicked, which read as a black line next to the inputs. */
 .site-header__filter-dropdown-trigger:hover {
   background: var(--paper);
-  border-color: var(--ink-soft);
+  border-color: var(--accent);
+}
+
+.site-header__filter-dropdown-trigger[aria-expanded="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .site-header__filter-dropdown .site-header__dropdown {
@@ -543,13 +581,22 @@
     display: none;
   }
 
+  /* Sector and title each get a row; location shares the last with Search. */
+  .site-header__searchbar > .site-header__filter-dropdown,
   .site-header__searchbar > .site-header__search {
     grid-column: 1 / -1;
     border-bottom: 1px solid var(--line);
   }
 
+  .site-header__search--title,
   .site-header__combobox .site-header__search {
     padding-left: 0;
+  }
+
+  /* The sector's whole row is its trigger, with the chevron at the far right. */
+  .site-header__searchbar .site-header__filter-dropdown-trigger {
+    width: 100%;
+    justify-content: space-between;
   }
 
   /* Signed in: Add Job moves up to the top row beside the avatar instead
@@ -593,6 +640,7 @@
     flex: 1 1 8rem;
     min-width: 0;
   }
+
 }
 
 .site-header__login {

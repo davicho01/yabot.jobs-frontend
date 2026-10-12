@@ -13,6 +13,7 @@ export interface JobFilters {
   company?: string;
   postedWithinDays?: number;
   workplaceType?: WorkplaceTypeFilter;
+  sector?: string;
   salaryMin?: number;
   salaryMax?: number;
   page?: number;
@@ -27,6 +28,7 @@ export const jobsApi = {
     company,
     postedWithinDays,
     workplaceType,
+    sector,
     salaryMin,
     salaryMax,
     page = 1,
@@ -39,6 +41,7 @@ export const jobsApi = {
       company,
       posted_within_days: postedWithinDays,
       workplace_type: workplaceType,
+      sector,
       salary_min: salaryMin,
       salary_max: salaryMax,
       page,

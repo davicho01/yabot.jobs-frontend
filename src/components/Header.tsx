@@ -9,6 +9,7 @@ import { describeSavedSearch, paramsToSavedSearchPayload, savedSearchesApi } fro
 import { ApiError } from "../api/client";
 import type { Metro } from "../api/types";
 import { BOARD_PATH } from "../routes";
+import { ALL_SECTORS, DEFAULT_SECTOR, SECTOR_OPTIONS, boardSector } from "../utils/jobTags";
 import "./Header.css";
 
 // The board's location when nothing else says otherwise — see the effect in
@@ -214,6 +215,9 @@ export function Header() {
   const companyFilter = onBoard ? (searchParams.get("company") ?? "") : "";
   const postedWithin = onBoard ? (searchParams.get("posted") ?? "") : "";
   const workplaceType = onBoard ? (searchParams.get("workplace") ?? "") : "";
+  // Not one of the panel filters below (so not counted or reset with them):
+  // it always has a value, the board's default when the URL doesn't say.
+  const sectorFilter = onBoard ? (boardSector(searchParams) ?? ALL_SECTORS) : DEFAULT_SECTOR;
   const salaryMinFilter = onBoard ? (searchParams.get("salaryMin") ?? "") : "";
   const salaryMaxFilter = onBoard ? (searchParams.get("salaryMax") ?? "") : "";
   const activeFilterCount = [
@@ -437,6 +441,15 @@ export function Header() {
     });
   }
 
+  function setSector(value: string) {
+    updateBoardParams((next) => {
+      // The default stays out of the URL, so a plain /jobs link means it.
+      if (value === DEFAULT_SECTOR) next.delete("sector");
+      else next.set("sector", value);
+      next.delete("page");
+    });
+  }
+
   function resetFilters() {
     if (companyDebounce.current) clearTimeout(companyDebounce.current);
     setCompanyInput("");
@@ -585,8 +598,16 @@ export function Header() {
           className={`site-header__center${mobileSearchOpen ? "" : " site-header__center--collapsed"}`}
         >
           <form className="site-header__searchbar" role="search" onSubmit={handleSearchSubmit}>
+            <FilterDropdown
+              options={SECTOR_OPTIONS}
+              value={sectorFilter}
+              onChange={setSector}
+              defaultLabel="All sectors"
+              ariaLabel="Sector"
+            />
+            <span className="site-header__searchbar-rule" aria-hidden="true" />
             <input
-              className="site-header__search"
+              className="site-header__search site-header__search--title"
               type="search"
               aria-label="Job title or keyword"
               placeholder="Search postings by title…"
@@ -703,7 +724,16 @@ export function Header() {
           className={`site-header__filter-toggle site-header__search-toggle${
             mobileSearchOpen ? " site-header__filter-toggle--active" : ""
           }`}
-          onClick={() => setMobileSearchOpenFor(mobileSearchOpen ? null : searchContext)}
+          onClick={() => {
+            // The filters and save-search panels are opened from buttons inside
+            // the search area, so hiding it closes them too rather than leaving
+            // them stranded with no visible way to close them.
+            if (mobileSearchOpen) {
+              setFiltersOpen(false);
+              setSaveSearchOpen(false);
+            }
+            setMobileSearchOpenFor(mobileSearchOpen ? null : searchContext);
+          }}
           aria-expanded={mobileSearchOpen}
           aria-label={mobileSearchOpen ? "Hide search" : "Search jobs"}
         >

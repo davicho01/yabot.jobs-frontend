@@ -8,7 +8,7 @@ import type { JobDetail, JobPosting } from "../api/types";
 import { useConfirm } from "../components/ConfirmDialog";
 import { JobCaseFile } from "../components/JobCaseFile";
 import { highlightQuery } from "../utils/searchHighlight";
-import { employmentLabel, workplaceLabel } from "../utils/jobTags";
+import { boardSector, employmentLabel, workplaceLabel } from "../utils/jobTags";
 import { jobAge, type JobAgeTone } from "../utils/jobPosting";
 import "./JobBoardPage.css";
 import CompanyLogo from "../components/CompanyLogo";
@@ -137,6 +137,7 @@ export function JobBoardPage() {
   const company = searchParams.get("company") ?? "";
   const postedWithinDays = Number(searchParams.get("posted")) || undefined;
   const workplaceType = (searchParams.get("workplace") as WorkplaceTypeFilter | null) ?? undefined;
+  const sector = boardSector(searchParams);
   const salaryMin = Number(searchParams.get("salaryMin")) || undefined;
   const salaryMax = Number(searchParams.get("salaryMax")) || undefined;
   const page = Number(searchParams.get("page")) || 1;
@@ -177,6 +178,7 @@ export function JobBoardPage() {
       company,
       postedWithinDays,
       workplaceType,
+      sector,
       salaryMin,
       salaryMax,
       page,
@@ -190,6 +192,7 @@ export function JobBoardPage() {
         company: company || undefined,
         postedWithinDays,
         workplaceType,
+        sector,
         salaryMin,
         salaryMax,
         page,

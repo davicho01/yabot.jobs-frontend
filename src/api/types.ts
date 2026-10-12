@@ -450,6 +450,8 @@ export interface SavedSearch {
   company: string | null;
   posted_within_days: number | null;
   workplace_type: string | null;
+  // Null = every sector (not the board's tech default) — see savedSearchToParams.
+  sector: string | null;
   salary_min: number | null;
   salary_max: number | null;
   created_at: string;
