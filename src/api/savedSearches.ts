@@ -1,6 +1,6 @@
 import { api } from "./client";
 import type { SavedSearch } from "./types";
-import { WORKPLACE_LABELS } from "../utils/jobTags";
+import { ALL_SECTORS, DEFAULT_SECTOR, WORKPLACE_LABELS, boardSector, sectorLabel } from "../utils/jobTags";
 
 // Every field always explicitly provided (never omitted) by the only
 // builder below, paramsToSavedSearchPayload — plain `| null`, not optional,
@@ -14,6 +14,7 @@ export interface SavedSearchCreatePayload {
   company: string | null;
   posted_within_days: number | null;
   workplace_type: string | null;
+  sector: string | null;
   salary_min: number | null;
   salary_max: number | null;
 }
@@ -37,6 +38,9 @@ export function paramsToSavedSearchPayload(params: URLSearchParams, name: string
     company: params.get("company") || null,
     posted_within_days: Number(params.get("posted")) || null,
     workplace_type: params.get("workplace") || null,
+    // What the board is actually showing — the tech default included, so a
+    // search saved from a plain /jobs keeps alerting on tech only.
+    sector: boardSector(params) ?? null,
     salary_min: params.has("salaryMin") ? Number(params.get("salaryMin")) : null,
     salary_max: params.has("salaryMax") ? Number(params.get("salaryMax")) : null,
   };
@@ -53,6 +57,9 @@ export function savedSearchToParams(search: SavedSearch): URLSearchParams {
   if (search.company) params.set("company", search.company);
   if (search.posted_within_days) params.set("posted", String(search.posted_within_days));
   if (search.workplace_type) params.set("workplace", search.workplace_type);
+  // Null is every sector, which the board only shows with ?sector=all.
+  if (search.sector === null) params.set("sector", ALL_SECTORS);
+  else if (search.sector !== DEFAULT_SECTOR) params.set("sector", search.sector);
   if (search.salary_min !== null) params.set("salaryMin", String(search.salary_min));
   if (search.salary_max !== null) params.set("salaryMax", String(search.salary_max));
   return params;
@@ -63,7 +70,7 @@ export function savedSearchToParams(search: SavedSearch): URLSearchParams {
 // an already-saved search and for a suggested name while saving one.
 type SavedSearchFilters = Pick<
   SavedSearch,
-  "q" | "location" | "metro" | "workplace_type" | "company" | "salary_min" | "salary_max" | "posted_within_days"
+  "q" | "location" | "metro" | "workplace_type" | "sector" | "company" | "salary_min" | "salary_max" | "posted_within_days"
 >;
 
 // A human-readable summary of what a saved search covers — used as the
@@ -79,6 +86,8 @@ export function describeSavedSearch(search: SavedSearchFilters): string {
   if (search.location) parts.push(search.location);
   else if (search.metro) parts.push(search.metro);
   if (search.workplace_type) parts.push(WORKPLACE_LABELS[search.workplace_type] ?? search.workplace_type);
+  const sector = sectorLabel(search.sector);
+  if (sector) parts.push(sector);
   if (search.company) parts.push(search.company);
   if (search.salary_min && search.salary_max) {
     parts.push(`$${search.salary_min.toLocaleString()}–$${search.salary_max.toLocaleString()}`);
