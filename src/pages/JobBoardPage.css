@@ -180,6 +180,18 @@
   align-self: center;
 }
 
+/* "Posted 1h ago" / "1d ago" / "5d ago" — same colors as the job page's
+   "Found 20m ago!" badge (jobAge). Gray and the plain date keep the default. */
+.job-card__posted--fresh {
+  color: var(--teal);
+  font-weight: 600;
+}
+
+.job-card__posted--recent {
+  color: var(--amber);
+  font-weight: 600;
+}
+
 .job-card--active {
   border-color: var(--accent-deep);
   box-shadow: var(--shadow-card);
@@ -381,6 +393,44 @@
   font-family: var(--font-display);
   font-size: 0.95rem;
   margin: 0 0 0.75rem;
+}
+
+/* Heading on the left, "Found 20m ago!" badge (JobCaseFile's foundBadge) in
+   the top-right corner — in the flow, so the fields always start below it. */
+.case-file__glance-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.case-file__glance-head h2 {
+  margin: 0;
+}
+
+/* "Found 20m ago!": green under 24h, amber from 24h to 48h, gray from 48h to
+   7 days (JobCaseFile's foundBadge). */
+.case-file__new {
+  --found-color: var(--teal);
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--found-color);
+  background: color-mix(in srgb, var(--found-color) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--found-color) 35%, transparent);
+  white-space: nowrap;
+}
+
+.case-file__new--recent {
+  --found-color: var(--amber);
+}
+
+.case-file__new--older {
+  --found-color: var(--ink-soft);
 }
 
 .case-file__glance dl {

@@ -17,6 +17,36 @@ export function formatSalary(job: JobDetail): string | null {
   return `${currency} ${(p.salary_min ?? p.salary_max)?.toLocaleString()}`;
 }
 
+export type JobAgeTone = "fresh" | "recent" | "older";
+
+// How old a job is, for the job page's "Found 20m ago!" badge and the search
+// cards' "Posted 1d ago": "just now", "20m ago", "2h ago" under 24h (fresh,
+// green), "1d ago" from 24h to 48h (recent, amber), "3d ago" from 48h to 7
+// days (older, gray), and null after that or once the job is closed.
+// Worked out when the page renders — it doesn't tick live.
+//
+// The age runs from whichever is older, the posted date or our first scan:
+// a job posted Jul 31 that we only found Oct 12 (a board we only just
+// started crawling) is old, however recently we found it. posted_at is a
+// date-only string (midnight UTC), so it only counts when it's an earlier
+// day than the first scan — on the same day the scan's own time is the more
+// precise one ("1h ago", not "19h ago" from midnight).
+export function jobAge(job: JobDetail): { ago: string; tone: JobAgeTone } | null {
+  const p = scannedPosting(job);
+  if (!p?.first_scanned_at || job.url.closed_at) return null;
+  const firstScanned = new Date(p.first_scanned_at).getTime();
+  const firstScannedDay = Date.parse(new Date(firstScanned).toISOString().slice(0, 10));
+  const posted = p.posted_at ? Date.parse(p.posted_at) : Number.NaN;
+  const since = !Number.isNaN(posted) && posted < firstScannedDay ? posted : firstScanned;
+  const minutes = Math.max(0, Math.floor((Date.now() - since) / 60_000));
+  const hours = Math.floor(minutes / 60);
+  if (hours >= 7 * 24) return null;
+  if (hours >= 24) return { ago: `${Math.floor(hours / 24)}d ago`, tone: hours >= 48 ? "older" : "recent" };
+  if (minutes < 1) return { ago: "just now", tone: "fresh" };
+  if (minutes < 60) return { ago: `${minutes}m ago`, tone: "fresh" };
+  return { ago: `${hours}h ago`, tone: "fresh" };
+}
+
 export function formatPostedAt(job: JobDetail): string | null {
   const p = scannedPosting(job);
   if (!p?.posted_at) return null;
