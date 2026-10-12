@@ -62,6 +62,15 @@ function firstScannedDateLabel(job: JobDetail): string | null {
   });
 }
 
+// "Closed Oct 12, 2026" in the same top-right corner (the "Found … ago" badge
+// never shows on a closed job): its board stopped listing it, or a scan found
+// it gone. closed_at is a real timestamp, shown in the viewer's time zone.
+function closedLabel(job: JobDetail): string | null {
+  if (!job.url.closed_at) return null;
+  const date = new Date(job.url.closed_at);
+  return `Closed ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+}
+
 // The "Found 20m ago!" badge — see jobAge (utils/jobPosting) for the age rule
 // and colors, shared with the search cards' "Posted 1d ago".
 function foundBadge(job: JobDetail): { label: string; tone: JobAgeTone } | null {
@@ -88,6 +97,19 @@ function glanceItems(job: JobDetail, posting: JobPosting): { label: string; valu
   if (posted) items.push({ label: "Posted", value: posted });
   const firstScanned = firstScannedDateLabel(job);
   if (firstScanned) items.push({ label: "First scanned", value: firstScanned });
+  // closed_at is a real timestamp (date and time, viewer's time zone), like
+  // first_scanned_at above. The static page has no equivalent: it's replaced
+  // with a "no longer available" page once a job closes.
+  if (job.url.closed_at) {
+    const closed = new Date(job.url.closed_at).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+    items.push({ label: "Closed", value: closed });
+  }
   return items;
 }
 
@@ -234,9 +256,18 @@ export function JobCaseFile({
             )}
           </div>
           {user && (
-            <button type="button" className="rescan-button" disabled={isRescanning} onClick={onRescan}>
-              {isRescanning ? "Rescanning…" : "Rescan ↻"}
-            </button>
+            <div className="case-file__header-actions">
+              {/* A failed scan still has its source page — let people open it
+                  themselves (job.url.url is only sent to signed-in users). */}
+              {job.url.url && (
+                <a href={job.url.url} target="_blank" rel="noopener noreferrer" className="rescan-button">
+                  View original posting ↗
+                </a>
+              )}
+              <button type="button" className="rescan-button" disabled={isRescanning} onClick={onRescan}>
+                {isRescanning ? "Rescanning…" : "Rescan ↻"}
+              </button>
+            </div>
           )}
         </div>
       )}
@@ -300,7 +331,6 @@ export function JobCaseFile({
           </div>
 
           <div className="case-file__tags">
-            {job.url.closed_at && <span className="tag tag--secondary">No longer listed</span>}
             {workplaceLabel(posting.workplace_type) && (
               <span className={`tag tag--workplace-${posting.workplace_type}`}>{workplaceLabel(posting.workplace_type)}</span>
             )}
@@ -313,6 +343,7 @@ export function JobCaseFile({
           <section className="case-file__glance" aria-labelledby="case-file-glance-h">
             <div className="case-file__glance-head">
               <h2 id="case-file-glance-h">Job at a glance</h2>
+              {closedLabel(job) && <strong className="case-file__new case-file__new--closed">{closedLabel(job)}</strong>}
               {foundBadge(job) && (
                 <strong className={`case-file__new case-file__new--${foundBadge(job)!.tone}`}>
                   {foundBadge(job)!.label}
