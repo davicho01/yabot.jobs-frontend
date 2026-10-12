@@ -128,9 +128,8 @@
    tab. Collapsed by default (per the "keep it concise" brief) behind its
    own toggle button. Styled like one of ApplyPage's process steps —
    a plain, un-boxed header row (title on the left, chevron on the far
-   right) rather than a bordered pill or a full-width card with nothing in
-   it; the card treatment only shows up on the body once it's expanded and
-   there's actual content to contain. */
+   right) rather than a bordered pill or a full-width card, and the body
+   stays un-boxed once expanded too (it just scrolls). */
 .job-dashboard__description-toggle {
   display: flex;
   width: 100%;
@@ -176,14 +175,16 @@
   color: var(--ink-soft);
 }
 
+/* Once expanded: no card, just a subtle line down the left side to show
+   where the section is (where the eye runs down the page), scrolling inside
+   the same 280px area as before so a long posting doesn't push everything
+   below it down. The right padding keeps the text clear of the scrollbar. */
 .job-dashboard__description-body {
   margin-top: 0.85rem;
   max-height: 280px;
   overflow-y: auto;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-field);
-  padding: 0.9rem 1.25rem;
+  border-left: 2px solid var(--line);
+  padding: 0.1rem 0.75rem 0.1rem 1rem;
 }
 
 .job-dashboard__evaluate-button {

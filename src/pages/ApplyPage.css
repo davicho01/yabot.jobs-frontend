@@ -584,6 +584,17 @@
   outline-offset: 2px;
 }
 
+/* Every collapsible header turns its title blue on hover, the same as the
+   Job description toggle (JobDashboardShell.css) — only the title, not a
+   step's secondary line. Only with a real pointer: on a phone a tap counts
+   as hover and the color would stick until the page scrolled. */
+@media (hover: hover) {
+  .apply-page .process-step__header:hover .process-step__title,
+  .apply-page .apply-page__notes-toggle:hover .apply-page__notes-title {
+    color: var(--accent);
+  }
+}
+
 .process-step__title {
   display: block;
   font-family: var(--font-display);
