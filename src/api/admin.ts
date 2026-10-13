@@ -41,7 +41,44 @@ export interface AdminCompany {
   posting_count: number;
 }
 
+// "linked": groups cross-source dedup already made (a canonical posting and
+// the duplicates pointing at it). "possible": unlinked open postings with the
+// same normalized company + title — candidates, often separate openings at
+// different sites.
+export type DuplicateKind = "linked" | "possible";
+
+export interface DuplicateMember {
+  url_id: string;
+  posting_id: string;
+  url: string;
+  domain: string;
+  title: string | null;
+  location: string | null;
+  is_primary: boolean;
+  closed: boolean;
+  last_scanned_at: string | null;
+}
+
+export interface DuplicateGroup {
+  company_name: string | null;
+  title: string | null;
+  members: DuplicateMember[];
+}
+
+export interface DuplicateGroupList {
+  items: DuplicateGroup[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
 export const adminApi = {
+  duplicates: (params: { kind: DuplicateKind; page?: number; pageSize?: number }) =>
+    api.get<DuplicateGroupList>("/admin/duplicates", {
+      kind: params.kind,
+      page: params.page ?? 1,
+      page_size: params.pageSize ?? 20,
+    }),
   feedback: (params: { status?: FeedbackStatus; kind?: FeedbackKind; page?: number; pageSize?: number }) =>
     api.get<AdminFeedbackList>("/admin/feedback", {
       status: params.status,

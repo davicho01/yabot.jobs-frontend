@@ -16,6 +16,7 @@ import { SavedSearchesPage } from "./pages/SavedSearchesPage";
 import { AdminDashboardPage } from "./pages/AdminDashboardPage";
 import { AdminCrawlSourceStatsPage } from "./pages/AdminCrawlSourceStatsPage";
 import { AdminJobsPage } from "./pages/AdminJobsPage";
+import { AdminDuplicatesPage } from "./pages/AdminDuplicatesPage";
 import { AdminFeedbackPage } from "./pages/AdminFeedbackPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
@@ -169,6 +170,14 @@ export default function App() {
           element={
             <AdminRoute>
               <AdminJobsPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/duplicates"
+          element={
+            <AdminRoute>
+              <AdminDuplicatesPage />
             </AdminRoute>
           }
         />

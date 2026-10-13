@@ -184,6 +184,10 @@ export function AdminDashboardPage() {
               </span>
               <span className="admin-totals__label">Jobs flagged{dashboard.totals.jobs_flagged > 0 ? " →" : ""}</span>
             </Link>
+            <Link to="/admin/duplicates" className="admin-totals__tile admin-totals__tile--button">
+              <span className="admin-totals__value">⧉</span>
+              <span className="admin-totals__label">Duplicates →</span>
+            </Link>
             <div className="admin-totals__tile">
               <span className="admin-totals__value">{dashboard.totals.crawl_sources.toLocaleString()}</span>
               <span className="admin-totals__label">Crawl sources</span>
