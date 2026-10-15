@@ -523,6 +523,130 @@
   color: #fff;
 }
 
+/* An auto-score run is working on this step: the number stays put while an
+   accent arc spins around it, drawn over the marker's own border. */
+.process-step .process-step__marker--running {
+  position: relative;
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--accent);
+}
+
+.process-step__marker--running::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--accent);
+  animation: apply-spin 0.9s linear infinite;
+}
+
+/* A running step's parts, in place of its status line: one bar per part
+   with a label under it. Done parts are filled green; the current one has
+   an accent fill sliding across it (no percentage to show); the rest are
+   empty. */
+.process-step__progress {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+/* The title column takes the header's full width (up to the chevron), so a
+   running step's progress bar spans it. */
+.process-step__heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.process-step__progress-part {
+  flex: 1;
+  min-width: 0;
+}
+
+.process-step__progress-bar {
+  position: relative;
+  display: block;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--line);
+  overflow: hidden;
+}
+
+.process-step__progress-part--done .process-step__progress-bar {
+  background: var(--teal);
+}
+
+.process-step__progress-part--current .process-step__progress-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  border-radius: inherit;
+  background: var(--accent);
+  animation: process-step-progress-slide 1.3s ease-in-out infinite;
+}
+
+@keyframes process-step-progress-slide {
+  from {
+    left: -40%;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+.process-step__progress-label {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.process-step__progress-part--done .process-step__progress-label {
+  color: var(--teal);
+}
+
+.process-step__progress-part--current .process-step__progress-label {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.apply__spin {
+  display: inline-block;
+  margin-left: 0.4rem;
+  animation: apply-spin 0.9s linear infinite;
+}
+
+@keyframes apply-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .process-step__marker--running::before,
+  .process-step__progress-part--current .process-step__progress-bar::after,
+  .apply__spin {
+    animation-duration: 3s;
+  }
+}
+
+.apply__auto-score-outcome {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.apply__auto-score-outcome--ready {
+  color: var(--teal);
+  font-weight: 600;
+}
+
 .process-step__line {
   width: 2px;
   flex: 1;

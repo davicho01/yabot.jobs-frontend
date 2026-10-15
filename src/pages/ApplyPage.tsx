@@ -11,6 +11,7 @@ import { ApiError } from "../api/client";
 import type {
   Application,
   ApplicationStatus,
+  AutoScoreRun,
   CoverLetter,
   InterviewPrep,
   ResumeScore,
@@ -28,6 +29,7 @@ import { PrerequisiteNotice } from "../components/PrerequisiteNotice";
 import { FreeEvaluationNote } from "../components/FreeEvaluationNote";
 import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY } from "../api/onboarding";
 import { fitLabel, fitTier } from "../utils/fitScore";
+import { AUTO_SCORE_POLL_MS, isAutoScoreActive, previewAutoScoreStatus } from "../utils/autoScore";
 import { formatFollowUp } from "../utils/followUp";
 import { prerequisiteMessage, genericErrorMessage } from "../utils/apiErrors";
 import { scannedPosting, formatSalary, formatPostedAt } from "../utils/jobPosting";
@@ -263,11 +265,15 @@ function EvaluateButton({
 // collapsible body holding that step's actual content. Steps aren't locked
 // to being done in order; any of them can be opened at any time so someone
 // resuming a saved application can jump straight to whichever one they need.
+type StepProgressPart = { label: string; state: "done" | "current" | "todo" };
+
 function ProcessStep({
   index,
   title,
   status,
   done,
+  running = false,
+  progress,
   isOpen,
   onToggle,
   footer,
@@ -277,6 +283,13 @@ function ProcessStep({
   title: string;
   status: ReactNode;
   done: boolean;
+  // An auto-score run is working on this step — the marker spins.
+  running?: boolean;
+  // While running: the step's parts (step 2 has two — tailor, then score
+  // the tailored version) as a bar under the title, in place of the status
+  // line. The part in progress has a sliding fill, since there's no
+  // percentage to show.
+  progress?: StepProgressPart[];
   isOpen: boolean;
   onToggle: () => void;
   // Rendered at the bottom of the open step — see StepNextButton.
@@ -287,7 +300,9 @@ function ProcessStep({
   return (
     <li className={`process-step${done ? " process-step--done" : ""}${isOpen ? " process-step--active" : ""}`}>
       <div className="process-step__rail" aria-hidden="true">
-        <span className="process-step__marker">{done ? "✓" : index}</span>
+        <span className={`process-step__marker${running ? " process-step__marker--running" : ""}`}>
+          {running ? index : done ? "✓" : index}
+        </span>
         <span className="process-step__line" />
       </div>
       <div className="process-step__content">
@@ -301,7 +316,21 @@ function ProcessStep({
         >
           <span className="process-step__heading">
             <span className="process-step__title">{title}</span>
-            <span className={`process-step__status${done ? " process-step__status--done" : ""}`}>{status}</span>
+            {running && progress ? (
+              <span className="process-step__progress">
+                {progress.map((part) => (
+                  <span key={part.label} className={`process-step__progress-part process-step__progress-part--${part.state}`}>
+                    <span className="process-step__progress-bar" />
+                    <span className="process-step__progress-label">
+                      {part.state === "done" ? "✓ " : ""}
+                      {part.label}
+                    </span>
+                  </span>
+                ))}
+              </span>
+            ) : (
+              <span className={`process-step__status${done ? " process-step__status--done" : ""}`}>{status}</span>
+            )}
           </span>
           <span className="process-step__chevron" aria-hidden="true">
             {isOpen ? "▲" : "▼"}
@@ -339,6 +368,23 @@ const STEP_SHORT_TITLES: Record<number, string> = {
   4: "Apply",
   5: "Interview prep",
 };
+
+// One line under the toolbar once a run has finished — why it stopped where
+// it did, or that the job is ready to apply.
+function autoScoreOutcome(run: AutoScoreRun): { text: string; ready: boolean } | null {
+  switch (run.status) {
+    case "ready":
+      return { text: `Ready to apply · best score ${run.best_score}`, ready: true };
+    case "not_ready":
+      return { text: `Score: best ${run.best_score} — below 85, not marked ready`, ready: false };
+    case "below_threshold":
+      return { text: `Score: ${run.resume_score} — below 75, so it wasn't tailored`, ready: false };
+    case "failed":
+      return { text: `Score failed: ${run.error ?? "unknown error"}`, ready: false };
+    default:
+      return null;
+  }
+}
 
 function processStepHeaderId(index: number): string {
   return `process-step-header-${index}`;
@@ -651,6 +697,44 @@ function ApplyPageContent({
   const displayedTailoredScore =
     displayedTailoredScoreRaw?.tailored_resume_id === displayedTailored?.id ? displayedTailoredScoreRaw : undefined;
 
+  // Auto score: a backend run (score → tailor → score tailored) that keeps
+  // going if the candidate leaves — polled while in progress, so a refresh
+  // or a return visit picks the live state back up.
+  const autoScoreQuery = useQuery<AutoScoreRun, ApiError>({
+    queryKey: ["auto-score", jobPostingId],
+    queryFn: () => resumesApi.getAutoScore(jobPostingId!),
+    enabled: !!jobPostingId && !!user,
+    retry: false,
+    refetchInterval: (query) => (isAutoScoreActive(query.state.data?.status) ? AUTO_SCORE_POLL_MS : false),
+  });
+  const autoScoreMutation = useMutation<AutoScoreRun, ApiError>({
+    mutationFn: () => resumesApi.startAutoScore(jobPostingId!, resumeIdParam),
+    onSuccess: (run) => queryClient.setQueryData(["auto-score", jobPostingId], run),
+  });
+  const autoScoreRun = autoScoreQuery.data;
+  const autoScoreStatus = previewAutoScoreStatus() ?? autoScoreRun?.status;
+  const autoScoreActive = autoScoreMutation.isPending || isAutoScoreActive(autoScoreStatus);
+  // Each stage the run finishes writes a score/tailored resume — reload the
+  // steps' data so they fill in (dropping any older result this page made
+  // itself, which would otherwise win). Which step is open is left to the
+  // user — the run's progress shows on the step markers, not by opening
+  // sections.
+  const lastAutoScoreStatus = useRef(autoScoreStatus);
+  useEffect(() => {
+    const previous = lastAutoScoreStatus.current;
+    lastAutoScoreStatus.current = autoScoreStatus;
+    if (previous === undefined || previous === autoScoreStatus) return;
+    setFreshScore(null);
+    setFreshTailoredScore(null);
+    tailorMutation.reset();
+    queryClient.invalidateQueries({ queryKey: ["score", jobPostingId] });
+    queryClient.invalidateQueries({ queryKey: ["tailored", jobPostingId] });
+    queryClient.invalidateQueries({ queryKey: ["tailored-score"] });
+    queryClient.invalidateQueries({ queryKey: ["applications"] });
+    refreshAiAccess();
+    // oxlint-disable-next-line react/exhaustive-deps -- only a status change should trigger this.
+  }, [autoScoreStatus]);
+
   const coverLetterQuery = useQuery<CoverLetter, ApiError>({
     queryKey: ["cover-letter", jobPostingId, resumeIdParam],
     queryFn: () => resumesApi.getCoverLetter(jobPostingId!, resumeIdParam),
@@ -939,16 +1023,41 @@ function ApplyPageContent({
             View job ↑
           </Link>
           {navGroup}
-          {/* Same as step 4's: filled until applied, then secondary blue. */}
-          <a
-            className={`apply__toolbar-apply ${step4Done ? "rescan-button" : "job-dashboard__view-button apply__apply-button"}`}
-            href={job.url.url ?? undefined}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
+            className="apply__toolbar-apply job-dashboard__view-button apply__apply-button"
+            onClick={() => {
+              // Collapse every step so the run's progress reads from the
+              // step markers and bars; the user reopens whichever they want.
+              hasAutoSelectedStep.current = true;
+              setActiveStep(null);
+              autoScoreMutation.mutate();
+            }}
+            disabled={!user || !jobPostingId || autoScoreActive}
           >
-            Apply →
-          </a>
+            {autoScoreActive ? (
+              <>
+                Scoring <span className="apply__spin" aria-hidden="true">↻</span>
+              </>
+            ) : (
+              "Score"
+            )}
+          </button>
         </div>
+        {autoScoreMutation.error ? (
+          <p className="apply__auto-score-outcome">Score failed: {autoScoreMutation.error.message}</p>
+        ) : (
+          autoScoreRun &&
+          autoScoreOutcome(autoScoreRun) && (
+            <p
+              className={`apply__auto-score-outcome${
+                autoScoreOutcome(autoScoreRun)!.ready ? " apply__auto-score-outcome--ready" : ""
+              }`}
+            >
+              {autoScoreOutcome(autoScoreRun)!.text}
+            </p>
+          )
+        )}
 
         {/* Rescan floats top-right (rendered first so it can), letting the
             title wrap around it and everything below take the full width. */}
@@ -1167,6 +1276,8 @@ function ApplyPageContent({
             title={STEP_TITLES[1]}
             status={step1Status}
             done={step1Done}
+            running={autoScoreMutation.isPending || autoScoreStatus === "queued" || autoScoreStatus === "scoring"}
+            progress={[{ label: "Scoring your resume", state: "current" }]}
             isOpen={activeStep === 1}
             onToggle={() => toggleStep(1)}
             // No footer: Next/Skip sits in the step's own action row instead
@@ -1248,6 +1359,14 @@ function ApplyPageContent({
             title={STEP_TITLES[2]}
             status={step2Status}
             done={step2Done}
+            running={autoScoreStatus === "tailoring" || autoScoreStatus === "scoring_tailored"}
+            progress={[
+              { label: "Tailoring your resume", state: autoScoreStatus === "tailoring" ? "current" : "done" },
+              {
+                label: "Scoring the tailored resume",
+                state: autoScoreStatus === "scoring_tailored" ? "current" : "todo",
+              },
+            ]}
             isOpen={activeStep === 2}
             onToggle={() => toggleStep(2)}
             // No footer: Next/Skip sits in the section's own action row

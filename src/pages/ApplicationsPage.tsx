@@ -4,11 +4,18 @@ import { Link, useSearchParams } from "react-router-dom";
 import { applicationsApi } from "../api/applications";
 import { resumesApi } from "../api/resumes";
 import { ApiError } from "../api/client";
-import type { Application, ApplicationJobPosting, ApplicationStatus } from "../api/types";
+import type {
+  Application,
+  ApplicationJobPosting,
+  ApplicationStatus,
+  AutoScoreRun,
+  AutoScoreStatus,
+} from "../api/types";
 import { StatusSelect } from "../components/StatusSelect";
 import { STATUSES, statusTone } from "../utils/applicationStatus";
 import { formatFollowUp } from "../utils/followUp";
 import { fitTier } from "../utils/fitScore";
+import { AUTO_SCORE_POLL_MS, isAutoScoreActive, previewAutoScoreStatus } from "../utils/autoScore";
 import "./ApplicationsPage.css";
 import { BOARD_PATH } from "../routes";
 import CompanyLogo from "../components/CompanyLogo";
@@ -223,30 +230,118 @@ function ApplicationStatusSelect({ application }: { application: Application }) 
   );
 }
 
-function EvaluateButton({ jobPostingId }: { jobPostingId: string }) {
+// Starts the same background auto score as the apply page's Auto score
+// button (score → tailor if ≥ 75 → score tailored; ready at ≥ 85), with the
+// application's chosen resume. Shares the apply page's ["auto-score", id]
+// query, so a run started in either place shows as running in both.
+// This job's latest auto score run (null if it never had one), polled while
+// it's in progress. Read by both the card's Score button and its progress
+// bar — same query key, so one request serves both.
+function useAutoScoreRun(jobPostingId: string) {
+  return useQuery<AutoScoreRun | null>({
+    queryKey: ["auto-score", jobPostingId],
+    queryFn: async () => {
+      try {
+        return await resumesApi.getAutoScore(jobPostingId);
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) return null;
+        throw err;
+      }
+    },
+    retry: false,
+    refetchInterval: (query) => (isAutoScoreActive(query.state.data?.status) ? AUTO_SCORE_POLL_MS : false),
+  });
+}
+
+const PROGRESS_STEPS = ["Score", "Tailor", "Score tailored"];
+
+// Which of PROGRESS_STEPS a run is on.
+const PROGRESS_STEP_INDEX: Partial<Record<AutoScoreStatus, number>> = {
+  queued: 0,
+  scoring: 0,
+  tailoring: 1,
+  scoring_tailored: 2,
+};
+
+// Three segments along the card's top edge while its auto score runs: done
+// ones green, the current one blue and pulsing, the rest grey. Gone once
+// the run ends — the corner score and green Apply show the result.
+function AutoScoreProgress({ jobPostingId }: { jobPostingId: string }) {
+  const runStatus = useAutoScoreRun(jobPostingId).data?.status;
+  const status = previewAutoScoreStatus() ?? runStatus;
+  const current = status === undefined ? undefined : PROGRESS_STEP_INDEX[status];
+  if (current === undefined) return null;
+  return (
+    <ol className="application-row__progress" aria-label={`Auto score: ${PROGRESS_STEPS[current]}`}>
+      {PROGRESS_STEPS.map((label, index) => (
+        <li
+          key={label}
+          className={`application-row__progress-step${
+            index < current
+              ? " application-row__progress-step--done"
+              : index === current
+                ? " application-row__progress-step--current"
+                : ""
+          }`}
+        >
+          <span className="application-row__progress-label">
+            {index < current ? "✓ " : ""}
+            {label}
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function EvaluateButton({ application }: { application: Application }) {
   const queryClient = useQueryClient();
+  const jobPostingId = application.job_posting.id;
   const [error, setError] = useState<string | null>(null);
 
+  const runQuery = useAutoScoreRun(jobPostingId);
+  const status = previewAutoScoreStatus() ?? runQuery.data?.status;
+
   const mutation = useMutation({
-    mutationFn: () => resumesApi.generateScore(jobPostingId),
-    onSuccess: () => {
+    mutationFn: () => resumesApi.startAutoScore(jobPostingId, application.selected_resume_id ?? undefined),
+    onSuccess: (run) => {
       setError(null);
-      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      queryClient.setQueryData(["auto-score", jobPostingId], run);
     },
-    onError: (err) => setError(errorMessage(err, "Couldn't score this job.")),
+    onError: (err) => setError(errorMessage(err, "Couldn't start scoring this job.")),
   });
+
+  // When a run finishes, reload the list so its score (and green Apply, if
+  // it came out ready) shows.
+  const lastStatus = useRef(status);
+  useEffect(() => {
+    const previous = lastStatus.current;
+    lastStatus.current = status;
+    if (isAutoScoreActive(previous) && !isAutoScoreActive(status)) {
+      if (status === "failed" && runQuery.data?.error) setError(runQuery.data.error);
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+    }
+  }, [status, runQuery.data?.error, queryClient]);
+
+  const running = mutation.isPending || isAutoScoreActive(status);
 
   return (
     <div className="application-row__score">
-      <button
-        type="button"
-        className="application-row__action"
-        disabled={mutation.isPending}
-        onClick={() => mutation.mutate()}
-      >
-        {mutation.isPending ? "Scoring…" : "Score"}
+      <button type="button" className="application-row__action" disabled={running} onClick={() => mutation.mutate()}>
+        {running ? (
+          <>
+            Scoring
+            <span className="application-row__spin" aria-hidden="true">
+              ↻
+            </span>
+          </>
+        ) : application.best_score !== null ? (
+          "Re-score"
+        ) : (
+          "Score"
+        )}
       </button>
-      {error && <span className="application-row__details-error">{error}</span>}
+      {error && <span className="application-row__details-error application-row__score-error">{error}</span>}
     </div>
   );
 }
@@ -294,9 +389,14 @@ function DownloadMenu({ application }: { application: Application }) {
 
   return (
     <div className="action-dropdown application-row__download" ref={containerRef}>
-      <button type="button" className="application-row__action" aria-label="Download" onClick={() => setOpen((o) => !o)}>
-        {/* The word is dropped on phones, leaving the arrow, so a row's four controls fit on one line. */}
-        <span className="application-row__action-label">Download </span>↓
+      <button
+        type="button"
+        className="application-row__action application-row__more"
+        aria-label="Download"
+        title="Download"
+        onClick={() => setOpen((o) => !o)}
+      >
+        ⋯
       </button>
       {open && (
         <div className="action-dropdown-menu">
@@ -661,8 +761,17 @@ export function ApplicationsPage() {
           {applications?.map((application) => (
             <li
               key={application.id}
-              className={`application-row${application.job_posting.company_name ? " application-row--with-employer" : ""}`}
+              className={`application-row${application.job_posting.company_name ? " application-row--with-employer" : ""}${
+                application.best_score !== null ? " application-row--scored" : ""
+              }`}
             >
+              <AutoScoreProgress jobPostingId={application.job_posting.id} />
+              {application.best_score !== null && (
+                <span className={`stamp application-row__score stamp--${fitTier(application.best_score)}`}>
+                  <span className="application-row__score-label">Score</span>
+                  <span className="application-row__score-value">{application.best_score}</span>
+                </span>
+              )}
               <input
                 type="checkbox"
                 className="application-row__select"
@@ -689,10 +798,8 @@ export function ApplicationsPage() {
                   {application.is_archived && <span className="application-row__archived-badge">Archived</span>}
                 </span>
                 <div className="application-row__meta">
-                  {formatSalary(application.job_posting) ? (
+                  {formatSalary(application.job_posting) && (
                     <span className="tag tag--accent application-row__pay">{formatSalary(application.job_posting)}</span>
-                  ) : (
-                    <span className="application-row__details-hint">Pay not listed</span>
                   )}
                   {application.job_posting.posted_at && (
                     <span className="application-row__added">Posted {formatPostedDate(application.job_posting.posted_at)}</span>
@@ -703,11 +810,7 @@ export function ApplicationsPage() {
                   {application.follow_up_at && (
                     <span
                       className={`application-row__follow-up${
-                        formatFollowUp(application.follow_up_at).overdue
-                          ? " application-row__follow-up--due"
-                          : formatFollowUp(application.follow_up_at).dueSoon
-                            ? " application-row__follow-up--soon"
-                            : ""
+                        formatFollowUp(application.follow_up_at).overdue ? " application-row__follow-up--due" : ""
                       }`}
                     >
                       Follow up {formatFollowUp(application.follow_up_at).text}
@@ -716,25 +819,19 @@ export function ApplicationsPage() {
                 </div>
               </div>
               <div className="application-row__controls">
+                <EvaluateButton application={application} />
                 <ApplicationStatusSelect application={application} />
-                <DownloadMenu application={application} />
-                {application.best_score !== null ? (
-                  <span
-                    className={`stamp application-row__score stamp--${fitTier(application.best_score)}`}
-                  >
-                    Score {application.best_score}
-                  </span>
-                ) : (
-                  <EvaluateButton jobPostingId={application.job_posting.id} />
-                )}
                 <a
                   href={application.job_posting.apply_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="application-row__apply-button"
+                  className={`application-row__apply-button${
+                    application.ready_to_apply_at ? " application-row__apply-button--ready" : ""
+                  }`}
                 >
                   Apply →
                 </a>
+                <DownloadMenu application={application} />
               </div>
             </li>
           ))}
