@@ -21,6 +21,7 @@ import type {
 } from "../api/types";
 import { useConfirm } from "../components/ConfirmDialog";
 import { ResumeSelect } from "../components/ResumeSelect";
+import { ApplyButton } from "../components/ApplyButton";
 import { StatusSelect } from "../components/StatusSelect";
 import { NotesEditor } from "../components/NotesEditor";
 import { TailoredDownloadMenu } from "../components/TailoredDownloadMenu";
@@ -29,7 +30,12 @@ import { PrerequisiteNotice } from "../components/PrerequisiteNotice";
 import { FreeEvaluationNote } from "../components/FreeEvaluationNote";
 import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY } from "../api/onboarding";
 import { fitLabel, fitTier } from "../utils/fitScore";
-import { AUTO_SCORE_POLL_MS, isAutoScoreActive, previewAutoScoreStatus } from "../utils/autoScore";
+import {
+  AUTO_SCORE_POLL_MS,
+  isAutoScoreActive,
+  previewAutoScoreStatus,
+  useShownAutoScoreStatus,
+} from "../utils/autoScore";
 import { formatFollowUp } from "../utils/followUp";
 import { prerequisiteMessage, genericErrorMessage } from "../utils/apiErrors";
 import { scannedPosting, formatSalary, formatPostedAt } from "../utils/jobPosting";
@@ -712,7 +718,11 @@ function ApplyPageContent({
     onSuccess: (run) => queryClient.setQueryData(["auto-score", jobPostingId], run),
   });
   const autoScoreRun = autoScoreQuery.data;
-  const autoScoreStatus = previewAutoScoreStatus() ?? autoScoreRun?.status;
+  // Stepped so each step's marker/bar shows for at least a second (see
+  // useShownAutoScoreStatus); everything on the page follows this, so the
+  // steps fill in and the outcome line appears in step with the bars.
+  const shownAutoScoreStatus = useShownAutoScoreStatus(autoScoreRun?.status);
+  const autoScoreStatus = previewAutoScoreStatus() ?? shownAutoScoreStatus;
   const autoScoreActive = autoScoreMutation.isPending || isAutoScoreActive(autoScoreStatus);
   // Each stage the run finishes writes a score/tailored resume — reload the
   // steps' data so they fill in (dropping any older result this page made
@@ -1048,6 +1058,7 @@ function ApplyPageContent({
           <p className="apply__auto-score-outcome">Score failed: {autoScoreMutation.error.message}</p>
         ) : (
           autoScoreRun &&
+          !autoScoreActive &&
           autoScoreOutcome(autoScoreRun) && (
             <p
               className={`apply__auto-score-outcome${
@@ -1582,8 +1593,8 @@ function ApplyPageContent({
             <section className="dossier-action apply__flush">
               {!step4Done && (
                 <p className="dossier-action__lede">
-                  Submit your application on the employer's site, then mark it applied here to keep your status in
-                  sync.
+                  Apply → takes you to the employer's site, marks this applied and downloads your tailored resume
+                  to attach.
                 </p>
               )}
               {/* Once done, the natural next thing instead of the
@@ -1601,25 +1612,22 @@ function ApplyPageContent({
                 {/* Filled while applying is the step's main action; once it's
                     marked applied it drops to the secondary blue-outlined
                     style (.rescan-button, same as View job). */}
-                <a
+                {/* Same window and actions as /applications' Apply → (marks
+                    it applied, downloads the tailored .docx) — the tailored
+                    resume being the one this page shows for the picked
+                    resume. */}
+                <ApplyButton
                   className={step4Done ? "rescan-button" : "job-dashboard__view-button apply__apply-button"}
-                  href={job.url.url ?? undefined}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Apply →
-                </a>
-                {/* Once applied, the step header's status line already says so. */}
-                {currentApplication && !step4Done && (
-                  <button
-                    type="button"
-                    className="rescan-button"
-                    disabled={updateApplicationMutation.isPending}
-                    onClick={() => updateApplicationMutation.mutate({ status: "applied" })}
-                  >
-                    Mark as applied
-                  </button>
-                )}
+                  target={{
+                    href: job.url.url ?? "",
+                    title: posting.title,
+                    company: posting.company_name,
+                    application: currentApplication
+                      ? { id: currentApplication.id, status: currentApplication.status }
+                      : null,
+                    tailored: displayedTailored ?? currentApplication?.latest_tailored_resume ?? null,
+                  }}
+                />
               </div>
             </section>
           </ProcessStep>

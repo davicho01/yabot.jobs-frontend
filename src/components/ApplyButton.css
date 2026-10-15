@@ -1,0 +1,147 @@
+/* The window Apply → opens (ConfirmDialog's look): what the click is doing
+   — marking applied, downloading the tailored resume — then the button on
+   to the company site. */
+.apply-dialog {
+  max-width: 720px;
+}
+
+.apply-dialog__steps {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.apply-dialog__step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--ink);
+}
+
+.apply-dialog__step-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Under each action: fills toward 90% over the (at least) one second it
+   shows as in progress, then completes green — or red if it failed. */
+.apply-dialog__bar {
+  display: block;
+  height: 8px;
+  margin-left: 1.8rem;
+  border-radius: var(--radius-pill);
+  background: var(--line);
+  overflow: hidden;
+}
+
+.apply-dialog__bar-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 0.25s ease-out, background-color 0.25s ease-out;
+}
+
+/* A keyframe rather than a transition: the bar is born pending, and a
+   transition wouldn't run on the first render. */
+.apply-dialog__step--pending .apply-dialog__bar-fill {
+  width: 90%;
+  animation: apply-dialog-fill 1s ease-out;
+}
+
+@keyframes apply-dialog-fill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 90%;
+  }
+}
+
+.apply-dialog__step--done .apply-dialog__bar-fill {
+  width: 100%;
+  background: var(--teal);
+}
+
+.apply-dialog__step--error .apply-dialog__bar-fill {
+  width: 100%;
+  background: var(--rose);
+}
+
+.apply-dialog__icon {
+  flex-shrink: 0;
+  width: 1.3rem;
+  height: 1.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--surface);
+  color: var(--ink-soft);
+}
+
+.apply-dialog__step--done .apply-dialog__icon {
+  background: var(--teal);
+  color: #fff;
+}
+
+.apply-dialog__step--pending .apply-dialog__icon {
+  color: var(--accent);
+  animation: apply-dialog-spin 0.9s linear infinite;
+}
+
+@keyframes apply-dialog-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.apply-dialog__step--error {
+  color: var(--rose);
+}
+
+.apply-dialog__step--error .apply-dialog__icon {
+  background: var(--rose);
+  color: #fff;
+}
+
+.apply-dialog__step--none {
+  color: var(--ink-soft);
+}
+
+.apply-dialog__skip {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 1.1rem;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.apply-dialog__continue {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.apply-dialog__continue:hover {
+  background: var(--accent-deep);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apply-dialog__step--pending .apply-dialog__icon {
+    animation: none;
+  }
+}

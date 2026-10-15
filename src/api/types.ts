@@ -156,6 +156,9 @@ export interface Application {
   best_score: number | null;
   latest_tailored_resume: ApplicationDocument | null;
   latest_cover_letter: ApplicationDocument | null;
+  // This job's newest auto-score run (null if none) — sent with the list so
+  // its cards don't each fetch it. Only GET /applications fills it.
+  auto_score?: AutoScoreRun | null;
 }
 
 // Background score → tailor → score-tailored run (backend:

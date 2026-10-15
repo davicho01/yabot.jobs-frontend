@@ -15,10 +15,16 @@ import { StatusSelect } from "../components/StatusSelect";
 import { STATUSES, statusTone } from "../utils/applicationStatus";
 import { formatFollowUp } from "../utils/followUp";
 import { fitTier } from "../utils/fitScore";
-import { AUTO_SCORE_POLL_MS, isAutoScoreActive, previewAutoScoreStatus } from "../utils/autoScore";
+import {
+  AUTO_SCORE_POLL_MS,
+  isAutoScoreActive,
+  previewAutoScoreStatus,
+  useShownAutoScoreStatus,
+} from "../utils/autoScore";
 import "./ApplicationsPage.css";
 import { BOARD_PATH } from "../routes";
 import CompanyLogo from "../components/CompanyLogo";
+import { ApplyButton } from "../components/ApplyButton";
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof ApiError ? err.message : fallback;
@@ -230,16 +236,35 @@ function ApplicationStatusSelect({ application }: { application: Application }) 
   );
 }
 
-// Starts the same background auto score as the apply page's Auto score
-// button (score → tailor if ≥ 75 → score tailored; ready at ≥ 85), with the
-// application's chosen resume. Shares the apply page's ["auto-score", id]
-// query, so a run started in either place shows as running in both.
-// This job's latest auto score run (null if it never had one), polled while
-// it's in progress. Read by both the card's Score button and its progress
-// bar — same query key, so one request serves both.
-function useAutoScoreRun(jobPostingId: string) {
+// The card's Apply → (see ApplyButton for what a click does). Green when
+// auto score marked the application ready.
+function ApplyLink({ application }: { application: Application }) {
+  const ready = application.ready_to_apply_at !== null;
+  return (
+    <ApplyButton
+      className={`application-row__apply-button${ready ? " application-row__apply-button--ready" : ""}`}
+      target={{
+        href: application.job_posting.apply_url,
+        title: application.job_posting.title,
+        company: application.job_posting.company_name,
+        application: { id: application.id, status: application.status },
+        tailored: application.latest_tailored_resume,
+      }}
+    />
+  );
+}
+
+// This job's latest auto score run (null if it never had one). Starts from
+// the run the applications list sent along (application.auto_score), so a
+// page load makes no per-card requests; only a run in progress is polled.
+// Read by both the card's Score button and its progress bar — same query
+// key, so one poll serves both.
+function useAutoScoreRun(application: Application) {
+  const jobPostingId = application.job_posting.id;
   return useQuery<AutoScoreRun | null>({
     queryKey: ["auto-score", jobPostingId],
+    initialData: application.auto_score ?? null,
+    staleTime: Infinity,
     queryFn: async () => {
       try {
         return await resumesApi.getAutoScore(jobPostingId);
@@ -266,9 +291,9 @@ const PROGRESS_STEP_INDEX: Partial<Record<AutoScoreStatus, number>> = {
 // Three segments along the card's top edge while its auto score runs: done
 // ones green, the current one blue and pulsing, the rest grey. Gone once
 // the run ends — the corner score and green Apply show the result.
-function AutoScoreProgress({ jobPostingId }: { jobPostingId: string }) {
-  const runStatus = useAutoScoreRun(jobPostingId).data?.status;
-  const status = previewAutoScoreStatus() ?? runStatus;
+function AutoScoreProgress({ application }: { application: Application }) {
+  const shownStatus = useShownAutoScoreStatus(useAutoScoreRun(application).data?.status);
+  const status = previewAutoScoreStatus() ?? shownStatus;
   const current = status === undefined ? undefined : PROGRESS_STEP_INDEX[status];
   if (current === undefined) return null;
   return (
@@ -294,13 +319,20 @@ function AutoScoreProgress({ jobPostingId }: { jobPostingId: string }) {
   );
 }
 
+// Starts the same background auto score as the apply page's Score button
+// (score → tailor if ≥ 75 → score tailored; ready at ≥ 85), with the
+// application's chosen resume. Shares the apply page's ["auto-score", id]
+// query, so a run started in either place shows as running in both.
 function EvaluateButton({ application }: { application: Application }) {
   const queryClient = useQueryClient();
   const jobPostingId = application.job_posting.id;
   const [error, setError] = useState<string | null>(null);
 
-  const runQuery = useAutoScoreRun(jobPostingId);
-  const status = previewAutoScoreStatus() ?? runQuery.data?.status;
+  const runQuery = useAutoScoreRun(application);
+  // Stepped like the card's progress bar (each step ≥ 1s), so the button,
+  // the bar and the refreshed score all change together.
+  const shownStatus = useShownAutoScoreStatus(runQuery.data?.status);
+  const status = previewAutoScoreStatus() ?? shownStatus;
 
   const mutation = useMutation({
     mutationFn: () => resumesApi.startAutoScore(jobPostingId, application.selected_resume_id ?? undefined),
@@ -765,7 +797,7 @@ export function ApplicationsPage() {
                 application.best_score !== null ? " application-row--scored" : ""
               }`}
             >
-              <AutoScoreProgress jobPostingId={application.job_posting.id} />
+              <AutoScoreProgress application={application} />
               {application.best_score !== null && (
                 <span className={`stamp application-row__score stamp--${fitTier(application.best_score)}`}>
                   <span className="application-row__score-label">Score</span>
@@ -821,16 +853,7 @@ export function ApplicationsPage() {
               <div className="application-row__controls">
                 <EvaluateButton application={application} />
                 <ApplicationStatusSelect application={application} />
-                <a
-                  href={application.job_posting.apply_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={`application-row__apply-button${
-                    application.ready_to_apply_at ? " application-row__apply-button--ready" : ""
-                  }`}
-                >
-                  Apply →
-                </a>
+                <ApplyLink application={application} />
                 <DownloadMenu application={application} />
               </div>
             </li>
