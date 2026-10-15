@@ -301,7 +301,8 @@ export function ResumePage() {
   }
 
   function uploadFile(file: File | undefined) {
-    if (file) uploadMutation.mutate(file);
+    // One at a time — the dropzone is busy until this one's done.
+    if (file && !uploadMutation.isPending) uploadMutation.mutate(file);
   }
 
   function handleFileInputChange(event: ChangeEvent<HTMLInputElement>) {
@@ -348,7 +349,7 @@ export function ResumePage() {
             onDragEnter={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            onClick={() => fileInput.current?.click()}
+            onClick={() => !uploadMutation.isPending && fileInput.current?.click()}
             onKeyDown={handleDropzoneKeyDown}
             role="button"
             tabIndex={0}
@@ -362,17 +363,25 @@ export function ResumePage() {
               onChange={handleFileInputChange}
               tabIndex={-1}
             />
-            <div className="resume-dropzone__icon" aria-hidden="true">
-              ⇪
-            </div>
-            <p className="resume-dropzone__label">
+            {uploadMutation.isPending ? (
+              <div className="resume-dropzone__spinner" aria-hidden="true" />
+            ) : (
+              <div className="resume-dropzone__icon" aria-hidden="true">
+                ⇪
+              </div>
+            )}
+            <p className="resume-dropzone__label" aria-live="polite">
               {uploadMutation.isPending
-                ? "Uploading…"
+                ? "Uploading your resume…"
                 : isDragOver
                   ? "Drop to upload"
                   : "Drag & drop your resume here, or click to browse"}
             </p>
-            <p className="resume-dropzone__hint">PDF or DOCX, up to 5MB</p>
+            <p className="resume-dropzone__hint">
+              {/* Upload can also read the resume into editable sections (an
+                  AI call), so it can take a while. */}
+              {uploadMutation.isPending ? "This can take up to a minute." : "PDF or DOCX, up to 5MB"}
+            </p>
           </div>
           <FreeRestructuresNote />
           {uploadMutation.error && (

@@ -330,6 +330,30 @@
   margin: 0.5rem 0 0;
 }
 
+/* Under the toolbar's bottom rule: what a saved "Don't ask again" makes Add
+   for evaluation do, and the link that clears it. */
+.case-file__evaluate-choice {
+  margin: -0.75rem 0 1.25rem;
+  text-align: right;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.case-file__evaluate-choice button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.case-file__evaluate-error {
+  margin: -0.75rem 0 1.25rem;
+  text-align: right;
+}
+
 .case-file__header-left {
   flex-shrink: 0;
 }
