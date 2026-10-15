@@ -341,6 +341,28 @@
   line-height: 1;
 }
 
+/* In the icon's place while an upload is in flight. */
+.resume-dropzone__spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: resume-dropzone-spin 0.8s linear infinite;
+}
+
+@keyframes resume-dropzone-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resume-dropzone__spinner {
+    animation-duration: 2.4s;
+  }
+}
+
 .resume-dropzone__label {
   font-size: 1rem;
   font-weight: 500;

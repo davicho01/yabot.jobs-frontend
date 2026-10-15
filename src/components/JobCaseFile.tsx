@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ONBOARDING_QUERY_KEY } from "../api/onboarding";
+import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY, onboardingApi } from "../api/onboarding";
 import { JobDescription } from "./JobDescription";
 import { applicationsApi } from "../api/applications";
+import { ApiError } from "../api/client";
 import { jobsApi } from "../api/jobs";
-import type { Application, JobDetail, JobPosting, User } from "../api/types";
+import { resumesApi } from "../api/resumes";
+import type { AiAccess, Application, AutoScoreRun, AutoScoreStatus, JobDetail, JobPosting, Resume, User } from "../api/types";
 import { highlightQuery } from "../utils/searchHighlight";
+import { AUTO_SCORE_POLL_MS, isAutoScoreActive } from "../utils/autoScore";
+import { type EvaluateChoice, loadEvaluateChoice, saveEvaluateChoice } from "../utils/evaluateChoice";
+import { freeEvaluationsPhrase } from "../utils/onboarding";
+import { EvaluateChoiceModal, EvaluateProgressModal } from "./EvaluateChoiceModal";
 import { FlagJobModal } from "./FlagJobModal";
 import { employmentLabel, sectorLabel, workplaceLabel } from "../utils/jobTags";
 import { jobAge, type JobAgeTone } from "../utils/jobPosting";
@@ -118,6 +124,62 @@ function glanceItems(job: JobDetail, posting: JobPosting): { label: string; valu
 function formatApplicationDate(application: Application): string {
   const date = new Date(application.created_at);
   return `Added ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+}
+
+// Why "Evaluate now" can't run for this job, or null if it can. Unknown
+// (still loading) counts as able — the backend has the final say, and its
+// error shows under the button.
+function evaluateBlockedReason(
+  resumes: Resume[] | undefined,
+  access: AiAccess | undefined,
+  jobPostingId: string,
+): ReactNode | null {
+  if (resumes && resumes.length === 0) {
+    return (
+      <>
+        <Link to="/resume">Upload a resume</Link> first to evaluate jobs.
+      </>
+    );
+  }
+  if (!access || access.has_own_key || access.subscribed) return null;
+  if (!access.free_trial_enabled) {
+    return (
+      <>
+        <Link to="/api-keys">Add your own AI API key</Link> to evaluate jobs.
+      </>
+    );
+  }
+  if (access.free_trial_job_ids.includes(jobPostingId) || access.free_evaluations_remaining > 0) return null;
+  return (
+    <>
+      You've used all {freeEvaluationsPhrase(access.free_evaluation_limit)}.{" "}
+      <Link to="/api-keys">Add your own AI API key</Link> to evaluate more jobs.
+    </>
+  );
+}
+
+// Free-trial users: an evaluation spends one of their free ones, unless this
+// job is already unlocked.
+function evaluateNote(access: AiAccess | undefined, jobPostingId: string): string | null {
+  if (!access || access.has_own_key || access.subscribed || !access.free_trial_enabled) return null;
+  if (access.free_trial_job_ids.includes(jobPostingId)) return null;
+  return `Uses 1 free evaluation (${access.free_evaluations_remaining} left).`;
+}
+
+// The Add for evaluation button's second line while an evaluation runs.
+const EVALUATING_STEP: Partial<Record<AutoScoreStatus, string>> = {
+  queued: "Scoring your resume",
+  scoring: "Scoring your resume",
+  tailoring: "Tailoring your resume",
+  scoring_tailored: "Scoring the tailored resume",
+};
+
+// A finished run that scored too low to add the job (one that came out
+// ready added it, so the button is "View application →" by then). The
+// button then shows the score and reopens the result.
+function notAddedScore(run: AutoScoreRun | null | undefined): number | null {
+  if (!run || (run.status !== "below_threshold" && run.status !== "not_ready")) return null;
+  return run.best_score;
 }
 
 function SimilarJobsList({ items, onSelect }: { items: JobDetail[]; onSelect?: (urlId: string) => void }) {
@@ -238,6 +300,119 @@ export function JobCaseFile({
     },
   });
 
+  // "Add for evaluation" asks (EvaluateChoiceModal) whether to save the job
+  // for later or evaluate it now — unless a choice was saved with "Don't ask
+  // again", which it then just does. Evaluating shows its progress
+  // (EvaluateProgressModal) until it's done or sent to the background.
+  const [evaluateChoice, setEvaluateChoice] = useState(loadEvaluateChoice);
+  const [modal, setModal] = useState<"choice" | "progress" | null>(null);
+  const [evaluateError, setEvaluateError] = useState<string | null>(null);
+  const jobPostingId = posting?.id ?? "";
+  const showsAddButton = !!user && !!posting && !currentApplication;
+
+  // Same cache keys as the Resume/Apply pages, so these are usually already
+  // loaded — they decide whether "Evaluate now" can run.
+  const { data: resumes } = useQuery({ queryKey: ["resumes"], queryFn: resumesApi.list, enabled: showsAddButton });
+  const { data: aiAccess } = useQuery({
+    queryKey: AI_ACCESS_QUERY_KEY,
+    queryFn: onboardingApi.aiAccess,
+    enabled: showsAddButton,
+  });
+  const blockedReason = evaluateBlockedReason(resumes, aiAccess, jobPostingId);
+
+  // This job's latest auto-score run (null if none) — same key the apply
+  // page and applications cards poll. Polled while running, so the button
+  // shows its progress and, after, its score.
+  const autoScoreQuery = useQuery<AutoScoreRun | null>({
+    queryKey: ["auto-score", jobPostingId],
+    queryFn: async () => {
+      try {
+        return await resumesApi.getAutoScore(jobPostingId);
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) return null;
+        throw err;
+      }
+    },
+    enabled: showsAddButton,
+    retry: false,
+    refetchInterval: (query) => (isAutoScoreActive(query.state.data?.status) ? AUTO_SCORE_POLL_MS : false),
+  });
+  const run = autoScoreQuery.data;
+
+  const startEvaluation = useMutation({
+    mutationFn: () => resumesApi.startAutoScore(jobPostingId),
+    onSuccess: (started) => {
+      setEvaluateError(null);
+      queryClient.setQueryData(["auto-score", jobPostingId], started);
+    },
+    onError: (err) => setEvaluateError(err instanceof ApiError ? err.message : "Couldn't start the evaluation."),
+  });
+  const evaluating = startEvaluation.isPending || isAutoScoreActive(run?.status);
+
+  // When a run ends, reload what it changed: the application it may have
+  // added (the button then becomes "View application →"), free evaluations
+  // left, and onboarding's "evaluation" step.
+  const lastRunStatus = useRef(run?.status);
+  useEffect(() => {
+    const previous = lastRunStatus.current;
+    lastRunStatus.current = run?.status;
+    if (isAutoScoreActive(previous) && !isAutoScoreActive(run?.status)) {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      queryClient.invalidateQueries({ queryKey: AI_ACCESS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
+    }
+  }, [run?.status, queryClient]);
+
+  function runChoice(choice: EvaluateChoice) {
+    if (choice === "evaluate") {
+      setEvaluateError(null);
+      startEvaluation.mutate();
+      setModal("progress");
+    } else if (job.url.url) {
+      recordApplication.mutate(job.url.url);
+    }
+  }
+
+  function onAddClick() {
+    // Mid-run (e.g. after "Run in background") the button reopens the
+    // progress; after a run that didn't add the job, its result.
+    if (evaluating || notAdded !== null) setModal("progress");
+    // A saved "evaluate" that can't run right now (no resume, out of free
+    // evaluations) asks instead, so the reason shows.
+    else if (evaluateChoice === "list" || (evaluateChoice === "evaluate" && !blockedReason)) runChoice(evaluateChoice);
+    else setModal("choice");
+  }
+
+  function onChoose(choice: EvaluateChoice, remember: boolean) {
+    setModal(null);
+    if (remember) {
+      saveEvaluateChoice(choice);
+      setEvaluateChoice(choice);
+    }
+    runChoice(choice);
+  }
+
+  function forgetEvaluateChoice() {
+    saveEvaluateChoice(null);
+    setEvaluateChoice(null);
+  }
+
+  const notAdded = evaluating ? null : notAddedScore(run);
+  const addButtonLabel = recordApplication.isPending
+    ? "Adding…"
+    : evaluating
+      ? "Evaluating…"
+      : notAdded !== null
+        ? `Scored ${notAdded} →`
+        : "Add for evaluation →";
+  const addButtonMeta = evaluating
+    ? (EVALUATING_STEP[run && isAutoScoreActive(run.status) ? run.status : "queued"] ?? null)
+    : notAdded !== null
+      ? "Not added · see why"
+      : run?.status === "failed"
+        ? "Evaluation failed, try again"
+        : null;
+
   return (
     <article className="case-file">
       {(!posting || scanFailed) && (
@@ -307,13 +482,23 @@ export function JobCaseFile({
                   type="button"
                   className="apply-button"
                   disabled={recordApplication.isPending || !job.url.url}
-                  onClick={() => job.url.url && recordApplication.mutate(job.url.url)}
+                  onClick={onAddClick}
                 >
-                  <span>{recordApplication.isPending ? "Adding…" : "Add for evaluation →"}</span>
+                  <span>{addButtonLabel}</span>
+                  {addButtonMeta && <span className="apply-button__meta">{addButtonMeta}</span>}
                 </button>
               )}
             </div>
           </div>
+          {showsAddButton && evaluateChoice && (
+            <p className="case-file__evaluate-choice">
+              Add for evaluation always {evaluateChoice === "list" ? "adds the job to your list" : "evaluates the job now"}.{" "}
+              <button type="button" onClick={forgetEvaluateChoice}>
+                Ask me again
+              </button>
+            </p>
+          )}
+          {evaluateError && <p className="rescan-error case-file__evaluate-error">{evaluateError}</p>}
 
           <div className="case-file__header-title">
             {/* Company first, logo beside its name, then the title — same as the static job pages. */}
@@ -389,6 +574,23 @@ export function JobCaseFile({
         </>
       )}
       {flagModalOpen && <FlagJobModal urlId={job.url.id} onClose={() => setFlagModalOpen(false)} />}
+      {modal === "choice" && (
+        <EvaluateChoiceModal
+          evaluateBlockedReason={blockedReason}
+          evaluateNote={evaluateNote(aiAccess, jobPostingId)}
+          onChoose={onChoose}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {modal === "progress" && (
+        <EvaluateProgressModal
+          run={run ?? null}
+          starting={startEvaluation.isPending}
+          startError={evaluateError}
+          applicationPath={`/jobs/${job.url.id}/apply`}
+          onClose={() => setModal(null)}
+        />
+      )}
     </article>
   );
 }

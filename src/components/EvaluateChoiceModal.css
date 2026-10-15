@@ -1,0 +1,293 @@
+.evaluate-choice-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 1000;
+}
+
+.evaluate-choice-modal {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  padding: 1.5rem;
+  max-width: 500px;
+  width: 100%;
+  max-height: min(90vh, 680px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+/* Dark mode: the page and --paper are both black, so a light black overlay
+   barely dims the page and the modal blends into it. Dim harder and lift the
+   modal onto --surface; the option cards stay --paper, so they still stand
+   out inside it. Same two selectors index.css uses for the dark theme. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .evaluate-choice-modal__overlay {
+    background: rgba(0, 0, 0, 0.75);
+  }
+
+  :root:not([data-theme="light"]) .evaluate-choice-modal {
+    background: var(--surface);
+  }
+
+  :root:not([data-theme="light"]) .evaluate-choice-modal__option:hover:not(:disabled) {
+    background: var(--paper);
+  }
+}
+
+:root[data-theme="dark"] .evaluate-choice-modal__overlay {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+:root[data-theme="dark"] .evaluate-choice-modal {
+  background: var(--surface);
+}
+
+:root[data-theme="dark"] .evaluate-choice-modal__option:hover:not(:disabled) {
+  background: var(--paper);
+}
+
+.evaluate-choice-modal__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.evaluate-choice-modal__header h2 {
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.evaluate-choice-modal__close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--ink-soft);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
+}
+
+.evaluate-choice-modal__close:hover {
+  color: var(--ink);
+}
+
+.evaluate-choice-modal__option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  text-align: left;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 0.9rem 1rem;
+  color: var(--ink);
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+.evaluate-choice-modal__option:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.evaluate-choice-modal__option:disabled {
+  cursor: default;
+}
+
+.evaluate-choice-modal__option:disabled .evaluate-choice-modal__option-title,
+.evaluate-choice-modal__option:disabled .evaluate-choice-modal__option-body {
+  opacity: 0.55;
+}
+
+.evaluate-choice-modal__option-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--accent);
+}
+
+.evaluate-choice-modal__option-body {
+  font-size: 0.83rem;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.evaluate-choice-modal__option-note {
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+
+/* Pulled up under the disabled "Evaluate now" option it explains. */
+.evaluate-choice-modal__blocked {
+  margin: -0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--rose);
+}
+
+.evaluate-choice-modal__remember {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.evaluate-choice-modal__remember input {
+  margin-top: 0.15rem;
+}
+
+/* Progress view (EvaluateProgressModal): three segments like the
+   applications cards' bar — done green, current blue and pulsing. */
+.evaluate-progress__steps {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.evaluate-progress__step {
+  flex: 1;
+  border-top: 6px solid var(--line);
+  border-radius: 3px;
+}
+
+.evaluate-progress__step--done {
+  border-top-color: var(--teal);
+}
+
+.evaluate-progress__step--current {
+  border-top-color: var(--accent);
+  animation: evaluate-progress-pulse 1.2s ease-in-out infinite;
+}
+
+.evaluate-progress__step-label {
+  display: block;
+  padding-top: 0.35rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.evaluate-progress__step--done .evaluate-progress__step-label {
+  color: var(--teal);
+}
+
+.evaluate-progress__step--current .evaluate-progress__step-label {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.evaluate-progress__step--skipped .evaluate-progress__step-label {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+@keyframes evaluate-progress-pulse {
+  50% {
+    border-top-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evaluate-progress__step--current {
+    animation: none;
+  }
+}
+
+.evaluate-progress__figures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.evaluate-progress__figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+}
+
+.evaluate-progress__figure-label {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.evaluate-progress__figure-value {
+  font-size: 1.2rem;
+}
+
+.evaluate-progress__figure-empty {
+  font-size: 1.2rem;
+  color: var(--ink-soft);
+}
+
+.evaluate-progress__result {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ink);
+}
+
+.evaluate-progress__result--ready {
+  color: var(--teal);
+  font-weight: 600;
+}
+
+.evaluate-progress__result--failed {
+  color: var(--rose);
+}
+
+.evaluate-progress__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.evaluate-progress__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.evaluate-progress__secondary {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.evaluate-progress__secondary:hover {
+  border-color: var(--ink-soft);
+}
+
+.evaluate-progress__primary {
+  background: var(--accent);
+  color: #fff;
+  padding: 0.5rem 1.2rem;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.evaluate-progress__primary:hover {
+  background: var(--accent-deep);
+}
