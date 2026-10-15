@@ -148,11 +148,39 @@ export interface Application {
   // Which resume the apply page's picker is set to for this application —
   // null means no explicit pick was ever saved (falls back to is_main).
   selected_resume_id: string | null;
+  // Set when an auto-score run's best score cleared the ready bar — shown
+  // as "Ready to apply".
+  ready_to_apply_at: string | null;
   job_posting: ApplicationJobPosting;
   // Max of the fitness score and the tailored-resume score, whichever is set.
   best_score: number | null;
   latest_tailored_resume: ApplicationDocument | null;
   latest_cover_letter: ApplicationDocument | null;
+}
+
+// Background score → tailor → score-tailored run (backend:
+// app.services.auto_score). The first four statuses are in progress.
+export type AutoScoreStatus =
+  | "queued"
+  | "scoring"
+  | "tailoring"
+  | "scoring_tailored"
+  | "ready"
+  | "not_ready"
+  | "below_threshold"
+  | "failed";
+
+export interface AutoScoreRun {
+  id: string;
+  job_posting_id: string;
+  resume_id: string;
+  status: AutoScoreStatus;
+  resume_score: number | null;
+  tailored_score: number | null;
+  best_score: number | null;
+  error: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Resume {

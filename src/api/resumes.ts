@@ -1,5 +1,6 @@
 import { api, downloadFile, fileUrl } from "./client";
 import type {
+  AutoScoreRun,
   CoverLetter,
   DocumentFormat,
   InterviewPrep,
@@ -72,6 +73,16 @@ export const resumesApi = {
       job_posting_id: jobPostingId,
       resume_id: resumeId,
     }),
+
+  // Background score → tailor → score-tailored run; poll getAutoScore for
+  // its progress (backend: app.services.auto_score).
+  startAutoScore: (jobPostingId: string, resumeId?: string) =>
+    api.post<AutoScoreRun>("/resumes/main/auto-score", undefined, {
+      job_posting_id: jobPostingId,
+      resume_id: resumeId,
+    }),
+  getAutoScore: (jobPostingId: string) =>
+    api.get<AutoScoreRun>("/resumes/main/auto-score", { job_posting_id: jobPostingId }),
 
   getTailored: (jobPostingId: string, resumeId?: string) =>
     api.get<TailoredResume>("/resumes/main/tailored", { job_posting_id: jobPostingId, resume_id: resumeId }),
