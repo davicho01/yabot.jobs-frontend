@@ -288,6 +288,25 @@ const PROGRESS_STEP_INDEX: Partial<Record<AutoScoreStatus, number>> = {
   scoring_tailored: 2,
 };
 
+// The card's corner score. Mid-run, once the first score is in (the bar is
+// past "Score"), shows that score instead of waiting for the run to end;
+// otherwise the application's best score. Same query as the bar and the
+// Score button, so no extra requests.
+function CardScore({ application }: { application: Application }) {
+  const run = useAutoScoreRun(application).data;
+  const shownStatus = useShownAutoScoreStatus(run?.status);
+  const status = previewAutoScoreStatus() ?? shownStatus;
+  const pastFirstScore = status === "tailoring" || status === "scoring_tailored";
+  const score = pastFirstScore && run?.resume_score != null ? run.resume_score : application.best_score;
+  if (score === null) return null;
+  return (
+    <span className={`stamp application-row__score stamp--${fitTier(score)}`}>
+      <span className="application-row__score-label">Score</span>
+      <span className="application-row__score-value">{score}</span>
+    </span>
+  );
+}
+
 // Three segments along the card's top edge while its auto score runs: done
 // ones green, the current one blue and pulsing, the rest grey. Gone once
 // the run ends — the corner score and green Apply show the result.
@@ -793,17 +812,10 @@ export function ApplicationsPage() {
           {applications?.map((application) => (
             <li
               key={application.id}
-              className={`application-row${application.job_posting.company_name ? " application-row--with-employer" : ""}${
-                application.best_score !== null ? " application-row--scored" : ""
-              }`}
+              className={`application-row${application.job_posting.company_name ? " application-row--with-employer" : ""}`}
             >
               <AutoScoreProgress application={application} />
-              {application.best_score !== null && (
-                <span className={`stamp application-row__score stamp--${fitTier(application.best_score)}`}>
-                  <span className="application-row__score-label">Score</span>
-                  <span className="application-row__score-value">{application.best_score}</span>
-                </span>
-              )}
+              <CardScore application={application} />
               <input
                 type="checkbox"
                 className="application-row__select"
