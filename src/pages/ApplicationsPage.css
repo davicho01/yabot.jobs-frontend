@@ -196,11 +196,13 @@
   font-weight: 700;
 }
 
-.application-row--scored .application-row__employer {
+/* Room for the corner score stamp (a direct child — the Score button's
+   wrapper inside the controls shares the class). */
+.application-row:has(> .application-row__score) .application-row__employer {
   padding-right: 5.5rem;
 }
 
-.application-row--scored:not(.application-row--with-employer) .application-row__controls {
+.application-row:has(> .application-row__score):not(.application-row--with-employer) .application-row__controls {
   margin-top: 1.9rem;
 }
 
