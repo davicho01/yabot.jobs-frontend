@@ -56,7 +56,7 @@ export function EvaluateChoiceModal({
         >
           <span className="evaluate-choice-modal__option-title">Evaluate now</span>
           <span className="evaluate-choice-modal__option-body">
-            Score your resume against this job. It's added to My applications only if it scores 85 or more.
+            Score your resume against this job and save it to My applications.
           </span>
           {!evaluateBlockedReason && evaluateNote && (
             <span className="evaluate-choice-modal__option-note">{evaluateNote}</span>
@@ -114,15 +114,15 @@ function outcome(status: AutoScoreStatus, run: AutoScoreRun | null): { text: str
   if (!run) return null;
   switch (status) {
     case "ready":
-      return { text: "Ready to apply! It's been added to My applications.", ready: true };
+      return { text: "Ready to apply! Saved to My applications.", ready: true };
     case "not_ready":
       return {
-        text: `Even tailored to this job, your resume's best score is ${run.best_score} out of 100. Jobs are added to My applications at 85 or more, so this one wasn't added. Take a look at other postings — there may be a better fit.`,
+        text: `Best score ${run.best_score}, even tailored. Not quite ready to apply (85+). Saved to My applications.`,
         ready: false,
       };
     case "below_threshold":
       return {
-        text: `Your resume scored ${run.resume_score} out of 100 for this job. Below 75, the gap is too big for tailoring your resume to close, so we stopped there and didn't add it to My applications. Take a look at other postings — there may be a better fit.`,
+        text: `Scored ${run.resume_score}. Too low to tailor (75+). Saved to My applications as archived.`,
         ready: false,
       };
     case "failed":
@@ -220,11 +220,12 @@ export function EvaluateProgressModal({
             </button>
           ) : (
             <>
-              {/* Not added: back to the postings behind the modal. */}
+              {/* Short of ready: back to the postings behind the modal. */}
               <button type="button" className="evaluate-progress__secondary" onClick={onClose}>
                 {result && !result.ready && status !== "failed" ? "Browse other postings" : "Close"}
               </button>
-              {result?.ready && (
+              {/* Every finished run saves the job, ready or not. */}
+              {result && status !== "failed" && (
                 <Link to={applicationPath} className="evaluate-progress__primary">
                   View application →
                 </Link>
