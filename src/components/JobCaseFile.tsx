@@ -174,10 +174,10 @@ const EVALUATING_STEP: Partial<Record<AutoScoreStatus, string>> = {
   scoring_tailored: "Scoring the tailored resume",
 };
 
-// A finished run that scored too low to add the job (one that came out
-// ready added it, so the button is "View application →" by then). The
-// button then shows the score and reopens the result.
-function notAddedScore(run: AutoScoreRun | null | undefined): number | null {
+// A finished run that scored short of ready. Every run saves the job, but
+// for these the button keeps showing the score and reopens the result
+// instead of turning into "View application →" (as a ready one does).
+function belowReadyScore(run: AutoScoreRun | null | undefined): number | null {
   if (!run || (run.status !== "below_threshold" && run.status !== "not_ready")) return null;
   return run.best_score;
 }
@@ -322,7 +322,8 @@ export function JobCaseFile({
 
   // This job's latest auto-score run (null if none) — same key the apply
   // page and applications cards poll. Polled while running, so the button
-  // shows its progress and, after, its score.
+  // shows its progress and, after, its score. Read even once the job is
+  // saved, since a run short of ready keeps its score button.
   const autoScoreQuery = useQuery<AutoScoreRun | null>({
     queryKey: ["auto-score", jobPostingId],
     queryFn: async () => {
@@ -333,7 +334,7 @@ export function JobCaseFile({
         throw err;
       }
     },
-    enabled: showsAddButton,
+    enabled: !!user && !!posting,
     retry: false,
     refetchInterval: (query) => (isAutoScoreActive(query.state.data?.status) ? AUTO_SCORE_POLL_MS : false),
   });
@@ -349,8 +350,8 @@ export function JobCaseFile({
   });
   const evaluating = startEvaluation.isPending || isAutoScoreActive(run?.status);
 
-  // When a run ends, reload what it changed: the application it may have
-  // added (the button then becomes "View application →"), free evaluations
+  // When a run ends, reload what it changed: the application it saved (a
+  // ready one's button then becomes "View application →"), free evaluations
   // left, and onboarding's "evaluation" step.
   const lastRunStatus = useRef(run?.status);
   useEffect(() => {
@@ -376,7 +377,7 @@ export function JobCaseFile({
   function onAddClick() {
     // Mid-run (e.g. after "Run in background") the button reopens the
     // progress; after a run that didn't add the job, its result.
-    if (evaluating || notAdded !== null) setModal("progress");
+    if (evaluating || belowReady !== null) setModal("progress");
     // A saved "evaluate" that can't run right now (no resume, out of free
     // evaluations) asks instead, so the reason shows.
     else if (evaluateChoice === "list" || (evaluateChoice === "evaluate" && !blockedReason)) runChoice(evaluateChoice);
@@ -397,18 +398,20 @@ export function JobCaseFile({
     setEvaluateChoice(null);
   }
 
-  const notAdded = evaluating ? null : notAddedScore(run);
+  const belowReady = evaluating ? null : belowReadyScore(run);
   const addButtonLabel = recordApplication.isPending
     ? "Adding…"
     : evaluating
       ? "Evaluating…"
-      : notAdded !== null
-        ? `Scored ${notAdded} →`
+      : belowReady !== null
+        ? `Scored ${belowReady} →`
         : "Add for evaluation →";
   const addButtonMeta = evaluating
     ? (EVALUATING_STEP[run && isAutoScoreActive(run.status) ? run.status : "queued"] ?? null)
-    : notAdded !== null
-      ? "Not added · see why"
+    : belowReady !== null
+      ? currentApplication?.is_archived
+        ? "Archived · see why"
+        : "Saved · see why"
       : run?.status === "failed"
         ? "Evaluation failed, try again"
         : null;
@@ -470,7 +473,7 @@ export function JobCaseFile({
                   Report<span className="case-file__label-extra"> a problem</span>
                 </button>
               )}
-              {currentApplication || !user ? (
+              {(currentApplication && belowReady === null) || !user ? (
                 <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
                   <span>{currentApplication ? "View application →" : "Add for evaluation →"}</span>
                   {currentApplication && (
