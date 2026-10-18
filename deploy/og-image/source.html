@@ -3,33 +3,29 @@
   <head>
     <meta charset="utf-8" />
     <!--
-      Source for public/og-image.png. Fixed at 1200x630 (the standard OG size,
-      and what public/og-image.png already is) rather than responsive, because
-      this is only ever rendered once, by deploy/og-image/generate.mjs, at that
-      exact viewport.
+      Source for public/og-image.png. Fixed at 1200x630 (the standard OG size)
+      rather than responsive, because this is only ever rendered once, by
+      deploy/og-image/generate.mjs, at that exact viewport.
 
-      Keep the copy here in sync with the hero section in index.html
-      (.hero__title, .hero__sub, .fineprint, the CTA row) by hand — this file
-      intentionally doesn't import index.html, since the hero is full-page and
-      responsive and this is a fixed-size crop of it.
+      Keep it in step with the landing page (index.html) by hand: the hero's
+      copy (headline, lede, buttons, fine print) over the office footage's
+      poster frame and plum overlay, and the "Score it, apply, done." steps in
+      the card lists' violet-to-green run (src/utils/listGradient.ts).
     -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@800&display=block"
       rel="stylesheet"
     />
     <style>
       :root {
-        --paper: #ffffff;
-        --ink: #1d1d1f;
-        --ink-soft: #6e6e73;
-        --accent: #0071e3;
-        --accent-bright: #2997ff;
-        --violet: #7b61ff;
-        --cyan: #00c2ff;
-        --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Manrope", system-ui, sans-serif;
-        --radius-pill: 980px;
+        --plum: #1f1a35;
+        --ink: #0a0a0a;
+        --ink-soft: #5f5c6b;
+        --sunset: linear-gradient(227deg, #ec008c 3%, #fc8b67 69%, #ffd46d 98%);
+        --display: "Outfit", system-ui, sans-serif;
+        --body: "Inter", system-ui, sans-serif;
       }
 
       * {
@@ -45,177 +41,252 @@
         overflow: hidden;
       }
 
+      /* The hero's footage (its poster frame) under the hero's plum overlay. */
       body {
         position: relative;
         display: flex;
         align-items: center;
-        background: var(--paper);
-        font-family: var(--font);
+        gap: 48px;
+        padding: 0 64px;
+        color: #ffffff;
+        font-family: var(--body);
         -webkit-font-smoothing: antialiased;
-      }
-
-      .glow {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(50px);
-        pointer-events: none;
+        background:
+          radial-gradient(45% 65% at 10% 0%, rgba(236, 0, 140, 0.32), transparent 70%),
+          radial-gradient(45% 65% at 92% 100%, rgba(124, 58, 237, 0.45), transparent 70%),
+          linear-gradient(90deg, rgba(31, 26, 53, 0.72), rgba(31, 26, 53, 0.5)),
+          url("../../public/landing/hero-office.jpg") center / cover,
+          var(--plum);
       }
 
       .content {
-        position: relative;
-        z-index: 1;
+        flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 22px;
-        padding: 0 0 0 64px;
-        width: 700px;
+        align-items: flex-start;
+        gap: 18px;
       }
 
       .brand {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
+        font-family: var(--display);
         font-weight: 800;
-        font-size: 22px;
-        letter-spacing: -0.02em;
-        color: var(--ink);
+        font-size: 24px;
+        letter-spacing: -0.03em;
       }
 
       .brand__mark {
-        width: 26px;
-        height: 26px;
-        color: var(--accent);
+        width: 36px;
+        height: 36px;
+        padding: 7px;
+        border-radius: 11px;
+        background: var(--sunset);
       }
 
-      .brand__accent {
-        color: var(--accent);
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px 6px 7px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        background: rgba(255, 255, 255, 0.12);
+        font-size: 15px;
+        font-weight: 600;
       }
 
-      .eyebrow {
-        font-size: 19px;
-        font-weight: 700;
-        color: var(--accent);
+      .chip i {
+        display: grid;
+        place-items: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #cdea8f;
+        color: var(--ink);
+        font-size: 12px;
+        font-style: normal;
       }
 
       h1 {
+        font-family: var(--display);
         font-weight: 800;
-        font-size: 54px;
-        line-height: 1.08;
-        letter-spacing: -0.035em;
-        color: var(--ink);
+        font-size: 68px;
+        line-height: 0.98;
+        letter-spacing: -0.05em;
       }
 
       h1 em {
         font-style: normal;
-        background: linear-gradient(90deg, var(--accent), var(--violet));
+        background: var(--sunset);
         -webkit-background-clip: text;
         background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: transparent;
+        padding-inline-end: 0.06em;
       }
 
-      .sub {
+      .lede {
         font-size: 22px;
-        line-height: 1.3;
-        font-weight: 600;
-        letter-spacing: -0.01em;
-        color: var(--ink-soft);
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.88);
       }
 
-      .cta-row {
+      .ctas {
         display: flex;
-        align-items: center;
-        gap: 20px;
+        gap: 12px;
         padding-top: 4px;
       }
 
       .btn {
-        display: inline-block;
-        font-weight: 600;
+        padding: 13px 26px;
+        border-radius: 999px;
         font-size: 18px;
-        padding: 14px 28px;
-        border-radius: var(--radius-pill);
-        background: var(--accent);
-        color: var(--paper);
+        font-weight: 600;
+        background: #ffffff;
+        color: var(--ink);
       }
 
-      .btn--text {
-        font-weight: 600;
-        font-size: 18px;
-        color: var(--accent);
+      .btn--sunset {
+        background: var(--sunset);
+        color: #ffffff;
       }
 
-      .fineprint {
+      .fine {
         font-size: 15px;
+        color: rgba(255, 255, 255, 0.85);
+      }
+
+      /* The five steps as the landing page shows them on phones: slim white
+         rows, each tile one slice of the violet-to-green run. */
+      .steps {
+        width: 400px;
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        list-style: none;
+      }
+
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 14px;
+        border-radius: 20px;
+        background: #ffffff;
+        color: var(--ink);
+        box-shadow: 0 14px 32px rgba(10, 6, 30, 0.28);
+      }
+
+      .step__tile {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        background: var(--band);
+      }
+
+      .step__tile span {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        background: #ffffff;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .step__text {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .step__kicker {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
         color: var(--ink-soft);
       }
 
-      .shot {
-        position: absolute;
-        top: 108px;
-        right: 44px;
-        width: 400px;
-        background: #1d1d1f;
-        border-radius: 48px 48px 0 0;
-        padding: 12px 12px 0;
-        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.18);
-        z-index: 1;
-        overflow: hidden;
+      .step__name {
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
       }
 
-      .shot img {
-        display: block;
-        width: 100%;
-        height: auto;
-        border-radius: 38px 38px 0 0;
+      .step__pill {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: #f1f1f4;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .step__pill i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #248a3d;
+      }
+
+      .step__pill--warn i {
+        background: #b4531a;
       }
     </style>
   </head>
 
   <body>
-    <span
-      class="glow"
-      style="top: -220px; left: -160px; width: 760px; height: 760px; background: radial-gradient(circle, rgba(0, 113, 227, 0.35) 0%, rgba(0, 0, 0, 0) 68%)"
-    ></span>
-    <span
-      class="glow"
-      style="top: -120px; right: -200px; width: 680px; height: 680px; background: radial-gradient(circle, rgba(123, 97, 255, 0.3) 0%, rgba(0, 0, 0, 0) 68%)"
-    ></span>
-    <span
-      class="glow"
-      style="top: 320px; left: 30%; width: 620px; height: 620px; background: radial-gradient(circle, rgba(0, 194, 255, 0.3) 0%, rgba(0, 0, 0, 0) 68%)"
-    ></span>
-
     <div class="content">
       <span class="brand">
         <svg class="brand__mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-          <path
-            d="M9 24h6l4-10 6 20 4-10h10"
-            stroke="currentColor"
-            stroke-width="4"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
+          <path d="M9 24h6l4-10 6 20 4-10h10" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
-        <span>Yabot <span class="brand__accent">Jobs</span></span>
+        Yabot Jobs
       </span>
-
-      <p class="eyebrow">Free, open source job search</p>
+      <span class="chip"><i>✓</i>Free, open source job search</span>
       <h1>Tailor your resume.<br /><em>Apply with confidence.</em></h1>
-      <p class="sub">New jobs every day. See your fit before you apply.</p>
-
-      <div class="cta-row">
+      <p class="lede">New jobs every day. See your fit before you apply.</p>
+      <div class="ctas">
         <span class="btn">Start free</span>
-        <span class="btn--text">Browse jobs &rsaquo;</span>
+        <span class="btn btn--sunset">Browse jobs &rsaquo;</span>
       </div>
-
-      <p class="fineprint">Your first 10 jobs are on us. No credit card needed.</p>
+      <p class="fine">Your first 10 jobs are on us. No credit card needed.</p>
     </div>
 
-    <figure class="shot">
-      <img
-        src="../../public/landing/hero-phone-steps.png"
-        alt="A job showing a fit score of 82, a tailored resume score of 90, and steps for cover letter, apply, and interview prep."
-      />
-    </figure>
+    <ul class="steps">
+      <li class="step" style="--band: linear-gradient(110deg, #7c3aed, color-mix(in oklch, #7c3aed, #2563eb 60%))">
+        <span class="step__tile"><span>◎</span></span>
+        <span class="step__text"><p class="step__kicker">STEP 1</p><p class="step__name">Evaluate your resume</p></span>
+        <span class="step__pill step__pill--warn"><i></i>82 fit</span>
+      </li>
+      <li class="step" style="--band: linear-gradient(110deg, color-mix(in oklch, #7c3aed, #2563eb 60%), color-mix(in oklch, #2563eb, #0d9488 20%))">
+        <span class="step__tile"><span>✂︎</span></span>
+        <span class="step__text"><p class="step__kicker">STEP 2</p><p class="step__name">Tailor your resume</p></span>
+        <span class="step__pill"><i></i>90 fit</span>
+      </li>
+      <li class="step" style="--band: linear-gradient(110deg, color-mix(in oklch, #2563eb, #0d9488 20%), color-mix(in oklch, #2563eb, #0d9488 80%))">
+        <span class="step__tile"><span>✉︎</span></span>
+        <span class="step__text"><p class="step__kicker">STEP 3</p><p class="step__name">Write a cover letter</p></span>
+        <span class="step__pill"><i></i>Drafted</span>
+      </li>
+      <li class="step" style="--band: linear-gradient(110deg, color-mix(in oklch, #2563eb, #0d9488 80%), color-mix(in oklch, #0d9488, #16a34a 40%))">
+        <span class="step__tile"><span>↗</span></span>
+        <span class="step__text"><p class="step__kicker">STEP 4</p><p class="step__name">Apply on their site</p></span>
+        <span class="step__pill"><i></i>Applied</span>
+      </li>
+      <li class="step" style="--band: linear-gradient(110deg, color-mix(in oklch, #0d9488, #16a34a 40%), #16a34a)">
+        <span class="step__tile"><span>❝</span></span>
+        <span class="step__text"><p class="step__kicker">STEP 5</p><p class="step__name">Prep for the interview</p></span>
+        <span class="step__pill"><i></i>Prepared</span>
+      </li>
+    </ul>
   </body>
 </html>
