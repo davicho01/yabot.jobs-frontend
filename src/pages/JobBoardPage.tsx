@@ -8,6 +8,8 @@ import { applicationsApi } from "../api/applications";
 import type { JobDetail, JobPosting } from "../api/types";
 import { useConfirm } from "../components/ConfirmDialog";
 import { JobCaseFile } from "../components/JobCaseFile";
+import { Footer } from "../components/Footer";
+import { GettingStartedBanner } from "../components/GettingStarted";
 import { highlightQuery } from "../utils/searchHighlight";
 import {
   DEFAULT_SECTOR,
@@ -370,27 +372,57 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
 
   const { confirm, dialog } = useConfirm();
 
-  // Where the list was scrolled to when a job was opened, so backing out of
-  // the detail on a phone drops the user back on the card they tapped
-  // instead of at the top of the list.
-  const listScrollY = useRef(0);
-  const hadSelection = useRef(!!selectedId);
+  // Phones: the list and the posting sit side by side in a row that scrolls
+  // sideways a whole screen at a time (see JobBoardPage.css), each scrolling
+  // up and down on its own, so each keeps its place. Tapping a card scrolls
+  // the row over to the posting; swiping it back, or the All jobs pill,
+  // scrolls back to the list, and once it settles there the posting closes.
+  const pagerRef = useRef<HTMLDivElement>(null);
+  const detailRef = useRef<HTMLDivElement>(null);
+  const isPhone = () => window.matchMedia(SPLIT_COLLAPSED_QUERY).matches;
+  const smooth = (): ScrollBehavior =>
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+  // Only a tap slides over — a page loaded with ?jobId= starts on the posting.
+  const openedByTap = useRef(false);
   useLayoutEffect(() => {
-    const hasSelection = !!selectedId;
-    if (hasSelection === hadSelection.current) return;
-    hadSelection.current = hasSelection;
-    // On desktop both panes stay put and the page shouldn't jump.
-    if (!window.matchMedia(SPLIT_COLLAPSED_QUERY).matches) return;
-    window.scrollTo(0, hasSelection ? 0 : listScrollY.current);
+    const pager = pagerRef.current;
+    if (!selectedId || !pager || !isPhone()) return;
+    detailRef.current?.scrollTo(0, 0);
+    pager.scrollTo({ left: pager.clientWidth, behavior: openedByTap.current ? smooth() : "auto" });
+    openedByTap.current = false;
   }, [selectedId]);
 
+  const selectedIdRef = useRef(selectedId);
+  selectedIdRef.current = selectedId;
+  useEffect(() => {
+    const pager = pagerRef.current;
+    if (!pager) return;
+    let timer = 0;
+    const settle = () => {
+      if (pager.scrollLeft < 2 && selectedIdRef.current) {
+        updateParams((next) => next.delete("jobId"));
+      }
+    };
+    const onScroll = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(settle, 120);
+    };
+    pager.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.clearTimeout(timer);
+      pager.removeEventListener("scroll", onScroll);
+    };
+  }, [updateParams]);
+
   function selectJob(id: string) {
-    listScrollY.current = window.scrollY;
+    openedByTap.current = true;
     updateParams((next) => next.set("jobId", id));
   }
 
   function closeDetail() {
-    updateParams((next) => next.delete("jobId"));
+    const pager = pagerRef.current;
+    if (pager && isPhone() && pager.scrollLeft > 0) pager.scrollTo({ left: 0, behavior: smooth() });
+    else updateParams((next) => next.delete("jobId"));
   }
 
   async function deleteListing(urlId: string) {
@@ -402,8 +434,13 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
   return (
     <div className={`board board--split${selectedId ? " board--detail-open" : ""}${cards ? " board--cards" : ""}`}>
       {dialog}
-      <div className="board__layout">
+      <div className="board__layout" ref={pagerRef}>
         <div className="board__list">
+          {/* On phones the list is its own scrolling pane, so it carries the
+              page's banner and footer (the page's own are hidden there). */}
+          <div className="board__phone-only">
+            <GettingStartedBanner />
+          </div>
           {cards ? (
             <div className="board__cards-head">
               <div className="board__cards-heading">
@@ -513,9 +550,12 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
                 </button>
               </div>
             )}
+            <div className="board__phone-only">
+              <Footer />
+            </div>
           </div>
 
-          <div className="board__detail">
+          <div className="board__detail" ref={detailRef}>
             {cards && (
               // Above the posting's card: the way back to the list (phones
               // only) on the left, My applications on the right.

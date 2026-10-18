@@ -27,6 +27,9 @@ const PHONE_QUERY = "(max-width: 760px)";
 const PHONE_REVEAL_SCROLL_UP_PX = 700;
 // Scrolled down past this, the header can hide; above it, it's always shown.
 const HIDE_AFTER_SCROLL_PX = 80;
+// And it only hides after this many pixels of continuous scrolling down, so a
+// short scroll while reading leaves it in place.
+const PHONE_HIDE_SCROLL_DOWN_PX = 240;
 
 // What an area named by an old shared ?metro= link reads as in the search box.
 function metroLabel(metro: Metro): string {
@@ -161,30 +164,48 @@ export function Header() {
     lastScrollY.current = window.scrollY;
     // How far the page has been scrolled up in one go; a change of direction starts it over.
     let scrolledUp = 0;
-    function onScroll() {
-      const y = window.scrollY;
-      const delta = y - lastScrollY.current;
-      lastScrollY.current = y;
+    let scrolledDown = 0;
+    // Besides the page itself, panes that scroll on their own count too (the
+    // job board's list and posting on phones), each from its own last spot.
+    const lastPaneY = new WeakMap<Element, number>();
+    function onScroll(event: Event) {
+      const pane = event.target instanceof Element ? event.target : null;
+      const y = pane ? pane.scrollTop : window.scrollY;
+      const last = pane ? lastPaneY.get(pane) : lastScrollY.current;
+      if (pane) lastPaneY.set(pane, y);
+      else lastScrollY.current = y;
+      // A pane seen for the first time has nothing to compare against. (A
+      // sideways scroll — the board sliding between its screens — has its
+      // pane at the top, which brings the header back for the new screen.)
+      if (last === undefined) return;
+      const delta = y - last;
 
       if (!window.matchMedia(PHONE_QUERY).matches) {
         setHidden(false);
         scrolledUp = 0;
+        scrolledDown = 0;
       } else if (y <= HIDE_AFTER_SCROLL_PX) {
         setHidden(false);
         scrolledUp = 0;
+        scrolledDown = 0;
       } else if (delta > 0) {
         scrolledUp = 0;
+        scrolledDown += delta;
         // Never slide the header away while a search field is being used: the
         // phone scrolls the page to bring a focused field into view, which
         // would otherwise take the field with it.
-        if (!headerRef.current?.contains(document.activeElement)) setHidden(true);
+        if (scrolledDown >= PHONE_HIDE_SCROLL_DOWN_PX && !headerRef.current?.contains(document.activeElement)) {
+          setHidden(true);
+        }
       } else if (delta < 0) {
+        scrolledDown = 0;
         scrolledUp -= delta;
         if (scrolledUp >= PHONE_REVEAL_SCROLL_UP_PX) setHidden(false);
       }
     }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    // Capturing, since an element's scroll event doesn't bubble.
+    document.addEventListener("scroll", onScroll, { passive: true, capture: true });
+    return () => document.removeEventListener("scroll", onScroll, { capture: true });
   }, []);
 
   // The header is position:fixed (see Header.css) so it no longer reserves
