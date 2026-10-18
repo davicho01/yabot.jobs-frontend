@@ -2101,10 +2101,11 @@
     <main id="main">
       <!-- hero -->
       <section class="hero" id="try" aria-labelledby="hero-title">
-        <!-- Muted, decorative. No source on a phone (saves the download), so
-             it shows the poster frame; reduced motion pauses it (script below). -->
-        <video class="hero__video" autoplay muted loop playsinline preload="none" poster="/landing/hero-office.jpg" aria-hidden="true">
-          <source src="/landing/hero-office.mp4" type="video/mp4" media="(min-width: 600px)" />
+        <!-- Muted and inline so it autoplays on phones too (iOS shows the
+             poster instead in Low Power Mode); reduced motion pauses it
+             (script below). -->
+        <video class="hero__video" autoplay muted loop playsinline preload="metadata" poster="/landing/hero-office.jpg" aria-hidden="true">
+          <source src="/landing/hero-office.mp4" type="video/mp4" />
         </video>
         <div class="wrap hero__inner">
           <span class="chip-tag"><span class="chip-tag__dot" aria-hidden="true">✓</span>Free, open source job search</span>
