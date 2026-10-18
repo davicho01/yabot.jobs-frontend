@@ -14,6 +14,10 @@
   --accent: #0a0a0a;
   --accent-deep: #2b2b33;
   --on-accent: #ffffff;
+  /* The main buttons (header Search and Add Job, the job board's Next, the
+     apply page's): the first stretch of the card lists' violet-to-green run
+     (src/utils/listGradient.ts), the same in both themes, with white text. */
+  --btn-run: linear-gradient(110deg, #7c3aed, #2563eb);
   --teal: #248a3d;
   --rose: #d70015;
   --amber: #b36500;

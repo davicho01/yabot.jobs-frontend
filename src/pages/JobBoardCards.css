@@ -865,8 +865,8 @@
 
 .board--cards .board__page-button:last-child:not(:disabled),
 .board--cards .board__page-button:last-child:hover:not(:disabled) {
-  color: var(--on-accent);
-  background: var(--ink);
+  color: #ffffff;
+  background: var(--btn-run);
 }
 
 .board--cards .board__page-status {
