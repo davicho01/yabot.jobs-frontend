@@ -106,7 +106,7 @@
 .add-skill-modal__save {
   margin-left: auto;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   padding: 0.5rem 1.2rem;
   border-radius: var(--radius-pill);

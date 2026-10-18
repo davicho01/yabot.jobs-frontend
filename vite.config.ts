@@ -1,4 +1,5 @@
 import { existsSync, readFileSync, statSync } from 'node:fs'
+import type { ServerResponse } from 'node:http'
 import { resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
@@ -44,6 +45,27 @@ function appShellFallback(): Plugin {
 // reaches the app.
 const SEO_PAGES_DIR = resolve(__dirname, '.seo-pages')
 
+// Dev only: logos fetched from the live site, kept in memory for the session.
+const PRODUCTION_ORIGIN = 'https://yabot.jobs'
+const productionLogos = new Map<string, Buffer | null>()
+
+async function proxyProductionLogo(path: string, res: ServerResponse, next: () => void) {
+  if (!productionLogos.has(path)) {
+    try {
+      const response = await fetch(PRODUCTION_ORIGIN + path)
+      const isImage = response.ok && (response.headers.get('content-type') ?? '').startsWith('image/')
+      productionLogos.set(path, isImage ? Buffer.from(await response.arrayBuffer()) : null)
+    } catch {
+      return next()
+    }
+  }
+  const logo = productionLogos.get(path)
+  if (!logo) return next()
+  res.setHeader('Content-Type', 'image/png')
+  res.setHeader('Cache-Control', 'max-age=3600')
+  res.end(logo)
+}
+
 function seoPages(): Plugin {
   return {
     name: 'seo-pages',
@@ -54,7 +76,12 @@ function seoPages(): Plugin {
         const file = path.includes('.')
           ? resolve(SEO_PAGES_DIR, '.' + path)
           : resolve(SEO_PAGES_DIR, '.' + path.replace(/\/+$/, ''), 'index.html')
-        if (!existsSync(file) || !statSync(file).isFile()) return next()
+        if (!existsSync(file) || !statSync(file).isFile()) {
+          // A logo this machine never crawled (a copy of the production
+          // database points at production's logos): show production's copy.
+          if (path.startsWith('/logos/')) return void proxyProductionLogo(path, res, next)
+          return next()
+        }
         res.setHeader(
           'Content-Type',
           file.endsWith('.xml') ? 'application/xml' : file.endsWith('.png') ? 'image/png' : 'text/html; charset=utf-8',

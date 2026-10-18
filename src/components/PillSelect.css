@@ -1,0 +1,88 @@
+/* Same look as the header's pay filters (.site-header__filter-dropdown in
+   Header.css), sized to fill a form row. */
+.pill-select {
+  position: relative;
+  width: 100%;
+}
+
+.pill-select__button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--chip);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+  cursor: pointer;
+}
+
+.pill-select__button:hover:not(:disabled) {
+  background: var(--paper);
+  border-color: var(--focus);
+}
+
+.pill-select__button[aria-expanded="true"] {
+  background: var(--paper);
+  border-color: var(--focus);
+  box-shadow: none;
+}
+
+.pill-select__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pill-select__button svg {
+  flex-shrink: 0;
+}
+
+.pill-select__menu {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.5rem);
+  min-width: 14rem;
+  max-width: 100%;
+  max-height: 20rem;
+  overflow-y: auto;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card), 0 20px 40px -16px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  padding: 0.4rem;
+  z-index: 20;
+}
+
+.pill-select__menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border: none;
+  border-radius: var(--radius-field);
+  background: none;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.9rem;
+  text-transform: none;
+  letter-spacing: normal;
+  cursor: pointer;
+}
+
+.pill-select__menu button:hover:not(:disabled),
+.pill-select__menu button:focus {
+  background: var(--chip);
+  box-shadow: none;
+}

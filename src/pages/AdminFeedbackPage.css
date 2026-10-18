@@ -99,5 +99,5 @@
 }
 
 .admin-feedback__actions button:hover:not(:disabled) {
-  background: var(--surface);
+  background: var(--chip);
 }

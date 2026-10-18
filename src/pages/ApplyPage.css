@@ -42,7 +42,7 @@
 
 .apply__apply-button {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 
@@ -309,7 +309,7 @@
   flex-direction: column;
   gap: 0.15rem;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink-soft);
@@ -334,9 +334,9 @@
 .apply__score-number {
   font-family: var(--font-display);
   font-size: 2.25rem;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.025em;
 }
 
 .apply__score-out-of {
@@ -369,7 +369,7 @@
 .apply__report-number {
   font-family: var(--font-display);
   font-size: 1.3rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1;
 }
@@ -503,10 +503,10 @@
   height: 2rem;
   border-radius: 50%;
   border: 2px solid var(--line);
-  background: var(--surface);
+  background: var(--chip);
   color: var(--ink-soft);
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.9rem;
 }
 
@@ -528,7 +528,7 @@
 .process-step .process-step__marker--running {
   position: relative;
   border-color: var(--line);
-  background: var(--surface);
+  background: var(--chip);
   color: var(--accent);
 }
 
@@ -723,7 +723,7 @@
   display: block;
   font-family: var(--font-display);
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 0.2rem;
 }
 
@@ -780,7 +780,7 @@
   align-items: center;
   max-width: 100%;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border: 1px solid var(--accent);
   padding: 0.45rem 0.9rem;
   border-radius: var(--radius-pill);
@@ -795,7 +795,7 @@
 .process-step__next:hover {
   background: var(--accent-deep);
   border-color: var(--accent-deep);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 /* Step not done yet: a quieter "Skip to", so the step's own main action
@@ -858,7 +858,7 @@
   border-radius: 50%;
   background: var(--teal);
   color: #fff;
-  font-weight: 700;
+  font-weight: 600;
   flex-shrink: 0;
 }
 

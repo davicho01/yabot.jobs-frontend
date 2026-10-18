@@ -8,7 +8,7 @@ import { jobsApi } from "../api/jobs";
 import { describeSavedSearch, paramsToSavedSearchPayload, savedSearchesApi } from "../api/savedSearches";
 import { ApiError } from "../api/client";
 import type { Metro } from "../api/types";
-import { BOARD_PATH } from "../routes";
+import { BOARD_PATH, isBoardPath } from "../routes";
 import { ALL_SECTORS, DEFAULT_SECTOR, SECTOR_OPTIONS, boardSector } from "../utils/jobTags";
 import "./Header.css";
 
@@ -18,10 +18,11 @@ const DEFAULT_LOCATION = "United States";
 
 const PLACE_SUGGESTION_LIMIT = 10;
 
-// On a phone the header is tall and covers a lot of the screen, so once it has
-// slid away it only comes back after this many pixels of continuous scrolling
-// up (or at the very top), not at the first flick of the thumb. Must match the
-// phone breakpoint in Header.css.
+// Only on a phone does the header slide away on scroll: it's tall there and
+// covers a lot of the screen. Once it has slid away it only comes back after
+// this many pixels of continuous scrolling up (or at the very top), not at the
+// first flick of the thumb. On desktop it always stays. Must match the phone
+// breakpoint in Header.css.
 const PHONE_QUERY = "(max-width: 760px)";
 const PHONE_REVEAL_SCROLL_UP_PX = 700;
 // Scrolled down past this, the header can hide; above it, it's always shown.
@@ -165,7 +166,10 @@ export function Header() {
       const delta = y - lastScrollY.current;
       lastScrollY.current = y;
 
-      if (y <= HIDE_AFTER_SCROLL_PX) {
+      if (!window.matchMedia(PHONE_QUERY).matches) {
+        setHidden(false);
+        scrolledUp = 0;
+      } else if (y <= HIDE_AFTER_SCROLL_PX) {
         setHidden(false);
         scrolledUp = 0;
       } else if (delta > 0) {
@@ -176,8 +180,7 @@ export function Header() {
         if (!headerRef.current?.contains(document.activeElement)) setHidden(true);
       } else if (delta < 0) {
         scrolledUp -= delta;
-        // Desktop: any upward movement brings it back. Phone: only a sustained one.
-        if (!window.matchMedia(PHONE_QUERY).matches || scrolledUp >= PHONE_REVEAL_SCROLL_UP_PX) setHidden(false);
+        if (scrolledUp >= PHONE_REVEAL_SCROLL_UP_PX) setHidden(false);
       }
     }
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -205,7 +208,7 @@ export function Header() {
   // only makes sense on the board — everywhere else, using them starts a fresh
   // search there instead of trying to merge into whatever unrelated params
   // the current route has (or doesn't have).
-  const onBoard = routerLocation.pathname === BOARD_PATH;
+  const onBoard = isBoardPath(routerLocation.pathname);
   const boardJobId = onBoard ? searchParams.get("jobId") : null;
   const searchContext = `${routerLocation.pathname}#${boardJobId ?? ""}`;
   const mobileSearchOpen = mobileSearchOpenFor === searchContext;
@@ -573,7 +576,10 @@ export function Header() {
   const firstName = user?.display_name?.trim().split(/\s+/)[0] || user?.email?.split("@")[0];
 
   return (
-    <header className={`site-header${hidden ? " site-header--hidden" : ""}`} ref={headerRef}>
+    <header
+      className={`site-header site-header--glass${hidden ? " site-header--hidden" : ""}`}
+      ref={headerRef}
+    >
       <div className="site-header__row">
         {/* A plain <a>, not <Link>: "/" is the static marketing landing page
             (see index.html), not one of this SPA's own routes — a client-side

@@ -121,6 +121,8 @@ export interface ApplicationJobPosting {
   title: string | null;
   company_name: string | null;
   company_logo_url: string | null;
+  // Optional: older backends don't send it.
+  location?: string | null;
   salary_min: number | null;
   salary_max: number | null;
   salary_currency: string | null;

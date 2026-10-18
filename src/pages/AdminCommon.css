@@ -141,7 +141,7 @@
 
 .admin-totals__value {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 2rem;
   letter-spacing: -0.02em;
 }

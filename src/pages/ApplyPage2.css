@@ -1,0 +1,1273 @@
+/* /jobs/:urlId/apply2 — the card layout (see ApplyPage2.tsx). Builds on
+   ApplyPage.css, which is loaded too: step contents (reports, menus, notes
+   editor) keep their /apply classes and are only retinted here. */
+
+.apply2 {
+  /* Band and accent colors are the same in both themes: the bands carry
+     their own white or dark text. */
+  --apply2-plum: #1f1a35;
+  --apply2-plum-soft: #b9b4cc;
+  --apply2-magenta: #ec008c;
+  --apply2-coral: #fc8b67;
+  --apply2-sun: #ffd46d;
+  --apply2-blue: #364ea9;
+  --apply2-lime: #cdea8f;
+  --apply2-sunset: linear-gradient(227deg, var(--apply2-magenta) 3%, var(--apply2-coral) 69%, var(--apply2-sun) 98%);
+
+  --apply2-card: #ffffff;
+  --apply2-chip: #f1f1f4;
+  --apply2-muted-band: #d9d8e0;
+  --apply2-btn: #0a0a0a;
+  --apply2-on-btn: #ffffff;
+  --apply2-shadow: 0 18px 40px rgba(31, 26, 53, 0.1), 0 2px 6px rgba(31, 26, 53, 0.05);
+
+  --apply2-r-card: 32px;
+  --apply2-r-pill: 999px;
+
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 4rem;
+  /* Transparent so the page shell's color washes (see Header.css) show. */
+  background: transparent;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .apply2 {
+    --apply2-card: #1c1b22;
+    --apply2-chip: #2a2931;
+    --apply2-muted-band: #34333c;
+    --apply2-btn: #f5f5f7;
+    --apply2-on-btn: #0a0a0a;
+    --apply2-shadow: 0 0 0 1px #2c2c2e;
+  }
+}
+
+:root[data-theme="dark"] .apply2 {
+  --apply2-card: #1c1b22;
+  --apply2-chip: #2a2931;
+  --apply2-muted-band: #34333c;
+  --apply2-btn: #f5f5f7;
+  --apply2-on-btn: #0a0a0a;
+  --apply2-shadow: 0 0 0 1px #2c2c2e;
+}
+
+.apply2--state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.apply2 h1,
+.apply2 h2 {
+  font-family: var(--font-display);
+}
+
+/* ---------- toolbar ---------- */
+
+.apply2__toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+/* The same pill as the job board's "My applications →". */
+.apply2__crumb {
+  justify-self: start;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--apply2-r-pill);
+  background: var(--apply2-chip);
+}
+
+.apply2__crumb:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+
+/* Crumb left, Prev / position / Next centred, buttons right. The base
+   .apply__nav-group pins itself to grid-row 1, which auto-placed it into the
+   first column ahead of the crumb; the explicit columns keep the order. */
+.apply2__toolbar .apply2__crumb {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.apply2__toolbar .apply__nav-group {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.apply2__toolbar-actions {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+/* Same type as the crumb, so the row reads as one line of links. */
+.apply2__toolbar .apply__back-link,
+.apply2__toolbar .apply__nav-position {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.apply2__toolbar-actions {
+  justify-self: end;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.apply2-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 0.8rem 1.2rem;
+  border-radius: var(--apply2-r-pill);
+  border: 0;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.apply2-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.apply2-btn--ink,
+.apply2-btn--ink:hover:not(:disabled) {
+  background: var(--apply2-btn);
+  color: var(--apply2-on-btn);
+}
+
+.apply2-btn--soft,
+.apply2-btn--soft:hover:not(:disabled) {
+  background: var(--apply2-chip);
+  color: var(--ink);
+}
+
+.apply2-btn--light,
+.apply2-btn--light:hover {
+  background: #ffffff;
+  color: #0a0a0a;
+}
+
+.apply2-btn--sm {
+  padding: 0.6rem 0.95rem;
+  font-size: 0.82rem;
+}
+
+/* ---------- grid ---------- */
+
+.apply2__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+  gap: 1.75rem;
+  align-items: start;
+}
+
+.apply2__side {
+  position: sticky;
+  top: calc(var(--header-height, 0px) + 1rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.apply2__main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+/* ---------- the card ---------- */
+
+/* Not overflow: hidden, so menus inside (Download, resume picker) can open
+   past the card's edge; the band rounds its own top corners instead. */
+.apply2-card {
+  background: var(--apply2-card);
+  border-radius: var(--apply2-r-card);
+  box-shadow: var(--apply2-shadow);
+}
+
+.apply2-band {
+  position: relative;
+  background: var(--apply2-band, var(--apply2-plum));
+  border-radius: var(--apply2-r-card) var(--apply2-r-card) 0 0;
+}
+
+/* The soft sheen on every band. */
+.apply2-band::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(55% 75% at 66% 32%, #ffffff1f, #fff0 70%);
+}
+
+.apply2-tile {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  color: var(--apply2-plum);
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(31, 26, 53, 0.16);
+}
+
+.apply2-fit {
+  position: absolute;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--apply2-r-pill);
+  background: #ffffffeb;
+  color: #0a0a0a;
+  font-weight: 600;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.apply2-fit i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #9a99a6;
+}
+
+/* Fixed light-theme tier colors: the pill is always white. */
+.apply2-fit--positive i {
+  background: #248a3d;
+}
+
+.apply2-fit--warning i {
+  background: #b36500;
+}
+
+.apply2-fit--negative i {
+  background: #d70015;
+}
+
+.apply2-chev {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--apply2-chip);
+  color: var(--ink);
+  transition: transform 0.25s ease;
+}
+
+[aria-expanded="true"] > .apply2-chev {
+  transform: rotate(180deg);
+}
+
+/* ---------- job card ---------- */
+
+.apply2-job .apply2-band {
+  height: 112px;
+  background: var(--apply2-sunset);
+}
+
+.apply2-job__tile {
+  left: 24px;
+  bottom: -32px;
+  width: 76px;
+  height: 76px;
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+/* Drops the inline-in-text spacing and nudge CompanyLogo.css gives it, so it
+   sits dead center in the tile. */
+.apply2-job__tile .company-logo {
+  margin: 0;
+  top: 0;
+  border-radius: 12px;
+}
+
+.apply2-job .apply2-fit {
+  right: 16px;
+  top: 16px;
+  font-size: 1.05rem;
+  padding: 0.55rem 1rem;
+}
+
+.apply2-job__body {
+  padding: 48px 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.apply2-job__co {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+
+.apply2-job h1 {
+  font-size: 1.85rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.apply2-job__meta {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--ink-soft);
+}
+
+.apply2-job__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+
+.apply2-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--apply2-r-pill);
+  background: var(--apply2-chip);
+}
+
+/* The pay as the soft lime chip used on the job search and applications
+   cards: a light lime tint with deep green text (lime on a fainter tint in
+   the dark theme). */
+.apply2-tag--salary {
+  font-weight: 500;
+  background: color-mix(in srgb, var(--apply2-lime) 45%, transparent);
+  color: #3f6212;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .apply2-tag--salary {
+    background: color-mix(in srgb, var(--apply2-lime) 16%, transparent);
+    color: var(--apply2-lime);
+  }
+}
+
+:root[data-theme="dark"] .apply2-tag--salary {
+  background: color-mix(in srgb, var(--apply2-lime) 16%, transparent);
+  color: var(--apply2-lime);
+}
+
+.apply2-job__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.8rem;
+}
+
+.apply2-job__posted {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.apply2-job__desc {
+  border-top: 1px solid var(--line);
+}
+
+.apply2-disclose,
+.apply2-disclose:hover:not(:disabled) {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 24px;
+  background: none;
+  color: var(--ink);
+  border-radius: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.apply2-job__desc-body {
+  padding: 0 24px 22px;
+  max-height: 60vh;
+  overflow: auto;
+}
+
+/* ---------- notes ---------- */
+
+.apply2-notes {
+  /* Clear of the fixed header when a #notes link scrolls here. */
+  scroll-margin-top: calc(var(--header-height, 0px) + 1rem);
+  padding: 1.1rem 1.4rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.apply2-notes__head,
+.apply2-notes__head:hover:not(:disabled) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0;
+  background: none;
+  color: var(--ink);
+  border-radius: 0;
+  text-align: left;
+}
+
+.apply2-notes__title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.apply2-notes__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.apply2-notes__body[hidden] {
+  display: none;
+}
+
+.apply2-notes__fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.apply2-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  min-width: 0;
+}
+
+.apply2-input {
+  font: 500 0.92rem/1.3 var(--font-body);
+  color: var(--ink);
+  background: var(--apply2-chip);
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: 0.6rem 0.8rem;
+  width: 100%;
+}
+
+.apply2-input:focus {
+  outline: none;
+  border-color: var(--ink);
+}
+
+.apply2-saved {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--teal);
+  margin-left: 0.4rem;
+}
+
+.apply2-saving {
+  font-weight: 500;
+}
+
+.apply2__remove-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* ---------- match score ---------- */
+
+.apply2-score {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--apply2-r-card);
+  /* The two soft glows (magenta top right; violet bottom middle, the steps'
+     first color, handing off to step 1 below) are painted as gradients in
+     the card's own background rather than blurred layers, which Safari lets
+     spill past the rounded corners. */
+  background:
+    radial-gradient(42% 70% at 82% 6%, rgba(236, 0, 140, 0.5), transparent 70%),
+    radial-gradient(40% 60% at 55% 108%, rgba(124, 58, 237, 0.7), transparent 70%),
+    var(--apply2-plum);
+  color: #ffffff;
+  padding: 1.6rem 1.8rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.5rem 1.6rem;
+  align-items: center;
+  box-shadow: var(--apply2-shadow);
+}
+
+.apply2-score > * {
+  position: relative;
+  z-index: 1;
+}
+
+.apply2-score__num {
+  font-family: var(--font-display);
+  font-size: 6rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+
+.apply2-score__num small {
+  font-size: 1.3rem;
+  letter-spacing: 0;
+  font-weight: 600;
+  color: var(--apply2-plum-soft);
+}
+
+.apply2-score__txt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.apply2-score__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--apply2-plum-soft);
+}
+
+.apply2-score__head {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.apply2-score__delta {
+  align-self: flex-start;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--apply2-r-pill);
+  background: #ffffff1f;
+}
+
+.apply2-score__meter {
+  grid-column: 1 / -1;
+  position: relative;
+  height: 10px;
+  margin-top: 0.8rem;
+  border-radius: 10px;
+  background: #ffffff24;
+}
+
+.apply2-score__fill {
+  height: 100%;
+  border-radius: 10px;
+  background: var(--apply2-sunset);
+}
+
+/* Where the original resume scored, under the tailored fill. */
+.apply2-score__was {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 3px;
+  border-radius: 2px;
+  background: #ffffff;
+}
+
+/* ---------- progress strip ---------- */
+
+.apply2-progress {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.apply2-progress button,
+.apply2-progress button:hover:not(:disabled) {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.apply2-progress b {
+  display: block;
+  height: 6px;
+  border-radius: 6px;
+  background: var(--line);
+}
+
+/* Each dash is its step's own band (--step-band, set per button), so the
+   strip is a small copy of the steps' ribbon below: lit once a step is done
+   or open, a faint tint of it until then. */
+.apply2-progress [data-state="todo"] b {
+  background: var(--step-band);
+  opacity: 0.22;
+}
+
+.apply2-progress [data-state="done"] b,
+.apply2-progress [data-state="current"] b {
+  background: var(--step-band);
+}
+
+.apply2-progress [data-state="current"] {
+  color: var(--ink);
+}
+
+.apply2-progress span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- step cards ---------- */
+
+.apply2-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.apply2-step .apply2-band {
+  height: 72px;
+  transition: height 0.3s ease;
+}
+
+.apply2-step--open .apply2-band {
+  height: 96px;
+}
+
+.apply2-step--muted {
+  box-shadow: 0 2px 6px rgba(31, 26, 53, 0.05);
+}
+
+.apply2-step--muted .apply2-band {
+  background: var(--apply2-muted-band);
+}
+
+.apply2-step__tile {
+  left: 22px;
+  bottom: -24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  font-size: 1.3rem;
+}
+
+.apply2-step__tile--running {
+  animation: apply2-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes apply2-pulse {
+  50% {
+    transform: scale(0.92);
+  }
+}
+
+.apply2-step .apply2-fit {
+  right: 14px;
+  top: 14px;
+}
+
+.apply2-step__head,
+.apply2-step__head:hover:not(:disabled) {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  padding: 36px 22px 18px;
+  background: none;
+  color: var(--ink);
+  border-radius: 0;
+  text-align: left;
+  scroll-margin-top: calc(var(--header-height, 0px) + 7rem);
+}
+
+/* The chevron lines up with the title rather than the middle of the
+   header, so it stays put when the status line or progress bars below the
+   title change the header's height. Its offset is the "Step N" line above
+   the title (about 1.09rem) plus half the title's line, less half its own
+   30px. */
+.apply2-step {
+  --apply2-step-title-size: 1.35rem;
+}
+
+.apply2-step__head,
+.apply2-step__head:hover:not(:disabled) {
+  align-items: flex-start;
+}
+
+.apply2-step__head > .apply2-chev {
+  margin-top: calc(1.09rem + var(--apply2-step-title-size) * 0.6 - 15px);
+}
+
+.apply2-step__name {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.apply2-step__num {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+.apply2-step__title {
+  font-family: var(--font-display);
+  font-size: var(--apply2-step-title-size);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.apply2-step__sub {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.apply2-step__body {
+  padding: 0 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Step contents keep their /apply markup; drop the grey panel behind it
+   (the card is the panel now) and use the card's buttons. */
+.apply2-step__body .dossier-action,
+.apply2-step__body .job-dashboard__evaluate-panel {
+  background: transparent;
+}
+
+/* A step's main action (Score this resume, Tailor my resume, Generate cover
+   letter, Generate interview prep) is "the next thing to do": the sunset
+   gradient. Once a step is done, "Next:" is a black outline and the step's
+   own leftover actions (Quick re-score, Get full evaluation…) drop to the
+   grey outline the "Skip to" buttons use. */
+.apply2 .dossier-action__button,
+.apply2 .dossier-action__button:hover:not(:disabled),
+.apply2 .job-dashboard__evaluate-button,
+.apply2 .job-dashboard__evaluate-button:hover:not(:disabled) {
+  background: var(--apply2-sunset);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 8px 20px -8px rgba(236, 0, 140, 0.45);
+}
+
+.apply2 .process-step__next:not(.process-step__next--skip),
+.apply2 .process-step__next:not(.process-step__next--skip):hover {
+  background: transparent;
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.apply2 .rescan-button:not(.rescan-button--danger, .delete-button) {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ink-soft);
+}
+
+.apply2 .rescan-button:not(.rescan-button--danger, .delete-button):hover:not(:disabled) {
+  background: transparent;
+  border-color: var(--ink-soft);
+  color: var(--ink);
+}
+
+/* The last step's way out (Next application / Back to applications) leaves
+   this job rather than moving it forward: the same outlined style as the
+   "Skip to" buttons. */
+.apply2 .process-step__footer > a.process-step__next {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ink-soft);
+}
+
+.apply2 .process-step__footer > a.process-step__next:hover {
+  background: transparent;
+  border-color: var(--ink-soft);
+  color: var(--ink);
+}
+
+.apply2 .apply__apply-button,
+.apply2 .apply__apply-button:hover:not(:disabled) {
+  background: var(--apply2-sunset);
+  border-color: transparent;
+  color: #ffffff;
+}
+
+/* ---------- step buttons ---------- */
+
+/* Every button in a step looks and behaves the same: one height (taller on
+   phones, see the 600px block), centered label, and 0.5rem between any two
+   of them, in a row or stacked. */
+.apply2-step__body {
+  --apply2-step-btn-h: 2.5rem;
+}
+
+.apply2-step__body
+  :is(
+    .dossier-action__button,
+    .job-dashboard__evaluate-button,
+    .rescan-button,
+    .process-step__next,
+    .apply__apply-button,
+    .action-dropdown > button
+  ) {
+  box-sizing: border-box;
+  min-height: var(--apply2-step-btn-h);
+  margin: 0;
+  padding-block: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.apply2-step__body .job-dashboard__actions {
+  gap: 0.5rem;
+}
+
+/* Wider screens: a Next sharing a row with other buttons stays at its right
+   end (the reset margin above would otherwise pull it in). */
+@media (min-width: 601px) {
+  .apply2-step__body .job-dashboard__actions .process-step__next {
+    margin-left: auto;
+  }
+}
+
+/* The step's body spaces its blocks 1rem apart; the button that closes a
+   step (its footer) sits only 0.5rem under the buttons before it. */
+.apply2-step__body > .process-step__footer {
+  margin-top: -0.5rem;
+}
+
+/* ---------- all set ---------- */
+
+/* Picks up where step 5's band ends (lime) and goes deeper: the same
+   diagonal, from a bold green into teal, so the steps' run finishes on a
+   strong "done" color. Both are dark enough for white text. */
+.apply2-done {
+  border-radius: var(--apply2-r-card);
+  padding: 2rem 1.8rem;
+  color: #ffffff;
+  background:
+    radial-gradient(55% 90% at 78% 10%, #cdea8f59, #cdea8f00 70%),
+    linear-gradient(110deg, #23883a, #087f86);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  box-shadow: var(--apply2-shadow);
+}
+
+.apply2-done h2 {
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+.apply2-done p {
+  margin: 0 0 0.4rem;
+  font-weight: 600;
+}
+
+/* ---------- narrow screens ---------- */
+
+@media (max-width: 920px) {
+  .apply2__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* One column: the score and the steps first, the job card, notes and
+     Remove/Archive after them, so the work isn't a long scroll away. */
+  .apply2__side {
+    position: static;
+    order: 1;
+  }
+}
+
+/* The job in one line above the score card, on phones (see above). */
+.apply2-jobline {
+  display: none;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.apply2-jobline__logo {
+  flex: none;
+  display: grid;
+}
+
+.apply2-jobline__logo .company-logo {
+  margin: 0;
+  top: 0;
+  border-radius: 10px;
+}
+
+.apply2-jobline__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.apply2-jobline__company {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.apply2-jobline__title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 920px) {
+  /* Its own small card in the brand's sunset gradient, with white text and
+     the logo on a white tile, so it stands apart from the plum score card. */
+  .apply2-jobline {
+    display: flex;
+    padding: 0.85rem 1rem;
+    border-radius: 22px;
+    color: #ffffff;
+    background: var(--apply2-sunset);
+    box-shadow: var(--apply2-shadow);
+  }
+
+  .apply2-jobline .apply2-jobline__company {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .apply2-jobline .apply2-jobline__title {
+    text-shadow: 0 1px 2px rgba(31, 26, 53, 0.2);
+  }
+
+  .apply2-jobline__logo {
+    padding: 4px;
+    border-radius: 12px;
+    background: #ffffff;
+  }
+
+  /* Below the steps, the job card keeps only the details: the job line at
+     the top already shows the logo, company and title. */
+  .apply2-job .apply2-band,
+  .apply2-job .apply2-job__co,
+  .apply2-job h1 {
+    display: none;
+  }
+
+  /* No logo tile hanging into it any more, so no room left for one. */
+  .apply2-job .apply2-job__body {
+    padding-top: 22px;
+  }
+
+  .apply2-job .apply2-job__about {
+    display: block;
+  }
+}
+
+.apply2-job__about {
+  display: none;
+  margin: 0 0 0.2rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 600px) {
+  /* A step's buttons as one tidy block: they wrap in rows that each fill
+     the card's width (so a button left alone on a row stretches across it),
+     and Next takes a full-width row of its own at the bottom. Nested button
+     groups are flattened into the one block. */
+  .apply2-step__body .job-dashboard__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+
+  .apply2-step__body .job-dashboard__actions .job-dashboard__actions {
+    display: contents;
+  }
+
+  /* div: the download menus come wrapped in a plain one. */
+  .apply2-step__body .job-dashboard__actions > :is(button, a, div),
+  .apply2-step__body .job-dashboard__actions .job-dashboard__actions > :is(button, a, div) {
+    flex: 1 1 auto;
+    margin: 0;
+    display: inline-flex;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .apply2-step__body .job-dashboard__actions .action-dropdown,
+  .apply2-step__body .job-dashboard__actions .action-dropdown > button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .apply2-step__body .job-dashboard__actions .process-step__next {
+    flex-basis: 100%;
+    order: 1;
+  }
+
+  .apply2-step__body {
+    --apply2-step-btn-h: 2.9rem;
+  }
+
+  .apply2-step__body
+    :is(
+      .dossier-action__button,
+      .job-dashboard__evaluate-button,
+      .rescan-button,
+      .process-step__next,
+      .apply__apply-button,
+      .action-dropdown > button
+    ) {
+    font-size: 0.95rem;
+  }
+
+  /* One that isn't sharing a row with others (Generate interview prep,
+     Regenerate, the last step's Next application) takes the full width, like
+     the rows above. */
+  .apply2-step__body
+    :is(.dossier-action__button, .job-dashboard__evaluate-button, .rescan-button, .process-step__next):not(
+      .job-dashboard__actions *
+    ) {
+    width: 100%;
+  }
+
+  .apply2 {
+    padding: 1rem 0.75rem 3rem;
+    border-radius: 0;
+  }
+
+  .apply2__toolbar {
+    grid-template-columns: 1fr auto;
+  }
+
+  .apply2__toolbar .apply__nav-group {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .apply2__toolbar-actions {
+    grid-column: 2;
+  }
+
+  .apply2-score {
+    grid-template-columns: 1fr;
+    padding: 1.4rem;
+  }
+
+  .apply2-score__num {
+    font-size: 4.8rem;
+  }
+
+  .apply2-notes__fields {
+    grid-template-columns: 1fr;
+  }
+
+  .apply2-progress span {
+    display: none;
+  }
+
+  .apply2-step {
+    --apply2-step-title-size: 1.15rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apply2-step .apply2-band,
+  .apply2-chev,
+  .apply2-btn {
+    transition: none;
+  }
+
+  .apply2-step__tile--running {
+    animation: none;
+  }
+}
+
+/* The full-width toggles (step headers, description, notes, progress) drop
+   the click glow (inside a card it showed as a line across) and draw their
+   focus ring in the brand magenta, inside the card. */
+.apply2-step__head:focus,
+.apply2-disclose:focus,
+.apply2-notes__head:focus,
+.apply2-progress button:focus {
+  box-shadow: none;
+}
+
+.apply2-disclose:focus-visible,
+.apply2-notes__head:focus-visible,
+.apply2-progress button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -4px;
+  border-radius: 18px;
+}
+
+/* A focused step header outlines its whole step card in magenta (e.g. after a
+   "Next:" link or the Next button lands on it), not just the title row. */
+.apply2-step__head:focus-visible {
+  outline: none;
+}
+
+.apply2-step:has(.apply2-step__head:focus-visible) {
+  box-shadow:
+    0 0 0 2px var(--focus),
+    var(--apply2-shadow);
+}
+
+/* ---------- auto-score progress bars ----------
+   The running stage's bar fills from the left in the sunset gradient over
+   the stage's time limit (--progress-seconds, set per stage in
+   ApplyPage2.tsx), slowing a little toward the end and stopping just short
+   of full; a light sheen sweeps across it. A finished stage's bar is full.
+   Replaces the base page's black block sliding back and forth. The bars
+   span the header up to the chevron and are thicker than the base page's. */
+/* Runs on under the chevron (its 30px plus the header's 0.9rem gap), so
+   the bars span the card's full inner width. */
+.apply2 .process-step__progress {
+  margin-top: 0.75rem;
+  margin-right: calc(-30px - 0.9rem);
+  gap: 1rem;
+}
+
+.apply2 .process-step__progress-bar {
+  height: 14px;
+}
+
+.apply2 .process-step__progress-label {
+  margin-top: 0.45rem;
+  font-size: 0.9rem;
+}
+
+.apply2 .process-step__progress-part--current .process-step__progress-bar::after {
+  left: 0;
+  width: 96%;
+  background:
+    linear-gradient(100deg, #fff0 30%, #ffffff73 50%, #fff0 70%) 0 0 / 50% 100% no-repeat,
+    var(--apply2-sunset);
+  animation:
+    apply2-progress-fill var(--progress-seconds, 60s) cubic-bezier(0.25, 0.55, 0.45, 1) var(--progress-delay, 0s)
+      forwards,
+    apply2-progress-sheen 1.6s linear infinite;
+}
+
+.apply2 .process-step__progress-part--done .process-step__progress-bar {
+  background: var(--apply2-sunset);
+}
+
+.apply2 .process-step__progress-part--done .process-step__progress-label {
+  color: var(--ink-soft);
+}
+
+.apply2 .process-step__progress-part--current .process-step__progress-label {
+  color: var(--ink);
+}
+
+/* Phone: a step's bars stack, each the full width, so their labels
+   ("Tailoring your resume", "Scoring the tailored resume") aren't cut off. */
+@media (max-width: 600px) {
+  .apply2 .process-step__progress {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+@keyframes apply2-progress-fill {
+  from {
+    width: 6%;
+  }
+  to {
+    width: 96%;
+  }
+}
+
+@keyframes apply2-progress-sheen {
+  from {
+    background-position: -100% 0, 0 0;
+  }
+  to {
+    background-position: 200% 0, 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apply2 .process-step__progress-part--current .process-step__progress-bar::after {
+    animation: apply2-progress-fill var(--progress-seconds, 60s) cubic-bezier(0.25, 0.55, 0.45, 1)
+      var(--progress-delay, 0s) forwards;
+  }
+}
+
+/* On a window wide enough for the full 1200px (the header's width), drop the
+   side padding so the cards line up with the header's edges. Narrower, the
+   padding keeps them off the window edge. */
+@media (min-width: 1260px) {
+  .apply2 {
+    padding-inline: 0;
+  }
+}

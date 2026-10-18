@@ -25,7 +25,7 @@
 }
 
 .getting-started-banner__title {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--ink);
   text-decoration: none;
 }
@@ -84,7 +84,7 @@
   background: var(--teal);
   color: #fff;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .getting-started-banner__close {

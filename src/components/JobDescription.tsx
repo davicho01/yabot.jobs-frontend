@@ -109,6 +109,11 @@ const components: Components = {
   },
 };
 
+// Scraped bullets often arrive as plain "• item" lines (one paragraph each)
+// rather than markdown list items; as a real list they read as one, with
+// list spacing instead of a paragraph gap between every line.
+const BULLET_LINE = /^[ \t]*[•·▪●◦‣][ \t]*/gm;
+
 export function JobDescription({ markdown }: { markdown: string }) {
-  return <ReactMarkdown components={components}>{markdown}</ReactMarkdown>;
+  return <ReactMarkdown components={components}>{markdown.replace(BULLET_LINE, "- ")}</ReactMarkdown>;
 }

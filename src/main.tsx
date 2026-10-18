@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App.tsx";
+// After App, so it follows every page's own stylesheet.
+import "./cardStyle.css";
 import { AuthProvider } from "./auth/AuthContext.tsx";
 import { initAnalytics } from "./utils/analytics.ts";
 

@@ -1,3 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-  <path d="M4 24h8l5-13 7 26 5-13h15" fill="none" stroke="#0071e3" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- The brand mark: a white pulse line on the sunset-gradient tile (the
+       landing page's .brand__mark and the app header's logo). -->
+  <defs>
+    <linearGradient id="sunset" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0.03" stop-color="#ec008c"/>
+      <stop offset="0.69" stop-color="#fc8b67"/>
+      <stop offset="0.98" stop-color="#ffd46d"/>
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" rx="13" fill="url(#sunset)"/>
+  <path d="M9 24h6l4-10 6 20 4-10h10" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

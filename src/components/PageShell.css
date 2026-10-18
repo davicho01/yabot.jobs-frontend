@@ -12,7 +12,7 @@
   /* Mobile browsers' 100vh is the *largest* viewport (URL bar retracted), so
      it overshoots what's visible; dvh tracks the real one. */
   height: 100dvh;
-  background: var(--paper);
+  background: var(--page);
   /* Header is position:fixed (see Header.css) and out of normal flow, so
      this reserves its place; --header-height is kept in sync with the
      header's actual rendered height (it changes when the filters/add-job
@@ -32,7 +32,7 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--paper);
+  background: var(--page);
 }
 
 /* Must match --content-max-width in index.css — @media can't read custom

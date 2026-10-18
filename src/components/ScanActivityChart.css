@@ -28,7 +28,7 @@
 }
 
 .scan-chart__granularity-btn:hover {
-  background: var(--surface);
+  background: var(--chip);
 }
 
 .scan-chart__granularity-btn--active {
@@ -64,7 +64,7 @@
 }
 
 .scan-chart__hour-nav-btn:hover:not(:disabled) {
-  background: var(--surface);
+  background: var(--chip);
 }
 
 .scan-chart__hour-nav-btn:disabled {
@@ -152,7 +152,7 @@
 }
 
 .scan-chart__tooltip-value {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.95rem;
   color: var(--ink);
 }

@@ -36,7 +36,7 @@
 }
 
 .feedback-modal__kind:hover {
-  background: var(--surface);
+  background: var(--chip);
 }
 
 .feedback-modal__kind.is-active {
@@ -46,7 +46,7 @@
 }
 
 .feedback-modal__kind:has(input:focus-visible) {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
@@ -67,13 +67,13 @@
 }
 
 .feedback-modal__rating-buttons button:hover {
-  background: var(--surface);
+  background: var(--chip);
 }
 
 .feedback-modal__rating-buttons button.is-active {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .feedback-modal__rating-scale {

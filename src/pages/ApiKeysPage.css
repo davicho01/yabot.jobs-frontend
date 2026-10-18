@@ -45,7 +45,8 @@
   align-self: flex-start;
 }
 
-.settings-key-form label {
+.settings-key-form label,
+.settings-key-form__field {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
@@ -92,12 +93,15 @@
   transition: border-color 0.15s ease;
 }
 
-.settings-key-form select:hover {
-  border-color: var(--accent);
+/* The same magenta line and glow as the text fields (see index.css). */
+.settings-key-form select:hover:not(:disabled, :focus) {
+  border-color: var(--focus);
 }
 
-.settings-key-form select:focus-visible {
-  border-color: var(--accent-deep);
+.settings-key-form select:focus {
+  outline: none;
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent);
 }
 
 .select-field::after {
@@ -175,7 +179,7 @@
 
 .record-list__make-default:hover:not(:disabled) {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 
