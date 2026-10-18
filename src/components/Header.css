@@ -832,8 +832,10 @@
 .site-header--glass > * {
   max-width: 1200px;
   background: var(--glass-bg);
-  backdrop-filter: blur(14px) saturate(200%);
+  /* Prefixed first: in the other order the production CSS minifier drops
+     the standard property and keeps only Safari's, so Chrome got no blur. */
   -webkit-backdrop-filter: blur(14px) saturate(200%);
+  backdrop-filter: blur(14px) saturate(200%);
   border-left: 1px solid var(--glass-edge);
   border-right: 1px solid var(--glass-edge);
   box-shadow: var(--glass-shadow);
