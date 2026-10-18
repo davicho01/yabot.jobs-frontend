@@ -69,9 +69,9 @@
 }
 
 .record-list__make-default:hover {
-  background: var(--accent);
-  color: var(--on-accent);
-  border-color: var(--accent);
+  background: var(--btn-run);
+  color: #ffffff;
+  border-color: transparent;
 }
 
 .record-list__remove {

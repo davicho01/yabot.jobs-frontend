@@ -719,8 +719,8 @@ a.application-row__follow-up--due:hover {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--btn-run);
+  color: #ffffff;
   text-decoration: none;
   font-family: var(--font-body);
   font-weight: 600;
@@ -734,7 +734,8 @@ a.application-row__follow-up--due:hover {
 }
 
 .application-row__apply-button:hover {
-  background: var(--accent-deep);
+  background: var(--btn-run);
+  filter: brightness(1.1);
 }
 
 /* Auto score marked this one ready (best score ≥ 85). */

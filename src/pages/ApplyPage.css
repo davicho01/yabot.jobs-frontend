@@ -41,13 +41,14 @@
 }
 
 .apply__apply-button {
-  background: var(--accent);
-  color: var(--on-accent);
-  border-color: var(--accent);
+  background: var(--btn-run);
+  color: #ffffff;
+  border-color: transparent;
 }
 
 .apply__apply-button:hover {
-  background: var(--accent-deep);
+  background: var(--btn-run);
+  filter: brightness(1.1);
 }
 
 /* The first thing in the card (above the title block) — a 3-column grid
@@ -779,9 +780,9 @@
   display: inline-flex;
   align-items: center;
   max-width: 100%;
-  background: var(--accent);
-  color: var(--on-accent);
-  border: 1px solid var(--accent);
+  background: var(--btn-run);
+  color: #ffffff;
+  border: 1px solid transparent;
   padding: 0.45rem 0.9rem;
   border-radius: var(--radius-pill);
   font-family: var(--font-body);
@@ -793,9 +794,10 @@
 }
 
 .process-step__next:hover {
-  background: var(--accent-deep);
-  border-color: var(--accent-deep);
-  color: var(--on-accent);
+  background: var(--btn-run);
+  filter: brightness(1.1);
+  border-color: transparent;
+  color: #ffffff;
 }
 
 /* Step not done yet: a quieter "Skip to", so the step's own main action

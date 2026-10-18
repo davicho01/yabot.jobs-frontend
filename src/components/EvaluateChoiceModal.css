@@ -279,8 +279,8 @@
 }
 
 .evaluate-progress__primary {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--btn-run);
+  color: #ffffff;
   padding: 0.5rem 1.2rem;
   border-radius: var(--radius-pill);
   font-weight: 600;
@@ -289,5 +289,6 @@
 }
 
 .evaluate-progress__primary:hover {
-  background: var(--accent-deep);
+  background: var(--btn-run);
+  filter: brightness(1.1);
 }

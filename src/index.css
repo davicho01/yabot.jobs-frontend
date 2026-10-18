@@ -177,8 +177,8 @@ button {
   font-size: 0.9rem;
   letter-spacing: 0;
   text-transform: none;
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--btn-run);
+  color: #ffffff;
   border: none;
   padding: 0.65rem 1.3rem;
   border-radius: var(--radius-pill);
@@ -197,7 +197,7 @@ button {
    button's own border:none makes it a no-op there, which is the point —
    one rule for both button styles instead of two. */
 :where(button:hover:not(:disabled)) {
-  background: var(--accent-deep);
+  background: var(--btn-run);
   border-color: var(--accent);
 }
 

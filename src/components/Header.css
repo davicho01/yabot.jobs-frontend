@@ -658,9 +658,9 @@
 }
 
 .site-header__login:hover {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--paper);
+  background: var(--btn-run);
+  border-color: transparent;
+  color: #ffffff;
 }
 
 /* Stays exactly the avatar's own size — the row's align-items: center then

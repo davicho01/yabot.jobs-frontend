@@ -105,8 +105,8 @@
 
 .add-skill-modal__save {
   margin-left: auto;
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--btn-run);
+  color: #ffffff;
   border: none;
   padding: 0.5rem 1.2rem;
   border-radius: var(--radius-pill);
@@ -115,7 +115,8 @@
 }
 
 .add-skill-modal__save:hover:not(:disabled) {
-  background: var(--accent-deep);
+  background: var(--btn-run);
+  filter: brightness(1.1);
 }
 
 .add-skill-modal__save:disabled {
