@@ -1012,11 +1012,11 @@
    background-attachment: fixed version showed hard horizontal edges in iOS
    Safari, which doesn't support fixed backgrounds properly. */
 .page-shell:has(.site-header--glass) {
-  background:
+  --page-washes:
     radial-gradient(40% 420px at 12% 0%, rgba(236, 0, 140, 0.26), transparent 70%),
     radial-gradient(34% 380px at 55% 0%, rgba(252, 139, 103, 0.28), transparent 70%),
-    radial-gradient(38% 420px at 92% 0%, rgba(54, 78, 169, 0.24), transparent 70%),
-    #f6f6f7;
+    radial-gradient(38% 420px at 92% 0%, rgba(54, 78, 169, 0.24), transparent 70%);
+  background: var(--page-washes), #f6f6f7;
   background-repeat: no-repeat;
 }
 
@@ -1026,21 +1026,21 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .page-shell:has(.site-header--glass) {
-    background:
+    --page-washes:
       radial-gradient(40% 420px at 12% 0%, rgba(236, 0, 140, 0.22), transparent 70%),
       radial-gradient(34% 380px at 55% 0%, rgba(252, 139, 103, 0.14), transparent 70%),
-      radial-gradient(38% 420px at 92% 0%, rgba(54, 78, 169, 0.3), transparent 70%),
-      #0a0a0c;
+      radial-gradient(38% 420px at 92% 0%, rgba(54, 78, 169, 0.3), transparent 70%);
+    background: var(--page-washes), #0a0a0c;
     background-repeat: no-repeat;
   }
 }
 
 :root[data-theme="dark"] .page-shell:has(.site-header--glass) {
-  background:
+  --page-washes:
     radial-gradient(40% 420px at 12% 0%, rgba(236, 0, 140, 0.22), transparent 70%),
     radial-gradient(34% 380px at 55% 0%, rgba(252, 139, 103, 0.14), transparent 70%),
-    radial-gradient(38% 420px at 92% 0%, rgba(54, 78, 169, 0.3), transparent 70%),
-    #0a0a0c;
+    radial-gradient(38% 420px at 92% 0%, rgba(54, 78, 169, 0.3), transparent 70%);
+  background: var(--page-washes), #0a0a0c;
   background-repeat: no-repeat;
 }
 

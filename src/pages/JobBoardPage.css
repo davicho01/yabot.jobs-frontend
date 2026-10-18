@@ -712,12 +712,24 @@
     height: var(--header-height, 0px);
   }
 
+  /* Each pane is a page of its own, so it has its own ground: the page's
+     color washes at its top, scrolling away with its content ("local"), on
+     an opaque base. (.board doubled to outrank the cards variant's
+     transparent detail.) */
+  .board.board--split .board__list,
+  .board.board--split .board__detail {
+    background-color: var(--page);
+    background-image: var(--page-washes, none);
+    background-repeat: no-repeat;
+    background-attachment: local;
+  }
+
   .board--split:not(.board--detail-open) .board__detail {
     display: none;
   }
 
   /* The panes cover the whole screen, so the page's own banner and footer
-     would sit hidden behind them; the list pane carries copies instead. */
+     would sit hidden behind them; the panes carry copies instead. */
   .page-shell:has(.board--split) .page-shell__content > .getting-started-banner,
   .page-shell:has(.board--split) .page-shell__content > .site-footer {
     display: none;

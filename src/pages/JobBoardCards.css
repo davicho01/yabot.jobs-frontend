@@ -290,6 +290,13 @@
   transform: translateY(-2px);
 }
 
+/* A tap leaves a "hover" behind on a touch screen, which lifted the card. */
+@media (hover: none) {
+  .band-card:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
 /* The open job: a thin ring in its own band color. A card focused from the
    keyboard gets the same ring instead of the app's magenta focus outline,
    which drew a second line around the open card. */
@@ -470,6 +477,13 @@
 }
 
 @media (max-width: 760px) {
+  /* On a phone the open job's ring only showed while swiping back to the
+     list, and vanished as the swipe settled and the job closed. */
+  .board--split .band-card--active,
+  .board--split .band-card--active:hover:not(:disabled) {
+    box-shadow: var(--band-card-shadow);
+  }
+
   .board--cards .board__detail {
     margin: 0;
     padding: 0.75rem;

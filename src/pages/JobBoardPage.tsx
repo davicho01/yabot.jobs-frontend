@@ -436,8 +436,9 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
       {dialog}
       <div className="board__layout" ref={pagerRef}>
         <div className="board__list">
-          {/* On phones the list is its own scrolling pane, so it carries the
-              page's banner and footer (the page's own are hidden there). */}
+          {/* On phones each pane is a page of its own, scrolling by itself, so
+              each carries the page's footer (the list the banner too); the
+              page's own are hidden there. */}
           <div className="board__phone-only">
             <GettingStartedBanner />
           </div>
@@ -616,6 +617,9 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
                 boardCards={cards}
               />
             )}
+            </div>
+            <div className="board__phone-only">
+              <Footer />
             </div>
         </div>
       </div>
