@@ -107,7 +107,7 @@
 .board__detail-applications,
 .board__back--top,
 .board__back--top:hover:not(:disabled) {
-  margin: 0 0 0 auto;
+  margin: 0;
   padding: 0.45rem 0.9rem;
   border: 0;
   border-radius: 999px;
@@ -125,12 +125,15 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  margin-left: auto;
 }
 
+/* The margins stay out of the :hover rule above: a phone's tap is a hover,
+   and a margin set there would move the pill out from under the finger
+   before the tap lands as a click. */
 .board__detail-top .board__back--top {
   align-items: center;
   gap: 0.4rem;
-  margin: 0 auto 0 0;
 }
 
 .board__detail-applications:hover {
