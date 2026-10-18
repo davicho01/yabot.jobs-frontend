@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
+import { SHOW_HEADER_EVENT } from "../components/Header";
 
 type Pane = "list" | "detail";
 
@@ -145,6 +146,8 @@ export function usePanePager({ pager, list, detail, enabled, selectedId, onBack 
       return;
     }
     freeze("detail");
+    // The posting opens at its top, where the header belongs.
+    window.dispatchEvent(new Event(SHOW_HEADER_EVENT));
     if (openedByTap.current && !reducedMotion()) {
       row.scrollTo({ left: row.clientWidth, behavior: "smooth" });
     } else {

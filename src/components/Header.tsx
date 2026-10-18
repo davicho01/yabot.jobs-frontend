@@ -24,6 +24,8 @@ const PLACE_SUGGESTION_LIMIT = 10;
 // first flick of the thumb. On desktop it always stays. Must match the phone
 // breakpoint in Header.css.
 const PHONE_QUERY = "(max-width: 760px)";
+// Dispatched on window to bring the header back (see onShow below).
+export const SHOW_HEADER_EVENT = "yabot:show-header";
 const PHONE_REVEAL_SCROLL_UP_PX = 700;
 // Scrolled down past this, the header can hide; above it, it's always shown.
 const HIDE_AFTER_SCROLL_PX = 80;
@@ -197,8 +199,19 @@ export function Header() {
         if (scrolledUp >= PHONE_REVEAL_SCROLL_UP_PX) setHidden(false);
       }
     }
+    // A page can ask for the header back, e.g. the job board as a posting
+    // slides in at its top, so the header comes in with the slide.
+    function onShow() {
+      setHidden(false);
+      scrolledUp = 0;
+      scrolledDown = 0;
+    }
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener(SHOW_HEADER_EVENT, onShow);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener(SHOW_HEADER_EVENT, onShow);
+    };
   }, []);
 
   // The header is position:fixed (see Header.css) so it no longer reserves
