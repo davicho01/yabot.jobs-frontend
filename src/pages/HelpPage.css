@@ -62,7 +62,7 @@
 }
 
 .help-faq__item summary:hover {
-  background: var(--surface);
+  background: var(--chip);
 }
 
 .help-faq__answer {
@@ -112,7 +112,7 @@
 
 .help-contact__primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
 }
 

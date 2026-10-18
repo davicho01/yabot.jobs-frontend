@@ -56,12 +56,20 @@
 
 .plan-section__primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
 }
 
 .plan-section__primary:hover:not(:disabled) {
   background: var(--accent-deep);
+}
+
+/* Subscribing is the page's one call to action: the sunset gradient. */
+.plan-section__primary--subscribe,
+.plan-section__primary--subscribe:hover:not(:disabled) {
+  background: var(--sunset);
+  color: #ffffff;
+  box-shadow: 0 8px 20px -8px rgba(236, 0, 140, 0.45);
 }
 
 .plan-section__secondary {

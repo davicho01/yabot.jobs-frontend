@@ -1,15 +1,24 @@
 import { useState, type FormEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../api/client";
 import "./LoginPage.css";
 
 export function LoginPage() {
-  const { requestLink } = useAuth();
+  const { requestLink, user, isLoading } = useAuth();
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
+
+  // Already signed in: there's nothing to do here, so go on to where the
+  // link was headed (a path on this site only) or the applications list.
+  if (isLoading) return null;
+  if (user) {
+    const next = searchParams.get("next");
+    const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+    return <Navigate to={safeNext ?? "/applications"} replace />;
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();

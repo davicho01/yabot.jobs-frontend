@@ -1,0 +1,61 @@
+/* App-wide card style, loaded after every page's own stylesheet (see
+   main.tsx) so it can restyle their containers in one place: the main panels
+   become white cards lifted off the soft page by a shadow instead of
+   outlined by a border. Colors come from the tokens in index.css. */
+
+.settings-section,
+.profile-section,
+.admin-section,
+.admin-totals__tile,
+.application-row,
+.applications-page__bulk-bar,
+.login-card,
+.help-contact,
+.getting-started-step,
+.getting-started-banner,
+.resume-preview,
+.score-history,
+.active-source,
+.job-dashboard__card {
+  background: var(--surface);
+  border-color: transparent;
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-card);
+}
+
+/* The standalone job page (/jobs/:id) sits on a white card too, like the
+   board's detail pane. */
+.board__detail--standalone {
+  max-width: 1000px;
+  margin: 1.25rem auto 2rem;
+  padding: 2rem 2.25rem;
+  background: var(--surface);
+  border-radius: 32px;
+  box-shadow: var(--shadow-card);
+}
+
+/* Primary buttons and dialogs: ink pills, rounder dialogs. */
+.confirm-dialog,
+.add-skill-modal,
+.flag-job-modal,
+.feedback-modal,
+.evaluate-choice-modal {
+  border-radius: 28px;
+}
+
+.action-dropdown-menu,
+.site-header__dropdown,
+.site-header__combobox-list {
+  border-radius: 20px;
+  border-color: transparent;
+  box-shadow: 0 18px 40px rgba(31, 26, 53, 0.16), 0 2px 6px rgba(31, 26, 53, 0.08);
+}
+
+@media (max-width: 760px) {
+  .board__detail--standalone {
+    margin: 0.75rem;
+    width: auto;
+    padding: 1.25rem 1rem 2rem;
+    border-radius: 24px;
+  }
+}

@@ -54,7 +54,7 @@
 
 .site-header__title {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 1.2rem;
   letter-spacing: -0.02em;
 }
@@ -80,7 +80,7 @@
   padding: 0.2rem 0.2rem 0.2rem 1.1rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-pill);
-  background: var(--surface);
+  background: var(--chip);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -199,7 +199,7 @@
 }
 
 .site-header__combobox-option--active {
-  background: var(--surface);
+  background: var(--chip);
 }
 
 .site-header__combobox-context {
@@ -218,7 +218,7 @@
   padding: 0.45rem 0.8rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-pill);
-  background: var(--surface);
+  background: var(--chip);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 0.83rem;
@@ -255,7 +255,7 @@
   height: 2.4rem;
   border: 1px solid var(--line);
   border-radius: 50%;
-  background: var(--surface);
+  background: var(--chip);
   color: var(--ink-soft);
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
@@ -291,9 +291,9 @@
   padding: 0 3px;
   border-radius: var(--radius-pill);
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-size: 0.62rem;
-  font-weight: 700;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -316,7 +316,7 @@
   padding: 0.45rem 0.8rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-pill);
-  background: var(--surface);
+  background: var(--chip);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 0.83rem;
@@ -363,7 +363,7 @@
   font-size: 0.88rem;
   letter-spacing: 0;
   text-transform: none;
-  color: #fff;
+  color: var(--on-accent);
   background: var(--accent);
   border: none;
   padding: 0.6rem 1.2rem;
@@ -416,7 +416,7 @@
   padding: 0.6rem 1rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-pill);
-  background: var(--surface);
+  background: var(--chip);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 0.9rem;
@@ -443,7 +443,7 @@
   padding: 0.2rem 0.2rem 0.2rem 1.1rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-pill);
-  background: var(--surface);
+  background: var(--chip);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -708,9 +708,9 @@
   border-radius: 50%;
   border: none;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-family: var(--font-body);
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -778,5 +778,289 @@
 
 .site-header__dropdown a:hover,
 .site-header__dropdown button:hover {
-  background: var(--surface);
+  background: var(--chip);
+}
+
+/* ---------- Glass header ----------
+   The card style's header (every page): a floating frosted panel over the
+   soft page, the gradient brand tile, and ink pill buttons. Same markup and
+   behavior as the plain header above; .site-header--glass (Header.tsx)
+   layers this look on top. */
+
+.site-header--glass {
+  /* Mostly see-through: a sheen at the top fading to almost nothing, with a
+     lighter blur, so whatever scrolls underneath shows through as soft shapes
+     and color rather than a white film. */
+  --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.06));
+  --glass-edge: rgba(255, 255, 255, 0.6);
+  --glass-highlight: rgba(255, 255, 255, 0.9);
+  --glass-shadow: 0 10px 40px rgba(31, 26, 53, 0.12), 0 1px 3px rgba(31, 26, 53, 0.06);
+  --glass-chip: rgba(255, 255, 255, 0.22);
+  /* The round icon buttons' outline (search, filter). */
+  --glass-ring: rgba(10, 10, 10, 0.14);
+  --glass-btn: #0a0a0a;
+  --glass-on-btn: #ffffff;
+  --glass-sunset: linear-gradient(227deg, #ec008c 3%, #fc8b67 69%, #ffd46d 98%);
+  background: transparent;
+  border-bottom: 0;
+  padding: 10px 12px 0;
+  gap: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .site-header--glass {
+    --glass-bg: linear-gradient(180deg, rgba(60, 58, 72, 0.38), rgba(20, 19, 26, 0.18));
+    --glass-edge: rgba(255, 255, 255, 0.12);
+    --glass-highlight: rgba(255, 255, 255, 0.18);
+    --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+    --glass-chip: rgba(255, 255, 255, 0.06);
+    --glass-ring: rgba(255, 255, 255, 0.2);
+    --glass-btn: #f5f5f7;
+    --glass-on-btn: #0a0a0a;
+  }
+}
+
+:root[data-theme="dark"] .site-header--glass {
+  --glass-bg: linear-gradient(180deg, rgba(60, 58, 72, 0.38), rgba(20, 19, 26, 0.18));
+  --glass-edge: rgba(255, 255, 255, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.18);
+  --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  --glass-chip: rgba(255, 255, 255, 0.06);
+  --glass-ring: rgba(255, 255, 255, 0.2);
+  --glass-btn: #f5f5f7;
+  --glass-on-btn: #0a0a0a;
+}
+
+/* The row and any open panel (filters, add job) stack into one frosted card. */
+.site-header--glass > * {
+  max-width: 1200px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(14px) saturate(200%);
+  -webkit-backdrop-filter: blur(14px) saturate(200%);
+  border-left: 1px solid var(--glass-edge);
+  border-right: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow);
+}
+
+/* A bright rim along the top edge, like light catching a pane. */
+.site-header--glass > :first-child {
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    inset 1px 0 0 rgba(255, 255, 255, 0.25),
+    inset -1px 0 0 rgba(255, 255, 255, 0.25),
+    var(--glass-shadow);
+}
+
+/* Light pooling along the bottom edge, as in a thick pane. */
+.site-header--glass > :last-child {
+  box-shadow:
+    inset 0 -1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -14px 24px -18px rgba(255, 255, 255, 0.6),
+    var(--glass-shadow);
+}
+
+.site-header--glass > :only-child {
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -14px 24px -18px rgba(255, 255, 255, 0.6),
+    var(--glass-shadow);
+}
+
+.site-header--glass > :first-child {
+  border-top: 1px solid var(--glass-edge);
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+}
+
+.site-header--glass > :last-child {
+  border-bottom: 1px solid var(--glass-edge);
+  border-bottom-left-radius: 28px;
+  border-bottom-right-radius: 28px;
+}
+
+.site-header--glass .site-header__row {
+  padding: 0.55rem 0.6rem 0.55rem 1rem;
+}
+
+.site-header--glass .site-header__filters-expand,
+.site-header--glass .site-header__add-job-expand {
+  border-top-color: var(--line);
+}
+
+/* Brand: the gradient tile with a white mark. */
+.site-header--glass .site-header__mark {
+  background: var(--glass-sunset);
+  border-radius: 10px;
+}
+
+.site-header--glass .site-header__mark path {
+  stroke: #ffffff;
+}
+
+/* The wordmark stays in Outfit, the brand's display face, at extra-bold:
+   the app's one exception to Inter at semibold. */
+.site-header--glass .site-header__title {
+  font-family: "Outfit", var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+/* Search pill: a soft chip, magenta focus ring, ink Search button. */
+.site-header--glass .site-header__searchbar {
+  background: var(--glass-chip);
+  border-color: var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+
+.site-header--glass .site-header__searchbar:focus-within {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 18%, transparent);
+}
+
+.site-header--glass .site-header__searchbar .site-header__filter-dropdown-trigger:hover {
+  color: var(--ink);
+}
+
+.site-header--glass .site-header__search-submit,
+.site-header--glass .site-header__search-submit:hover:not(:disabled),
+.site-header--glass .site-header__add-job-toggle,
+.site-header--glass .site-header__add-job-toggle:hover,
+.site-header--glass .site-header__add-job-submit,
+.site-header--glass .site-header__add-job-submit:hover:not(:disabled) {
+  background: var(--glass-btn);
+  color: var(--glass-on-btn);
+  font-weight: 600;
+}
+
+.site-header--glass .site-header__filter-toggle,
+.site-header--glass .site-header__filter-dropdown-trigger,
+.site-header--glass .site-header__filter-input,
+.site-header--glass .site-header__add-job-expand input {
+  background: var(--glass-chip);
+  border-color: var(--glass-edge);
+}
+
+.site-header--glass .site-header__searchbar .site-header__filter-dropdown-trigger {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* The round icon buttons (search, filter) get a visible outline. */
+.site-header--glass .site-header__filter-toggle {
+  border-color: var(--glass-ring);
+}
+
+.site-header--glass .site-header__filter-toggle:hover {
+  background: var(--glass-chip);
+  border-color: var(--ink-soft);
+}
+
+/* Pressed, and open (search shown, filter panel open, or filters on): a
+   magenta border. Listed with :hover so a phone's sticky hover after the tap
+   doesn't grey it out. */
+.site-header--glass .site-header__filter-toggle:active,
+.site-header--glass .site-header__filter-toggle--active,
+.site-header--glass .site-header__filter-toggle--active:hover,
+.site-header--glass .site-header__filter-toggle[aria-expanded="true"],
+.site-header--glass .site-header__filter-toggle[aria-expanded="true"]:hover {
+  color: var(--focus);
+  border-color: var(--focus);
+}
+
+.site-header--glass .site-header__filter-badge {
+  background: var(--glass-sunset);
+}
+
+.site-header--glass .site-header__filter-input:focus-visible,
+.site-header--glass .site-header__filter-dropdown-trigger[aria-expanded="true"] {
+  border-color: var(--focus);
+  box-shadow: none;
+}
+
+/* The sector picker inside the search bar has no outline of its own: the
+   bar around it already turns magenta while it's open. */
+.site-header--glass .site-header__searchbar .site-header__filter-dropdown-trigger,
+.site-header--glass .site-header__searchbar .site-header__filter-dropdown-trigger:focus,
+.site-header--glass .site-header__searchbar .site-header__filter-dropdown-trigger[aria-expanded="true"] {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* No "Hi name!" under the avatar here; the account menu still shows the name. */
+.site-header--glass .site-header__greeting {
+  display: none;
+}
+
+/* Without the greeting below it, the menu opens just under the avatar. */
+.site-header--glass .site-header__menu .site-header__dropdown {
+  top: calc(100% + 0.5rem);
+}
+
+.site-header--glass .site-header__avatar {
+  background: var(--glass-sunset);
+}
+
+.site-header--glass .site-header__login {
+  border-color: transparent;
+  background: var(--glass-chip);
+}
+
+/* The page behind the floating header takes the card pages' soft background,
+   so the glass reads as one surface with them. */
+/* Soft color washes at the top of the page give the glass something to blur
+   and tint. Sized in px from the top and scrolling with the page: a
+   background-attachment: fixed version showed hard horizontal edges in iOS
+   Safari, which doesn't support fixed backgrounds properly. */
+.page-shell:has(.site-header--glass) {
+  background:
+    radial-gradient(40% 420px at 12% 0%, rgba(236, 0, 140, 0.26), transparent 70%),
+    radial-gradient(34% 380px at 55% 0%, rgba(252, 139, 103, 0.28), transparent 70%),
+    radial-gradient(38% 420px at 92% 0%, rgba(54, 78, 169, 0.24), transparent 70%),
+    #f6f6f7;
+  background-repeat: no-repeat;
+}
+
+.page-shell:has(.site-header--glass) .page-shell__content {
+  background: transparent;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .page-shell:has(.site-header--glass) {
+    background:
+      radial-gradient(40% 420px at 12% 0%, rgba(236, 0, 140, 0.22), transparent 70%),
+      radial-gradient(34% 380px at 55% 0%, rgba(252, 139, 103, 0.14), transparent 70%),
+      radial-gradient(38% 420px at 92% 0%, rgba(54, 78, 169, 0.3), transparent 70%),
+      #0a0a0c;
+    background-repeat: no-repeat;
+  }
+}
+
+:root[data-theme="dark"] .page-shell:has(.site-header--glass) {
+  background:
+    radial-gradient(40% 420px at 12% 0%, rgba(236, 0, 140, 0.22), transparent 70%),
+    radial-gradient(34% 380px at 55% 0%, rgba(252, 139, 103, 0.14), transparent 70%),
+    radial-gradient(38% 420px at 92% 0%, rgba(54, 78, 169, 0.3), transparent 70%),
+    #0a0a0c;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 760px) {
+  .site-header--glass {
+    padding: 8px 8px 0;
+  }
+
+  .site-header--glass .site-header__row {
+    padding: 0.55rem 0.6rem 0.65rem 0.85rem;
+  }
+
+  .site-header--glass > :first-child {
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+  }
+
+  .site-header--glass > :last-child {
+    border-bottom-left-radius: 24px;
+    border-bottom-right-radius: 24px;
+  }
 }

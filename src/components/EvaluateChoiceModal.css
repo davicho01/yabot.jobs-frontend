@@ -97,7 +97,7 @@
 
 .evaluate-choice-modal__option:hover:not(:disabled) {
   border-color: var(--accent);
-  background: var(--surface);
+  background: var(--chip);
 }
 
 .evaluate-choice-modal__option:disabled {
@@ -280,7 +280,7 @@
 
 .evaluate-progress__primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   padding: 0.5rem 1.2rem;
   border-radius: var(--radius-pill);
   font-weight: 600;

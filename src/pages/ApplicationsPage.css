@@ -1,13 +1,181 @@
 .applications-page {
   width: 100%;
-  max-width: 960px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2.5rem 1.5rem 4rem;
 }
 
 .applications-page h1 {
-  font-size: 1.8rem;
-  margin-bottom: 0.4rem;
+  font-size: clamp(2rem, 4.5vw, 2.8rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+/* Where the active applications stand: a row of white count tiles. */
+/* The hero: title and counts on a deep-plum band with soft magenta and blue
+   glows, painted as background gradients (blurred layers spill past rounded
+   corners in Safari). Same plum as the apply page's score card; the
+   bottom-right glow is the card lists' violet, handing off to the first
+   card's band below. */
+.applications-page__hero {
+  margin-bottom: 1.5rem;
+  padding: 2rem 2rem 1.75rem;
+  border-radius: 32px;
+  color: #ffffff;
+  background:
+    radial-gradient(45% 80% at 10% 0%, rgba(236, 0, 140, 0.5), transparent 70%),
+    radial-gradient(40% 70% at 95% 110%, rgba(124, 58, 237, 0.75), transparent 70%),
+    radial-gradient(30% 50% at 60% 40%, rgba(222, 88, 138, 0.22), transparent 70%),
+    #1f1a35;
+  box-shadow: var(--shadow-card);
+}
+
+.applications-page__hero h1 {
+  color: #ffffff;
+}
+
+.applications-page__hero .applications-page__intro {
+  color: #b9b4cc;
+}
+
+.applications-page__hero .applications-page__header {
+  margin-bottom: 1.5rem;
+}
+
+/* On the band the count tiles are frosted glass, with big white numbers. */
+.applications-page__hero .applications-page__summary {
+  margin-bottom: 0;
+}
+
+.applications-page__hero .applications-page__stat {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+  color: #ffffff;
+}
+
+.applications-page__hero .applications-page__stat-count {
+  font-size: 2.4rem;
+}
+
+.applications-page__hero .applications-page__stat-label {
+  color: #b9b4cc;
+}
+
+.applications-page__hero .applications-page__stat--urgent {
+  border-color: transparent;
+  background: var(--sunset);
+  /* From the tile's outer edge: sized to the padding box, the gradient
+     repeated into the transparent border as a thin line down each side. */
+  background-origin: border-box;
+}
+
+.applications-page__hero .applications-page__stat--urgent .applications-page__stat-label {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* Tiles share the row's width evenly, however many are showing (zero
+   counts are left out). */
+.applications-page__summary {
+  list-style: none;
+  margin: 0 0 1.75rem;
+  padding: 0;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.applications-page__summary > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.applications-page__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 1rem 1.1rem;
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.applications-page__stat-count {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.applications-page__stat-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+/* Follow-ups due: the one count that needs attention, in the sunset colors. */
+.applications-page__stat--urgent {
+  background: var(--sunset);
+  color: #ffffff;
+}
+
+.applications-page__stat--urgent .applications-page__stat-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* The tiles are the list's filters (buttons): reset the app's button look so
+   they stay tiles, and light up the one that's on: white with plum text on
+   the band, or a white ring around the sunset follow-ups tile. */
+button.applications-page__stat,
+button.applications-page__stat:hover:not(:disabled) {
+  align-items: flex-start;
+  text-align: left;
+  font: inherit;
+  letter-spacing: normal;
+  cursor: pointer;
+}
+
+.applications-page__hero button.applications-page__stat:hover:not(:disabled, .applications-page__stat--urgent, .applications-page__stat--on) {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.applications-page__hero .applications-page__stat--on,
+.applications-page__hero .applications-page__stat--on:hover:not(:disabled) {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #1f1a35;
+}
+
+.applications-page__hero .applications-page__stat--on .applications-page__stat-label {
+  color: #5b5470;
+}
+
+.applications-page__hero .applications-page__stat--urgent.applications-page__stat--on,
+.applications-page__hero .applications-page__stat--urgent.applications-page__stat--on:hover:not(:disabled) {
+  background: var(--sunset);
+  background-origin: border-box;
+  color: #ffffff;
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+.applications-page__hero .applications-page__stat--urgent.applications-page__stat--on .applications-page__stat-label {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* "Show all" after a filter's empty message: a plain inline link. */
+.applications-page__show-all,
+.applications-page__show-all:hover:not(:disabled) {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--ink);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .applications-page__header {
@@ -23,30 +191,6 @@
   margin: 0;
 }
 
-/* The one CTA on this page worth calling out above the routine list
-   controls (sort/export/archive) below — same filled-accent treatment as
-   ApplyPage's primary evaluate button, pinned to the header's top-right
-   corner instead of living in the toolbar row. Links to its own page
-   (/resume-optimization) rather than opening a modal. */
-.applications-page__evaluate-button {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  padding: 0.65rem 1.3rem;
-  border-radius: var(--radius-pill);
-  font-weight: 600;
-  font-size: 0.88rem;
-  white-space: nowrap;
-  text-decoration: none;
-}
-
-.applications-page__evaluate-button:hover {
-  background: var(--accent-deep);
-}
-
 .applications-page__empty {
   color: var(--ink-soft);
 }
@@ -54,19 +198,52 @@
 .applications-page__toolbar {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 0.75rem 1rem;
+  gap: 0.5rem;
   margin-bottom: 1.25rem;
 }
 
-.applications-page__archive-toggle {
+/* A link in the ⋯ menu (Resume optimization), styled like its buttons. */
+.applications-page__list-menu a {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.85rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: calc(var(--radius-field) - 4px);
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.applications-page__list-menu a:hover {
+  background: var(--chip);
+}
+
+/* Says the list includes archived rows, since that switch now lives in the
+   ⋯ menu. */
+.applications-page__showing {
+  font-size: 0.8rem;
+  font-weight: 600;
   color: var(--ink-soft);
-  cursor: pointer;
+}
+
+/* The ⋯ menu's options, each with a check column for its on/off state. */
+.applications-page__list-menu {
+  min-width: 190px;
+}
+
+.applications-page__list-menu button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.applications-page__check {
+  width: 1rem;
+  flex-shrink: 0;
+  font-weight: 600;
 }
 
 .applications-page__bulk-bar {
@@ -83,7 +260,7 @@
 
 .applications-page__bulk-count {
   font-family: var(--font-body);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.85rem;
   color: var(--ink);
   margin-right: 0.25rem;
@@ -105,13 +282,23 @@
   color: var(--ink);
 }
 
+/* Done sits at the bar's far end; Select all/none is the plain link after
+   the count. */
+.applications-page__bulk-clear {
+  margin-left: 0;
+}
+
+.applications-page__bulk-done {
+  margin-left: auto;
+}
+
 .application-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 1.1rem;
 }
 
 .application-row__select {
@@ -121,90 +308,160 @@
   cursor: pointer;
 }
 
+/* Each application is a white card with a thin stripe of its company's
+   color along the top (the same color as on the board), drawn as the card's
+   own top border so it follows the rounded corners — the card can't clip,
+   since its menus open past its edges. Checkbox, logo and text sit in one
+   row on the card. */
+/* The company's color as a band across the top of the card, reaching down to
+   the middle of the logo tile and the fit pill (both 22px below the top
+   padding's end), so they sit half on the color. Painted as part of the
+   card's background, so it follows the rounded corners without the card
+   clipping its menus. */
 .application-row {
+  --row-pad-top: 1.35rem;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 0.75rem;
-  background: var(--surface);
+  gap: 0.75rem 1rem;
+  background:
+    linear-gradient(110deg, var(--band, #1f1a35), var(--band-end, var(--band, #1f1a35))) top / 100% calc(var(--row-pad-top) + 22px) no-repeat,
+    var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
-  padding: 1.15rem 1.4rem;
+  padding: var(--row-pad-top) 1.5rem 1.4rem;
   position: relative;
 }
 
-/* Status, Download, Score/Evaluate and Apply, kept together on one line. */
-.application-row__controls {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+/* cardStyle.css (loaded after this file) resets card backgrounds to plain
+   white and the radius to the app's 24px; this keeps the band (its place in
+   the list's run, utils/listGradient.ts, swept diagonally), and rounder
+   32px corners like the hero above. */
+.application-list .application-row {
+  border-radius: 32px;
+  background:
+    linear-gradient(110deg, var(--band, #1f1a35), var(--band-end, var(--band, #1f1a35))) top / 100% calc(var(--row-pad-top) + 22px) no-repeat,
+    var(--surface);
+  /* From the card's outer edge, not inside its (transparent) 1px border —
+     otherwise a hairline of white shows around the band's curved corners. */
+  background-origin: border-box;
+}
+
+.application-row > .application-row__select {
+  margin: 13px 0 0;
+  accent-color: var(--focus);
+}
+
+/* Same tile as the search list's cards: the 32px logo on a 44px white tile
+   with a soft shadow. */
+.application-row__tile {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(31, 26, 53, 0.16);
+}
+
+.application-row__tile .company-logo {
+  margin: 0;
+  top: 0;
+  border-radius: 8px;
+}
+
+/* A company without a logo: its letter on plum (the header's color), not a
+   hue hashed from its name, which clashed with the cards' colored bands. */
+.application-row__tile .company-logo--avatar {
+  background: #1f1a35;
+}
+
+/* The best fit score, as a grey pill at the end of the company line (in the
+   card's top-right corner on wide screens, below). */
+.application-row__fit {
   flex-shrink: 0;
   margin-left: auto;
+  text-transform: none;
+  letter-spacing: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-pill);
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(31, 26, 53, 0.14);
+  color: #0a0a0a;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
-/* The checkbox sits level with the job title rather than the top of the
-   row: the title is under the 32px company line (.application-row__employer).
-   Not on phones, where it gets a line of its own. The controls sit lower
-   still, level with the pay line at the bottom of the row, from 900px;
-   below that the row wraps them onto a line under the text. */
-@media (min-width: 641px) {
-  .application-row--with-employer .application-row__select {
-    margin-top: calc(32px + 0.3rem + 3px);
-  }
+.application-row__fit i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
 }
 
-@media (min-width: 900px) {
-  .application-row__controls {
-    align-self: flex-end;
-  }
+/* Fixed light tier colors: the pill is always white. */
+.application-row__fit--positive i {
+  background: #248a3d;
 }
 
-/* Shared by both the Score stamp and the Evaluate-button wrapper so the
-   two states take up the same footprint and don't shift row alignment
-   depending on which one a given row happens to be in. */
-.application-row__score {
-  flex-shrink: 0;
-  width: 100px;
+.application-row__fit--warning i {
+  background: #b36500;
+}
+
+.application-row__fit--negative i {
+  background: #d70015;
+}
+
+
+/* The buttons, on a row of their own under the text: the status at the
+   left, Apply and ⋯ at the right. */
+.application-row__controls {
+  flex: 1 1 100%;
   display: flex;
-  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-/* The Score itself: pinned to the card's top-right corner, level with the
-   company line. Not a pill — a small "Score" label and the number, in the
-   stamp's tier color. The company name keeps clear of it, and a row with
-   no company line drops its controls below it. */
-.stamp.application-row__score {
-  position: absolute;
-  top: 1.15rem;
-  right: 1.4rem;
-  width: auto;
-  align-items: baseline;
-  padding: 0;
-  background: none;
-  line-height: 1;
+.application-row__status {
+  margin-right: auto;
 }
 
-.application-row__score-label {
-  font-size: 0.72rem;
-  font-weight: 500;
-  opacity: 0.8;
+/* The status menu opens rightward from the label at the card's left. */
+.application-row__status .action-dropdown-menu {
+  left: 0;
+  right: auto;
 }
 
-.application-row__score-value {
-  font-family: var(--font-display);
-  font-size: 1.4rem;
-  font-weight: 700;
+/* The controls sit level with the pay line at the bottom of the row from
+   900px; below that the row wraps them onto a line under the text. With the
+   controls down there, the fit pill takes the card's top-right corner rather
+   than stopping partway across at the end of the text column. */
+@media (min-width: 900px) {
+  /* Two cards per row: they keep the same tall layout as on a phone, and
+     twice as many fit on screen. */
+  .application-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Side-by-side cards share a height; the button row stays at the bottom. */
+  .application-row {
+    align-content: space-between;
+  }
+
+  /* Level with the middle of the 44px logo tile, as on the search list. */
+  .application-row__fit {
+    position: absolute;
+    top: calc(1.35rem + 10px);
+    right: 1.5rem;
+  }
 }
 
-/* Room for the corner score stamp (a direct child — the Score button's
-   wrapper inside the controls shares the class). */
-.application-row:has(> .application-row__score) .application-row__employer {
-  padding-right: 5.5rem;
-}
-
-.application-row:has(> .application-row__score):not(.application-row--with-employer) .application-row__controls {
-  margin-top: 1.9rem;
-}
 
 .application-row__details-hint {
   font-size: 0.78rem;
@@ -223,11 +480,12 @@
   gap: 0.2rem;
 }
 
-/* Smaller than the shared .rescan-button size, so a tinted status
-   (Applied, Interview…) doesn't outweigh the row's other controls. */
+/* Same text size and weight as the row's other buttons (Score, Apply), so
+   the status reads as one of them rather than a fainter label. */
 .application-row__status .status-select__button {
-  padding: 0.25rem 0.7rem;
-  font-size: 0.75rem;
+  padding: 0.25rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
   line-height: 1.4;
 }
 
@@ -251,7 +509,7 @@
 }
 
 .application-row__action:hover:not(:disabled) {
-  background: var(--surface);
+  background: var(--chip);
 }
 
 /* Takes whatever the row has left after the fixed-width actions to its
@@ -259,7 +517,7 @@
    regardless of title length. The 320px basis is where the row gives up and
    wraps them onto a second line beneath it. */
 .application-row__main {
-  flex: 1 1 320px;
+  flex: 1 1 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -272,15 +530,95 @@
   min-width: 0;
 }
 
+/* Up to two lines, so a long title is read in full rather than cut off. */
 .application-row__title {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
+  font-size: 1.15rem;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
   text-decoration: none;
-  color: var(--accent);
+  color: var(--ink);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  min-width: 0;
+}
+
+/* The location under the title, as on the search list's cards. */
+.application-row__location {
+  display: block;
+  min-width: 0;
+  margin-top: 0.1rem;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* The step tracker under the title: four short segments, filled in the
+   company's stripe color for the steps done, then the next step as a link. */
+.application-row__track {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   min-width: 0;
+  margin-top: 0.75rem;
+}
+
+.application-row__track-steps {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  flex-shrink: 0;
+}
+
+.application-row__track-step {
+  width: 26px;
+  height: 6px;
+  border-radius: 6px;
+  background: var(--chip);
+}
+
+/* Done steps in the positive green (like "Completed!" and "Ready to
+   apply"), and the next one to do in the brand magenta (like the "Next:" link
+   beside it), whatever the card's band color: the band only marks the card's
+   place in the list, so it says nothing about progress. */
+.application-row__track-step--done {
+  background: var(--teal);
+}
+
+.application-row__track-step--next {
+  background: var(--focus);
+}
+
+/* The next step, in the brand magenta — it's the card's call to action. */
+.application-row__track-next {
+  min-width: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--focus);
+  text-decoration: none;
+}
+
+a.application-row__track-next:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.application-row__track-next--quiet {
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 640px) {
+  .application-row__track-step {
+    width: 18px;
+  }
 }
 
 .application-row__archived-badge {
@@ -292,7 +630,7 @@
   text-transform: none;
   color: var(--ink-soft);
   border: none;
-  background: var(--surface);
+  background: var(--chip);
   border-radius: var(--radius-pill);
   padding: 0.15rem 0.55rem;
 }
@@ -300,58 +638,81 @@
 .application-row__meta {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.6rem;
   min-width: 0;
-  margin-top: 0.5rem;
+  margin-top: 0.55rem;
 }
 
-/* Pay · Posted · Applied · Follow up, as one quiet grey line joined by
-   dots. Only an overdue follow-up gets a color. */
+/* The pay chip, then the card's one date (see the row markup), as a quiet
+   grey line. Only an overdue follow-up gets a color. */
 .application-row__meta > * {
   flex-shrink: 0;
   font-size: 0.78rem;
   color: var(--ink-soft);
 }
 
-.application-row__meta > * + *::before {
-  content: "·";
-  margin-right: 0.45rem;
-  color: var(--ink-soft);
-}
-
 .application-row__follow-up--due {
   color: var(--rose);
   font-weight: 600;
+  text-decoration: none;
 }
 
+a.application-row__follow-up--due:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The logo tile, with the fit pill at the row's far end. */
 .application-row__employer {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   min-width: 0;
-  margin-bottom: 0.3rem;
-  font-size: 0.85rem;
+  margin-bottom: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
 }
 
-.application-row__employer span {
+
+
+/* The company name under the logo, in the search list's small grey caps. */
+.application-row__company {
+  display: block;
+  min-width: 0;
+  margin-bottom: 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* CompanyLogo is styled to sit inline in a line of text; here it's a flex item. */
-.application-row__employer .company-logo {
-  margin-right: 0;
-  top: 0;
+
+/* The pay as a soft lime chip, as on the board's cards: a light lime tint
+   with deep green text (lime text on a fainter tint on the dark page). */
+.application-row__meta > .application-row__pay {
+  font-weight: 500;
+  color: #3f6212;
+  background: color-mix(in srgb, #cdea8f 45%, transparent);
+  white-space: nowrap;
 }
 
-/* The blue .tag--accent label, same as the job page and the board's cards. */
-/* The pay keeps its blue highlight pill; the dots start after it. */
-.application-row__meta > .application-row__pay {
-  font-weight: 600;
-  color: var(--accent-deep);
-  white-space: nowrap;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .application-row__meta > .application-row__pay {
+    color: #cdea8f;
+    background: color-mix(in srgb, #cdea8f 16%, transparent);
+  }
+}
+
+:root[data-theme="dark"] .application-row__meta > .application-row__pay {
+  color: #cdea8f;
+  background: color-mix(in srgb, #cdea8f 16%, transparent);
 }
 
 .application-row__apply-button {
@@ -359,7 +720,7 @@
   display: inline-flex;
   align-items: center;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   text-decoration: none;
   font-family: var(--font-body);
   font-weight: 600;
@@ -377,12 +738,10 @@
 }
 
 /* Auto score marked this one ready (best score ≥ 85). */
-.application-row__apply-button--ready {
-  background: var(--teal);
-}
-
+.application-row__apply-button--ready,
 .application-row__apply-button--ready:hover {
-  background: color-mix(in srgb, var(--teal) 80%, #000);
+  background: var(--sunset);
+  color: #ffffff;
 }
 
 /* Score, Status, Apply and ⋯ all share one height and center their text,
@@ -474,12 +833,17 @@
   }
 }
 
-.application-row:has(.application-row__progress) {
-  padding-top: 2.2rem;
+/* While an auto score runs, its bar runs along the card's bottom edge (the
+   top is the band's), and the card grows a strip of padding to hold it. */
+.application-row__progress {
+  top: auto;
+  bottom: 0.35rem;
+  left: 1.4rem;
+  right: 1.4rem;
 }
 
-.application-row:has(.application-row__progress) .application-row__score {
-  top: 2.2rem;
+.application-row:has(.application-row__progress) {
+  padding-bottom: 2.6rem;
 }
 
 /* The ↻ beside "Scoring" while an auto score runs. */
@@ -502,11 +866,6 @@
   }
 }
 
-/* No fixed-width slot for the Score button here, so the gaps between the
-   controls stay even. */
-.application-row__controls .application-row__score {
-  width: auto;
-}
 
 /* Shared dropdown-trigger look for both the row-level Download menu and the
    toolbar's Sort menu, so they behave and read the same way. */
@@ -554,7 +913,38 @@
 }
 
 .action-dropdown-menu button:hover:not(:disabled) {
-  background: var(--surface);
+  background: var(--chip);
+}
+
+/* The row ⋯ menu's link to the posting, styled like its buttons, and the
+   rule between its actions and its downloads. */
+.action-dropdown-menu__link {
+  display: block;
+  padding: 0.55rem 0.7rem;
+  border-radius: calc(var(--radius-field) - 4px);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.88rem;
+  text-decoration: none;
+}
+
+.action-dropdown-menu__link:hover {
+  background: var(--chip);
+}
+
+.action-dropdown-menu__rule {
+  margin: 0.3rem 0.4rem;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+/* "Scoring ↻" beside the row's buttons while a score runs (the action
+   itself is in the ⋯ menu). */
+.application-row__scoring {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
 }
 
 .action-dropdown-menu button:disabled {
@@ -572,47 +962,89 @@
     align-items: stretch;
   }
 
-  .applications-page__evaluate-button {
-    align-self: flex-start;
-  }
-
   .application-row {
-    padding: 0.85rem 0.9rem;
+    --row-pad-top: 1.1rem;
+    padding: var(--row-pad-top) 1.1rem 1.1rem;
   }
 
-  /* Title/company/pay get the full row; the actions sit below it, left to
-     right, with Apply pushed to the far edge. */
-  .application-row__main {
-    flex-basis: 100%;
+
+
+  .applications-page__hero {
+    margin-inline: -0.25rem;
+    padding: 1.5rem 1.1rem 1.25rem;
+    border-radius: 26px;
   }
+
+  /* One row you can swipe instead of an uneven 3 + 2 grid. The padding
+     leaves room for the tiles' shadows inside the scrolling strip. */
+  .applications-page__summary {
+    display: flex;
+    overflow-x: auto;
+    margin-inline: -1rem;
+    padding: 0.25rem 1rem 0.75rem;
+    margin-bottom: 1rem;
+    scrollbar-width: none;
+  }
+
+  .applications-page__stat {
+    flex: 0 0 auto;
+    min-width: 7.25rem;
+  }
+
+  /* Inside the hero the strip stays within the band's padding (no
+     edge-to-edge pull), and the tiles stretch to fill it: three fit evenly,
+     more scroll. */
+  .applications-page__hero .applications-page__summary {
+    margin-inline: 0;
+    padding: 0;
+    gap: 0.5rem;
+  }
+
+  /* Three tiles per view (more swipe in from the right), wide enough that
+     "Interviewing" fits and labels only break between words. */
+  .applications-page__hero .applications-page__stat {
+    flex: 0 0 calc((100% - 1rem) / 3);
+    min-width: 0;
+    padding: 0.85rem 0.8rem;
+  }
+
+  .applications-page__hero .applications-page__stat-label {
+    font-size: 0.75rem;
+    overflow-wrap: normal;
+    hyphens: none;
+  }
+
+  /* "Follow-ups" fits on one line in a phone's tile; "due" doesn't. */
+  .applications-page__stat-label-long {
+    display: none;
+  }
+
 
   /* All four controls on one line on every row: no wrapping, Download
      shrinks to its arrow, and the score loses its fixed desktop width. */
   .application-row__controls {
-    flex: 1 1 100%;
     gap: 0.4rem;
-    margin-left: 0;
   }
 
-  .application-row__controls .application-row__score {
-    width: auto;
-  }
 
-  .application-row__apply-button {
-    margin-left: auto;
-  }
-
-  /* The status picker sits at the row's left side here, so its menu can't be
-     right-anchored to it (it would open off the left of the screen). The ⋯
-     Download menu and the toolbar's Sort menu, both at the right edge, keep
-     their anchoring. */
-  .application-row__status .action-dropdown-menu {
-    left: 0;
-    right: auto;
-  }
 
   .application-row__meta {
     flex-wrap: wrap;
     row-gap: 0.1rem;
   }
+}
+
+/* On a window wide enough for the full 1200px (the header's width), drop the
+   side padding so the cards line up with the header's edges. Narrower, the
+   padding keeps them off the window edge. */
+@media (min-width: 1260px) {
+  .applications-page {
+    padding-inline: 0;
+  }
+}
+
+/* "Ready to apply" (a card showing the Apply button) or "Completed!" (every
+   step done) beside the dashes: a label, not a link, in the positive green. */
+.application-row__track-next--ready {
+  color: var(--teal);
 }

@@ -56,3 +56,11 @@ export function formatPostedAt(job: JobDetail): string | null {
   const date = new Date(`${p.posted_at}T00:00:00Z`);
   return `Posted ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`;
 }
+
+// A location, short: the first of several places, without the
+// country on the end ("Work At Home-Virginia, United States of America" →
+// "Work At Home-Virginia"). On the job board's cards and open posting.
+export function shortLocation(location: string): string {
+  const first = location.split(/;|\|/)[0].trim();
+  return first.replace(/,?\s*(United States( of America)?|USA|U\.S\.A?\.?)$/i, "").trim() || first;
+}

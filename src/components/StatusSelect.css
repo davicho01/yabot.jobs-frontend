@@ -1,5 +1,18 @@
 .status-select {
   flex-shrink: 0;
+  /* Applied's own blue: the app's accent is ink now, which tinted Applied the
+     same grey as Saved. The band blue, lifted for dark mode. */
+  --status-applied: #364ea9;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .status-select {
+    --status-applied: #8fa3ff;
+  }
+}
+
+:root[data-theme="dark"] .status-select {
+  --status-applied: #8fa3ff;
 }
 
 .status-select__button {
@@ -19,8 +32,8 @@
    the marketing site mocks up on index.html's "Applied"/"Interviewing"/
    "Offer" stamps, so the live control reads the way that page promises. */
 .status-select__button--default {
-  color: var(--accent-deep);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--status-applied);
+  background: color-mix(in srgb, var(--status-applied) 14%, transparent);
 }
 
 .status-select__button--positive {
@@ -38,9 +51,11 @@
   background: color-mix(in srgb, var(--rose) 14%, transparent);
 }
 
+/* Saved/withdrawn: plain ink on the chip grey, not the soft grey text that
+   made it look disabled next to the row's other buttons. */
 .status-select__button--neutral {
-  color: var(--ink-soft);
-  background: var(--surface);
+  color: var(--ink);
+  background: var(--chip);
 }
 
 .status-select__button:disabled {
@@ -71,7 +86,7 @@
 }
 
 .status-select__option--default .status-select__option-dot {
-  background: var(--accent);
+  background: var(--status-applied);
 }
 
 .status-select__option--positive .status-select__option-dot {

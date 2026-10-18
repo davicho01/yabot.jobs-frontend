@@ -1,23 +1,36 @@
 :root {
+  /* The card style (link.me-inspired): a soft grey page, white cards with
+     soft shadows, ink pill buttons, and a sunset gradient for highlights.
+     --page is the page itself; --surface the cards on it; --paper raised
+     things on top of those (menus, dialogs, inputs); --chip small tinted
+     fills inside a card (tags, hovered rows, segmented controls). */
+  --page: #f6f6f7;
   --paper: #ffffff;
-  --surface: #f5f5f7;
-  --ink: #1d1d1f;
-  --ink-soft: #6e6e73;
-  --accent: #0071e3;
-  --accent-deep: #0058b0;
+  --surface: #ffffff;
+  --chip: #f0f0f3;
+  --ink: #0a0a0a;
+  --ink-soft: #5d5d66;
+  /* The primary action color: ink, with --on-accent for text on it. */
+  --accent: #0a0a0a;
+  --accent-deep: #2b2b33;
+  --on-accent: #ffffff;
   --teal: #248a3d;
   --rose: #d70015;
   --amber: #b36500;
-  --line: #e8e8ed;
+  --line: #e7e7ea;
+  --sunset: linear-gradient(227deg, #ec008c 3%, #fc8b67 69%, #ffd46d 98%);
+  /* Focus outlines, click glows and selection rings: the brand magenta from
+     the sunset gradient, not ink. */
+  --focus: #d1007c;
 
-  --font-display: "Outfit", system-ui, -apple-system, sans-serif;
-  --font-body: "Manrope", system-ui, -apple-system, sans-serif;
+  --font-display: "Inter", system-ui, -apple-system, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", monospace;
 
   --radius-pill: 980px;
-  --radius-field: 12px;
-  --radius-card: 18px;
-  --shadow-card: 0 0 0 1px var(--line);
+  --radius-field: 14px;
+  --radius-card: 24px;
+  --shadow-card: 0 12px 28px rgba(31, 26, 53, 0.08), 0 1px 3px rgba(31, 26, 53, 0.06);
 
   /* Width of the centered content column shared by every page (see
      <PageShell>) — the leftover space on either side is reserved for
@@ -30,30 +43,41 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #000000;
-    --surface: #1d1d1f;
+    --page: #0a0a0c;
+    --paper: #1c1b22;
+    --surface: #16151b;
+    --chip: #2a2931;
     --ink: #f5f5f7;
-    --ink-soft: #86868b;
-    --accent: #2997ff;
-    --accent-deep: #6cb4ff;
+    --ink-soft: #9a99a6;
+    --accent: #f5f5f7;
+    --accent-deep: #d4d4dc;
+    --on-accent: #0a0a0a;
     --teal: #30d158;
     --rose: #ff453a;
     --amber: #ff9f0a;
-    --line: #2c2c2e;
+    --line: #2c2c33;
+    --shadow-card: 0 0 0 1px #2c2c33;
+    --focus: #ff4fae;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --paper: #000000;
-  --surface: #1d1d1f;
+  --page: #0a0a0c;
+  --paper: #1c1b22;
+  --surface: #16151b;
+  --chip: #2a2931;
   --ink: #f5f5f7;
-  --ink-soft: #86868b;
-  --accent: #2997ff;
-  --accent-deep: #6cb4ff;
+  --ink-soft: #9a99a6;
+  --accent: #f5f5f7;
+  --accent-deep: #d4d4dc;
+  --on-accent: #0a0a0a;
   --teal: #30d158;
   --rose: #ff453a;
-  --line: #2c2c2e;
+  --amber: #ff9f0a;
+  --line: #2c2c33;
+  --shadow-card: 0 0 0 1px #2c2c33;
+  --focus: #ff4fae;
   color-scheme: dark;
 }
 
@@ -74,7 +98,7 @@ html {
 }
 
 body {
-  background: var(--paper);
+  background: var(--page);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 16px;
@@ -92,9 +116,38 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
   margin: 0;
   letter-spacing: -0.02em;
+}
+
+/* Text wrapping, app-wide. Headings and short lines (titles, labels,
+   buttons, pills, captions) are balanced so a wrapped line splits evenly
+   instead of leaving one word on its own. Paragraphs and list items use
+   "pretty", which only avoids a lone last word: balancing a long paragraph
+   (a job description, a cover letter) would shorten every line. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+button,
+label,
+legend,
+figcaption,
+dt,
+th,
+small {
+  text-wrap: balance;
+}
+
+p,
+li,
+dd,
+blockquote,
+td {
+  text-wrap: pretty;
 }
 
 a {
@@ -121,7 +174,7 @@ button {
   letter-spacing: 0;
   text-transform: none;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   padding: 0.65rem 1.3rem;
   border-radius: var(--radius-pill);
@@ -156,7 +209,7 @@ textarea {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent-deep);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
@@ -183,7 +236,7 @@ input:where(
     :not([type])
   ):not(.site-header__search, .site-header__save-search-input):hover:not(:disabled, :focus-visible),
 textarea:hover:not(:disabled, :focus-visible) {
-  border-color: var(--accent);
+  border-color: var(--focus);
 }
 
 input:where(
@@ -199,8 +252,8 @@ input:where(
   ):not(.site-header__search, .site-header__save-search-input):focus-visible,
 textarea:focus-visible {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent);
 }
 
 /* Plain :focus (not :focus-visible): the ask is for the glow on click, and
@@ -209,8 +262,8 @@ textarea:focus-visible {
    plain option buttons inside their menus included (see comment above). */
 :where(button:focus) {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent);
 }
 
 /* Dropdown menu options are borderless rows, not outlined pills, so
@@ -257,7 +310,7 @@ textarea:focus-visible {
 
 .stamp--neutral {
   color: var(--ink-soft);
-  background: var(--surface);
+  background: var(--chip);
 }
 
 /* Shared UI atoms used across pages (job board, apply page, ...) — kept
@@ -271,7 +324,7 @@ textarea:focus-visible {
   text-transform: none;
   color: var(--ink-soft);
   border: none;
-  background: var(--surface);
+  background: var(--chip);
   border-radius: var(--radius-pill);
   padding: 0.25rem 0.7rem;
 }
@@ -337,4 +390,11 @@ textarea:focus-visible {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* Inter at semibold at most, app-wide: bold text in descriptions, letters
+   and notes renders at the same weight as the headings. */
+strong,
+b {
+  font-weight: 600;
 }

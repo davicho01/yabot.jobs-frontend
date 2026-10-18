@@ -148,7 +148,7 @@ export function PlanSection({ access }: { access: AiAccess }) {
           ) : (
             <button
               type="button"
-              className="plan-section__primary"
+              className="plan-section__primary plan-section__primary--subscribe"
               disabled={checkoutMutation.isPending}
               onClick={() => checkoutMutation.mutate()}
             >

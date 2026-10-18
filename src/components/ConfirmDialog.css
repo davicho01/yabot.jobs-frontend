@@ -54,7 +54,7 @@
 }
 
 .confirm-dialog__button:hover {
-  background: var(--surface);
+  background: var(--chip);
 }
 
 .confirm-dialog__button--danger {

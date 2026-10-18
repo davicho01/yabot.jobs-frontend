@@ -56,7 +56,7 @@ export const ALL_SECTORS = "all";
 // SECTOR_LABELS. Customer Support, Design & Product and Trades & Service stay
 // long on purpose: "Support" reads as IT, "Design" hides product managers,
 // and the trades bucket also holds retail and hospitality.
-const SECTOR_SHORT_LABELS: Record<string, string> = {
+export const SECTOR_SHORT_LABELS: Record<string, string> = {
   engineering_tech: "Tech",
   engineering_traditional: "Engineering",
   sales: "Sales",

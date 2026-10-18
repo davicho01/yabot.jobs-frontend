@@ -1,11 +1,11 @@
 import { Routes, Route, Outlet, Navigate, useLocation, useParams } from "react-router-dom";
-import { BOARD_PATH } from "./routes";
+import { BOARD2_PATH, BOARD_PATH } from "./routes";
 import { LoginPage } from "./pages/LoginPage";
 import { AuthCallbackPage } from "./pages/AuthCallbackPage";
 import { OAuthAuthorizePage } from "./pages/OAuthAuthorizePage";
 import { JobBoardPage } from "./pages/JobBoardPage";
 import { JobDetailPage } from "./pages/JobDetailPage";
-import { ApplyPage } from "./pages/ApplyPage";
+import { ApplyPage2 } from "./pages/ApplyPage2";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ResumePage } from "./pages/ResumePage";
 import { ResumeOptimizationPage } from "./pages/ResumeOptimizationPage";
@@ -63,7 +63,8 @@ export default function App() {
   return (
     <Routes>
       <Route element={<RootLayout />}>
-        <Route path={BOARD_PATH} element={<JobBoardPage />} />
+        <Route path={BOARD_PATH} element={<JobBoardPage variant="cards" />} />
+        <Route path={BOARD2_PATH} element={<JobBoardPage variant="cards" />} />
         <Route path="/jobs/:urlId" element={<JobDetailPage />} />
         <Route path="/job/:urlId" element={<StaticJobPageFallback />} />
         <Route path="/login" element={<LoginPage />} />
@@ -81,7 +82,15 @@ export default function App() {
           path="/jobs/:urlId/apply"
           element={
             <ProtectedRoute>
-              <ApplyPage />
+              <ApplyPage2 />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/:urlId/apply2"
+          element={
+            <ProtectedRoute>
+              <ApplyPage2 />
             </ProtectedRoute>
           }
         />

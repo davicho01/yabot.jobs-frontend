@@ -1,9 +1,10 @@
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiKeysApi } from "../api/apiKeys";
 import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY, onboardingApi } from "../api/onboarding";
 import { PlanSection } from "../components/PlanSection";
 import { ActiveSourceNotice } from "../components/ActiveSourceNotice";
+import { PillSelect } from "../components/PillSelect";
 import { useMarkAiAccessSeen } from "../hooks/useOnboarding";
 import { ApiError } from "../api/client";
 import { LLM_PROVIDERS, getLlmProvider } from "../data/llmProviders";
@@ -46,8 +47,10 @@ export function ApiKeysPage() {
     queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
   }
 
+  const providerLabelId = useId();
+  const modelLabelId = useId();
   const [provider, setProvider] = useState("anthropic");
-  const [model, setModel] = useState("");
+  const [model, setModel] = useState(() => defaultModelFor("anthropic"));
   const [apiKeyValue, setApiKeyValue] = useState("");
   const [baseUrl, setBaseUrl] = useState("");
   const [isDefault, setIsDefault] = useState(true);
@@ -163,17 +166,14 @@ export function ApiKeysPage() {
 
         <h3 className="ai-access-keys__form-title">Add a key</h3>
         <form onSubmit={handleCreateKey} className="settings-key-form">
-          <label>
-            Provider
-            <div className="select-field">
-              <select value={provider} onChange={(e) => handleProviderChange(e.target.value)}>
-                {LLM_PROVIDERS.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="settings-key-form__field">
+            <span id={providerLabelId}>Provider</span>
+            <PillSelect
+              value={provider}
+              options={LLM_PROVIDERS.map((p) => ({ value: p.id, label: p.label }))}
+              onChange={handleProviderChange}
+              labelledBy={providerLabelId}
+            />
             {selectedProvider?.keysUrl && (
               <span className="ai-access-keys__get-key">
                 Don't have one?{" "}
@@ -182,33 +182,33 @@ export function ApiKeysPage() {
                 </a>
               </span>
             )}
-          </label>
-          <label>
-            Model {!selectedProvider?.defaultModel && <span className="settings-key-form__required">required</span>}
-            {selectedProvider && selectedProvider.models.length > 0 ? (
-              <div className="select-field">
-                <select
-                  value={model}
-                  onChange={(e) => setModel(e.target.value)}
-                  required={!selectedProvider.defaultModel}
-                >
-                  {selectedProvider.defaultModel && <option value="">Default ({selectedProvider.defaultModel})</option>}
-                  {selectedProvider.models.map((m) => (
-                    <option key={m.value} value={m.value}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
+          </div>
+          {selectedProvider && selectedProvider.models.length > 0 ? (
+            <div className="settings-key-form__field">
+              <span id={modelLabelId}>Model</span>
+              <PillSelect
+                value={model}
+                options={[
+                  ...(selectedProvider.defaultModel
+                    ? [{ value: "", label: `Default (${selectedProvider.defaultModel})` }]
+                    : []),
+                  ...selectedProvider.models,
+                ]}
+                onChange={setModel}
+                labelledBy={modelLabelId}
+              />
+            </div>
+          ) : (
+            <label>
+              Model <span className="settings-key-form__required">required</span>
               <input
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
                 placeholder="e.g. llama-3.1-70b-instruct"
                 required
               />
-            )}
-          </label>
+            </label>
+          )}
           {provider === "other" && (
             <label>
               Base URL

@@ -86,7 +86,7 @@
 
 .resume-optimization-page__entry-count {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.85rem;
   color: var(--ink-soft);
   font-variant-numeric: tabular-nums;
@@ -128,7 +128,7 @@
 .resume-optimization-page__apply-button {
   flex-shrink: 0;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   padding: 0.65rem 1.3rem;
   border-radius: var(--radius-pill);

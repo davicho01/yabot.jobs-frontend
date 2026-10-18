@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY, onboardingApi } from "../api/onboarding";
@@ -14,14 +14,19 @@ import { type EvaluateChoice, loadEvaluateChoice, saveEvaluateChoice } from "../
 import { freeEvaluationsPhrase } from "../utils/onboarding";
 import { EvaluateChoiceModal, EvaluateProgressModal } from "./EvaluateChoiceModal";
 import { FlagJobModal } from "./FlagJobModal";
-import { employmentLabel, sectorLabel, workplaceLabel } from "../utils/jobTags";
-import { jobAge, type JobAgeTone } from "../utils/jobPosting";
+import { SECTOR_SHORT_LABELS, employmentLabel, sectorLabel, workplaceLabel } from "../utils/jobTags";
+import { jobAge, shortLocation, type JobAgeTone } from "../utils/jobPosting";
+import { fitLabel, fitTier } from "../utils/fitScore";
 import CompanyLogo from "./CompanyLogo";
 
 // A JobPosting row exists from the moment its URL is submitted (see
 // get_or_create_job_posting) so job_posting_id is available right away —
 // scanned/not-scanned is tracked by extraction_status, not by the posting
 // being present at all.
+// How much of a long description the board's cards show before "Show full
+// posting" (keep in step with .case-file__description--folded in JobBoardCards.css).
+const DESCRIPTION_FOLD_PX = 480;
+
 function scannedPosting(job: JobDetail): JobPosting | null {
   return job.posting && job.posting.extraction_status !== "pending" ? job.posting : null;
 }
@@ -256,6 +261,7 @@ export function JobCaseFile({
   isDeleting,
   titleHighlightQuery,
   onSelectSimilar,
+  boardCards = false,
 }: {
   job: JobDetail;
   user: User | null;
@@ -271,6 +277,10 @@ export function JobCaseFile({
   titleHighlightQuery?: string;
   // See SimilarJobsList — only set from JobBoardPage.
   onSelectSimilar?: (urlId: string) => void;
+  // The job board's card style: the posting's facts as chips in the header
+  // (age and sector included), and in place of "Job at a glance" (which only
+  // repeated them) a fit card holding the main button.
+  boardCards?: boolean;
 }) {
   const posting = scannedPosting(job);
   const scanFailed = job.url.scan_status === "failed";
@@ -416,6 +426,40 @@ export function JobCaseFile({
         ? "Evaluation failed, try again"
         : null;
 
+  // The main button: Add for evaluation, or View application once the job is
+  // saved. In the toolbar normally; in the fit card on the board's cards.
+  const addButton =
+    (currentApplication && belowReady === null) || !user ? (
+      <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
+        <span>{currentApplication ? "View application →" : "Add for evaluation →"}</span>
+        {currentApplication && <span className="apply-button__meta">{formatApplicationDate(currentApplication)}</span>}
+      </Link>
+    ) : (
+      <button
+        type="button"
+        className="apply-button"
+        disabled={recordApplication.isPending || !job.url.url}
+        onClick={onAddClick}
+      >
+        <span>{addButtonLabel}</span>
+        {addButtonMeta && <span className="apply-button__meta">{addButtonMeta}</span>}
+      </button>
+    );
+
+  // On the board's cards a long description shows its first screen, faded
+  // out, with "Show full posting" under it; reopening another job folds again.
+  const descriptionRef = useRef<HTMLDivElement>(null);
+  const [expandedFor, setExpandedFor] = useState<string | null>(null);
+  const expanded = expandedFor === job.url.id;
+  const [foldable, setFoldable] = useState(false);
+  useLayoutEffect(() => {
+    const el = descriptionRef.current;
+    setFoldable(boardCards && !!el && el.scrollHeight > DESCRIPTION_FOLD_PX + 160);
+  }, [boardCards, posting?.description]);
+
+  const fitScore = currentApplication?.best_score ?? null;
+  const age = jobAge(job);
+
   return (
     <article className="case-file">
       {(!posting || scanFailed) && (
@@ -473,24 +517,7 @@ export function JobCaseFile({
                   Report<span className="case-file__label-extra"> a problem</span>
                 </button>
               )}
-              {(currentApplication && belowReady === null) || !user ? (
-                <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
-                  <span>{currentApplication ? "View application →" : "Add for evaluation →"}</span>
-                  {currentApplication && (
-                    <span className="apply-button__meta">{formatApplicationDate(currentApplication)}</span>
-                  )}
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  className="apply-button"
-                  disabled={recordApplication.isPending || !job.url.url}
-                  onClick={onAddClick}
-                >
-                  <span>{addButtonLabel}</span>
-                  {addButtonMeta && <span className="apply-button__meta">{addButtonMeta}</span>}
-                </button>
-              )}
+              {!boardCards && addButton}
             </div>
           </div>
           {showsAddButton && evaluateChoice && (
@@ -512,7 +539,7 @@ export function JobCaseFile({
             <h1>{posting.title ? highlightQuery(posting.title, titleHighlightQuery) : "Untitled role"}</h1>
             {(posting.location || formatPostedAt(job)) && (
               <p className="case-file__company">
-                <span>{posting.location}</span>
+                <span>{boardCards && posting.location ? shortLocation(posting.location) : posting.location}</span>
                 {formatPostedAt(job) && <span className="case-file__posted">{formatPostedAt(job)}</span>}
               </p>
             )}
@@ -526,8 +553,35 @@ export function JobCaseFile({
               <span className="tag">{employmentLabel(posting.employment_type)}</span>
             )}
             {formatSalary(job) && <span className="tag tag--accent">{formatSalary(job)}</span>}
+            {boardCards && sectorLabel(posting.sector) && (
+              <span className="tag tag--sector">{SECTOR_SHORT_LABELS[posting.sector] ?? sectorLabel(posting.sector)}</span>
+            )}
+            {boardCards && closedLabel(job) && <span className="tag tag--closed">{closedLabel(job)}</span>}
+            {boardCards && age && <span className={`tag tag--age tag--age-${age.tone}`}>Found {age.ago}</span>}
           </div>
 
+          {boardCards ? (
+            <section className="case-file__fit" aria-labelledby="case-file-fit-h">
+              {fitScore !== null ? (
+                <span className={`case-file__fit-dial case-file__fit-dial--${fitTier(fitScore)}`}>{fitScore}</span>
+              ) : (
+                <span className="case-file__fit-dial case-file__fit-dial--unknown" aria-hidden="true">
+                  ?
+                </span>
+              )}
+              <div className="case-file__fit-text">
+                <h2 id="case-file-fit-h">
+                  {fitScore !== null ? `${fitLabel(fitScore).text}: ${fitScore} fit` : "What's your fit?"}
+                </h2>
+                <p>
+                  {fitScore !== null
+                    ? "Scored against your resume. Open the application for the gaps and risks."
+                    : "Score your resume against this job to see your fit, the gaps and the risks."}
+                </p>
+              </div>
+              {addButton}
+            </section>
+          ) : (
           <section className="case-file__glance" aria-labelledby="case-file-glance-h">
             <div className="case-file__glance-head">
               <h2 id="case-file-glance-h">Job at a glance</h2>
@@ -547,14 +601,23 @@ export function JobCaseFile({
               ))}
             </dl>
           </section>
+          )}
 
-          <div className="case-file__description">
+          <div
+            ref={descriptionRef}
+            className={`case-file__description${foldable && !expanded ? " case-file__description--folded" : ""}`}
+          >
             {posting.description ? (
               <JobDescription markdown={posting.description} />
             ) : (
               "No description was extracted for this posting."
             )}
           </div>
+          {foldable && !expanded && (
+            <button type="button" className="case-file__unfold" onClick={() => setExpandedFor(job.url.id)}>
+              Show full posting
+            </button>
+          )}
 
           <SimilarJobsSection
             jobId={job.url.id}

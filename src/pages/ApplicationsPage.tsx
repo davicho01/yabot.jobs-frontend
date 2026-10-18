@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { applicationsApi } from "../api/applications";
@@ -24,6 +24,7 @@ import {
 import "./ApplicationsPage.css";
 import { BOARD_PATH } from "../routes";
 import CompanyLogo from "../components/CompanyLogo";
+import { listColor, listColorEnd } from "../utils/listGradient";
 import { ApplyButton } from "../components/ApplyButton";
 
 function errorMessage(err: unknown, fallback: string): string {
@@ -181,7 +182,8 @@ function SortMenu({
 
   const triggerLabel =
     activeSorts.length === 0
-      ? "Sort ↓"
+      ? // The API's own order, newest saved first.
+        "Sort: Newest ↓"
       : `Sort: ${activeSorts.map((sort) => SORT_FIELD_LABELS[sort.field]).join(" → ")}`;
 
   return (
@@ -200,6 +202,219 @@ function SortMenu({
               </button>
             );
           })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Where the application stands in the apply page's steps — the four the list
+// knows about (interview prep isn't sent with it) — and the next one to do.
+// `section` is where the "Next:" link opens the apply page (see ApplyPage2's
+// #step-N / #notes handling).
+const TRACK_STEPS = [
+  { label: "Score", next: "score it", section: "step-1", done: (a: Application) => a.best_score !== null },
+  {
+    label: "Tailor",
+    next: "tailor resume",
+    section: "step-2",
+    done: (a: Application) => a.latest_tailored_resume !== null,
+  },
+  {
+    label: "Cover letter",
+    next: "cover letter",
+    section: "step-3",
+    done: (a: Application) => a.latest_cover_letter !== null,
+  },
+  { label: "Apply", next: "apply", section: "step-4", done: (a: Application) => a.status !== "saved" },
+];
+
+// What to do next. Before applying, the first step not done yet. After, the
+// steps before Apply are behind you (a skipped cover letter isn't "next"
+// once you've applied), so it follows the status instead.
+function nextStep(
+  application: Application,
+  done: boolean[],
+): { text: string; section: string | null; done?: boolean } | null {
+  // A poor match (the red fit tier), saved or applied, isn't nudged on to
+  // more work; the choice to keep going is yours, from the card's menu or its
+  // job page. An interview or offer outranks the score.
+  if (
+    (application.status === "saved" || application.status === "applied") &&
+    application.best_score !== null &&
+    fitTier(application.best_score) === "negative"
+  ) {
+    return { text: "Not a match", section: null };
+  }
+  switch (application.status) {
+    case "saved": {
+      const step = TRACK_STEPS.find((_, i) => !done[i]);
+      return step ? { text: `Next: ${step.next}`, section: step.section } : null;
+    }
+    case "applied":
+      if (!application.follow_up_at) return { text: "Next: set a follow-up", section: "notes" };
+      // Every step is done; a due follow-up shows as the red date link above.
+      return { text: "Completed!", section: null, done: true };
+    case "interviewing":
+      return { text: "Next: interview prep", section: "step-5" };
+    case "offer":
+      return { text: "Offer received", section: null };
+    default:
+      return null;
+  }
+}
+
+function StepTracker({ application }: { application: Application }) {
+  const done = TRACK_STEPS.map((step) => step.done(application));
+  // A job ready to apply shows the Apply button (RowControls); a "Next:" link
+  // beside it would be a second, competing call to action, so the dashes are
+  // labeled "Ready to apply" instead (the cover letter is optional).
+  const ready = showApply(application);
+  const next = ready ? null : nextStep(application, done);
+  const count = done.filter(Boolean).length;
+  return (
+    <div className="application-row__track">
+      <ol className="application-row__track-steps" aria-label={`${count} of ${TRACK_STEPS.length} steps done`}>
+        {TRACK_STEPS.map((step, i) => (
+          <li
+            key={step.label}
+            className={`application-row__track-step${done[i] ? " application-row__track-step--done" : ""}${
+              next?.section === step.section ? " application-row__track-step--next" : ""
+            }`}
+            title={`${step.label}${done[i] ? " · done" : ""}`}
+          />
+        ))}
+      </ol>
+      {next?.section ? (
+        <Link
+          to={`/jobs/${application.job_posting.url_id}/apply#${next.section}`}
+          className="application-row__track-next"
+        >
+          {next.text} →
+        </Link>
+      ) : ready ? (
+        <span className="application-row__track-next application-row__track-next--ready">Ready to apply</span>
+      ) : (
+        next && (
+          <span
+            className={`application-row__track-next ${next.done ? "application-row__track-next--ready" : "application-row__track-next--quiet"}`}
+          >
+            {next.text}
+          </span>
+        )
+      )}
+    </div>
+  );
+}
+
+// The header's count tiles double as the list's filters: tapping one shows
+// just what it counts (kept in the URL as ?show=), tapping it again shows
+// everything. `empty` is what the list says when a filter matches nothing.
+const LIST_FILTERS = [
+  { value: "saved", label: "Saved", empty: "Nothing saved right now.", match: (a: Application) => a.status === "saved" },
+  {
+    value: "applied",
+    label: "Applied",
+    empty: "Nothing waiting to hear back right now.",
+    match: (a: Application) => a.status === "applied",
+  },
+  {
+    value: "interviewing",
+    label: "Interviewing",
+    empty: "No interviews right now.",
+    match: (a: Application) => a.status === "interviewing",
+  },
+  { value: "offer", label: "Offers", empty: "No offers right now.", match: (a: Application) => a.status === "offer" },
+  {
+    value: "followups",
+    label: "Follow-ups due",
+    empty: "No follow-ups due right now.",
+    match: (a: Application) => !!a.follow_up_at && formatFollowUp(a.follow_up_at).overdue,
+    urgent: true,
+  },
+];
+
+// The toolbar's ⋯ menu: the list's less frequent controls (archived rows,
+// selecting rows for bulk actions, CSV export) behind one button, so Sort and
+// the menu fit on one line on a phone. Same action-dropdown pattern as SortMenu.
+function ListMenu({
+  showArchived,
+  onShowArchivedChange,
+  onSelect,
+  onExportCsv,
+  hasRows,
+}: {
+  showArchived: boolean;
+  onShowArchivedChange: (checked: boolean) => void;
+  onSelect: () => void;
+  onExportCsv: () => void;
+  hasRows: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  return (
+    <div className="action-dropdown" ref={containerRef}>
+      <button
+        type="button"
+        className="application-row__action application-row__more"
+        aria-label="More list options"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        ⋯
+      </button>
+      {open && (
+        <div className="action-dropdown-menu applications-page__list-menu" role="menu">
+          <Link to="/resume-optimization" role="menuitem" onClick={() => setOpen(false)}>
+            <span className="applications-page__check" aria-hidden="true" />
+            Resume optimization
+          </Link>
+          <button
+            type="button"
+            role="menuitemcheckbox"
+            aria-checked={showArchived}
+            onClick={() => onShowArchivedChange(!showArchived)}
+          >
+            <span className="applications-page__check" aria-hidden="true">
+              {showArchived ? "✓" : ""}
+            </span>
+            Show archived
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!hasRows}
+            onClick={() => {
+              onSelect();
+              setOpen(false);
+            }}
+          >
+            <span className="applications-page__check" aria-hidden="true" />
+            Select
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!hasRows}
+            onClick={() => {
+              onExportCsv();
+              setOpen(false);
+            }}
+          >
+            <span className="applications-page__check" aria-hidden="true" />
+            Export CSV
+          </button>
         </div>
       )}
     </div>
@@ -300,9 +515,9 @@ function CardScore({ application }: { application: Application }) {
   const score = pastFirstScore && run?.resume_score != null ? run.resume_score : application.best_score;
   if (score === null) return null;
   return (
-    <span className={`stamp application-row__score stamp--${fitTier(score)}`}>
-      <span className="application-row__score-label">Score</span>
-      <span className="application-row__score-value">{score}</span>
+    <span className={`application-row__fit application-row__fit--${fitTier(score)}`}>
+      <i aria-hidden="true" />
+      {score} fit
     </span>
   );
 }
@@ -342,7 +557,7 @@ function AutoScoreProgress({ application }: { application: Application }) {
 // (score → tailor if ≥ 75 → score tailored; ready at ≥ 85), with the
 // application's chosen resume. Shares the apply page's ["auto-score", id]
 // query, so a run started in either place shows as running in both.
-function EvaluateButton({ application }: { application: Application }) {
+function useScoreAction(application: Application) {
   const queryClient = useQueryClient();
   const jobPostingId = application.job_posting.id;
   const [error, setError] = useState<string | null>(null);
@@ -375,33 +590,25 @@ function EvaluateButton({ application }: { application: Application }) {
   }, [status, runQuery.data?.error, queryClient]);
 
   const running = mutation.isPending || isAutoScoreActive(status);
-
-  return (
-    <div className="application-row__score">
-      <button type="button" className="application-row__action" disabled={running} onClick={() => mutation.mutate()}>
-        {running ? (
-          <>
-            Scoring
-            <span className="application-row__spin" aria-hidden="true">
-              ↻
-            </span>
-          </>
-        ) : application.best_score !== null ? (
-          "Re-score"
-        ) : (
-          "Score"
-        )}
-      </button>
-      {error && <span className="application-row__details-error application-row__score-error">{error}</span>}
-    </div>
-  );
+  return {
+    running,
+    label: application.best_score !== null ? "Re-score" : "Score",
+    start: () => mutation.mutate(),
+    error,
+  };
 }
 
 // Score/tailored-resume/cover-letter all arrive nested on the application
 // itself (backend keeps a "latest" pointer per application, updated when
 // each is generated — see UserJobApplication.latest_score etc.), so this is
 // pure rendering aside from the "not generated yet" actions below.
-function DownloadMenu({ application }: { application: Application }) {
+function DownloadMenu({
+  application,
+  score,
+}: {
+  application: Application;
+  score: ReturnType<typeof useScoreAction>;
+}) {
   const { latest_tailored_resume: tailoredResume, latest_cover_letter: coverLetter, job_posting: jobPosting } =
     application;
   const [open, setOpen] = useState(false);
@@ -443,14 +650,37 @@ function DownloadMenu({ application }: { application: Application }) {
       <button
         type="button"
         className="application-row__action application-row__more"
-        aria-label="Download"
-        title="Download"
+        aria-label="More actions"
+        title="More actions"
         onClick={() => setOpen((o) => !o)}
       >
         ⋯
       </button>
       {open && (
         <div className="action-dropdown-menu">
+          <button
+            type="button"
+            disabled={score.running}
+            onClick={() => {
+              setOpen(false);
+              score.start();
+            }}
+          >
+            {score.running ? "Scoring…" : score.label}
+          </button>
+          {/* Wherever the row has no Apply button, the posting stays one tap away here. */}
+          {!showApply(application) && jobPosting.apply_url && (
+            <a
+              className="action-dropdown-menu__link"
+              href={jobPosting.apply_url}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setOpen(false)}
+            >
+              Open the job posting ↗
+            </a>
+          )}
+          <hr className="action-dropdown-menu__rule" />
           {tailoredResume ? (
             (["docx", "pdf"] as const).map((format) => (
               <button
@@ -504,6 +734,37 @@ function DownloadMenu({ application }: { application: Application }) {
         </div>
       )}
       {error && <span className="application-row__details-error">{error}</span>}
+    </div>
+  );
+}
+
+// Apply shows only for a job auto score marked ready (best score ≥ 85) that
+// you haven't applied to yet; otherwise the ⋯ menu has the posting.
+function showApply(application: Application): boolean {
+  return application.status === "saved" && application.ready_to_apply_at !== null;
+}
+
+// The row's buttons: the status, Apply (when ready), and the ⋯ menu
+// holding Score/Re-score, the job posting and the downloads. Owns the score
+// action so a run keeps being watched while the menu is closed.
+function RowControls({ application }: { application: Application }) {
+  const score = useScoreAction(application);
+  return (
+    <div className="application-row__controls">
+      <ApplicationStatusSelect application={application} />
+      {score.running && (
+        <span className="application-row__scoring">
+          Scoring
+          <span className="application-row__spin" aria-hidden="true">
+            ↻
+          </span>
+        </span>
+      )}
+      {showApply(application) && <ApplyLink application={application} />}
+      <DownloadMenu application={application} score={score} />
+      {score.error && (
+        <span className="application-row__details-error application-row__score-error">{score.error}</span>
+      )}
     </div>
   );
 }
@@ -579,14 +840,20 @@ function BulkStatusMenu({ disabled, onPick }: { disabled: boolean; onPick: (stat
   );
 }
 
+// Shown while selecting rows (⋯ → Select): the count, Select all, the bulk
+// actions, and Done to leave selection mode.
 function BulkActionsBar({
   selectedIds,
   applications,
-  onClear,
+  allSelected,
+  onToggleSelectAll,
+  onDone,
 }: {
   selectedIds: Set<string>;
   applications: Application[];
-  onClear: () => void;
+  allSelected: boolean;
+  onToggleSelectAll: () => void;
+  onDone: () => void;
 }) {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
@@ -604,27 +871,31 @@ function BulkActionsBar({
 
   const anyPending =
     archiveMutation.isPending || unarchiveMutation.isPending || statusMutation.isPending || evaluateMutation.isPending;
+  const noneSelected = selectedIds.size === 0;
   const selected = applications.filter((a) => selectedIds.has(a.id));
   const unscoredJobPostingIds = selected.filter((a) => a.best_score === null).map((a) => a.job_posting.id);
 
   function runBulk(mutate: () => Promise<unknown>) {
     setError(null);
     mutate()
-      .then(onClear)
+      .then(onDone)
       .catch((err) => setError(errorMessage(err, "That didn't fully go through, some rows may be unchanged.")));
   }
 
   return (
     <div className="applications-page__bulk-bar">
       <span className="applications-page__bulk-count">{selectedIds.size} selected</span>
+      <button type="button" className="applications-page__bulk-clear" onClick={onToggleSelectAll}>
+        {allSelected ? "Select none" : "Select all"}
+      </button>
       <BulkStatusMenu
-        disabled={anyPending}
+        disabled={anyPending || noneSelected}
         onPick={(status) => runBulk(() => statusMutation.mutateAsync({ ids: [...selectedIds], status }))}
       />
       <button
         type="button"
         className="application-row__action"
-        disabled={anyPending}
+        disabled={anyPending || noneSelected}
         onClick={() => runBulk(() => archiveMutation.mutateAsync([...selectedIds]))}
       >
         {archiveMutation.isPending ? "Archiving…" : "Archive"}
@@ -632,7 +903,7 @@ function BulkActionsBar({
       <button
         type="button"
         className="application-row__action"
-        disabled={anyPending}
+        disabled={anyPending || noneSelected}
         onClick={() => runBulk(() => unarchiveMutation.mutateAsync([...selectedIds]))}
       >
         {unarchiveMutation.isPending ? "Unarchiving…" : "Unarchive"}
@@ -646,8 +917,8 @@ function BulkActionsBar({
       >
         {evaluateMutation.isPending ? "Evaluating…" : `Evaluate${unscoredJobPostingIds.length ? ` (${unscoredJobPostingIds.length})` : ""}`}
       </button>
-      <button type="button" className="applications-page__bulk-clear" onClick={onClear}>
-        Clear
+      <button type="button" className="application-row__action applications-page__bulk-done" onClick={onDone}>
+        Done
       </button>
       {error && <span className="application-row__details-error">{error}</span>}
     </div>
@@ -661,6 +932,13 @@ export function ApplicationsPage() {
   });
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  // Checkboxes only show while selecting (⋯ → Select), to keep the cards clear.
+  const [selecting, setSelecting] = useState(false);
+
+  function stopSelecting() {
+    setSelecting(false);
+    setSelectedIds(new Set());
+  }
 
   // The view (which fields/directions are active, whether archived rows
   // show) lives in the URL so it survives a refresh or back/forward nav,
@@ -671,7 +949,23 @@ export function ApplicationsPage() {
   // Archived applications stay in the same list (so an archived job's own
   // ApplyPage can still look up and unarchive it) — this page just
   // hides them from the default view unless the checkbox below is checked.
-  const applications = allApplications?.filter((application) => showArchived || !application.is_archived);
+  const showFilter = LIST_FILTERS.find((filter) => filter.value === searchParams.get("show")) ?? null;
+  const applications = allApplications?.filter(
+    (application) => (showArchived || !application.is_archived) && (!showFilter || showFilter.match(application)),
+  );
+
+  function handleShowFilter(value: string | null) {
+    setSelectedIds(new Set());
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (value) next.set("show", value);
+        else next.delete("show");
+        return next;
+      },
+      { replace: true },
+    );
+  }
 
   // Multi-key sort: each checked field is a tiebreaker for the ones before
   // it, in the order they were added. A row missing a given field's value
@@ -748,92 +1042,136 @@ export function ApplicationsPage() {
 
   const allVisibleSelected = !!applications?.length && applications.every((a) => selectedIds.has(a.id));
 
+  // The summary above the list: where the active (unarchived) applications
+  // stand, and how many follow-ups are due today or earlier.
+  const active = allApplications?.filter((a) => !a.is_archived) ?? [];
+  const summary = LIST_FILTERS.map((filter) => ({ ...filter, count: active.filter(filter.match).length }));
+
   function toggleSelectAll() {
     setSelectedIds(allVisibleSelected ? new Set() : new Set(applications?.map((a) => a.id)));
   }
 
   return (
     <main className="applications-page">
+        {/* The page's one bold moment: title and counts on a deep-plum band. */}
+        <section className="applications-page__hero">
         <div className="applications-page__header">
           <div>
             <h1>My applications</h1>
             <p className="applications-page__intro">Every posting you've saved or applied to, in one drawer.</p>
           </div>
-          <Link to="/resume-optimization" className="applications-page__evaluate-button">
-            Resume optimization
-          </Link>
         </div>
+
+        {allApplications && allApplications.length > 0 && (
+          <div className="applications-page__summary" role="group" aria-label="Show">
+            {/* Follow-ups due leads when there are any, so it's never scrolled off on a phone. */}
+            {summary
+              // Zero counts are left out, except follow-ups due (always shown) and
+              // the filter that's on, so it can be tapped off again.
+              .filter(({ count, urgent, value }) => urgent || count > 0 || value === showFilter?.value)
+              .sort((a, b) => Number(!!b.urgent && b.count > 0) - Number(!!a.urgent && a.count > 0))
+              .map(({ label, count, urgent, value }) => {
+                const on = value === showFilter?.value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    className={`applications-page__stat${urgent && count > 0 ? " applications-page__stat--urgent" : ""}${on ? " applications-page__stat--on" : ""}`}
+                    aria-pressed={on}
+                    onClick={() => handleShowFilter(on ? null : value)}
+                  >
+                    <span className="applications-page__stat-count">{count}</span>
+                    <span className="applications-page__stat-label">
+                      {urgent ? (
+                        <>
+                          Follow-ups<span className="applications-page__stat-label-long"> due</span>
+                        </>
+                      ) : (
+                        label
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
+          </div>
+        )}
+        </section>
 
         <div className="applications-page__toolbar">
-          <label className="applications-page__archive-toggle">
-            <input
-              type="checkbox"
-              checked={showArchived}
-              onChange={(e) => handleShowArchivedChange(e.target.checked)}
-            />
-            Show archived
-          </label>
-          <label className="applications-page__archive-toggle">
-            <input
-              type="checkbox"
-              checked={allVisibleSelected}
-              disabled={!applications?.length}
-              onChange={toggleSelectAll}
-            />
-            Select all
-          </label>
+          {showArchived && <span className="applications-page__showing">Showing archived</span>}
           <SortMenu activeSorts={activeSorts} onCycleField={handleCycleSortField} />
-          <button
-            type="button"
-            className="application-row__action"
-            disabled={!applications?.length}
-            onClick={handleExportCsv}
-          >
-            Export CSV ↓
-          </button>
+          <ListMenu
+            showArchived={showArchived}
+            onShowArchivedChange={handleShowArchivedChange}
+            onSelect={() => setSelecting(true)}
+            onExportCsv={handleExportCsv}
+            hasRows={!!applications?.length}
+          />
         </div>
 
-        {selectedIds.size > 0 && applications && (
+        {selecting && applications && (
           <BulkActionsBar
             selectedIds={selectedIds}
             applications={applications}
-            onClear={() => setSelectedIds(new Set())}
+            allSelected={allVisibleSelected}
+            onToggleSelectAll={toggleSelectAll}
+            onDone={stopSelecting}
           />
         )}
 
         {isLoading && <p>Loading…</p>}
-        {!isLoading && applications?.length === 0 && (
+        {!isLoading && applications?.length === 0 && showFilter && (
+          <p className="applications-page__empty">
+            {showFilter.empty}{" "}
+            <button type="button" className="applications-page__show-all" onClick={() => handleShowFilter(null)}>
+              Show all
+            </button>
+          </p>
+        )}
+        {!isLoading && applications?.length === 0 && !showFilter && (
           <p className="applications-page__empty">
             Nothing here yet. <Link to={BOARD_PATH}>Browse postings</Link> and hit Add for evaluation on one that fits.
           </p>
         )}
 
         <ul className="application-list">
-          {applications?.map((application) => (
+          {applications?.map((application, index) => (
             <li
               key={application.id}
               className={`application-row${application.job_posting.company_name ? " application-row--with-employer" : ""}`}
+              style={
+                {
+                  "--band": listColor(index),
+                  "--band-end": listColorEnd(index),
+                } as CSSProperties
+              }
             >
               <AutoScoreProgress application={application} />
-              <CardScore application={application} />
-              <input
-                type="checkbox"
-                className="application-row__select"
-                aria-label={`Select ${application.job_posting.title ?? "this application"}`}
-                checked={selectedIds.has(application.id)}
-                onChange={() => toggleSelect(application.id)}
-              />
+              {selecting && (
+                <input
+                  type="checkbox"
+                  className="application-row__select"
+                  aria-label={`Select ${application.job_posting.title ?? "this application"}`}
+                  checked={selectedIds.has(application.id)}
+                  onChange={() => toggleSelect(application.id)}
+                />
+              )}
               <div className="application-row__main">
-                {/* Company first, logo beside its name, then the title — same as the job board's cards. */}
-                {application.job_posting.company_name && (
-                  <span className="application-row__employer">
+                {/* Company first, then the title — same order as the job board's cards. */}
+                {/* As on the search list's cards: the logo on a white tile (with the
+                    fit score at the row's far end), then the company name under it. */}
+                <span className="application-row__employer">
+                  <span className="application-row__tile" aria-hidden="true">
                     <CompanyLogo
-                      name={application.job_posting.company_name}
+                      name={application.job_posting.company_name ?? application.job_posting.title}
                       logoUrl={application.job_posting.company_logo_url}
                       size={32}
                     />
-                    <span>{application.job_posting.company_name}</span>
                   </span>
+                  <CardScore application={application} />
+                </span>
+                {application.job_posting.company_name && (
+                  <span className="application-row__company">{application.job_posting.company_name}</span>
                 )}
                 <span className="application-row__title-row">
                   <Link to={`/jobs/${application.job_posting.url_id}/apply`} className="application-row__title">
@@ -841,33 +1179,42 @@ export function ApplicationsPage() {
                   </Link>
                   {application.is_archived && <span className="application-row__archived-badge">Archived</span>}
                 </span>
+                {application.job_posting.location && (
+                  <span className="application-row__location">{application.job_posting.location}</span>
+                )}
                 <div className="application-row__meta">
                   {formatSalary(application.job_posting) && (
                     <span className="tag tag--accent application-row__pay">{formatSalary(application.job_posting)}</span>
                   )}
-                  {application.job_posting.posted_at && (
-                    <span className="application-row__added">Posted {formatPostedDate(application.job_posting.posted_at)}</span>
-                  )}
-                  {application.applied_at && (
+                  {/* One date only, the most useful one: the follow-up you set (red once
+                      it's due), else when you applied, else when the job was posted. */}
+                  {application.follow_up_at ? (
+                    formatFollowUp(application.follow_up_at).overdue ? (
+                      // Due: the date is the call to action, opening the job's notes.
+                      <Link
+                        to={`/jobs/${application.job_posting.url_id}/apply#notes`}
+                        className="application-row__follow-up application-row__follow-up--due"
+                      >
+                        Follow up {formatFollowUp(application.follow_up_at).text} →
+                      </Link>
+                    ) : (
+                      <span className="application-row__follow-up">
+                        Follow up {formatFollowUp(application.follow_up_at).text}
+                      </span>
+                    )
+                  ) : application.applied_at ? (
                     <span className="application-row__applied">Applied {formatAppliedDate(application.applied_at)}</span>
-                  )}
-                  {application.follow_up_at && (
-                    <span
-                      className={`application-row__follow-up${
-                        formatFollowUp(application.follow_up_at).overdue ? " application-row__follow-up--due" : ""
-                      }`}
-                    >
-                      Follow up {formatFollowUp(application.follow_up_at).text}
-                    </span>
+                  ) : (
+                    application.job_posting.posted_at && (
+                      <span className="application-row__added">
+                        Posted {formatPostedDate(application.job_posting.posted_at)}
+                      </span>
+                    )
                   )}
                 </div>
+                <StepTracker application={application} />
               </div>
-              <div className="application-row__controls">
-                <EvaluateButton application={application} />
-                <ApplicationStatusSelect application={application} />
-                <ApplyLink application={application} />
-                <DownloadMenu application={application} />
-              </div>
+              <RowControls application={application} />
             </li>
           ))}
         </ul>

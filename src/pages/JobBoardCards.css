@@ -1,0 +1,878 @@
+/* /jobs2 — JobBoardPage's "cards" variant, in the style of /jobs/:id/apply2:
+   banded job cards on a soft page, the open posting on a white card beside
+   them. Layout and phone behavior are JobBoardPage.css's; this only restyles. */
+
+.board--cards {
+  --band-card-bg: #ffffff;
+  --band-card-chip: #f1f1f4;
+  --band-card-ring: var(--focus);
+  --band-card-shadow: 0 12px 28px rgba(31, 26, 53, 0.09), 0 2px 5px rgba(31, 26, 53, 0.05);
+  --band-card-lime: #cdea8f;
+  /* Transparent so the page shell's color washes (see Header.css) show. */
+  background: transparent;
+  /* Same 1200px cap as the applications page and the landing page. */
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+}
+
+/* The detail pane's shadow room reaches past the 1200px column; on a narrow
+   window that mustn't widen the page. Clipped at the window-wide page shell
+   (not the column, which would cut the shadow off again), and clip rather
+   than hidden so the pane can still stick. */
+.page-shell:has(.board--cards) {
+  overflow-x: clip;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .board--cards {
+    --band-card-bg: #1c1b22;
+    --band-card-chip: #2a2931;
+    --band-card-ring: var(--focus);
+    --band-card-shadow: 0 0 0 1px #2c2c2e;
+  }
+}
+
+:root[data-theme="dark"] .board--cards {
+  --band-card-bg: #1c1b22;
+  --band-card-chip: #2a2931;
+  --band-card-ring: var(--focus);
+  --band-card-shadow: 0 0 0 1px #2c2c2e;
+}
+
+/* Wider list column beside the detail pane; phones keep JobBoardPage.css's
+   single full-width column. */
+@media (min-width: 761px) {
+  .board--cards .board__layout {
+    grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+  }
+}
+
+.board--cards .board__list {
+  border-right: none;
+}
+
+.board--cards .board__list-scroll {
+  padding: 0.5rem 1rem 1rem;
+  gap: 1rem;
+}
+
+.board--cards .board__pagination {
+  background: transparent;
+  border-top: none;
+  padding: 0.5rem 1rem 1.5rem;
+}
+
+.board--cards .board__page-button {
+  background: var(--band-card-chip);
+  border-color: transparent;
+  font-weight: 600;
+  padding: 0.55rem 1.1rem;
+}
+
+/* The open posting sits on its own white card (.board__detail-inner). The
+   pane around it is a transparent scroll area, so scrolling a long posting
+   moves the whole card, rounded top and all, up out of view, rather than
+   sliding its text under a card edge that stays put. Its padding is the
+   card's margin, with room for the card's shadow. */
+.board--cards .board__detail {
+  /* 2.5rem each side is room for the card's shadow (28px blur, 12px down)
+     so the pane's edge doesn't cut it off in a hard line; the negative
+     margins put the card itself back where it was. */
+  margin: 0 -1.5rem 0 -2.5rem;
+  padding: 1rem 2.5rem 2.5rem;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.board--cards .board__detail-inner {
+  padding: 2rem 2.25rem;
+  background: var(--band-card-bg);
+  border-radius: 32px;
+  box-shadow: var(--band-card-shadow);
+}
+
+/* The way to My applications sits above the posting's card, at its right
+   edge, and scrolls away with it. */
+.board__detail-applications {
+  display: table;
+  margin: 0 0 0.75rem auto;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--band-card-chip);
+}
+
+.board__detail-applications:hover {
+  color: var(--focus);
+}
+
+/* Beside the list it stays pinned under the header and scrolls on its own,
+   independently of the list; once the posting reaches its end, scrolling
+   carries on into the page, and the list with it. Phones keep
+   JobBoardPage.css's uncapped pane that scrolls with the page. */
+@media (min-width: 761px) {
+  .board--cards .board__detail {
+    top: var(--header-height, 0px);
+    max-height: calc(100vh - var(--header-height, 0px));
+    max-height: calc(100dvh - var(--header-height, 0px));
+    /* No visible scrollbar: it would sit in the pane's room for the card's
+       shadow, outside the page's 1200px column. Wheel, trackpad and keys
+       still scroll it. */
+    scrollbar-width: none;
+  }
+
+  .board--cards .board__detail::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* The open posting's color header: a band in the company's color across the
+   top of the white detail card (bleeding past its padding), with the logo on
+   a white tile hanging over the band's bottom edge. */
+.board__detail-band {
+  position: relative;
+  height: 96px;
+  margin: -2rem -2.25rem 2.75rem;
+  border-radius: 32px 32px 0 0;
+  background: linear-gradient(
+    110deg,
+    var(--band-card-color, #1f1a35),
+    var(--band-card-color-end, var(--band-card-color, #1f1a35))
+  );
+}
+
+/* "‹ All postings" (phones only — see JobBoardPage.css's .board__back) as a
+   white pill in the band's top-left corner. */
+.board__back--on-band,
+.board__back--on-band:hover:not(:disabled) {
+  position: absolute;
+  z-index: 1;
+  top: 12px;
+  left: 12px;
+  padding: 0.4rem 0.8rem;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0a0a0a;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Identity first, then actions: on the board, the company, title and tags
+   come before the button row (Rescan, Original, Report, Add/View), and the
+   line under the buttons goes. The standalone job page keeps its order. */
+.board--cards .case-file {
+  display: flex;
+  flex-direction: column;
+}
+
+.board--cards .case-file__header-title {
+  order: -2;
+}
+
+.board--cards .case-file__tags {
+  order: -1;
+}
+
+.board--cards .case-file__toolbar {
+  margin: 0.25rem 0 1.5rem;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.board__detail-band::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(55% 80% at 68% 30%, #ffffff1f, #fff0 70%);
+}
+
+.board__detail-tile {
+  position: absolute;
+  z-index: 1;
+  left: 2.25rem;
+  bottom: -28px;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(31, 26, 53, 0.16);
+}
+
+.board__detail-tile .company-logo {
+  margin: 0;
+  top: 0;
+  border-radius: 10px;
+}
+
+/* The logo now sits in the header, so the company line drops its own copy. */
+.board--cards .case-file__employer .company-logo {
+  display: none;
+}
+
+.board__cards-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.25rem 1rem 0.5rem;
+}
+
+.board__cards-count {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- the card ---------- */
+
+.band-card,
+.band-card:hover:not(:disabled) {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ink);
+  /* A thick band across the top, down to the middle of the fit pill (24px
+     down, about 21px tall), as on the Applications cards; the logo tile
+     hangs half off it. It sweeps diagonally from the card's color into one
+     further along the list's run, like the apply page's step bands. */
+  background:
+    linear-gradient(110deg, var(--band-card-color, #1f1a35), var(--band-card-color-end, var(--band-card-color, #1f1a35))) top / 100% 35px no-repeat,
+    var(--band-card-bg);
+  border: 0;
+  border-radius: 26px;
+  overflow: hidden;
+  box-shadow: var(--band-card-shadow);
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.band-card:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+/* The open job: a thin ring in its own band color. A card focused from the
+   keyboard gets the same ring instead of the app's magenta focus outline,
+   which drew a second line around the open card. */
+.band-card--active,
+.band-card--active:hover:not(:disabled),
+.band-card:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--band-card-color, var(--band-card-ring)),
+    0 16px 34px -12px color-mix(in srgb, var(--band-card-color, #1f1a35) 45%, transparent);
+}
+
+/* The anchor the logo tile and fit pill are placed from; the company's
+   color band itself is the card's background (above). */
+.band-card__band {
+  position: relative;
+  display: block;
+}
+
+.band-card__tile {
+  position: absolute;
+  z-index: 1;
+  left: 16px;
+  top: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(31, 26, 53, 0.16);
+  overflow: hidden;
+}
+
+.band-card__tile .company-logo {
+  margin: 0;
+  top: 0;
+  border-radius: 8px;
+}
+
+.band-card__fit {
+  position: absolute;
+  z-index: 1;
+  right: 14px;
+  top: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  /* White on any band color, in either theme. */
+  background: #ffffffeb;
+  /* Lifted off the band, as on the Applications cards. */
+  box-shadow: 0 2px 8px rgba(31, 26, 53, 0.14);
+  color: #0a0a0a;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.band-card__fit i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.band-card__fit--positive i {
+  background: var(--teal);
+}
+
+.band-card__fit--warning i {
+  background: var(--amber);
+}
+
+.band-card__fit--negative i {
+  background: var(--rose);
+}
+
+.band-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 4.25rem 1rem 1rem;
+  min-width: 0;
+}
+
+.band-card__company {
+  min-width: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.band-card__title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.band-card__meta {
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.band-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+}
+
+.band-card__tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: var(--band-card-chip);
+}
+
+/* Pay as a bold figure rather than another pill, so it's the first thing
+   read on the card's last line. */
+/* The pay as a soft lime chip: a light lime tint with deep green text, so it
+   stands out from the other chips without shouting. */
+.band-card__pay {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: #3f6212;
+  background: color-mix(in srgb, var(--band-card-lime) 45%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .band-card__pay {
+    color: var(--band-card-lime);
+    background: color-mix(in srgb, var(--band-card-lime) 16%, transparent);
+  }
+}
+
+:root[data-theme="dark"] .band-card__pay {
+  color: var(--band-card-lime);
+  background: color-mix(in srgb, var(--band-card-lime) 16%, transparent);
+}
+
+.band-card__posted {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+
+.band-card__posted--fresh {
+  color: var(--teal);
+  font-weight: 600;
+}
+
+.band-card__posted--recent {
+  color: var(--amber);
+  font-weight: 600;
+}
+
+@media (max-width: 760px) {
+  .board--cards .board__detail {
+    margin: 0;
+    padding: 0.75rem;
+  }
+
+  .board--cards .board__detail-inner {
+    padding: 1.25rem 1rem 2rem;
+    border-radius: 24px;
+  }
+
+  .board__detail-band {
+    height: 88px;
+    margin: -1.25rem -1rem 2.5rem;
+    border-radius: 24px 24px 0 0;
+  }
+
+  .board__detail-tile {
+    left: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .band-card,
+  .band-card:hover:not(:disabled) {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* On a window wide enough for the full 1200px (the header's width), the job
+   list's left edge and the detail card's right edge sit on the header's
+   edges, as on the apply and applications pages. Narrower, they keep their
+   inset. */
+@media (min-width: 1260px) {
+  .board--cards .board__cards-head,
+  .board--cards .board__list-scroll,
+  .board--cards .board__pagination {
+    padding-left: 0;
+  }
+
+  .board--cards .board__detail {
+    margin-right: -2.5rem;
+  }
+}
+
+/* ---------- the open posting's header and fit card ---------- */
+
+.board--cards .case-file__header-title h1 {
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+/* "Posted …" moves into the chips (as "Found 4d ago"), so the location line
+   is just the location. */
+.board--cards .case-file__company .case-file__posted {
+  display: none;
+}
+
+/* The facts as colored chips: pay biggest, in lime, then workplace, type,
+   sector and age each with a tint of its own. */
+.board--cards .case-file__tags {
+  gap: 0.45rem;
+  margin-top: 0.25rem;
+}
+
+.board--cards .case-file__tags .tag {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.2;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--chip-tint, #7b61ff) 14%, transparent);
+}
+
+/* The pay first, as the same soft lime chip as the list's cards. */
+.board--cards .case-file__tags .tag--accent {
+  order: -1;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #3f6212;
+  background: color-mix(in srgb, var(--band-card-lime) 45%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .board--cards .case-file__tags .tag--accent {
+    color: var(--band-card-lime);
+    background: color-mix(in srgb, var(--band-card-lime) 16%, transparent);
+  }
+}
+
+:root[data-theme="dark"] .board--cards .case-file__tags .tag--accent {
+  color: var(--band-card-lime);
+  background: color-mix(in srgb, var(--band-card-lime) 16%, transparent);
+}
+
+.board--cards .case-file__tags [class*="tag--workplace"] {
+  --chip-tint: #7b61ff;
+}
+
+.board--cards .case-file__tags .tag--sector {
+  --chip-tint: #364ea9;
+}
+
+.board--cards .case-file__tags .tag--age {
+  --chip-tint: #fc8b67;
+}
+
+.board--cards .case-file__tags .tag--age-fresh {
+  color: #fff;
+  background: linear-gradient(227deg, #ec008c 3%, #fc8b67 69%, #ffd46d 98%);
+}
+
+.board--cards .case-file__tags .tag--closed {
+  color: #fff;
+  background: var(--rose);
+}
+
+/* In place of "Job at a glance": the fit card. A soft sunset wash, the dial
+   (the score, or a "?" on a spinning-free rainbow ring), a line saying what
+   it is, and the main button in the gradient. */
+.board--cards .case-file__fit {
+  order: -1;
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  margin: 1.5rem 0 0.5rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: 24px;
+  background:
+    radial-gradient(60% 120% at 0% 0%, rgba(236, 0, 140, 0.12), transparent 70%),
+    radial-gradient(60% 120% at 100% 100%, rgba(252, 139, 103, 0.16), transparent 70%),
+    var(--band-card-chip);
+}
+
+.case-file__fit-dial {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: var(--ink);
+  background:
+    radial-gradient(closest-side, var(--band-card-bg) 76%, transparent 78%),
+    conic-gradient(var(--dial, #9a99a6) var(--dial-fill, 100%), color-mix(in srgb, var(--ink) 10%, transparent) 0);
+}
+
+.case-file__fit-dial--positive {
+  --dial: var(--teal);
+}
+
+.case-file__fit-dial--warning {
+  --dial: var(--amber);
+}
+
+.case-file__fit-dial--negative {
+  --dial: var(--rose);
+}
+
+.case-file__fit-dial--unknown {
+  background:
+    radial-gradient(closest-side, var(--band-card-bg) 76%, transparent 78%),
+    conic-gradient(#ffd46d, #fc8b67, #ec008c, #7b61ff, #364ea9, #ffd46d);
+}
+
+.case-file__fit-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.case-file__fit-text h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.case-file__fit-text p {
+  margin: 0.2rem 0 0;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.board--cards .case-file__fit .apply-button,
+.board--cards .case-file__fit .apply-button:hover:not(:disabled) {
+  flex: none;
+  padding: 0.75rem 1.2rem;
+  border: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(227deg, #ec008c 3%, #fc8b67 69%, #ffd46d 98%);
+  box-shadow: 0 8px 20px -8px rgba(236, 0, 140, 0.5);
+}
+
+.board--cards .case-file__fit .apply-button__meta {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* What's left of the toolbar (Rescan, Original, Report) is a quiet row
+   under the fit card. */
+.board--cards .case-file__toolbar {
+  margin: 0.5rem 0 1.25rem;
+}
+
+@media (max-width: 600px) {
+  .board--cards .case-file__fit {
+    flex-wrap: wrap;
+  }
+
+  .board--cards .case-file__fit .apply-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ---------- the open posting's description ---------- */
+
+/* A readable line length, list bullets in the brand magenta, and section
+   headings with a short sunset bar in front. */
+.board--cards .case-file__description {
+  max-width: 68ch;
+  font-size: 0.98rem;
+}
+
+.board--cards .case-file__description ul {
+  padding-left: 1.1rem;
+}
+
+.board--cards .case-file__description li {
+  margin-bottom: 0.4rem;
+  padding-left: 0.2rem;
+}
+
+.board--cards .case-file__description li::marker {
+  color: #ec008c;
+}
+
+.board--cards .case-file__description li > p {
+  margin: 0;
+}
+
+.board--cards .case-file__description :is(h1, h2, h3, h4, h5, h6) {
+  position: relative;
+  margin: 1.75rem 0 0.6rem;
+  padding-left: 0.85rem;
+  color: var(--ink);
+  font-size: 1.12rem;
+  letter-spacing: -0.02em;
+}
+
+.board--cards .case-file__description :is(h1, h2, h3, h4, h5, h6)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.2em;
+  bottom: 0.2em;
+  width: 4px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #ec008c, #fc8b67, #ffd46d);
+}
+
+/* Folded: the first 480px (DESCRIPTION_FOLD_PX in JobCaseFile.tsx), fading
+   out into "Show full posting". */
+.case-file__description--folded {
+  max-height: 480px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent);
+  mask-image: linear-gradient(180deg, #000 70%, transparent);
+}
+
+.case-file__unfold,
+.case-file__unfold:hover:not(:disabled) {
+  align-self: flex-start;
+  margin-top: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  border: 0;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--band-card-chip);
+}
+
+/* ---------- the list's heading and quick filters ---------- */
+
+.board__cards-head {
+  flex-wrap: wrap;
+  align-items: flex-start;
+  row-gap: 0.85rem;
+}
+
+.board__cards-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.board__cards-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.board__cards-title span {
+  color: var(--ink-soft);
+}
+
+.board--cards .board__cards-count {
+  margin-top: 0.3rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--ink-soft);
+}
+
+.board__quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.board__quick-chip,
+.board__quick-chip:hover:not(:disabled) {
+  padding: 0.4rem 0.85rem;
+  border: 1.5px solid color-mix(in srgb, var(--chip) 35%, transparent);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--chip);
+  background: color-mix(in srgb, var(--chip) 9%, var(--band-card-bg));
+  box-shadow: none;
+}
+
+.board__quick-chip--on,
+.board__quick-chip--on:hover:not(:disabled) {
+  color: #fff;
+  border-color: var(--chip);
+  background: var(--chip);
+}
+
+.board__quick-chip--on::after {
+  content: " ✕";
+  font-size: 0.7rem;
+}
+
+/* ---------- review fixes ---------- */
+
+/* The list heading takes the column's full width, the count at the end of
+   the title's line. */
+.board__cards-heading {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.board--cards .board__cards-heading .board__cards-count {
+  flex: none;
+  margin: 0;
+}
+
+/* Less air between the chips and the fit card. */
+.board--cards .case-file__tags {
+  margin-bottom: 0;
+}
+
+.board--cards .case-file__fit {
+  margin-top: 1.25rem;
+}
+
+/* Pagination as the page's pills: Next filled in ink, Prev on a chip, the
+   page count in bold. */
+.board--cards .board__pagination {
+  padding: 0.75rem 1rem 1.5rem 0;
+}
+
+.board--cards .board__page-button,
+.board--cards .board__page-button:hover:not(:disabled) {
+  padding: 0.6rem 1.2rem;
+  border: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--band-card-bg);
+  box-shadow: var(--band-card-shadow);
+}
+
+.board--cards .board__page-button:last-child:not(:disabled),
+.board--cards .board__page-button:last-child:hover:not(:disabled) {
+  color: var(--on-accent);
+  background: var(--ink);
+}
+
+.board--cards .board__page-status {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* The posting's scroll box ends at the page's footer; its edge fades out
+   rather than cutting the card off in a hard line. */
+@media (min-width: 761px) {
+  .board--cards .board__detail {
+    -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 56px), transparent);
+    mask-image: linear-gradient(180deg, #000 calc(100% - 56px), transparent);
+  }
+}
+

@@ -166,7 +166,7 @@
 }
 
 .score-history__row-score {
-  font-weight: 700;
+  font-weight: 600;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
@@ -306,13 +306,13 @@
 .resume-dropzone:hover,
 .resume-dropzone:focus-visible {
   border-color: var(--accent);
-  background: var(--surface);
+  background: var(--chip);
 }
 
 .resume-dropzone--active {
   border-color: var(--accent-deep);
   border-style: solid;
-  background: var(--surface);
+  background: var(--chip);
 }
 
 .resume-dropzone--busy {

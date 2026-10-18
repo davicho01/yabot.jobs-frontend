@@ -70,7 +70,7 @@
 
 .record-list__make-default:hover {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 
@@ -98,7 +98,7 @@
 
 .saved-search-row__name {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--ink);
 }
 

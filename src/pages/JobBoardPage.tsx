@@ -1,16 +1,28 @@
-import { useCallback, useLayoutEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, type CSSProperties } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { jobsApi, type WorkplaceTypeFilter } from "../api/jobs";
 import { adminApi } from "../api/admin";
+import { applicationsApi } from "../api/applications";
 import type { JobDetail, JobPosting } from "../api/types";
 import { useConfirm } from "../components/ConfirmDialog";
 import { JobCaseFile } from "../components/JobCaseFile";
 import { highlightQuery } from "../utils/searchHighlight";
-import { boardSector, employmentLabel, workplaceLabel } from "../utils/jobTags";
-import { jobAge, type JobAgeTone } from "../utils/jobPosting";
+import {
+  DEFAULT_SECTOR,
+  SECTOR_SHORT_LABELS,
+  boardSector,
+  employmentLabel,
+  sectorLabel,
+  workplaceLabel,
+} from "../utils/jobTags";
+import { jobAge, shortLocation, type JobAgeTone } from "../utils/jobPosting";
+import { fitTier } from "../utils/fitScore";
+import { bandColor } from "../utils/bandColor";
+import { listColor, listColorEnd } from "../utils/listGradient";
 import "./JobBoardPage.css";
+import "./JobBoardCards.css";
 import CompanyLogo from "../components/CompanyLogo";
 
 // Must match the max-width of the phone breakpoint in JobBoardPage.css, where
@@ -119,7 +131,87 @@ function JobCard({
   );
 }
 
-export function JobBoardPage() {
+// The /jobs2 card: a colored band (see bandColor) with the logo on a white
+// tile and, for a job already scored, its best fit as a pill.
+// The chips above the job cards: shortcuts for common picks from the
+// header's filter panel (same URL params, so the two stay in step).
+const QUICK_FILTERS: { label: string; param: string; value: string; color: string }[] = [
+  { label: "Remote", param: "workplace", value: "remote", color: "#7b61ff" },
+  { label: "Posted today", param: "posted", value: "1", color: "#ec008c" },
+  { label: "$100K+", param: "salaryMin", value: "100000", color: "#4f8a10" },
+];
+
+function BandJobCard({
+  job,
+  active,
+  query,
+  fit,
+  onSelect,
+  color,
+  colorEnd,
+}: {
+  job: JobDetail;
+  color: string;
+  colorEnd: string;
+  active: boolean;
+  query: string;
+  fit: number | null;
+  onSelect: () => void;
+}) {
+  const posting = scannedPosting(job);
+  const company = posting?.company_name ?? job.url.domain;
+  const salary = formatSalaryShort(job);
+  const posted = postedLabel(job);
+  return (
+    <button
+      type="button"
+      className={`band-card${active ? " band-card--active" : ""}`}
+      style={{ "--band-card-color": color, "--band-card-color-end": colorEnd } as CSSProperties}
+      onClick={onSelect}
+      aria-current={active ? "true" : undefined}
+    >
+      <span className="band-card__band">
+        <span className="band-card__tile">
+          <CompanyLogo name={company} logoUrl={posting?.company_logo_url} size={32} />
+        </span>
+        {fit !== null && (
+          <span className={`band-card__fit band-card__fit--${fitTier(fit)}`}>
+            <i aria-hidden="true" />
+            {fit} fit
+          </span>
+        )}
+      </span>
+      <span className="band-card__body">
+        <span className="band-card__company">{company}</span>
+        <span className="band-card__title">
+          {posting?.title ? highlightQuery(posting.title, query) : "Scanning posting…"}
+        </span>
+        {posting?.location && <span className="band-card__meta">{shortLocation(posting.location)}</span>}
+        {posting && (
+          <span className="band-card__tags">
+            {workplaceLabel(posting.workplace_type) && (
+              <span className="band-card__tag">{workplaceLabel(posting.workplace_type)}</span>
+            )}
+            {posting.employment_type !== "full_time" && employmentLabel(posting.employment_type) && (
+              <span className="band-card__tag">{employmentLabel(posting.employment_type)}</span>
+            )}
+            {salary && <span className="band-card__pay">{salary}</span>}
+            {posted && (
+              <span className={`band-card__posted${posted.tone ? ` band-card__posted--${posted.tone}` : ""}`}>
+                {posted.text}
+              </span>
+            )}
+          </span>
+        )}
+      </span>
+    </button>
+  );
+}
+
+// variant "cards" is /jobs2: same search, filters, paging and detail pane as
+// /jobs, with banded job cards and fit pills for jobs already scored.
+export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "cards" }) {
+  const cards = variant === "cards";
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -199,6 +291,17 @@ export function JobBoardPage() {
       }),
   });
 
+  // Best fit per job, for the card pills — the same cached list /applications uses.
+  const applicationsQuery = useQuery({
+    queryKey: ["applications"],
+    queryFn: applicationsApi.list,
+    enabled: cards && !!user,
+  });
+  const fitByUrlId = new Map<string, number>();
+  for (const a of applicationsQuery.data ?? []) {
+    if (a.best_score !== null) fitByUrlId.set(a.job_posting.url_id, a.best_score);
+  }
+
   const jobs = data?.items;
   const searchArea = data?.search_area;
   const widerRadius = searchArea ? searchArea.radius_miles + RADIUS_STEP : 0;
@@ -221,6 +324,29 @@ export function JobBoardPage() {
     enabled: !!selectedId,
   });
   const selected = selectedId ? selectedJob : jobs?.[0];
+  // The open posting's band matches its card's place in the list, diagonal
+  // and all; a job not on this page (a shared link) gets its company's color.
+  const selectedIndex = jobs?.findIndex((job) => job.url.id === selected?.url.id) ?? -1;
+  const selectedColor =
+    selectedIndex >= 0
+      ? listColor(selectedIndex)
+      : selected
+        ? bandColor(scannedPosting(selected)?.company_name ?? selected.url.domain)
+        : undefined;
+
+  const selectedColorEnd = selectedIndex >= 0 ? listColorEnd(selectedIndex) : selectedColor;
+
+  // A link straight to a job that doesn't say which sector (a shared link, an
+  // old bookmark) opens the board on that job's own sector rather than the
+  // Tech default, so the list beside it is jobs like it. Only for the page
+  // as it was opened: once someone picks a sector themselves, that stays.
+  const pickSectorFromJob = useRef(!!selectedId && !searchParams.has("sector"));
+  useEffect(() => {
+    if (!pickSectorFromJob.current || !selectedJob) return;
+    pickSectorFromJob.current = false;
+    const jobSector = selectedJob.posting?.sector;
+    if (jobSector && jobSector !== DEFAULT_SECTOR) updateParams((next) => next.set("sector", jobSector));
+  }, [selectedJob, updateParams]);
 
   const queryClient = useQueryClient();
   const rescanMutation = useMutation({
@@ -273,13 +399,56 @@ export function JobBoardPage() {
   }
 
   return (
-    <div className={`board board--split${selectedId ? " board--detail-open" : ""}`}>
+    <div className={`board board--split${selectedId ? " board--detail-open" : ""}${cards ? " board--cards" : ""}`}>
       {dialog}
       <div className="board__layout">
         <div className="board__list">
-          <Link to="/applications" className="board__applications-link">
-            My applications →
-          </Link>
+          {cards ? (
+            <div className="board__cards-head">
+              <div className="board__cards-heading">
+                <h1 className="board__cards-title">
+                  {sector ? `${SECTOR_SHORT_LABELS[sector] ?? sectorLabel(sector) ?? "Matching"} jobs` : "All jobs"}
+                  {location && <span> in {location === "United States" ? "the US" : location}</span>}
+                </h1>
+                <p className="board__cards-count">
+                  {data
+                    ? // GET /jobs counts at most 1,000 matches ahead (COUNT_AHEAD), so
+                      // a total that reaches it means "at least".
+                      `${data.total.toLocaleString()}${data.total >= 1000 ? "+" : ""} ${data.total === 1 ? "job" : "jobs"}`
+                    : "Loading jobs…"}
+                </p>
+              </div>
+              {/* One-tap versions of the header's filters; tapping an active one
+                  clears it. */}
+              <div className="board__quick" role="group" aria-label="Quick filters">
+                {QUICK_FILTERS.map((filter) => {
+                  const on = searchParams.get(filter.param) === filter.value;
+                  return (
+                    <button
+                      key={filter.label}
+                      type="button"
+                      className={`board__quick-chip${on ? " board__quick-chip--on" : ""}`}
+                      style={{ "--chip": filter.color } as CSSProperties}
+                      aria-pressed={on}
+                      onClick={() =>
+                        updateParams((next) => {
+                          if (on) next.delete(filter.param);
+                          else next.set(filter.param, filter.value);
+                          next.delete("page");
+                        })
+                      }
+                    >
+                      {filter.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <Link to="/applications" className="board__applications-link">
+              My applications →
+            </Link>
+          )}
           <div className="board__list-scroll">
               {searchArea && (
                 <p className="board__search-area">
@@ -296,15 +465,29 @@ export function JobBoardPage() {
               )}
               {isLoading && <p className="board__empty">Loading postings…</p>}
               {!isLoading && jobs?.length === 0 && <p className="board__empty">No postings match your filters.</p>}
-              {jobs?.map((job) => (
-                <JobCard
-                  key={job.url.id}
-                  job={job}
-                  active={job.url.id === (selected?.url.id ?? "")}
-                  query={query}
-                  onSelect={() => selectJob(job.url.id)}
-                />
-              ))}
+              {jobs?.map((job, index) =>
+                cards ? (
+                  <BandJobCard
+                    key={job.url.id}
+                    job={job}
+                    color={listColor(index)}
+                    colorEnd={listColorEnd(index)}
+                    // Only a job you picked is ringed, not the first one shown by default.
+                    active={job.url.id === selectedId}
+                    query={query}
+                    fit={fitByUrlId.get(job.url.id) ?? null}
+                    onSelect={() => selectJob(job.url.id)}
+                  />
+                ) : (
+                  <JobCard
+                    key={job.url.id}
+                    job={job}
+                    active={job.url.id === (selected?.url.id ?? "")}
+                    query={query}
+                    onSelect={() => selectJob(job.url.id)}
+                  />
+                ),
+              )}
             </div>
             {data && data.total > 0 && (
               <div className="board__pagination">
@@ -332,9 +515,41 @@ export function JobBoardPage() {
           </div>
 
           <div className="board__detail">
-            <button type="button" className="rescan-button board__back" onClick={closeDetail}>
-              ‹ All postings
-            </button>
+            {cards && (
+              <Link to="/applications" className="board__detail-applications">
+                My applications →
+              </Link>
+            )}
+            <div className="board__detail-inner">
+            {cards && selected ? (
+              // The open posting's color header: its company's band color, with
+              // the logo on a white tile hanging over the band's edge. On phones
+              // the way back to the list sits in its corner.
+              <div
+                className="board__detail-band"
+                style={
+                  {
+                    "--band-card-color": selectedColor,
+                    "--band-card-color-end": selectedColorEnd,
+                  } as CSSProperties
+                }
+              >
+                <button type="button" className="board__back board__back--on-band" onClick={closeDetail}>
+                  ‹ All postings
+                </button>
+                <span className="board__detail-tile">
+                  <CompanyLogo
+                    name={scannedPosting(selected)?.company_name ?? selected.url.domain}
+                    logoUrl={scannedPosting(selected)?.company_logo_url}
+                    size={40}
+                  />
+                </span>
+              </div>
+            ) : (
+              <button type="button" className="rescan-button board__back" onClick={closeDetail}>
+                ‹ All postings
+              </button>
+            )}
             {!selected && selectedJobLoading && <p className="board__empty">Loading posting…</p>}
             {!selected && !selectedJobLoading && (
               <p className="board__empty">Select a posting to open its case file.</p>
@@ -350,8 +565,10 @@ export function JobBoardPage() {
                 isDeleting={deleteListingMutation.isPending}
                 titleHighlightQuery={query}
                 onSelectSimilar={selectJob}
+                boardCards={cards}
               />
             )}
+            </div>
         </div>
       </div>
     </div>

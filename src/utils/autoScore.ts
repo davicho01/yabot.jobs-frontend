@@ -63,3 +63,14 @@ export function previewAutoScoreStatus(): AutoScoreStatus | undefined {
   const value = new URLSearchParams(window.location.search).get("previewScore") as AutoScoreStatus | null;
   return value !== null && AUTO_SCORE_ACTIVE.includes(value) ? value : undefined;
 }
+
+// Dev-only, same switch: ?previewScore=cover_letter|interview_prep on the
+// apply page shows that step's writing progress bar without generating
+// anything. Ignored in production builds.
+export type PreviewWriting = "cover_letter" | "interview_prep";
+
+export function previewWriting(): PreviewWriting | undefined {
+  if (!import.meta.env.DEV) return undefined;
+  const value = new URLSearchParams(window.location.search).get("previewScore");
+  return value === "cover_letter" || value === "interview_prep" ? value : undefined;
+}
