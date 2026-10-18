@@ -165,20 +165,10 @@ export function Header() {
     // How far the page has been scrolled up in one go; a change of direction starts it over.
     let scrolledUp = 0;
     let scrolledDown = 0;
-    // Besides the page itself, panes that scroll on their own count too (the
-    // job board's list and posting on phones), each from its own last spot.
-    const lastPaneY = new WeakMap<Element, number>();
-    function onScroll(event: Event) {
-      const pane = event.target instanceof Element ? event.target : null;
-      const y = pane ? pane.scrollTop : window.scrollY;
-      const last = pane ? lastPaneY.get(pane) : lastScrollY.current;
-      if (pane) lastPaneY.set(pane, y);
-      else lastScrollY.current = y;
-      // A pane seen for the first time has nothing to compare against. (A
-      // sideways scroll — the board sliding between its screens — has its
-      // pane at the top, which brings the header back for the new screen.)
-      if (last === undefined) return;
-      const delta = y - last;
+    function onScroll() {
+      const y = window.scrollY;
+      const delta = y - lastScrollY.current;
+      lastScrollY.current = y;
 
       if (!window.matchMedia(PHONE_QUERY).matches) {
         setHidden(false);
@@ -203,9 +193,8 @@ export function Header() {
         if (scrolledUp >= PHONE_REVEAL_SCROLL_UP_PX) setHidden(false);
       }
     }
-    // Capturing, since an element's scroll event doesn't bubble.
-    document.addEventListener("scroll", onScroll, { passive: true, capture: true });
-    return () => document.removeEventListener("scroll", onScroll, { capture: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   // The header is position:fixed (see Header.css) so it no longer reserves

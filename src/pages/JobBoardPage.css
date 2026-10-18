@@ -127,11 +127,6 @@
   display: none;
 }
 
-/* The banner and footer the list pane carries on phones (see below). */
-.board__phone-only {
-  display: none;
-}
-
 .board__empty {
   color: var(--ink-soft);
   font-size: 0.9rem;
@@ -659,28 +654,21 @@
     margin-bottom: 1rem;
   }
 
-  .board__phone-only {
-    display: block;
-  }
-
-  /* Master/detail as two screens side by side: the whole screen is a row
-     that scrolls sideways one screen at a time (snapping, so a swipe always
-     lands on one or the other), with the list on the left and the open
-     posting on the right. Each pane scrolls up and down on its own, so each
-     keeps its place, and the sideways swipe is the browser's own scrolling
-     — nothing is redrawn or swapped while it moves. With no posting open
-     there's only the list, and nothing to swipe to. JobBoardPage.tsx scrolls
-     the row over on a tap and closes the posting once it's swiped back.
-     Scoped to .board--split so the standalone /jobs/:id page, which is only
-     ever a detail, is unaffected. */
+  /* Master/detail as two screens side by side: the board is a row that
+     scrolls sideways one screen at a time (snapping, so a swipe always lands
+     on one or the other), with the list on the left and the open posting on
+     the right, while the page itself still scrolls up and down. Only the pane
+     on screen is in the page; the other is "frozen" to one screen's height,
+     kept where it was left (see usePanePager). With no posting open there's
+     only the list, and nothing to swipe to. Scoped to .board--split so the
+     standalone /jobs/:id page, which is only ever a detail, is unaffected. */
   .board--split .board__layout {
-    position: fixed;
-    inset: 0;
     display: flex;
+    align-items: flex-start;
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
-    overscroll-behavior: contain;
+    overscroll-behavior-x: contain;
     scrollbar-width: none;
   }
 
@@ -692,34 +680,18 @@
   .board--split .board__detail {
     flex: 0 0 100%;
     min-width: 0;
-    height: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
     scroll-snap-align: start;
     scroll-snap-stop: always;
   }
 
-  /* Room for the fixed glass header at the top of each pane. A spacer rather
-     than padding (each pane has its own) or a border (a scrolling pane's
-     border stays put, so the content would be cut off at it instead of
-     passing under the glass); it scrolls away with the content. */
-  .board--split .board__list::before,
-  .board--split .board__detail::before {
-    content: "";
-    display: block;
-    flex: none;
-    height: var(--header-height, 0px);
+  .board--split .board__list[data-frozen],
+  .board--split .board__detail[data-frozen] {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
   }
 
   .board--split:not(.board--detail-open) .board__detail {
-    display: none;
-  }
-
-  /* The panes cover the whole screen, so the page's own banner and footer
-     would sit hidden behind them; the list pane carries copies instead. */
-  .page-shell:has(.board--split) .page-shell__content > .getting-started-banner,
-  .page-shell:has(.board--split) .page-shell__content > .site-footer {
     display: none;
   }
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, type CSSProperties } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
@@ -8,8 +8,7 @@ import { applicationsApi } from "../api/applications";
 import type { JobDetail, JobPosting } from "../api/types";
 import { useConfirm } from "../components/ConfirmDialog";
 import { JobCaseFile } from "../components/JobCaseFile";
-import { Footer } from "../components/Footer";
-import { GettingStartedBanner } from "../components/GettingStarted";
+import { usePanePager } from "../hooks/usePanePager";
 import { highlightQuery } from "../utils/searchHighlight";
 import {
   DEFAULT_SECTOR,
@@ -372,57 +371,26 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
 
   const { confirm, dialog } = useConfirm();
 
-  // Phones: the list and the posting sit side by side in a row that scrolls
-  // sideways a whole screen at a time (see JobBoardPage.css), each scrolling
-  // up and down on its own, so each keeps its place. Tapping a card scrolls
-  // the row over to the posting; swiping it back, or the All jobs pill,
-  // scrolls back to the list, and once it settles there the posting closes.
+  // Phones: the list and the posting sit side by side as two screens; a tap
+  // slides over to the posting, a swipe (or the All jobs pill) slides back,
+  // and each keeps its own place. See usePanePager.
   const pagerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const detailRef = useRef<HTMLDivElement>(null);
-  const isPhone = () => window.matchMedia(SPLIT_COLLAPSED_QUERY).matches;
-  const smooth = (): ScrollBehavior =>
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
-  // Only a tap slides over — a page loaded with ?jobId= starts on the posting.
-  const openedByTap = useRef(false);
-  useLayoutEffect(() => {
-    const pager = pagerRef.current;
-    if (!selectedId || !pager || !isPhone()) return;
-    detailRef.current?.scrollTo(0, 0);
-    pager.scrollTo({ left: pager.clientWidth, behavior: openedByTap.current ? smooth() : "auto" });
-    openedByTap.current = false;
-  }, [selectedId]);
-
-  const selectedIdRef = useRef(selectedId);
-  selectedIdRef.current = selectedId;
-  useEffect(() => {
-    const pager = pagerRef.current;
-    if (!pager) return;
-    let timer = 0;
-    const settle = () => {
-      if (pager.scrollLeft < 2 && selectedIdRef.current) {
-        updateParams((next) => next.delete("jobId"));
-      }
-    };
-    const onScroll = () => {
-      window.clearTimeout(timer);
-      timer = window.setTimeout(settle, 120);
-    };
-    pager.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.clearTimeout(timer);
-      pager.removeEventListener("scroll", onScroll);
-    };
-  }, [updateParams]);
+  const isPhone = useCallback(() => window.matchMedia(SPLIT_COLLAPSED_QUERY).matches, []);
+  const closeSelected = useCallback(() => updateParams((next) => next.delete("jobId")), [updateParams]);
+  const { markTap, back: closeDetail } = usePanePager({
+    pager: pagerRef,
+    list: listRef,
+    detail: detailRef,
+    enabled: isPhone,
+    selectedId,
+    onBack: closeSelected,
+  });
 
   function selectJob(id: string) {
-    openedByTap.current = true;
+    markTap();
     updateParams((next) => next.set("jobId", id));
-  }
-
-  function closeDetail() {
-    const pager = pagerRef.current;
-    if (pager && isPhone() && pager.scrollLeft > 0) pager.scrollTo({ left: 0, behavior: smooth() });
-    else updateParams((next) => next.delete("jobId"));
   }
 
   async function deleteListing(urlId: string) {
@@ -435,12 +403,7 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
     <div className={`board board--split${selectedId ? " board--detail-open" : ""}${cards ? " board--cards" : ""}`}>
       {dialog}
       <div className="board__layout" ref={pagerRef}>
-        <div className="board__list">
-          {/* On phones the list is its own scrolling pane, so it carries the
-              page's banner and footer (the page's own are hidden there). */}
-          <div className="board__phone-only">
-            <GettingStartedBanner />
-          </div>
+        <div className="board__list" ref={listRef}>
           {cards ? (
             <div className="board__cards-head">
               <div className="board__cards-heading">
@@ -550,9 +513,6 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
                 </button>
               </div>
             )}
-            <div className="board__phone-only">
-              <Footer />
-            </div>
           </div>
 
           <div className="board__detail" ref={detailRef}>
