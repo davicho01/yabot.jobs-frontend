@@ -137,15 +137,20 @@
   color: var(--focus);
 }
 
-/* Beside the list it stays pinned under the header and scrolls on its own,
-   independently of the list; once the posting reaches its end, scrolling
-   carries on into the page, and the list with it. Phones keep
+/* Beside the list it stays pinned and scrolls on its own, independently of
+   the list; once the posting reaches its end, scrolling carries on into the
+   page, and the list with it. The pane reaches up behind the glass header
+   (pinned at the window's top, pulled up by the header's height, and padded
+   back down by it), so the posting slides under the glass the way the list
+   does instead of being cut off at the header's edge. Phones keep
    JobBoardPage.css's uncapped pane that scrolls with the page. */
 @media (min-width: 761px) {
   .board--cards .board__detail {
-    top: var(--header-height, 0px);
-    max-height: calc(100vh - var(--header-height, 0px));
-    max-height: calc(100dvh - var(--header-height, 0px));
+    top: 0;
+    margin-top: calc(-1 * var(--header-height, 0px));
+    padding-top: calc(1rem + var(--header-height, 0px));
+    max-height: 100vh;
+    max-height: 100dvh;
     /* No visible scrollbar: it would sit in the pane's room for the card's
        shadow, outside the page's 1200px column. Wheel, trackpad and keys
        still scroll it. */
