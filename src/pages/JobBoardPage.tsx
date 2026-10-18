@@ -24,6 +24,7 @@ import { listColor, listColorEnd } from "../utils/listGradient";
 import "./JobBoardPage.css";
 import "./JobBoardCards.css";
 import CompanyLogo from "../components/CompanyLogo";
+import { BriefcaseIcon, ListIcon } from "../components/PillIcons";
 
 // Must match the max-width of the phone breakpoint in JobBoardPage.css, where
 // the list and detail panes stop sitting side by side and take turns instead.
@@ -516,15 +517,23 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
 
           <div className="board__detail">
             {cards && (
-              <Link to="/applications" className="board__detail-applications">
-                My applications →
-              </Link>
+              // Above the posting's card: the way back to the list (phones
+              // only) on the left, My applications on the right.
+              <div className="board__detail-top">
+                <button type="button" className="board__back board__back--top" onClick={closeDetail}>
+                  <ListIcon />
+                  All jobs
+                </button>
+                <Link to="/applications" className="board__detail-applications">
+                  <BriefcaseIcon />
+                  My applications
+                </Link>
+              </div>
             )}
             <div className="board__detail-inner">
             {cards && selected ? (
               // The open posting's color header: its company's band color, with
-              // the logo on a white tile hanging over the band's edge. On phones
-              // the way back to the list sits in its corner.
+              // the logo on a white tile hanging over the band's edge.
               <div
                 className="board__detail-band"
                 style={
@@ -534,9 +543,6 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
                   } as CSSProperties
                 }
               >
-                <button type="button" className="board__back board__back--on-band" onClick={closeDetail}>
-                  ‹ All postings
-                </button>
                 <span className="board__detail-tile">
                   <CompanyLogo
                     name={scannedPosting(selected)?.company_name ?? selected.url.domain}
@@ -546,9 +552,11 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
                 </span>
               </div>
             ) : (
-              <button type="button" className="rescan-button board__back" onClick={closeDetail}>
-                ‹ All postings
-              </button>
+              !cards && (
+                <button type="button" className="rescan-button board__back" onClick={closeDetail}>
+                  ‹ All jobs
+                </button>
+              )
             )}
             {!selected && selectedJobLoading && <p className="board__empty">Loading posting…</p>}
             {!selected && !selectedJobLoading && (

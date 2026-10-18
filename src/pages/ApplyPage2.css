@@ -74,9 +74,12 @@
   margin-bottom: 1.25rem;
 }
 
-/* The same pill as the job board's "My applications →". */
+/* The same pill as the job board's "My applications". */
 .apply2__crumb {
   justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   color: var(--ink);
   font-weight: 600;
   font-size: 0.85rem;
