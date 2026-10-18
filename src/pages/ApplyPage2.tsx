@@ -55,6 +55,7 @@ import "../components/DossierAction.css";
 import "./ApplyPage.css";
 import "./ApplyPage2.css";
 import CompanyLogo from "../components/CompanyLogo";
+import { BriefcaseIcon } from "../components/PillIcons";
 
 // /jobs/:urlId/apply (and the old trial address /apply2) — the card layout:
 // the job as a banded card with its logo tile and fit pill, notes beside it,
@@ -745,10 +746,11 @@ function ApplyPage2Content({
   );
   const stateNav = (
     <div className="apply__state-nav">
-      <Link to="/applications" className="apply__back-link">
-        ‹ Back to applications
+      <Link to="/applications" className="apply2__crumb">
+        <BriefcaseIcon />
+        My applications
       </Link>
-      {navGroup}
+      {(previousApplicationUrlId || nextApplicationUrlId) && navGroup}
     </div>
   );
 
@@ -851,7 +853,8 @@ function ApplyPage2Content({
       {dialog}
       <div className="apply2__toolbar">
         <Link to="/applications" className="apply2__crumb">
-          ‹ Applications
+          <BriefcaseIcon />
+          My applications
         </Link>
         {/* Only when there's another application to go to. */}
         {(previousApplicationUrlId || nextApplicationUrlId) && navGroup}

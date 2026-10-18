@@ -127,8 +127,8 @@
    same filled-accent treatment as ApplicationsPage's own primary button. */
 .resume-optimization-page__apply-button {
   flex-shrink: 0;
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--btn-run);
+  color: #ffffff;
   border: none;
   padding: 0.65rem 1.3rem;
   border-radius: var(--radius-pill);
@@ -138,7 +138,8 @@
 }
 
 .resume-optimization-page__apply-button:hover:not(:disabled) {
-  background: var(--accent-deep);
+  background: var(--btn-run);
+  filter: brightness(1.1);
 }
 
 .resume-optimization-page__apply-button:disabled {

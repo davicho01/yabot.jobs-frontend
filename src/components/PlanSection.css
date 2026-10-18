@@ -55,13 +55,14 @@
 }
 
 .plan-section__primary {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--btn-run);
+  color: #ffffff;
   border: none;
 }
 
 .plan-section__primary:hover:not(:disabled) {
-  background: var(--accent-deep);
+  background: var(--btn-run);
+  filter: brightness(1.1);
 }
 
 /* Subscribing is the page's one call to action: the sunset gradient. */

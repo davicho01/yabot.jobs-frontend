@@ -658,9 +658,9 @@
 }
 
 .site-header__login:hover {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--paper);
+  background: var(--btn-run);
+  border-color: transparent;
+  color: #ffffff;
 }
 
 /* Stays exactly the avatar's own size — the row's align-items: center then
@@ -798,7 +798,8 @@
   --glass-chip: rgba(255, 255, 255, 0.22);
   /* The round icon buttons' outline (search, filter). */
   --glass-ring: rgba(10, 10, 10, 0.14);
-  --glass-btn: #0a0a0a;
+  /* Search and Add Job: the card lists' violet-to-blue, in both themes. */
+  --glass-btn: var(--btn-run);
   --glass-on-btn: #ffffff;
   --glass-sunset: linear-gradient(227deg, #ec008c 3%, #fc8b67 69%, #ffd46d 98%);
   background: transparent;
@@ -815,8 +816,6 @@
     --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
     --glass-chip: rgba(255, 255, 255, 0.06);
     --glass-ring: rgba(255, 255, 255, 0.2);
-    --glass-btn: #f5f5f7;
-    --glass-on-btn: #0a0a0a;
   }
 }
 
@@ -827,8 +826,6 @@
   --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
   --glass-chip: rgba(255, 255, 255, 0.06);
   --glass-ring: rgba(255, 255, 255, 0.2);
-  --glass-btn: #f5f5f7;
-  --glass-on-btn: #0a0a0a;
 }
 
 /* The row and any open panel (filters, add job) stack into one frosted card. */

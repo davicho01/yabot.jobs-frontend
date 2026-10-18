@@ -111,13 +111,14 @@
 }
 
 .help-contact__primary {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--btn-run);
+  color: #ffffff;
   border: none;
 }
 
 .help-contact__primary:hover {
-  background: var(--accent-deep);
+  background: var(--btn-run);
+  filter: brightness(1.1);
 }
 
 .help-contact__secondary {

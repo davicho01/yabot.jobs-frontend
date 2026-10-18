@@ -17,7 +17,9 @@
   --apply2-card: #ffffff;
   --apply2-chip: #f1f1f4;
   --apply2-muted-band: #d9d8e0;
-  --apply2-btn: #0a0a0a;
+  /* Re-score and the other main buttons: the card lists' violet-to-blue
+     (the header's Search and Add Job), in both themes. */
+  --apply2-btn: var(--btn-run);
   --apply2-on-btn: #ffffff;
   --apply2-shadow: 0 18px 40px rgba(31, 26, 53, 0.1), 0 2px 6px rgba(31, 26, 53, 0.05);
 
@@ -37,8 +39,6 @@
     --apply2-card: #1c1b22;
     --apply2-chip: #2a2931;
     --apply2-muted-band: #34333c;
-    --apply2-btn: #f5f5f7;
-    --apply2-on-btn: #0a0a0a;
     --apply2-shadow: 0 0 0 1px #2c2c2e;
   }
 }
@@ -47,8 +47,6 @@
   --apply2-card: #1c1b22;
   --apply2-chip: #2a2931;
   --apply2-muted-band: #34333c;
-  --apply2-btn: #f5f5f7;
-  --apply2-on-btn: #0a0a0a;
   --apply2-shadow: 0 0 0 1px #2c2c2e;
 }
 
@@ -74,9 +72,12 @@
   margin-bottom: 1.25rem;
 }
 
-/* The same pill as the job board's "My applications →". */
+/* The same pill as the job board's "My applications". */
 .apply2__crumb {
   justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   color: var(--ink);
   font-weight: 600;
   font-size: 0.85rem;

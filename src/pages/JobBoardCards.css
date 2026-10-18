@@ -93,18 +93,44 @@
   box-shadow: var(--band-card-shadow);
 }
 
-/* The way to My applications sits above the posting's card, at its right
-   edge, and scrolls away with it. */
-.board__detail-applications {
-  display: table;
-  margin: 0 0 0.75rem auto;
+/* Above the posting's card, scrolling away with it: "All jobs" (phones
+   only — see JobBoardPage.css's .board__back) on the left and the way to My
+   applications on the right, as matching pills. */
+.board__detail-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.board__detail-applications,
+.board__back--top,
+.board__back--top:hover:not(:disabled) {
+  margin: 0 0 0 auto;
   padding: 0.45rem 0.9rem;
+  border: 0;
   border-radius: 999px;
+  font-family: var(--font-body);
   font-size: 0.8rem;
   font-weight: 600;
+  line-height: 1.25;
   color: var(--ink);
   text-decoration: none;
   background: var(--band-card-chip);
+  cursor: pointer;
+}
+
+.board__detail-applications {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.board__detail-top .board__back--top {
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 auto 0 0;
 }
 
 .board__detail-applications:hover {
@@ -144,24 +170,6 @@
     var(--band-card-color, #1f1a35),
     var(--band-card-color-end, var(--band-card-color, #1f1a35))
   );
-}
-
-/* "‹ All postings" (phones only — see JobBoardPage.css's .board__back) as a
-   white pill in the band's top-left corner. */
-.board__back--on-band,
-.board__back--on-band:hover:not(:disabled) {
-  position: absolute;
-  z-index: 1;
-  top: 12px;
-  left: 12px;
-  padding: 0.4rem 0.8rem;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  color: #0a0a0a;
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  font-weight: 600;
 }
 
 /* Identity first, then actions: on the board, the company, title and tags
@@ -857,8 +865,8 @@
 
 .board--cards .board__page-button:last-child:not(:disabled),
 .board--cards .board__page-button:last-child:hover:not(:disabled) {
-  color: var(--on-accent);
-  background: var(--ink);
+  color: #ffffff;
+  background: var(--btn-run);
 }
 
 .board--cards .board__page-status {

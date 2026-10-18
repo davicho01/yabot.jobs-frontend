@@ -24,8 +24,8 @@
 }
 
 .dossier-action__button {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--btn-run);
+  color: #ffffff;
   border: none;
   padding: 0.65rem 1.2rem;
   border-radius: var(--radius-pill);
@@ -39,7 +39,8 @@
 }
 
 .dossier-action__button:hover:not(:disabled) {
-  background: var(--accent-deep);
+  background: var(--btn-run);
+  filter: brightness(1.1);
 }
 
 .dossier-action__button:disabled {
@@ -321,8 +322,8 @@
 }
 
 .apply-page__notes-save {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--btn-run);
+  color: #ffffff;
   border: none;
   padding: 0.45rem 1rem;
   border-radius: var(--radius-pill);
@@ -331,7 +332,8 @@
 }
 
 .apply-page__notes-save:hover:not(:disabled) {
-  background: var(--accent-deep);
+  background: var(--btn-run);
+  filter: brightness(1.1);
 }
 
 .apply-page__notes-save:disabled {

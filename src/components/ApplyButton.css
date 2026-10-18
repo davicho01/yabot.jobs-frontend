@@ -131,13 +131,14 @@
   display: inline-flex;
   align-items: center;
   text-decoration: none;
-  color: var(--on-accent);
-  background: var(--accent);
-  border-color: var(--accent);
+  color: #ffffff;
+  background: var(--btn-run);
+  border-color: transparent;
 }
 
 .apply-dialog__continue:hover {
-  background: var(--accent-deep);
+  background: var(--btn-run);
+  filter: brightness(1.1);
 }
 
 @media (prefers-reduced-motion: reduce) {
