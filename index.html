@@ -312,7 +312,9 @@
         text-wrap: balance;
       }
 
-      /* Section titles, like the hero headline, keep Outfit at extra-bold. */
+      /* Section titles, like the hero headline, keep Outfit at extra-bold, as
+         do the page's other big display moments: the stats, plan prices, job
+         wall pay and the mockups' scores. Reading text stays Inter. */
       .h2 {
         font-family: "Outfit", var(--font-display);
         font-weight: 800;
@@ -910,10 +912,10 @@
 
       .jcard__pay {
         margin-top: 8px;
-        font-family: var(--font-display);
-        font-weight: 600;
+        font-family: "Outfit", var(--font-display);
+        font-weight: 800;
         font-size: 24px;
-        letter-spacing: -0.025em;
+        letter-spacing: -0.04em;
         line-height: 1;
         font-variant-numeric: tabular-nums;
       }
@@ -927,8 +929,12 @@
         color: var(--ink-soft);
       }
 
+      /* Words, not a figure: Inter, like the card's other text. */
       .jcard__pay--none {
+        font-family: var(--font-body);
+        font-weight: 600;
         font-size: 15px;
+        letter-spacing: normal;
         color: var(--ink-soft);
       }
 
@@ -1143,10 +1149,10 @@
       }
 
       .stat__num {
-        font-family: var(--font-display);
-        font-weight: 600;
+        font-family: "Outfit", var(--font-display);
+        font-weight: 800;
         font-size: clamp(38px, 4.6vw, 56px);
-        letter-spacing: -0.025em;
+        letter-spacing: -0.04em;
         line-height: 1;
         font-variant-numeric: tabular-nums;
       }
@@ -1216,10 +1222,10 @@
 
       .mini-score b {
         display: block;
-        font-family: var(--font-display);
+        font-family: "Outfit", var(--font-display);
         font-size: 48px;
-        font-weight: 600;
-        letter-spacing: -0.025em;
+        font-weight: 800;
+        letter-spacing: -0.04em;
         line-height: 0.9;
       }
 
@@ -1352,10 +1358,10 @@
       }
 
       .lift__score {
-        font-family: var(--font-display);
-        font-weight: 600;
+        font-family: "Outfit", var(--font-display);
+        font-weight: 800;
         font-size: clamp(96px, 16vw, 200px);
-        letter-spacing: -0.025em;
+        letter-spacing: -0.04em;
         line-height: 0.9;
         font-variant-numeric: tabular-nums;
       }
@@ -1615,10 +1621,10 @@
       }
 
       .plan__price {
-        font-family: var(--font-display);
-        font-weight: 600;
+        font-family: "Outfit", var(--font-display);
+        font-weight: 800;
         font-size: 52px;
-        letter-spacing: -0.025em;
+        letter-spacing: -0.04em;
         line-height: 1;
       }
 
