@@ -403,180 +403,185 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
     <div className={`board board--split${selectedId ? " board--detail-open" : ""}${cards ? " board--cards" : ""}`}>
       {dialog}
       <div className="board__layout" ref={pagerRef}>
-        <div className="board__list" ref={listRef}>
-          {cards ? (
-            <div className="board__cards-head">
-              <div className="board__cards-heading">
-                <h1 className="board__cards-title">
-                  {sector ? `${SECTOR_SHORT_LABELS[sector] ?? sectorLabel(sector) ?? "Matching"} jobs` : "All jobs"}
-                  {location && <span> in {location === "United States" ? "the US" : location}</span>}
-                </h1>
-                <p className="board__cards-count">
-                  {data
-                    ? // GET /jobs counts at most 1,000 matches ahead (COUNT_AHEAD), so
-                      // a total that reaches it means "at least".
-                      `${data.total.toLocaleString()}${data.total >= 1000 ? "+" : ""} ${data.total === 1 ? "job" : "jobs"}`
-                    : "Loading jobs…"}
-                </p>
-              </div>
-              {/* One-tap versions of the header's filters; tapping an active one
-                  clears it. */}
-              <div className="board__quick" role="group" aria-label="Quick filters">
-                {QUICK_FILTERS.map((filter) => {
-                  const on = searchParams.get(filter.param) === filter.value;
-                  return (
-                    <button
-                      key={filter.label}
-                      type="button"
-                      className={`board__quick-chip${on ? " board__quick-chip--on" : ""}`}
-                      style={{ "--chip": filter.color } as CSSProperties}
-                      aria-pressed={on}
-                      onClick={() =>
-                        updateParams((next) => {
-                          if (on) next.delete(filter.param);
-                          else next.set(filter.param, filter.value);
-                          next.delete("page");
-                        })
-                      }
-                    >
-                      {filter.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <Link to="/applications" className="board__applications-link">
-              My applications →
-            </Link>
-          )}
-          <div className="board__list-scroll">
-              {searchArea && (
-                <p className="board__search-area">
-                  Nearest first, within {searchArea.radius_miles} miles of {searchArea.label}
-                  {widerRadius <= MAX_RADIUS && (
-                    <>
-                      {" · "}
-                      <button type="button" className="board__widen" onClick={widenSearch}>
-                        Search {widerRadius} miles
+        <div className="board__slot">
+          <div className="board__list" ref={listRef}>
+            {cards ? (
+              <div className="board__cards-head">
+                <div className="board__cards-heading">
+                  <h1 className="board__cards-title">
+                    {sector ? `${SECTOR_SHORT_LABELS[sector] ?? sectorLabel(sector) ?? "Matching"} jobs` : "All jobs"}
+                    {location && <span> in {location === "United States" ? "the US" : location}</span>}
+                  </h1>
+                  <p className="board__cards-count">
+                    {data
+                      ? // GET /jobs counts at most 1,000 matches ahead (COUNT_AHEAD), so
+                        // a total that reaches it means "at least".
+                        `${data.total.toLocaleString()}${data.total >= 1000 ? "+" : ""} ${data.total === 1 ? "job" : "jobs"}`
+                      : "Loading jobs…"}
+                  </p>
+                </div>
+                {/* One-tap versions of the header's filters; tapping an active one
+                    clears it. */}
+                <div className="board__quick" role="group" aria-label="Quick filters">
+                  {QUICK_FILTERS.map((filter) => {
+                    const on = searchParams.get(filter.param) === filter.value;
+                    return (
+                      <button
+                        key={filter.label}
+                        type="button"
+                        className={`board__quick-chip${on ? " board__quick-chip--on" : ""}`}
+                        style={{ "--chip": filter.color } as CSSProperties}
+                        aria-pressed={on}
+                        onClick={() =>
+                          updateParams((next) => {
+                            if (on) next.delete(filter.param);
+                            else next.set(filter.param, filter.value);
+                            next.delete("page");
+                          })
+                        }
+                      >
+                        {filter.label}
                       </button>
-                    </>
-                  )}
-                </p>
-              )}
-              {isLoading && <p className="board__empty">Loading postings…</p>}
-              {!isLoading && jobs?.length === 0 && <p className="board__empty">No postings match your filters.</p>}
-              {jobs?.map((job, index) =>
-                cards ? (
-                  <BandJobCard
-                    key={job.url.id}
-                    job={job}
-                    color={listColor(index)}
-                    colorEnd={listColorEnd(index)}
-                    // Only a job you picked is ringed, not the first one shown by default.
-                    active={job.url.id === selectedId}
-                    query={query}
-                    fit={fitByUrlId.get(job.url.id) ?? null}
-                    onSelect={() => selectJob(job.url.id)}
-                  />
-                ) : (
-                  <JobCard
-                    key={job.url.id}
-                    job={job}
-                    active={job.url.id === (selected?.url.id ?? "")}
-                    query={query}
-                    onSelect={() => selectJob(job.url.id)}
-                  />
-                ),
-              )}
-            </div>
-            {data && data.total > 0 && (
-              <div className="board__pagination">
-                <button
-                  type="button"
-                  className="board__page-button"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                >
-                  ‹ Prev
-                </button>
-                <span className="board__page-status">
-                  Page {page} of {totalPages}
-                </span>
-                <button
-                  type="button"
-                  className="board__page-button"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                >
-                  Next ›
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="board__detail" ref={detailRef}>
-            {cards && (
-              // Above the posting's card: the way back to the list (phones
-              // only) on the left, My applications on the right.
-              <div className="board__detail-top">
-                <button type="button" className="board__back board__back--top" onClick={closeDetail}>
-                  <ListIcon />
-                  All jobs
-                </button>
-                <Link to="/applications" className="board__detail-applications">
-                  <BriefcaseIcon />
-                  My applications
-                </Link>
-              </div>
-            )}
-            <div className="board__detail-inner">
-            {cards && selected ? (
-              // The open posting's color header: its company's band color, with
-              // the logo on a white tile hanging over the band's edge.
-              <div
-                className="board__detail-band"
-                style={
-                  {
-                    "--band-card-color": selectedColor,
-                    "--band-card-color-end": selectedColorEnd,
-                  } as CSSProperties
-                }
-              >
-                <span className="board__detail-tile">
-                  <CompanyLogo
-                    name={scannedPosting(selected)?.company_name ?? selected.url.domain}
-                    logoUrl={scannedPosting(selected)?.company_logo_url}
-                    size={40}
-                  />
-                </span>
+                    );
+                  })}
+                </div>
               </div>
             ) : (
-              !cards && (
-                <button type="button" className="rescan-button board__back" onClick={closeDetail}>
-                  ‹ All jobs
-                </button>
-              )
+              <Link to="/applications" className="board__applications-link">
+                My applications →
+              </Link>
             )}
-            {!selected && selectedJobLoading && <p className="board__empty">Loading posting…</p>}
-            {!selected && !selectedJobLoading && (
-              <p className="board__empty">Select a posting to open its case file.</p>
-            )}
-            {selected && (
-              <JobCaseFile
-                job={selected}
-                user={user}
-                isRescanning={isRescanning}
-                rescanFailed={rescanFailed}
-                onRescan={() => rescanMutation.mutate(selected.url.id)}
-                onDelete={() => deleteListing(selected.url.id)}
-                isDeleting={deleteListingMutation.isPending}
-                titleHighlightQuery={query}
-                onSelectSimilar={selectJob}
-                boardCards={cards}
-              />
-            )}
+            <div className="board__list-scroll">
+                {searchArea && (
+                  <p className="board__search-area">
+                    Nearest first, within {searchArea.radius_miles} miles of {searchArea.label}
+                    {widerRadius <= MAX_RADIUS && (
+                      <>
+                        {" · "}
+                        <button type="button" className="board__widen" onClick={widenSearch}>
+                          Search {widerRadius} miles
+                        </button>
+                      </>
+                    )}
+                  </p>
+                )}
+                {isLoading && <p className="board__empty">Loading postings…</p>}
+                {!isLoading && jobs?.length === 0 && <p className="board__empty">No postings match your filters.</p>}
+                {jobs?.map((job, index) =>
+                  cards ? (
+                    <BandJobCard
+                      key={job.url.id}
+                      job={job}
+                      color={listColor(index)}
+                      colorEnd={listColorEnd(index)}
+                      // Only a job you picked is ringed, not the first one shown by default.
+                      active={job.url.id === selectedId}
+                      query={query}
+                      fit={fitByUrlId.get(job.url.id) ?? null}
+                      onSelect={() => selectJob(job.url.id)}
+                    />
+                  ) : (
+                    <JobCard
+                      key={job.url.id}
+                      job={job}
+                      active={job.url.id === (selected?.url.id ?? "")}
+                      query={query}
+                      onSelect={() => selectJob(job.url.id)}
+                    />
+                  ),
+                )}
+              </div>
+              {data && data.total > 0 && (
+                <div className="board__pagination">
+                  <button
+                    type="button"
+                    className="board__page-button"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  >
+                    ‹ Prev
+                  </button>
+                  <span className="board__page-status">
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    className="board__page-button"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  >
+                    Next ›
+                  </button>
+                </div>
+              )}
             </div>
+
+        </div>
+
+        <div className="board__slot board__slot--detail">
+            <div className="board__detail" ref={detailRef}>
+              {cards && (
+                // Above the posting's card: the way back to the list (phones
+                // only) on the left, My applications on the right.
+                <div className="board__detail-top">
+                  <button type="button" className="board__back board__back--top" onClick={closeDetail}>
+                    <ListIcon />
+                    All jobs
+                  </button>
+                  <Link to="/applications" className="board__detail-applications">
+                    <BriefcaseIcon />
+                    My applications
+                  </Link>
+                </div>
+              )}
+              <div className="board__detail-inner">
+              {cards && selected ? (
+                // The open posting's color header: its company's band color, with
+                // the logo on a white tile hanging over the band's edge.
+                <div
+                  className="board__detail-band"
+                  style={
+                    {
+                      "--band-card-color": selectedColor,
+                      "--band-card-color-end": selectedColorEnd,
+                    } as CSSProperties
+                  }
+                >
+                  <span className="board__detail-tile">
+                    <CompanyLogo
+                      name={scannedPosting(selected)?.company_name ?? selected.url.domain}
+                      logoUrl={scannedPosting(selected)?.company_logo_url}
+                      size={40}
+                    />
+                  </span>
+                </div>
+              ) : (
+                !cards && (
+                  <button type="button" className="rescan-button board__back" onClick={closeDetail}>
+                    ‹ All jobs
+                  </button>
+                )
+              )}
+              {!selected && selectedJobLoading && <p className="board__empty">Loading posting…</p>}
+              {!selected && !selectedJobLoading && (
+                <p className="board__empty">Select a posting to open its case file.</p>
+              )}
+              {selected && (
+                <JobCaseFile
+                  job={selected}
+                  user={user}
+                  isRescanning={isRescanning}
+                  rescanFailed={rescanFailed}
+                  onRescan={() => rescanMutation.mutate(selected.url.id)}
+                  onDelete={() => deleteListing(selected.url.id)}
+                  isDeleting={deleteListingMutation.isPending}
+                  titleHighlightQuery={query}
+                  onSelectSimilar={selectJob}
+                  boardCards={cards}
+                />
+              )}
+              </div>
+          </div>
         </div>
       </div>
     </div>

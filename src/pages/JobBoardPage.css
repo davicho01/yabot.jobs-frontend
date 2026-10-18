@@ -121,6 +121,12 @@
   margin: 0 auto;
 }
 
+/* Each pane's place in the phone's sideways row (see the media query below);
+   elsewhere it's as if it weren't there. */
+.board__slot {
+  display: contents;
+}
+
 /* Only shown on phones (see the media query below), where the list and the
    detail take turns filling the screen. */
 .board__back {
@@ -676,8 +682,11 @@
     display: none;
   }
 
-  .board--split .board__list,
-  .board--split .board__detail {
+  /* A pane can briefly leave its slot (pinned to the screen while the page
+     jumps to its scroll position, see usePanePager); the slot holds its
+     place in the row meanwhile. */
+  .board--split .board__slot {
+    display: block;
     flex: 0 0 100%;
     min-width: 0;
     scroll-snap-align: start;
@@ -691,7 +700,7 @@
     overflow: hidden;
   }
 
-  .board--split:not(.board--detail-open) .board__detail {
+  .board--split:not(.board--detail-open) .board__slot--detail {
     display: none;
   }
 

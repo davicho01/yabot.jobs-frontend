@@ -77,18 +77,60 @@ export function usePanePager({ pager, list, detail, enabled, selectedId, onBack 
     [el],
   );
 
+  // A hand-off in progress: the pane being pinned while the page jumps.
+  const handoff = useRef(0);
+
   const goLive = useCallback(
     (pane: Pane) => {
       const from = live.current;
       if (pane === from) return;
+      const node = el(pane);
+      const slot = node?.parentElement;
+      if (!node || !slot) return;
       saved.current[from] = window.scrollY;
-      freeze(from);
-      thaw(pane);
       live.current = pane;
-      window.scrollTo(0, saved.current[pane]);
-      place(from);
+      const target = saved.current[pane];
+
+      // The page has to jump to this pane's spot, but a phone can draw that
+      // jump a frame apart from any change to the page, which flickers. So
+      // the pane is pinned to the screen exactly where it shows now (its slot
+      // keeps its room in the row, and the page's length), the page jumps
+      // underneath it, and only once the jump has landed does it go back into
+      // the page — where it then sits exactly as it was pinned.
+      const box = node.getBoundingClientRect();
+      const inside = node.scrollTop;
+      slot.style.minHeight = `${node.scrollHeight}px`;
+      node.style.position = "fixed";
+      node.style.top = `${box.top}px`;
+      node.style.left = `${box.left}px`;
+      node.style.width = `${box.width}px`;
+      node.style.transform = "none";
+      node.scrollTop = inside;
+      freeze(from);
+      window.scrollTo(0, target);
+
+      const id = ++handoff.current;
+      let frames = 0;
+      const land = () => {
+        if (id !== handoff.current) return;
+        const landed = Math.abs(window.scrollY - target) < 1 ||
+          window.scrollY >= document.documentElement.scrollHeight - window.innerHeight - 1;
+        if (!landed && ++frames < 30) {
+          requestAnimationFrame(land);
+          return;
+        }
+        // One more frame with the jump on screen before the pane goes back.
+        requestAnimationFrame(() => {
+          if (id !== handoff.current) return;
+          for (const prop of ["position", "top", "left", "width"]) node.style.removeProperty(prop);
+          slot.style.removeProperty("min-height");
+          thaw(pane);
+          place(from);
+        });
+      };
+      requestAnimationFrame(land);
     },
-    [freeze, thaw, place],
+    [el, freeze, thaw, place],
   );
 
   // A job opened: the detail starts frozen at its top, and the row scrolls
