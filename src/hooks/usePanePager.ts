@@ -14,6 +14,9 @@ interface Options {
   onBack: () => void;
 }
 
+// How long a pane stays pinned while the page jumps under it (see goLive).
+const PIN_MS = 120;
+
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /**
@@ -109,17 +112,10 @@ export function usePanePager({ pager, list, detail, enabled, selectedId, onBack 
       freeze(from);
       window.scrollTo(0, target);
 
+      // The page reports the new scroll position at once, but a phone can
+      // draw it a little later, so the pane stays pinned for a beat first.
       const id = ++handoff.current;
-      let frames = 0;
-      const land = () => {
-        if (id !== handoff.current) return;
-        const landed = Math.abs(window.scrollY - target) < 1 ||
-          window.scrollY >= document.documentElement.scrollHeight - window.innerHeight - 1;
-        if (!landed && ++frames < 30) {
-          requestAnimationFrame(land);
-          return;
-        }
-        // One more frame with the jump on screen before the pane goes back.
+      window.setTimeout(() => {
         requestAnimationFrame(() => {
           if (id !== handoff.current) return;
           for (const prop of ["position", "top", "left", "width"]) node.style.removeProperty(prop);
@@ -127,8 +123,7 @@ export function usePanePager({ pager, list, detail, enabled, selectedId, onBack 
           thaw(pane);
           place(from);
         });
-      };
-      requestAnimationFrame(land);
+      }, PIN_MS);
     },
     [el, freeze, thaw, place],
   );

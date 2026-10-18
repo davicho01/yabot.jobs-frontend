@@ -169,6 +169,10 @@ export function Header() {
       const y = window.scrollY;
       const delta = y - lastScrollY.current;
       lastScrollY.current = y;
+      // More than a screen in one go isn't someone scrolling but the page
+      // jumping (the job board's phone panes trading places), which leaves
+      // the header as it was.
+      if (Math.abs(delta) > window.innerHeight) return;
 
       if (!window.matchMedia(PHONE_QUERY).matches) {
         setHidden(false);
