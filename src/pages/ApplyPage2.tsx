@@ -746,10 +746,11 @@ function ApplyPage2Content({
   );
   const stateNav = (
     <div className="apply__state-nav">
-      <Link to="/applications" className="apply__back-link">
-        ‹ Back to applications
+      <Link to="/applications" className="apply2__crumb">
+        <BriefcaseIcon />
+        My applications
       </Link>
-      {navGroup}
+      {(previousApplicationUrlId || nextApplicationUrlId) && navGroup}
     </div>
   );
 
