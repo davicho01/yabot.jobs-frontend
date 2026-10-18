@@ -693,6 +693,22 @@
     scroll-snap-stop: always;
   }
 
+  /* Each pane carries the page's color washes at its own top (lined up with
+     where the page has them) on an opaque ground, instead of letting the
+     page's show through. The page jumps to a pane's scroll spot as it goes
+     live, and its washes, which scroll with it, would jump into or out of
+     view behind it; these move with the pane, so nothing behind it changes.
+     "local" so a frozen pane, scrolled inside itself, scrolls them too.
+     (.board doubled to outrank the cards variant's transparent detail.) */
+  .board.board--split .board__list,
+  .board.board--split .board__detail {
+    background-color: var(--page);
+    background-image: var(--page-washes, none);
+    background-repeat: no-repeat;
+    background-position: 0 calc(-1 * var(--header-height, 0px));
+    background-attachment: local;
+  }
+
   .board--split .board__list[data-frozen],
   .board--split .board__detail[data-frozen] {
     height: 100vh;
