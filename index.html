@@ -1657,14 +1657,17 @@
         text-align: left;
       }
 
-      /* Each point under a thick bar in one of the step colors, with an icon
-         tile like the step cards'. */
+      /* Each point under a thick bar in the step cards' colors, with an icon
+         tile like theirs. */
       .trust li {
         display: flex;
         flex-direction: column;
         gap: 6px;
         padding-top: 22px;
         border-top: 6px solid var(--bar, var(--ink));
+        /* Each bar one slice of the card lists' violet-to-green run, so the
+           four join into one line. */
+        border-image: linear-gradient(90deg, var(--bar), var(--bar-end, var(--bar))) 1;
       }
 
       .trust__icon {
@@ -2190,15 +2193,15 @@
 
             <div class="captions">
               <div class="caption">
-                <span class="caption__icon" style="--band: var(--magenta)" aria-hidden="true">!</span>
+                <span class="caption__icon" style="--band: linear-gradient(110deg, #7c3aed, #2563eb)" aria-hidden="true">!</span>
                 <div><h3 class="h3">The gaps</h3><p>What the job wants that your resume does not show.</p></div>
               </div>
               <div class="caption">
-                <span class="caption__icon" style="--band: var(--blue)" aria-hidden="true">“</span>
+                <span class="caption__icon" style="--band: linear-gradient(110deg, #2563eb, #0d9488)" aria-hidden="true">“</span>
                 <div><h3 class="h3">The straight read</h3><p>A plain summary, including the honest risks.</p></div>
               </div>
               <div class="caption">
-                <span class="caption__icon" style="--band: var(--coral)" aria-hidden="true">≡</span>
+                <span class="caption__icon" style="--band: linear-gradient(110deg, #0d9488, #16a34a)" aria-hidden="true">≡</span>
                 <div><h3 class="h3">Where the points came from</h3><p>Every point, scored by category.</p></div>
               </div>
             </div>
@@ -2342,10 +2345,10 @@
           <p class="eyebrow">Trust</p>
           <h2 class="h2" id="trust-title">Built to be trusted.</h2>
           <ul class="trust">
-            <li style="--bar: var(--blue)"><span class="trust__icon" aria-hidden="true">&lt;/&gt;</span><h3 class="h3">Open source</h3><p>Read exactly how it works.</p></li>
-            <li style="--bar: var(--violet)"><span class="trust__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></span><h3 class="h3">Delete anything</h3><p>Anytime, from your account.</p></li>
-            <li style="--bar: var(--rose)"><span class="trust__icon" aria-hidden="true">↗</span><h3 class="h3">You hit apply</h3><p>Nothing is submitted for you.</p></li>
-            <li style="--bar: var(--coral)"><span class="trust__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></span><h3 class="h3">Scores show their work</h3><p>Evidence, gaps, and risks.</p></li>
+            <li style="--bar: #7c3aed; --bar-end: color-mix(in oklch, #7c3aed, #2563eb 75%)"><span class="trust__icon" aria-hidden="true">&lt;/&gt;</span><h3 class="h3">Open source</h3><p>Read exactly how it works.</p></li>
+            <li style="--bar: color-mix(in oklch, #7c3aed, #2563eb 75%); --bar-end: color-mix(in oklch, #2563eb, #0d9488 50%)"><span class="trust__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></span><h3 class="h3">Delete anything</h3><p>Anytime, from your account.</p></li>
+            <li style="--bar: color-mix(in oklch, #2563eb, #0d9488 50%); --bar-end: color-mix(in oklch, #0d9488, #16a34a 25%)"><span class="trust__icon" aria-hidden="true">↗</span><h3 class="h3">You hit apply</h3><p>Nothing is submitted for you.</p></li>
+            <li style="--bar: color-mix(in oklch, #0d9488, #16a34a 25%); --bar-end: #16a34a"><span class="trust__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></span><h3 class="h3">Scores show their work</h3><p>Evidence, gaps, and risks.</p></li>
           </ul>
           <div class="trust-links">
             <a class="btn btn--soft" href="https://github.com/davicho01/yabot.jobs-frontend">Read the code on GitHub &rsaquo;</a>
@@ -2571,10 +2574,16 @@
         );
       }
 
+      // Jobs posted in the last day (the heading says 24 hours); if that's
+      // too few to fill the wall, the last week, rather than no wall at all.
       async function load() {
+        if (!(await fill(1))) await fill(7);
+      }
+
+      async function fill(days) {
         const lists = await Promise.all(
           SECTORS.map((sector) =>
-            fetch(`${API}/jobs?page=1&page_size=12&sector=${sector}&location=United%20States&posted_within_days=7`)
+            fetch(`${API}/jobs?page=1&page_size=12&sector=${sector}&location=United%20States&posted_within_days=${days}`)
               .then((r) => (r.ok ? r.json() : { items: [] }))
               .catch(() => ({ items: [] })),
           ),
@@ -2602,13 +2611,17 @@
             }
           }
         }
-        if (picked.length < 4) throw new Error("Not enough jobs to show");
+        if (picked.length < 4) {
+          if (days < 7) return false;
+          throw new Error("Not enough jobs to show");
+        }
         // Twice over so the strip loops seamlessly; the copy is hidden from
         // screen readers and the keyboard.
         track.innerHTML = picked.map((j, i) => card(j, i, false)).join("") + picked.map((j, i) => card(j, i, true)).join("");
         wall.classList.remove("wall--loading");
         stepOnPhones(picked.length);
         driftOnDesktop(picked.length);
+        return true;
       }
 
       // Desktop: the strip drifts left on its own (about 64 seconds per set of
