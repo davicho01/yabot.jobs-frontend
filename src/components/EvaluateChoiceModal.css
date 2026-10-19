@@ -211,6 +211,10 @@
   gap: 0.75rem;
 }
 
+.evaluate-progress__figures--one {
+  grid-template-columns: 1fr;
+}
+
 .evaluate-progress__figure {
   display: flex;
   flex-direction: column;
@@ -256,39 +260,66 @@
   color: var(--ink-soft);
 }
 
+/* On a narrow phone the two buttons stack, each full width, rather than
+   wrapping their labels (the arrow used to drop to a line of its own). */
 .evaluate-progress__actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.6rem;
 }
 
+.evaluate-progress__secondary,
+.evaluate-progress__primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .evaluate-progress__secondary,
+  .evaluate-progress__primary {
+    flex: 1 1 auto;
+  }
+}
+
+/* The two buttons as the board's pills: "Close" / "All jobs"
+   (with the list icon of the board's "All jobs") on a soft chip, "View
+   application" with the briefcase of the board's "My applications" pill, in
+   the blue-violet of opening things (the sunset is for the positive steps,
+   like "Add for evaluation"). */
 .evaluate-progress__secondary {
-  background: none;
-  border: 1px solid var(--line);
+  gap: 0.45rem;
+  background: var(--chip);
+  border: 0;
   color: var(--ink);
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.1rem;
   border-radius: var(--radius-pill);
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   cursor: pointer;
 }
 
 .evaluate-progress__secondary:hover {
-  border-color: var(--ink-soft);
+  color: var(--focus);
 }
 
 .evaluate-progress__primary {
+  gap: 0.45rem;
   background: var(--btn-run);
   color: #ffffff;
-  padding: 0.5rem 1.2rem;
+  padding: 0.6rem 1.2rem;
   border-radius: var(--radius-pill);
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   text-decoration: none;
+  box-shadow: 0 8px 20px -8px rgba(109, 59, 230, 0.5);
 }
 
 .evaluate-progress__primary:hover {
   background: var(--btn-run);
+  color: #ffffff;
   filter: brightness(1.1);
 }

@@ -906,3 +906,93 @@
   }
 }
 
+
+/* ---------- the shared job page (/jobs/:id) ----------
+   The board's card style on a page of its own: the card sits in the page's
+   flow, centered, instead of in the board's pinned, fading scroll pane. */
+.board--standalone .board__detail.board__detail--standalone {
+  position: static;
+  top: auto;
+  /* The posting's 720px reading width plus the card's padding, so the logo
+     tile lines up with the text below it. */
+  max-width: calc(720px + 4.5rem);
+  max-height: none;
+  margin: 1.25rem auto 2rem;
+  padding: 0;
+  overflow: visible;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.board--standalone .board__back--top {
+  display: inline-flex;
+}
+
+@media (max-width: 760px) {
+  .board--standalone .board__detail.board__detail--standalone {
+    margin: 0.75rem;
+  }
+}
+
+/* The shared job page's dates: posted, first found, last checked (or
+   closed), each with how long ago, as small tiles under the chips. */
+.board--cards .case-file__dates {
+  order: -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.6rem;
+  margin: 1.1rem 0 0;
+}
+
+.case-file__dates > div {
+  padding: 0.7rem 0.9rem;
+  border-radius: 18px;
+  background: var(--band-card-chip);
+}
+
+.case-file__dates dt {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.case-file__dates dd {
+  margin: 0.2rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.case-file__dates .case-file__dates-ago {
+  margin-top: 0.1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+/* The shared job page's band is the same for every job, scored or not: the
+   My applications header's deep plum and glows (ApplicationsPage.css),
+   magenta top left, violet bottom right, a soft rose between. */
+.board__detail-band.board__detail-band--plum {
+  background:
+    radial-gradient(45% 80% at 10% 0%, rgba(236, 0, 140, 0.5), transparent 70%),
+    radial-gradient(40% 70% at 95% 110%, rgba(124, 58, 237, 0.75), transparent 70%),
+    radial-gradient(30% 50% at 60% 40%, rgba(222, 88, 138, 0.22), transparent 70%),
+    #1f1a35;
+}
+
+/* The fit card's button: the sunset only for a qualified fit (and for "Add
+   for evaluation", before there's a score); a lower score's "Scored 63 →"
+   takes the calmer blue-violet. */
+.board--cards .case-file__fit--warning .apply-button,
+.board--cards .case-file__fit--warning .apply-button:hover:not(:disabled),
+.board--cards .case-file__fit--negative .apply-button,
+.board--cards .case-file__fit--negative .apply-button:hover:not(:disabled) {
+  background: var(--btn-run);
+  box-shadow: 0 8px 20px -8px rgba(109, 59, 230, 0.5);
+}

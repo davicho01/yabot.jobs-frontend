@@ -5,6 +5,7 @@ import { isAutoScoreActive, useShownAutoScoreStatus } from "../utils/autoScore";
 import type { EvaluateChoice } from "../utils/evaluateChoice";
 import { fitTier } from "../utils/fitScore";
 import "./EvaluateChoiceModal.css";
+import { BriefcaseIcon, ListIcon } from "./PillIcons";
 
 // Asked when "Add for evaluation" is clicked (unless a choice was saved with
 // "Don't ask again" — see utils/evaluateChoice): save the job to evaluate
@@ -163,6 +164,7 @@ export function EvaluateProgressModal({
   const firstScore = pastFirstScore ? (currentRun?.resume_score ?? null) : null;
   const finalScore = running ? null : (currentRun?.best_score ?? null);
   const result = startError ? { text: startError, ready: false } : outcome(status, currentRun);
+  const untailored = !running && status !== "failed" && firstScore !== null && currentRun?.tailored_score == null;
 
   return (
     <div className="evaluate-choice-modal__overlay" onClick={onClose}>
@@ -194,10 +196,17 @@ export function EvaluateProgressModal({
           })}
         </ol>
 
-        <div className="evaluate-progress__figures">
-          <ScoreFigure label="First score" score={firstScore} />
-          <ScoreFigure label="Final score" score={finalScore} />
-        </div>
+        {/* A run that never tailored has one score, so it shows once. */}
+        {untailored ? (
+          <div className="evaluate-progress__figures evaluate-progress__figures--one">
+            <ScoreFigure label="Score" score={firstScore} />
+          </div>
+        ) : (
+          <div className="evaluate-progress__figures">
+            <ScoreFigure label="First score" score={firstScore} />
+            <ScoreFigure label="Final score" score={finalScore} />
+          </div>
+        )}
 
         {result && (
           <p
@@ -209,9 +218,12 @@ export function EvaluateProgressModal({
           </p>
         )}
 
-        <p className="evaluate-progress__hint">
-          See all your ready-to-apply jobs on the <Link to="/applications">Applications page</Link>.
-        </p>
+        {/* Not under a job that came out short of ready: it isn't one of them. */}
+        {(running || result?.ready) && (
+          <p className="evaluate-progress__hint">
+            See all your ready-to-apply jobs on the <Link to="/applications">Applications page</Link>.
+          </p>
+        )}
 
         <div className="evaluate-progress__actions">
           {running ? (
@@ -222,12 +234,20 @@ export function EvaluateProgressModal({
             <>
               {/* Short of ready: back to the postings behind the modal. */}
               <button type="button" className="evaluate-progress__secondary" onClick={onClose}>
-                {result && !result.ready && status !== "failed" ? "Browse other postings" : "Close"}
+                {result && !result.ready && status !== "failed" ? (
+                  <>
+                    <ListIcon />
+                    All jobs
+                  </>
+                ) : (
+                  "Close"
+                )}
               </button>
               {/* Every finished run saves the job, ready or not. */}
               {result && status !== "failed" && (
                 <Link to={applicationPath} className="evaluate-progress__primary">
-                  View application →
+                  <BriefcaseIcon />
+                  View application
                 </Link>
               )}
             </>
