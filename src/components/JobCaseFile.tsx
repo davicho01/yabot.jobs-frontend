@@ -89,6 +89,44 @@ function foundBadge(job: JobDetail): { label: string; tone: JobAgeTone } | null 
   return age ? { label: `Found ${age.ago}!`, tone: age.tone } : null;
 }
 
+// "today", "yesterday", "6 days ago", "3 weeks ago", "2 months ago": how long
+// ago a day was, for the shared job page's dates.
+function daysAgoLabel(days: number): string {
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 14) return `${days} days ago`;
+  if (days < 60) return `${Math.floor(days / 7)} weeks ago`;
+  return `${Math.floor(days / 30)} months ago`;
+}
+
+// The shared job page's dates, each with how long ago it was, so a visitor
+// can tell at a glance whether the posting is new or old: when the company
+// posted it and when we first found it (or when it closed).
+function dateStats(job: JobDetail, posting: JobPosting): { label: string; value: string; ago: string }[] {
+  const day = 86_400_000;
+  const shortDate = (date: Date) => date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const stats: { label: string; value: string; ago: string }[] = [];
+  const posted = postedDateLabel(job);
+  if (posted && posting.posted_at) {
+    // posted_at is a UTC date, so count whole days against today in UTC.
+    const today = Date.parse(new Date().toISOString().slice(0, 10));
+    const days = Math.floor((today - Date.parse(`${posting.posted_at}T00:00:00Z`)) / day);
+    stats.push({ label: "Posted", value: posted, ago: daysAgoLabel(days) });
+  }
+  if (posting.first_scanned_at) {
+    const date = new Date(posting.first_scanned_at);
+    const time = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    const days = Math.floor((Date.now() - date.getTime()) / day);
+    stats.push({ label: "First found", value: shortDate(date), ago: `${daysAgoLabel(days)} · ${time}` });
+  }
+  if (job.url.closed_at) {
+    const date = new Date(job.url.closed_at);
+    const days = Math.floor((Date.now() - date.getTime()) / day);
+    stats.push({ label: "Closed", value: shortDate(date), ago: daysAgoLabel(days) });
+  }
+  return stats;
+}
+
 // Mirrors the "Job at a glance" dl on the static /job/<id> SEO pages
 // (job_pages.py) — same fields, same order.
 function glanceItems(job: JobDetail, posting: JobPosting): { label: string; value: string }[] {
@@ -262,6 +300,7 @@ export function JobCaseFile({
   titleHighlightQuery,
   onSelectSimilar,
   boardCards = false,
+  showDates = false,
 }: {
   job: JobDetail;
   user: User | null;
@@ -281,6 +320,8 @@ export function JobCaseFile({
   // (age and sector included), and in place of "Job at a glance" (which only
   // repeated them) a fit card holding the main button.
   boardCards?: boolean;
+  // The shared job page's row of dates (see dateStats), under the chips.
+  showDates?: boolean;
 }) {
   const posting = scannedPosting(job);
   const scanFailed = job.url.scan_status === "failed";
@@ -557,8 +598,20 @@ export function JobCaseFile({
               <span className="tag tag--sector">{SECTOR_SHORT_LABELS[posting.sector] ?? sectorLabel(posting.sector)}</span>
             )}
             {boardCards && closedLabel(job) && <span className="tag tag--closed">{closedLabel(job)}</span>}
-            {boardCards && age && <span className={`tag tag--age tag--age-${age.tone}`}>Found {age.ago}</span>}
+            {boardCards && age && !showDates && <span className={`tag tag--age tag--age-${age.tone}`}>Found {age.ago}</span>}
           </div>
+
+          {showDates && dateStats(job, posting).length > 0 && (
+            <dl className="case-file__dates">
+              {dateStats(job, posting).map((stat) => (
+                <div key={stat.label}>
+                  <dt>{stat.label}</dt>
+                  <dd>{stat.value}</dd>
+                  <dd className="case-file__dates-ago">{stat.ago}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
 
           {boardCards ? (
             <section className="case-file__fit" aria-labelledby="case-file-fit-h">

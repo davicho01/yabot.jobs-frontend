@@ -936,3 +936,41 @@
     margin: 0.75rem;
   }
 }
+
+/* The shared job page's dates: posted, first found, last checked (or
+   closed), each with how long ago, as small tiles under the chips. */
+.board--cards .case-file__dates {
+  order: -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.6rem;
+  margin: 1.1rem 0 0;
+}
+
+.case-file__dates > div {
+  padding: 0.7rem 0.9rem;
+  border-radius: 18px;
+  background: var(--band-card-chip);
+}
+
+.case-file__dates dt {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.case-file__dates dd {
+  margin: 0.2rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.case-file__dates .case-file__dates-ago {
+  margin-top: 0.1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}

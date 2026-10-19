@@ -101,6 +101,7 @@ export function JobDetailPage() {
             onDelete={() => deleteListing(job.url.id)}
             isDeleting={deleteListingMutation.isPending}
             boardCards
+            showDates
           />
         </div>
       </div>
