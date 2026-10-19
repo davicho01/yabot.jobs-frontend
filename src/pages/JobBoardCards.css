@@ -1005,20 +1005,30 @@
   }
 }
 
-/* The shared job page's dates: posted, first found, last checked (or
-   closed), each with how long ago, as small tiles under the chips. */
+/* The shared job page's dates: posted and first found, each with how long
+   ago, side by side in one strip between hairlines (as on the static job
+   pages). */
 .board--cards .case-file__dates {
   order: -1;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.6rem;
+  display: flex;
   margin: 1.1rem 0 0;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .case-file__dates > div {
-  padding: 0.7rem 0.9rem;
-  border-radius: 18px;
-  background: var(--band-card-chip);
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 1rem;
+}
+
+.case-file__dates > div:first-child {
+  padding-left: 0;
+}
+
+.case-file__dates > div + div {
+  border-left: 1px solid var(--line);
 }
 
 .case-file__dates dt {
