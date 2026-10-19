@@ -1,5 +1,5 @@
 import { Routes, Route, Outlet, Navigate, useLocation, useParams } from "react-router-dom";
-import { BOARD2_PATH, BOARD_PATH } from "./routes";
+import { BOARD_PATH } from "./routes";
 import { LoginPage } from "./pages/LoginPage";
 import { AuthCallbackPage } from "./pages/AuthCallbackPage";
 import { OAuthAuthorizePage } from "./pages/OAuthAuthorizePage";
@@ -64,7 +64,6 @@ export default function App() {
     <Routes>
       <Route element={<RootLayout />}>
         <Route path={BOARD_PATH} element={<JobBoardPage variant="cards" />} />
-        <Route path={BOARD2_PATH} element={<JobBoardPage variant="cards" />} />
         <Route path="/jobs/:urlId" element={<JobDetailPage />} />
         <Route path="/job/:urlId" element={<StaticJobPageFallback />} />
         <Route path="/login" element={<LoginPage />} />
@@ -80,14 +79,6 @@ export default function App() {
         />
         <Route
           path="/jobs/:urlId/apply"
-          element={
-            <ProtectedRoute>
-              <ApplyPage2 />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/jobs/:urlId/apply2"
           element={
             <ProtectedRoute>
               <ApplyPage2 />
