@@ -211,6 +211,10 @@
   gap: 0.75rem;
 }
 
+.evaluate-progress__figures--one {
+  grid-template-columns: 1fr;
+}
+
 .evaluate-progress__figure {
   display: flex;
   flex-direction: column;
@@ -256,10 +260,28 @@
   color: var(--ink-soft);
 }
 
+/* On a narrow phone the two buttons stack, each full width, rather than
+   wrapping their labels (the arrow used to drop to a line of its own). */
 .evaluate-progress__actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.6rem;
+}
+
+.evaluate-progress__secondary,
+.evaluate-progress__primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .evaluate-progress__secondary,
+  .evaluate-progress__primary {
+    flex: 1 1 auto;
+  }
 }
 
 .evaluate-progress__secondary {

@@ -163,6 +163,7 @@ export function EvaluateProgressModal({
   const firstScore = pastFirstScore ? (currentRun?.resume_score ?? null) : null;
   const finalScore = running ? null : (currentRun?.best_score ?? null);
   const result = startError ? { text: startError, ready: false } : outcome(status, currentRun);
+  const untailored = !running && status !== "failed" && firstScore !== null && currentRun?.tailored_score == null;
 
   return (
     <div className="evaluate-choice-modal__overlay" onClick={onClose}>
@@ -194,10 +195,17 @@ export function EvaluateProgressModal({
           })}
         </ol>
 
-        <div className="evaluate-progress__figures">
-          <ScoreFigure label="First score" score={firstScore} />
-          <ScoreFigure label="Final score" score={finalScore} />
-        </div>
+        {/* A run that never tailored has one score, so it shows once. */}
+        {untailored ? (
+          <div className="evaluate-progress__figures evaluate-progress__figures--one">
+            <ScoreFigure label="Score" score={firstScore} />
+          </div>
+        ) : (
+          <div className="evaluate-progress__figures">
+            <ScoreFigure label="First score" score={firstScore} />
+            <ScoreFigure label="Final score" score={finalScore} />
+          </div>
+        )}
 
         {result && (
           <p
@@ -209,9 +217,12 @@ export function EvaluateProgressModal({
           </p>
         )}
 
-        <p className="evaluate-progress__hint">
-          See all your ready-to-apply jobs on the <Link to="/applications">Applications page</Link>.
-        </p>
+        {/* Not under a job that came out short of ready: it isn't one of them. */}
+        {(running || result?.ready) && (
+          <p className="evaluate-progress__hint">
+            See all your ready-to-apply jobs on the <Link to="/applications">Applications page</Link>.
+          </p>
+        )}
 
         <div className="evaluate-progress__actions">
           {running ? (
