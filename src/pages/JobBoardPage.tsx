@@ -134,7 +134,7 @@ function JobCard({
   );
 }
 
-// The /jobs2 card: a colored band (see bandColor) with the logo on a white
+// The board's card: a colored band (see bandColor) with the logo on a white
 // tile and, for a job already scored, its best fit as a pill.
 // The chips above the job cards: shortcuts for common picks from the
 // header's filter panel (same URL params, so the two stay in step).
@@ -211,8 +211,9 @@ function BandJobCard({
   );
 }
 
-// variant "cards" is /jobs2: same search, filters, paging and detail pane as
-// /jobs, with banded job cards and fit pills for jobs already scored.
+// variant "cards" is the board at /jobs: banded job cards and fit pills for
+// jobs already scored, over the classic variant's search, filters, paging and
+// detail pane.
 export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "cards" }) {
   const cards = variant === "cards";
   const { user } = useAuth();

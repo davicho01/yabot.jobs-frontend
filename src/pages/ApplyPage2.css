@@ -1,4 +1,4 @@
-/* /jobs/:urlId/apply2 — the card layout (see ApplyPage2.tsx). Builds on
+/* /jobs/:urlId/apply — the card layout (see ApplyPage2.tsx). Builds on
    ApplyPage.css, which is loaded too: step contents (reports, menus, notes
    editor) keep their /apply classes and are only retinted here. */
 

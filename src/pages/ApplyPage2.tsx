@@ -57,7 +57,7 @@ import "./ApplyPage2.css";
 import CompanyLogo from "../components/CompanyLogo";
 import { BriefcaseIcon } from "../components/PillIcons";
 
-// /jobs/:urlId/apply (and the old trial address /apply2) — the card layout:
+// /jobs/:urlId/apply — the card layout:
 // the job as a banded card with its logo tile and fit pill, notes beside it,
 // and each of the five steps as the same kind of card. Data, mutations and
 // step logic are the same as ApplyPage's, the previous layout.

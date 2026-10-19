@@ -1,6 +1,5 @@
-// Step titles and small helpers shared by ApplyPage (/jobs/:id/apply) and
-// ApplyPage2 (/jobs/:id/apply2), kept out of the page files so those export
-// only components.
+// Step titles and small helpers for the apply page (/jobs/:id/apply,
+// ApplyPage2), kept out of the page file so it exports only components.
 import type { AutoScoreRun } from "../api/types";
 
 // Applied_at is a real timestamp (unlike the follow-up date, which is a
