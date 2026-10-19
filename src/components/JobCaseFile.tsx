@@ -581,32 +581,6 @@ export function JobCaseFile({
             )}
           </div>
 
-          {boardCards ? (
-            // The board's card: how new the job is first (only under 48
-            // hours, loudest under 24), the pay, then type, workplace and
-            // sector, all in one flowing row.
-            <div className="case-file__tags case-file__tags--stacked">
-              {age && !showDates && age.tone !== "older" && (
-                <span className={`tag tag--age tag--age-${age.tone}`}>
-                  <i aria-hidden="true" />
-                  {age.tone === "fresh" ? `New · Found ${age.ago}` : `Found ${age.ago}`}
-                </span>
-              )}
-              {formatSalary(job) && <span className="tag tag--accent">{formatSalary(job)}</span>}
-              <span className="case-file__tags-row">
-                {employmentLabel(posting.employment_type) && (
-                  <span className="tag">{employmentLabel(posting.employment_type)}</span>
-                )}
-                {workplaceLabel(posting.workplace_type) && (
-                  <span className={`tag tag--workplace-${posting.workplace_type}`}>{workplaceLabel(posting.workplace_type)}</span>
-                )}
-                {sectorLabel(posting.sector) && (
-                  <span className="tag tag--sector">{SECTOR_SHORT_LABELS[posting.sector] ?? sectorLabel(posting.sector)}</span>
-                )}
-                {closedLabel(job) && <span className="tag tag--closed">{closedLabel(job)}</span>}
-              </span>
-            </div>
-          ) : (
           <div className="case-file__tags">
             {workplaceLabel(posting.workplace_type) && (
               <span className={`tag tag--workplace-${posting.workplace_type}`}>{workplaceLabel(posting.workplace_type)}</span>
@@ -615,8 +589,16 @@ export function JobCaseFile({
               <span className="tag">{employmentLabel(posting.employment_type)}</span>
             )}
             {formatSalary(job) && <span className="tag tag--accent">{formatSalary(job)}</span>}
+            {boardCards && sectorLabel(posting.sector) && (
+              <span className="tag tag--sector">{SECTOR_SHORT_LABELS[posting.sector] ?? sectorLabel(posting.sector)}</span>
+            )}
+            {boardCards && closedLabel(job) && <span className="tag tag--closed">{closedLabel(job)}</span>}
+            {/* Only a job older than 48 hours: a newer one says so in the
+                board's header band instead (JobBoardPage's FoundBadge). */}
+            {boardCards && age && !showDates && age.tone === "older" && (
+              <span className={`tag tag--age tag--age-${age.tone}`}>Found {age.ago}</span>
+            )}
           </div>
-          )}
 
           {showDates && dateStats(job, posting).length > 0 && (
             <dl className="case-file__dates">

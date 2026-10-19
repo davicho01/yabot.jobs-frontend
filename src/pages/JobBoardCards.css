@@ -180,6 +180,66 @@
   );
 }
 
+/* How new the open job is, in the band's top-right corner (under 48 hours
+   only; see FoundBadge). */
+.board__detail-age {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.board__detail-age i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* Under 24 hours: the sunset, a glow, and a dot that pulses. */
+.board__detail-age--fresh {
+  color: #fff;
+  background: linear-gradient(227deg, #ec008c 3%, #fc8b67 69%, #ffd46d 98%);
+  box-shadow: 0 6px 18px -6px rgba(236, 0, 140, 0.7);
+}
+
+.board__detail-age--fresh i {
+  width: 7px;
+  height: 7px;
+  background: #fff;
+  animation: board-age-pulse 1.8s ease-out infinite;
+}
+
+@keyframes board-age-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.75); }
+  70% { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+/* 24 to 48 hours: a white pill, magenta text, the dot still. */
+.board__detail-age--recent {
+  color: #c2006f;
+  background: #ffffffeb;
+  box-shadow: 0 2px 8px rgba(31, 26, 53, 0.14);
+}
+
+.board__detail-age--recent i {
+  background: #ec008c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board__detail-age--fresh i {
+    animation: none;
+  }
+}
+
 /* Identity first, then actions: on the board, the company, title and tags
    come before the button row (Rescan, Original, Report, Add/View), and the
    line under the buttons goes. The standalone job page keeps its order. */
@@ -590,71 +650,13 @@
   --chip-tint: #364ea9;
 }
 
-/* The chips in one flowing row, in reading order: how new the job is, the
-   pay, then type, workplace and sector. */
-.board--cards .case-file__tags--stacked .tag--accent {
-  order: 0;
-}
-
-.case-file__tags-row {
-  display: contents;
-}
-
 .board--cards .case-file__tags .tag--age {
-  gap: 0.4rem;
+  --chip-tint: #fc8b67;
 }
 
-.board--cards .case-file__tags .tag--age i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
-
-/* Under 24 hours: the sunset, a glow, and a dot that pulses. */
 .board--cards .case-file__tags .tag--age-fresh {
   color: #fff;
   background: linear-gradient(227deg, #ec008c 3%, #fc8b67 69%, #ffd46d 98%);
-  box-shadow: 0 6px 16px -6px rgba(236, 0, 140, 0.55);
-}
-
-.board--cards .case-file__tags .tag--age-fresh i {
-  width: 7px;
-  height: 7px;
-  background: #fff;
-  animation: case-file-age-pulse 1.8s ease-out infinite;
-}
-
-@keyframes case-file-age-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.75); }
-  70% { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
-}
-
-/* 24 to 48 hours: magenta on a pale sunset wash, the dot still. */
-.board--cards .case-file__tags .tag--age-recent {
-  color: #c2006f;
-  background: linear-gradient(227deg, rgba(236, 0, 140, 0.14), rgba(252, 139, 103, 0.16));
-  box-shadow: inset 0 0 0 1px rgba(236, 0, 140, 0.28);
-}
-
-.board--cards .case-file__tags .tag--age-recent i {
-  background: #ec008c;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .board--cards .case-file__tags .tag--age-recent {
-    color: #ff6fbf;
-  }
-}
-
-:root[data-theme="dark"] .board--cards .case-file__tags .tag--age-recent {
-  color: #ff6fbf;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .board--cards .case-file__tags .tag--age-fresh i {
-    animation: none;
-  }
 }
 
 .board--cards .case-file__tags .tag--closed {
