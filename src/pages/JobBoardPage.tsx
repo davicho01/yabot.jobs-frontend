@@ -201,7 +201,7 @@ function BandJobCard({
             {salary && <span className="band-card__pay">{salary}</span>}
             {posted && (
               <span className={`band-card__posted${posted.tone ? ` band-card__posted--${posted.tone}` : ""}`}>
-                {(posted.tone === "fresh" || posted.tone === "recent") && <i aria-hidden="true" />}
+                {posted.tone === "fresh" && <i aria-hidden="true" />}
                 {posted.text}
               </span>
             )}

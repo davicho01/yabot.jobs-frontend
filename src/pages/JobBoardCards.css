@@ -527,41 +527,23 @@
   color: var(--ink-soft);
 }
 
-/* Found in the last 48 hours: bold text with a small dot, no pill, so a
-   list where every job is new stays calm (the open job's FoundBadge is the
-   loud one). Under 24 hours magenta with a sunset dot; up to 48, ink with a
-   magenta dot. Older, plain grey text. */
-.band-card__posted--fresh,
-.band-card__posted--recent {
+/* Found in the last 24 hours: bold magenta with a small sunset dot, no
+   pill, so a list where every job is new stays calm (the open job's
+   FoundBadge is the loud one). Anything older, plain grey text. */
+.band-card__posted--fresh {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
   font-weight: 700;
   white-space: nowrap;
-}
-
-.band-card__posted--fresh i,
-.band-card__posted--recent i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-}
-
-.band-card__posted--fresh {
   color: #c2006f;
 }
 
 .band-card__posted--fresh i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
   background: linear-gradient(227deg, #ec008c 3%, #fc8b67 69%, #ffd46d 98%);
-}
-
-.band-card__posted--recent {
-  color: var(--ink);
-}
-
-.band-card__posted--recent i {
-  background: #ec008c;
-  opacity: 0.55;
 }
 
 @media (prefers-color-scheme: dark) {
