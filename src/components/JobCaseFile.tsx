@@ -583,8 +583,8 @@ export function JobCaseFile({
 
           {boardCards ? (
             // The board's card: how new the job is first (only under 48
-            // hours, loudest under 24), the pay on its own line, then type,
-            // workplace and sector.
+            // hours, loudest under 24), the pay, then type, workplace and
+            // sector, all in one flowing row.
             <div className="case-file__tags case-file__tags--stacked">
               {age && !showDates && age.tone !== "older" && (
                 <span className={`tag tag--age tag--age-${age.tone}`}>

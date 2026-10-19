@@ -590,20 +590,14 @@
   --chip-tint: #364ea9;
 }
 
-/* The chips in three lines: how new the job is, the pay, then the rest. */
-.board--cards .case-file__tags--stacked {
-  flex-direction: column;
-  align-items: flex-start;
-}
-
+/* The chips in one flowing row, in reading order: how new the job is, the
+   pay, then type, workplace and sector. */
 .board--cards .case-file__tags--stacked .tag--accent {
   order: 0;
 }
 
 .case-file__tags-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
+  display: contents;
 }
 
 .board--cards .case-file__tags .tag--age {
