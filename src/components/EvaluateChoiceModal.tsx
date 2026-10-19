@@ -237,7 +237,7 @@ export function EvaluateProgressModal({
                 {result && !result.ready && status !== "failed" ? (
                   <>
                     <ListIcon />
-                    Browse other postings
+                    All jobs
                   </>
                 ) : (
                   "Close"
