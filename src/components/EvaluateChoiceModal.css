@@ -284,33 +284,41 @@
   }
 }
 
+/* The two buttons as the board's pills: "Close" / "Browse other postings"
+   (with the list icon of the board's "All jobs") on a soft chip, "View
+   application" with the briefcase of the board's
+   "My applications" pill, in the sunset gradient of "Add for evaluation". */
 .evaluate-progress__secondary {
-  background: none;
-  border: 1px solid var(--line);
+  gap: 0.45rem;
+  background: var(--chip);
+  border: 0;
   color: var(--ink);
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.1rem;
   border-radius: var(--radius-pill);
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   cursor: pointer;
 }
 
 .evaluate-progress__secondary:hover {
-  border-color: var(--ink-soft);
+  color: var(--focus);
 }
 
 .evaluate-progress__primary {
-  background: var(--btn-run);
+  gap: 0.45rem;
+  background: var(--sunset);
   color: #ffffff;
-  padding: 0.5rem 1.2rem;
+  padding: 0.6rem 1.2rem;
   border-radius: var(--radius-pill);
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   text-decoration: none;
+  box-shadow: 0 8px 20px -8px rgba(236, 0, 140, 0.5);
 }
 
 .evaluate-progress__primary:hover {
-  background: var(--btn-run);
+  background: var(--sunset);
+  color: #ffffff;
   filter: brightness(1.1);
 }

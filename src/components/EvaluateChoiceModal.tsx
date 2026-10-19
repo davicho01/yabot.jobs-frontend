@@ -5,6 +5,7 @@ import { isAutoScoreActive, useShownAutoScoreStatus } from "../utils/autoScore";
 import type { EvaluateChoice } from "../utils/evaluateChoice";
 import { fitTier } from "../utils/fitScore";
 import "./EvaluateChoiceModal.css";
+import { BriefcaseIcon, ListIcon } from "./PillIcons";
 
 // Asked when "Add for evaluation" is clicked (unless a choice was saved with
 // "Don't ask again" — see utils/evaluateChoice): save the job to evaluate
@@ -233,12 +234,20 @@ export function EvaluateProgressModal({
             <>
               {/* Short of ready: back to the postings behind the modal. */}
               <button type="button" className="evaluate-progress__secondary" onClick={onClose}>
-                {result && !result.ready && status !== "failed" ? "Browse other postings" : "Close"}
+                {result && !result.ready && status !== "failed" ? (
+                  <>
+                    <ListIcon />
+                    Browse other postings
+                  </>
+                ) : (
+                  "Close"
+                )}
               </button>
               {/* Every finished run saves the job, ready or not. */}
               {result && status !== "failed" && (
                 <Link to={applicationPath} className="evaluate-progress__primary">
-                  View application →
+                  <BriefcaseIcon />
+                  View application
                 </Link>
               )}
             </>
