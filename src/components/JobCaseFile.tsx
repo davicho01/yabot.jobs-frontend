@@ -483,7 +483,7 @@ export function JobCaseFile({
                   themselves (job.url.url is only sent to signed-in users). */}
               {job.url.url && (
                 <a href={job.url.url} target="_blank" rel="noopener noreferrer" className="rescan-button">
-                  View original posting ↗
+                  Job site ↗
                 </a>
               )}
               <button type="button" className="rescan-button" disabled={isRescanning} onClick={onRescan}>
@@ -508,7 +508,7 @@ export function JobCaseFile({
             <div className="case-file__header-actions">
               {user && (
                 <a href={job.url.url ?? undefined} target="_blank" rel="noopener noreferrer" className="rescan-button">
-                  Original ↗
+                  Job site ↗
                 </a>
               )}
               {user && (
