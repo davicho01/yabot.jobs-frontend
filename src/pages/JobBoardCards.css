@@ -228,7 +228,8 @@
    white text and a still dot; the sunset's calmer sibling. */
 .board__detail-age--recent {
   color: #fff;
-  background: linear-gradient(227deg, #0f766e, #0d9488 60%, #14b8a6);
+  /* Three stops at the sunset's angle, deep cyan through teal to aqua. */
+  background: linear-gradient(227deg, #0e7490 3%, #0d9488 55%, #2dd4bf 98%);
   box-shadow: 0 6px 16px -8px rgba(13, 148, 136, 0.6);
 }
 
