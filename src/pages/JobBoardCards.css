@@ -527,14 +527,62 @@
   color: var(--ink-soft);
 }
 
-.band-card__posted--fresh {
-  color: var(--teal);
+/* Found in the last 48 hours: a pill like the open job's corner badge
+   (FoundBadge): the sunset with a pulsing dot under 24 hours, magenta on a
+   pale wash with a still dot up to 48. Older, plain grey text. */
+.band-card__posted--fresh,
+.band-card__posted--recent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.band-card__posted--fresh i,
+.band-card__posted--recent i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.band-card__posted--fresh {
+  color: #fff;
+  background: linear-gradient(227deg, #ec008c 3%, #fc8b67 69%, #ffd46d 98%);
+  box-shadow: 0 4px 12px -4px rgba(236, 0, 140, 0.55);
+}
+
+.band-card__posted--fresh i {
+  background: #fff;
+  animation: board-age-pulse 1.8s ease-out infinite;
 }
 
 .band-card__posted--recent {
-  color: var(--amber);
-  font-weight: 600;
+  color: #c2006f;
+  background: linear-gradient(227deg, rgba(236, 0, 140, 0.12), rgba(252, 139, 103, 0.14));
+  box-shadow: inset 0 0 0 1px rgba(236, 0, 140, 0.25);
+}
+
+.band-card__posted--recent i {
+  background: #ec008c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .band-card__posted--recent {
+    color: #ff6fbf;
+  }
+}
+
+:root[data-theme="dark"] .band-card__posted--recent {
+  color: #ff6fbf;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .band-card__posted--fresh i {
+    animation: none;
+  }
 }
 
 @media (max-width: 760px) {
