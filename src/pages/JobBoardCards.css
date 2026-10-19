@@ -906,3 +906,33 @@
   }
 }
 
+
+/* ---------- the shared job page (/jobs/:id) ----------
+   The board's card style on a page of its own: the card sits in the page's
+   flow, centered, instead of in the board's pinned, fading scroll pane. */
+.board--standalone .board__detail.board__detail--standalone {
+  position: static;
+  top: auto;
+  /* The posting's 720px reading width plus the card's padding, so the logo
+     tile lines up with the text below it. */
+  max-width: calc(720px + 4.5rem);
+  max-height: none;
+  margin: 1.25rem auto 2rem;
+  padding: 0;
+  overflow: visible;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.board--standalone .board__back--top {
+  display: inline-flex;
+}
+
+@media (max-width: 760px) {
+  .board--standalone .board__detail.board__detail--standalone {
+    margin: 0.75rem;
+  }
+}

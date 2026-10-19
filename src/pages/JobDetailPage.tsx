@@ -1,11 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useParams } from "react-router-dom";
+import type { CSSProperties } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { jobsApi } from "../api/jobs";
 import { adminApi } from "../api/admin";
 import { useConfirm } from "../components/ConfirmDialog";
 import { JobCaseFile } from "../components/JobCaseFile";
+import CompanyLogo from "../components/CompanyLogo";
+import { BriefcaseIcon, ListIcon } from "../components/PillIcons";
+import { bandColor } from "../utils/bandColor";
+import { scannedPosting } from "../utils/jobPosting";
 import "./JobBoardPage.css";
+import "./JobBoardCards.css";
 import { BOARD_PATH } from "../routes";
 
 export function JobDetailPage() {
@@ -59,19 +65,44 @@ export function JobDetailPage() {
     );
   }
 
+  const company = scannedPosting(job)?.company_name ?? job.url.domain;
+
+  // The shared job page wears the board's card style: the pills above the
+  // card, the company's color band with its logo tile, and the card layout
+  // of the posting itself.
   return (
-    <div className="board">
+    <div className="board board--cards board--standalone">
       {dialog}
       <div className="board__detail board__detail--standalone">
-        <JobCaseFile
-          job={job}
-          user={user}
-          isRescanning={rescanMutation.isPending}
-          rescanFailed={rescanMutation.isError}
-          onRescan={() => rescanMutation.mutate(job.url.id)}
-          onDelete={() => deleteListing(job.url.id)}
-          isDeleting={deleteListingMutation.isPending}
-        />
+        <div className="board__detail-top">
+          <Link to={BOARD_PATH} className="board__back--top">
+            <ListIcon />
+            All jobs
+          </Link>
+          {user && (
+            <Link to="/applications" className="board__detail-applications">
+              <BriefcaseIcon />
+              My applications
+            </Link>
+          )}
+        </div>
+        <div className="board__detail-inner">
+          <div className="board__detail-band" style={{ "--band-card-color": bandColor(company) } as CSSProperties}>
+            <span className="board__detail-tile">
+              <CompanyLogo name={company} logoUrl={scannedPosting(job)?.company_logo_url} size={40} />
+            </span>
+          </div>
+          <JobCaseFile
+            job={job}
+            user={user}
+            isRescanning={rescanMutation.isPending}
+            rescanFailed={rescanMutation.isError}
+            onRescan={() => rescanMutation.mutate(job.url.id)}
+            onDelete={() => deleteListing(job.url.id)}
+            isDeleting={deleteListingMutation.isPending}
+            boardCards
+          />
+        </div>
       </div>
     </div>
   );
