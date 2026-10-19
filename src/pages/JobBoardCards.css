@@ -871,7 +871,14 @@
 /* Pagination as the page's pills: Next filled in ink, Prev on a chip, the
    page count in bold. */
 .board--cards .board__pagination {
-  padding: 0.75rem 1rem 1.5rem 0;
+  padding: 0.75rem 1rem 1.5rem;
+}
+
+/* Flush left only where the job list is too (the header's edge, see above). */
+@media (min-width: 1260px) {
+  .board--cards .board__pagination {
+    padding-left: 0;
+  }
 }
 
 .board--cards .board__page-button,
