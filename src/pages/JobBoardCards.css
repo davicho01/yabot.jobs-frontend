@@ -976,12 +976,13 @@
 }
 
 /* The shared job page's band is the same for every job, scored or not: the
-   brand plum with a sunrise glowing up from its bottom edge. */
-.board__detail-band.board__detail-band--sunrise {
+   My applications header's deep plum and glows (ApplicationsPage.css),
+   magenta top left, violet bottom right, a soft rose between. */
+.board__detail-band.board__detail-band--plum {
   background:
-    radial-gradient(50% 130% at 22% 105%, rgba(236, 0, 140, 0.85), transparent 72%),
-    radial-gradient(50% 140% at 58% 108%, rgba(252, 139, 103, 0.9), transparent 72%),
-    radial-gradient(40% 120% at 90% 105%, rgba(255, 212, 109, 0.75), transparent 72%),
+    radial-gradient(45% 80% at 10% 0%, rgba(236, 0, 140, 0.5), transparent 70%),
+    radial-gradient(40% 70% at 95% 110%, rgba(124, 58, 237, 0.75), transparent 70%),
+    radial-gradient(30% 50% at 60% 40%, rgba(222, 88, 138, 0.22), transparent 70%),
     #1f1a35;
 }
 

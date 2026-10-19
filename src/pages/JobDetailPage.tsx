@@ -66,7 +66,7 @@ export function JobDetailPage() {
   const company = scannedPosting(job)?.company_name ?? job.url.domain;
 
   // The shared job page wears the board's card style: the pills above the
-  // card, a plum band with a sunrise glow and the logo tile, and the card
+  // card, the My applications header's plum band with the logo tile, and the card
   // layout of the posting itself.
   return (
     <div className="board board--cards board--standalone">
@@ -85,7 +85,7 @@ export function JobDetailPage() {
           )}
         </div>
         <div className="board__detail-inner">
-          <div className="board__detail-band board__detail-band--sunrise">
+          <div className="board__detail-band board__detail-band--plum">
             <span className="board__detail-tile">
               <CompanyLogo name={company} logoUrl={scannedPosting(job)?.company_logo_url} size={40} />
             </span>
