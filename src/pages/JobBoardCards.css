@@ -184,8 +184,9 @@
    only; see FoundBadge). */
 .board__detail-age {
   position: absolute;
-  top: 14px;
-  right: 16px;
+  top: 50%;
+  right: 1.5rem;
+  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
