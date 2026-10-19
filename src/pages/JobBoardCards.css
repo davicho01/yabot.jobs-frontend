@@ -974,3 +974,39 @@
   font-weight: 500;
   color: var(--ink-soft);
 }
+
+/* The shared job page's band follows the fit score. Not scored yet: the
+   page's own soft washes, calm. Qualified: the sunset, the one exciting
+   color. Maybe or not a match: the company's color faded toward the chip
+   gray, so a weak fit doesn't look like good news. */
+.board__detail-band.board__detail-band--unscored {
+  background:
+    radial-gradient(45% 160% at 8% 0%, rgba(236, 0, 140, 0.24), transparent 70%),
+    radial-gradient(40% 160% at 52% 0%, rgba(252, 139, 103, 0.28), transparent 70%),
+    radial-gradient(45% 160% at 95% 0%, rgba(54, 78, 169, 0.24), transparent 70%),
+    var(--band-card-chip);
+}
+
+.board__detail-band.board__detail-band--positive {
+  background: var(--sunset);
+}
+
+.board__detail-band.board__detail-band--warning,
+.board__detail-band.board__detail-band--negative {
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--band-card-color) 38%, var(--band-card-chip)),
+    color-mix(in srgb, var(--band-card-color) 22%, var(--band-card-chip))
+  );
+}
+
+/* The fit card's button: the sunset only for a qualified fit (and for "Add
+   for evaluation", before there's a score); a lower score's "Scored 63 →"
+   takes the calmer blue-violet. */
+.board--cards .case-file__fit--warning .apply-button,
+.board--cards .case-file__fit--warning .apply-button:hover:not(:disabled),
+.board--cards .case-file__fit--negative .apply-button,
+.board--cards .case-file__fit--negative .apply-button:hover:not(:disabled) {
+  background: var(--btn-run);
+  box-shadow: 0 8px 20px -8px rgba(109, 59, 230, 0.5);
+}

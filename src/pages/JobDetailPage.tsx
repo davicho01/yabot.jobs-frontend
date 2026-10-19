@@ -4,12 +4,14 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { jobsApi } from "../api/jobs";
 import { adminApi } from "../api/admin";
+import { applicationsApi } from "../api/applications";
 import { useConfirm } from "../components/ConfirmDialog";
 import { JobCaseFile } from "../components/JobCaseFile";
 import CompanyLogo from "../components/CompanyLogo";
 import { BriefcaseIcon, ListIcon } from "../components/PillIcons";
 import { bandColor } from "../utils/bandColor";
 import { scannedPosting } from "../utils/jobPosting";
+import { fitTier } from "../utils/fitScore";
 import "./JobBoardPage.css";
 import "./JobBoardCards.css";
 import { BOARD_PATH } from "../routes";
@@ -26,6 +28,15 @@ export function JobDetailPage() {
     queryFn: () => jobsApi.get(urlId!),
     enabled: !!urlId,
   });
+
+  // Same list (and cache) JobCaseFile reads, for this job's fit score: the
+  // color band above the card follows it (see .board__detail-band--*).
+  const { data: applications } = useQuery({
+    queryKey: ["applications"],
+    queryFn: applicationsApi.list,
+    enabled: !!user,
+  });
+  const fitScore = applications?.find((a) => a.job_posting.url_id === urlId)?.best_score ?? null;
 
   const rescanMutation = useMutation({
     mutationFn: (id: string) => jobsApi.rescan(id),
@@ -87,7 +98,12 @@ export function JobDetailPage() {
           )}
         </div>
         <div className="board__detail-inner">
-          <div className="board__detail-band" style={{ "--band-card-color": bandColor(company) } as CSSProperties}>
+          {/* Calm until the job is scored, then bold for a qualified fit and
+              faded for a lower one, so the color never oversells a job. */}
+          <div
+            className={`board__detail-band board__detail-band--${fitScore === null ? "unscored" : fitTier(fitScore)}`}
+            style={{ "--band-card-color": bandColor(company) } as CSSProperties}
+          >
             <span className="board__detail-tile">
               <CompanyLogo name={company} logoUrl={scannedPosting(job)?.company_logo_url} size={40} />
             </span>

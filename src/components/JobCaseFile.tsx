@@ -609,7 +609,10 @@ export function JobCaseFile({
           )}
 
           {boardCards ? (
-            <section className="case-file__fit" aria-labelledby="case-file-fit-h">
+            <section
+              className={`case-file__fit${fitScore !== null ? ` case-file__fit--${fitTier(fitScore)}` : ""}`}
+              aria-labelledby="case-file-fit-h"
+            >
               {fitScore !== null ? (
                 <span className={`case-file__fit-dial case-file__fit-dial--${fitTier(fitScore)}`}>{fitScore}</span>
               ) : (
