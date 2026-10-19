@@ -98,8 +98,9 @@ export function JobDetailPage() {
           )}
         </div>
         <div className="board__detail-inner">
-          {/* Calm until the job is scored, then bold for a qualified fit and
-              faded for a lower one, so the color never oversells a job. */}
+          {/* Calm until the job is scored, then the company's color: full
+              for a qualified fit, faded for a lower one, so the color never
+              oversells a job. */}
           <div
             className={`board__detail-band board__detail-band--${fitScore === null ? "unscored" : fitTier(fitScore)}`}
             style={{ "--band-card-color": bandColor(company) } as CSSProperties}

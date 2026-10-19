@@ -976,19 +976,16 @@
 }
 
 /* The shared job page's band follows the fit score. Not scored yet: the
-   page's own soft washes, calm. Qualified: the sunset, the one exciting
-   color. Maybe or not a match: the company's color faded toward the chip
-   gray, so a weak fit doesn't look like good news. */
+   page's own soft washes, calm. Qualified: the company's color at full
+   strength (the band's default; the sunset stays on the button below, the
+   one exciting color). Maybe or not a match: the company's color faded
+   toward the chip gray, so a weak fit doesn't look like good news. */
 .board__detail-band.board__detail-band--unscored {
   background:
     radial-gradient(45% 160% at 8% 0%, rgba(236, 0, 140, 0.24), transparent 70%),
     radial-gradient(40% 160% at 52% 0%, rgba(252, 139, 103, 0.28), transparent 70%),
     radial-gradient(45% 160% at 95% 0%, rgba(54, 78, 169, 0.24), transparent 70%),
     var(--band-card-chip);
-}
-
-.board__detail-band.board__detail-band--positive {
-  background: var(--sunset);
 }
 
 .board__detail-band.board__detail-band--warning,
