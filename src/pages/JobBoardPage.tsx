@@ -201,6 +201,7 @@ function BandJobCard({
             {salary && <span className="band-card__pay">{salary}</span>}
             {posted && (
               <span className={`band-card__posted${posted.tone ? ` band-card__posted--${posted.tone}` : ""}`}>
+                {posted.tone === "fresh" && <i aria-hidden="true" />}
                 {posted.text}
               </span>
             )}
@@ -208,6 +209,21 @@ function BandJobCard({
         )}
       </span>
     </button>
+  );
+}
+
+// How new the open job is, in the band's top-right corner, for a job found
+// in the last 48 hours: the sunset and a pulsing dot under 24 hours, a white
+// pill after that. Older jobs keep their "Found 3d ago" chip with the others
+// (JobCaseFile).
+function FoundBadge({ job }: { job: JobDetail }) {
+  const age = jobAge(job);
+  if (!age || age.tone === "older") return null;
+  return (
+    <span className={`board__detail-age board__detail-age--${age.tone}`}>
+      <i aria-hidden="true" />
+      {age.tone === "fresh" ? `New · Found ${age.ago}` : `Found ${age.ago}`}
+    </span>
   );
 }
 
@@ -592,6 +608,7 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
                     size={40}
                   />
                 </span>
+                <FoundBadge job={selected} />
               </div>
             ) : (
               !cards && (

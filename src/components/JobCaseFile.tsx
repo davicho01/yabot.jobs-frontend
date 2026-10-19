@@ -593,7 +593,11 @@ export function JobCaseFile({
               <span className="tag tag--sector">{SECTOR_SHORT_LABELS[posting.sector] ?? sectorLabel(posting.sector)}</span>
             )}
             {boardCards && closedLabel(job) && <span className="tag tag--closed">{closedLabel(job)}</span>}
-            {boardCards && age && !showDates && <span className={`tag tag--age tag--age-${age.tone}`}>Found {age.ago}</span>}
+            {/* Only a job older than 48 hours: a newer one says so in the
+                board's header band instead (JobBoardPage's FoundBadge). */}
+            {boardCards && age && !showDates && age.tone === "older" && (
+              <span className={`tag tag--age tag--age-${age.tone}`}>Found {age.ago}</span>
+            )}
           </div>
 
           {showDates && dateStats(job, posting).length > 0 && (

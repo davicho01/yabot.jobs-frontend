@@ -180,6 +180,67 @@
   );
 }
 
+/* How new the open job is, in the band's top-right corner (under 48 hours
+   only; see FoundBadge). */
+.board__detail-age {
+  position: absolute;
+  top: 50%;
+  right: 1.5rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.board__detail-age i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* Under 24 hours: the sunset, a glow, and a dot that pulses. */
+.board__detail-age--fresh {
+  color: #fff;
+  background: linear-gradient(227deg, #ec008c 3%, #fc8b67 69%, #ffd46d 98%);
+  box-shadow: 0 6px 18px -6px rgba(236, 0, 140, 0.7);
+}
+
+.board__detail-age--fresh i {
+  width: 7px;
+  height: 7px;
+  background: #fff;
+  animation: board-age-pulse 1.8s ease-out infinite;
+}
+
+@keyframes board-age-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.75); }
+  70% { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+/* 24 to 48 hours: a white pill, magenta text, the dot still. */
+.board__detail-age--recent {
+  color: #c2006f;
+  background: #ffffffeb;
+  box-shadow: 0 2px 8px rgba(31, 26, 53, 0.14);
+}
+
+.board__detail-age--recent i {
+  background: #ec008c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board__detail-age--fresh i {
+    animation: none;
+  }
+}
+
 /* Identity first, then actions: on the board, the company, title and tags
    come before the button row (Rescan, Original, Report, Add/View), and the
    line under the buttons goes. The standalone job page keeps its order. */
@@ -466,14 +527,51 @@
   color: var(--ink-soft);
 }
 
-.band-card__posted--fresh {
-  color: var(--teal);
+/* Found in the last 24 hours: bold magenta with a small sunset dot; up to
+   48 hours, teal text with no dot. No pills, so a list where every job is
+   new stays calm (the open job's FoundBadge is the loud one). Older, plain
+   grey text. */
+.band-card__posted--recent {
   font-weight: 600;
+  /* A deep teal (--teal is a green, too close to the pay), dark enough to
+     read at this size. */
+  color: #0f766e;
 }
 
-.band-card__posted--recent {
-  color: var(--amber);
-  font-weight: 600;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .band-card__posted--recent {
+    color: #2dd4bf;
+  }
+}
+
+:root[data-theme="dark"] .band-card__posted--recent {
+  color: #2dd4bf;
+}
+
+.band-card__posted--fresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #c2006f;
+}
+
+.band-card__posted--fresh i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: linear-gradient(227deg, #ec008c 3%, #fc8b67 69%, #ffd46d 98%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .band-card__posted--fresh {
+    color: #ff6fbf;
+  }
+}
+
+:root[data-theme="dark"] .band-card__posted--fresh {
+  color: #ff6fbf;
 }
 
 @media (max-width: 760px) {
@@ -944,20 +1042,30 @@
   }
 }
 
-/* The shared job page's dates: posted, first found, last checked (or
-   closed), each with how long ago, as small tiles under the chips. */
+/* The shared job page's dates: posted and first found, each with how long
+   ago, side by side in one strip between hairlines (as on the static job
+   pages). */
 .board--cards .case-file__dates {
   order: -1;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.6rem;
+  display: flex;
   margin: 1.1rem 0 0;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .case-file__dates > div {
-  padding: 0.7rem 0.9rem;
-  border-radius: 18px;
-  background: var(--band-card-chip);
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 1rem;
+}
+
+.case-file__dates > div:first-child {
+  padding-left: 0;
+}
+
+.case-file__dates > div + div {
+  border-left: 1px solid var(--line);
 }
 
 .case-file__dates dt {
