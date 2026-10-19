@@ -77,14 +77,14 @@ itself.
 `/questions` and `/privacy` are extensionless, so they need a rewrite to reach their
 `.html` file. In production that is a CloudFront Function, kept in
 `deploy/cloudfront-pretty-urls.js` and attached by hand (see the comment at the top of
-that file for the steps). Without it the pages still work, via the `index.html`
-redirect, but cost an extra round trip and land the visitor on the `.html` URL. Adding
-another static page means updating all three lists: that Function, `STATIC_PAGES` in
-`index.html`, and `STATIC_PAGES` in `vite.config.ts`.
-
-Hosts that can serve `/app.html` for unknown paths directly (for CloudFront, point the
-403/404 custom error response at `/app.html`) skip the app's extra hop, but then the
-static-page rewrite above is doing the work on its own and the Function is required.
+that file for the steps). The same Function sends the app's routes straight to
+`app.html`, which lets the fallback answer with status 404: a URL that doesn't exist
+(an expired static job page, say) is then a real 404 to search engines rather than a
+copy of the landing page with a 200. Without the Function every page still works, via
+the `index.html` redirect, but costs an extra round trip — and with the fallback on 404,
+answers 404. Adding another static page means updating all three lists: that Function,
+`STATIC_PAGES` in `index.html`, and `STATIC_PAGES` in `vite.config.ts`. Adding an app
+route means adding it to the Function's `APP_ROUTES` too.
 
 ## Deployment
 
