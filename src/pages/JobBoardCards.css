@@ -533,8 +533,9 @@
    grey text. */
 .band-card__posted--recent {
   font-weight: 600;
-  /* The list gradient's teal (--teal is a green, too close to the pay). */
-  color: #0d9488;
+  /* A deep teal (--teal is a green, too close to the pay), dark enough to
+     read at this size. */
+  color: #0f766e;
 }
 
 @media (prefers-color-scheme: dark) {
