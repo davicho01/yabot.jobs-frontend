@@ -224,15 +224,16 @@
   100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
 }
 
-/* 24 to 48 hours: a white pill, magenta text, the dot still. */
+/* 24 to 48 hours: a white pill, deep teal text and dot (the list's
+   "Posted 1d ago" teal), the dot still. */
 .board__detail-age--recent {
-  color: #c2006f;
+  color: #0f766e;
   background: #ffffffeb;
   box-shadow: 0 2px 8px rgba(31, 26, 53, 0.14);
 }
 
 .board__detail-age--recent i {
-  background: #ec008c;
+  background: #0f766e;
 }
 
 @media (prefers-reduced-motion: reduce) {
