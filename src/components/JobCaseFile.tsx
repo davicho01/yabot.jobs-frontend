@@ -101,7 +101,7 @@ function daysAgoLabel(days: number): string {
 
 // The shared job page's dates, each with how long ago it was, so a visitor
 // can tell at a glance whether the posting is new or old: when the company
-// posted it and when we first found it (or when it closed).
+// posted it and when we first found it. A closed job's date is its chip.
 function dateStats(job: JobDetail, posting: JobPosting): { label: string; value: string; ago: string }[] {
   const day = 86_400_000;
   const shortDate = (date: Date) => date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -118,11 +118,6 @@ function dateStats(job: JobDetail, posting: JobPosting): { label: string; value:
     const time = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
     const days = Math.floor((Date.now() - date.getTime()) / day);
     stats.push({ label: "First found", value: shortDate(date), ago: `${daysAgoLabel(days)} · ${time}` });
-  }
-  if (job.url.closed_at) {
-    const date = new Date(job.url.closed_at);
-    const days = Math.floor((Date.now() - date.getTime()) / day);
-    stats.push({ label: "Closed", value: shortDate(date), ago: daysAgoLabel(days) });
   }
   return stats;
 }
