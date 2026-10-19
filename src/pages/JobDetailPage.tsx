@@ -1,17 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CSSProperties } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { jobsApi } from "../api/jobs";
 import { adminApi } from "../api/admin";
-import { applicationsApi } from "../api/applications";
 import { useConfirm } from "../components/ConfirmDialog";
 import { JobCaseFile } from "../components/JobCaseFile";
 import CompanyLogo from "../components/CompanyLogo";
 import { BriefcaseIcon, ListIcon } from "../components/PillIcons";
-import { bandColor } from "../utils/bandColor";
 import { scannedPosting } from "../utils/jobPosting";
-import { fitTier } from "../utils/fitScore";
 import "./JobBoardPage.css";
 import "./JobBoardCards.css";
 import { BOARD_PATH } from "../routes";
@@ -28,15 +24,6 @@ export function JobDetailPage() {
     queryFn: () => jobsApi.get(urlId!),
     enabled: !!urlId,
   });
-
-  // Same list (and cache) JobCaseFile reads, for this job's fit score: the
-  // color band above the card follows it (see .board__detail-band--*).
-  const { data: applications } = useQuery({
-    queryKey: ["applications"],
-    queryFn: applicationsApi.list,
-    enabled: !!user,
-  });
-  const fitScore = applications?.find((a) => a.job_posting.url_id === urlId)?.best_score ?? null;
 
   const rescanMutation = useMutation({
     mutationFn: (id: string) => jobsApi.rescan(id),
@@ -79,8 +66,8 @@ export function JobDetailPage() {
   const company = scannedPosting(job)?.company_name ?? job.url.domain;
 
   // The shared job page wears the board's card style: the pills above the
-  // card, the company's color band with its logo tile, and the card layout
-  // of the posting itself.
+  // card, a plum band with a sunrise glow and the logo tile, and the card
+  // layout of the posting itself.
   return (
     <div className="board board--cards board--standalone">
       {dialog}
@@ -98,13 +85,7 @@ export function JobDetailPage() {
           )}
         </div>
         <div className="board__detail-inner">
-          {/* Calm until the job is scored, then the company's color: full
-              for a qualified fit, faded for a lower one, so the color never
-              oversells a job. */}
-          <div
-            className={`board__detail-band board__detail-band--${fitScore === null ? "unscored" : fitTier(fitScore)}`}
-            style={{ "--band-card-color": bandColor(company) } as CSSProperties}
-          >
+          <div className="board__detail-band board__detail-band--sunrise">
             <span className="board__detail-tile">
               <CompanyLogo name={company} logoUrl={scannedPosting(job)?.company_logo_url} size={40} />
             </span>
