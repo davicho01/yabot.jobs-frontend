@@ -89,35 +89,22 @@ function foundBadge(job: JobDetail): { label: string; tone: JobAgeTone } | null 
   return age ? { label: `Found ${age.ago}!`, tone: age.tone } : null;
 }
 
-// "today", "yesterday", "6 days ago", "3 weeks ago", "2 months ago": how long
-// ago a day was, for the shared job page's dates.
-function daysAgoLabel(days: number): string {
-  if (days <= 0) return "today";
-  if (days === 1) return "yesterday";
-  if (days < 14) return `${days} days ago`;
-  if (days < 60) return `${Math.floor(days / 7)} weeks ago`;
-  return `${Math.floor(days / 30)} months ago`;
-}
-
-// The shared job page's dates, each with how long ago it was, so a visitor
-// can tell at a glance whether the posting is new or old: when the company
-// posted it and when we first found it. A closed job's date is its chip.
-function dateStats(job: JobDetail, posting: JobPosting): { label: string; value: string; ago: string }[] {
-  const day = 86_400_000;
-  const shortDate = (date: Date) => date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  const stats: { label: string; value: string; ago: string }[] = [];
-  const posted = postedDateLabel(job);
-  if (posted && posting.posted_at) {
-    // posted_at is a UTC date, so count whole days against today in UTC.
-    const today = Date.parse(new Date().toISOString().slice(0, 10));
-    const days = Math.floor((today - Date.parse(`${posting.posted_at}T00:00:00Z`)) / day);
-    stats.push({ label: "Posted", value: posted, ago: daysAgoLabel(days) });
-  }
+// The shared job page's dates, so a visitor can tell at a glance whether the
+// posting is new or old: when the company posted it (a date only, posted_at
+// has no time) and when we first found it, with the time in the viewer's own
+// time zone. A closed job's date is its chip. Posted keeps its column even
+// when the company gave no date, left blank, so First found never moves.
+function dateStats(job: JobDetail, posting: JobPosting): { label: string; value: string; time?: string }[] {
+  const posted = posting.posted_at ? postedDateLabel(job) : null;
+  if (!posted && !posting.first_scanned_at) return [];
+  const stats: { label: string; value: string; time?: string }[] = [{ label: "Posted", value: posted ?? "" }];
   if (posting.first_scanned_at) {
     const date = new Date(posting.first_scanned_at);
-    const time = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-    const days = Math.floor((Date.now() - date.getTime()) / day);
-    stats.push({ label: "First found", value: shortDate(date), ago: `${daysAgoLabel(days)} · ${time}` });
+    stats.push({
+      label: "First found",
+      value: date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      time: date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+    });
   }
   return stats;
 }
@@ -606,7 +593,7 @@ export function JobCaseFile({
                 <div key={stat.label}>
                   <dt>{stat.label}</dt>
                   <dd>{stat.value}</dd>
-                  <dd className="case-file__dates-ago">{stat.ago}</dd>
+                  {stat.time && <dd className="case-file__dates-time">{stat.time}</dd>}
                 </div>
               ))}
             </dl>
