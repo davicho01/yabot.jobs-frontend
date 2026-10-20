@@ -92,11 +92,12 @@ function foundBadge(job: JobDetail): { label: string; tone: JobAgeTone } | null 
 // The shared job page's dates, so a visitor can tell at a glance whether the
 // posting is new or old: when the company posted it (a date only, posted_at
 // has no time) and when we first found it, with the time in the viewer's own
-// time zone. A closed job's date is its chip.
+// time zone. A closed job's date is its chip. Posted keeps its column even
+// when the company gave no date, left blank, so First found never moves.
 function dateStats(job: JobDetail, posting: JobPosting): { label: string; value: string; time?: string }[] {
-  const stats: { label: string; value: string; time?: string }[] = [];
-  const posted = postedDateLabel(job);
-  if (posted && posting.posted_at) stats.push({ label: "Posted", value: posted });
+  const posted = posting.posted_at ? postedDateLabel(job) : null;
+  if (!posted && !posting.first_scanned_at) return [];
+  const stats: { label: string; value: string; time?: string }[] = [{ label: "Posted", value: posted ?? "" }];
   if (posting.first_scanned_at) {
     const date = new Date(posting.first_scanned_at);
     stats.push({
