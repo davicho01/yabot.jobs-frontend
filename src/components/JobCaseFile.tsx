@@ -127,7 +127,7 @@ function glanceItems(job: JobDetail, posting: JobPosting): { label: string; valu
   const posted = postedDateLabel(job);
   if (posted) items.push({ label: "Posted", value: posted });
   const firstScanned = firstScannedDateLabel(job);
-  if (firstScanned) items.push({ label: "First scanned", value: firstScanned });
+  if (firstScanned) items.push({ label: "First found", value: firstScanned });
   // closed_at is a real timestamp (date and time, viewer's time zone), like
   // first_scanned_at above. The static page has no equivalent: it's replaced
   // with a "no longer available" page once a job closes.
