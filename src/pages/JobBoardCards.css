@@ -870,10 +870,12 @@
     justify-content: center;
   }
 
-  /* Apply takes a row of its own under the tags, full width. */
+  /* Apply takes a row of its own under the tags, full width, with some air
+     above it. */
   .board--cards .case-file__job-site {
     flex: 1 1 100%;
     justify-content: center;
+    margin-top: 0.6rem;
   }
 }
 
