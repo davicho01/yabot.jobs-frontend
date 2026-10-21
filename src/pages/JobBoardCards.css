@@ -30,6 +30,8 @@
     --band-card-chip: #2a2931;
     --band-card-ring: var(--focus);
     --band-card-shadow: 0 0 0 1px #2c2c2e;
+    --apply-pill-bg: #ffffff;
+    --apply-pill-ink: #0a0a0a;
   }
 }
 
@@ -38,6 +40,8 @@
   --band-card-chip: #2a2931;
   --band-card-ring: var(--focus);
   --band-card-shadow: 0 0 0 1px #2c2c2e;
+  --apply-pill-bg: #ffffff;
+  --apply-pill-ink: #0a0a0a;
 }
 
 /* Wider list column beside the detail pane; phones keep JobBoardPage.css's
@@ -180,6 +184,39 @@
   );
 }
 
+/* Apply: the posting on the company's site, just under the band on the
+   right, across from the logo tile. Ink on the light card, white on the
+   dark one (--apply-pill-*), so it stands out in both. */
+.board__detail-apply {
+  position: absolute;
+  top: calc(100% + 1rem);
+  right: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.2rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--apply-pill-ink, #ffffff);
+  background: var(--apply-pill-bg, #0a0a0a);
+  box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* Hover: a slight lift, no color change (not on touch screens, where a
+   tap leaves a hover behind, nor for reduced motion). */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .board__detail-apply:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.45);
+  }
+}
+
 /* How new the open job is, in the band's top-right corner (under 48 hours
    only; see FoundBadge). */
 .board__detail-age {
@@ -246,9 +283,13 @@
 /* Identity first, then actions: on the board, the company, title and tags
    come before the button row (Rescan, Original, Report, Add/View), and the
    line under the buttons goes. The standalone job page keeps its order. */
+/* The full width of the card, so the right margin matches the left one
+   (the plain case file stops at 720px, which left a wider gap on the right
+   of a wide pane). */
 .board--cards .case-file {
   display: flex;
   flex-direction: column;
+  max-width: none;
 }
 
 .board--cards .case-file__header-title {
@@ -649,11 +690,15 @@
   margin-top: 0.25rem;
 }
 
+/* One height for every pill: the pay pill's bigger type made its row 2px
+   taller than a row without pay. */
 .board--cards .case-file__tags .tag {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
+  height: 1.8rem;
   line-height: 1.2;
-  padding: 0.35rem 0.75rem;
+  padding: 0 0.75rem;
   border-radius: 999px;
   font-size: 0.8rem;
   font-weight: 600;
@@ -790,6 +835,56 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
+/* Apply (the posting on the company's site) on phones, full width under
+   the dates: the same ink/white pill as .board__detail-apply, which has it
+   on desktop. */
+.board--cards .case-file__job-site {
+  order: -1;
+  display: none;
+  justify-content: center;
+  margin-top: 1rem;
+  align-items: center;
+  padding: 0.75rem 1.2rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--apply-pill-ink, #ffffff);
+  background: var(--apply-pill-bg, #0a0a0a);
+  box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* Hover: a slight lift, no color change (not on touch screens, where a
+   tap leaves a hover behind, nor for reduced motion). */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .board--cards .case-file__job-site:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* Room for Apply, level with the company line, on desktop. */
+@media (min-width: 761px) {
+  .board--cards .case-file__employer {
+    padding-right: 8.5rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .board--cards .case-file__job-site {
+    display: flex;
+  }
+
+  .board__detail-apply {
+    display: none;
+  }
+}
+
 /* What's left of the toolbar (Rescan, Original, Report) is a quiet row
    under the fit card. */
 .board--cards .case-file__toolbar {
@@ -809,10 +904,11 @@
 
 /* ---------- the open posting's description ---------- */
 
-/* A readable line length, list bullets in the brand magenta, and section
-   headings with a short sunset bar in front. */
+/* The full width of the case file (already capped at 720px, a readable
+   line), so its right edge lines up with the dates and fit card; list
+   bullets in the brand magenta, and section headings with a short sunset
+   bar in front. */
 .board--cards .case-file__description {
-  max-width: 68ch;
   font-size: 0.98rem;
 }
 
@@ -1083,6 +1179,12 @@
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--ink);
+}
+
+/* "Not listed": no date from the employer, in the labels' grey. */
+.case-file__dates .case-file__dates-missing {
+  font-weight: 500;
+  color: var(--ink-soft);
 }
 
 .case-file__dates .case-file__dates-time {

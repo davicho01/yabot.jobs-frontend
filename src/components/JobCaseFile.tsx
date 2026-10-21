@@ -95,10 +95,13 @@ function foundBadge(job: JobDetail): { label: string; tone: JobAgeTone } | null 
 // has no time) and when we first found it, with the time in the viewer's own
 // time zone. A closed job's date is its chip. Posted keeps its column even
 // when the company gave no date, left blank, so First found never moves.
-function dateStats(job: JobDetail, posting: JobPosting): { label: string; value: string; time?: string }[] {
+type DateStat = { label: string; value: string; time?: string; missing?: boolean };
+
+function dateStats(job: JobDetail, posting: JobPosting): DateStat[] {
   const posted = posting.posted_at ? postedDateLabel(job) : null;
   if (!posted && !posting.first_scanned_at) return [];
-  const stats: { label: string; value: string; time?: string }[] = [{ label: "Posted", value: posted ?? "" }];
+  // Many postings give no date; say so rather than leave the column blank.
+  const stats: DateStat[] = [posted ? { label: "Posted", value: posted } : { label: "Posted", value: "Not listed", missing: true }];
   if (posting.first_scanned_at) {
     const date = new Date(posting.first_scanned_at);
     stats.push({
@@ -269,6 +272,30 @@ function SimilarJobsSection({
         </div>
       )}
     </div>
+  );
+}
+
+// A link to the posting on the employer's own site, counted as job_site_click.
+export function CompanySiteLink({
+  job,
+  className,
+  children,
+}: {
+  job: JobDetail;
+  className: string;
+  children: ReactNode;
+}) {
+  if (!job.url.url) return null;
+  return (
+    <a
+      href={job.url.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+      onClick={() => trackEvent("job_site_click", { job_id: job.url.id })}
+    >
+      {children}
+    </a>
   );
 }
 
@@ -472,6 +499,15 @@ export function JobCaseFile({
       </button>
     );
 
+  // The posting on the employer's own site. On the board's cards it's
+  // "Apply ↗" just under the band on desktop (JobBoardPage, JobDetailPage),
+  // and here, full width under the dates, on phones.
+  const jobSiteLink = job.url.url && (
+    <CompanySiteLink job={job} className={boardCards ? "case-file__job-site" : "rescan-button"}>
+      {boardCards ? "Apply ↗" : "Job site ↗"}
+    </CompanySiteLink>
+  );
+
   // On the board's cards a long description shows its first screen, faded
   // out, with "Show full posting" under it; reopening another job folds again.
   const descriptionRef = useRef<HTMLDivElement>(null);
@@ -503,10 +539,10 @@ export function JobCaseFile({
               </button>
             )}
           </div>
-          {user && (
+          {(user || job.url.url) && (
             <div className="case-file__header-actions">
               {/* A failed scan still has its source page — let people open it
-                  themselves (job.url.url is only sent to signed-in users). */}
+                  themselves. */}
               {job.url.url && (
                 <a
                   href={job.url.url}
@@ -518,9 +554,11 @@ export function JobCaseFile({
                   Job site ↗
                 </a>
               )}
-              <button type="button" className="rescan-button" disabled={isRescanning} onClick={onRescan}>
-                {isRescanning ? "Rescanning…" : "Rescan ↻"}
-              </button>
+              {user && (
+                <button type="button" className="rescan-button" disabled={isRescanning} onClick={onRescan}>
+                  {isRescanning ? "Rescanning…" : "Rescan ↻"}
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -529,6 +567,9 @@ export function JobCaseFile({
       {rescanFailed && <p className="rescan-error">Rescan failed, try again in a moment.</p>}
       {posting && !scanFailed && (
         <>
+          {/* Logged out on the board's cards it would be empty (Job site and
+              the main button are in the fit card): leave out its gap too. */}
+          {(user || !boardCards) && (
           <div className="case-file__toolbar">
             <div className="case-file__header-left">
               {user && (
@@ -538,17 +579,7 @@ export function JobCaseFile({
               )}
             </div>
             <div className="case-file__header-actions">
-              {user && (
-                <a
-                  href={job.url.url ?? undefined}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rescan-button"
-                  onClick={() => trackEvent("job_site_click", { job_id: job.url.id })}
-                >
-                  Job site ↗
-                </a>
-              )}
+              {!boardCards && jobSiteLink}
               {user && (
                 <button type="button" className="rescan-button" onClick={() => setFlagModalOpen(true)}>
                   {/* "a problem" is dropped on phones so the three small buttons fit on one line. */}
@@ -558,6 +589,7 @@ export function JobCaseFile({
               {!boardCards && addButton}
             </div>
           </div>
+          )}
           {showsAddButton && evaluateChoice && (
             <p className="case-file__evaluate-choice">
               Add for evaluation always {evaluateChoice === "list" ? "adds the job to your list" : "evaluates the job now"}.{" "}
@@ -607,12 +639,13 @@ export function JobCaseFile({
               {dateStats(job, posting).map((stat) => (
                 <div key={stat.label}>
                   <dt>{stat.label}</dt>
-                  <dd>{stat.value}</dd>
+                  <dd className={stat.missing ? "case-file__dates-missing" : undefined}>{stat.value}</dd>
                   {stat.time && <dd className="case-file__dates-time">{stat.time}</dd>}
                 </div>
               ))}
             </dl>
           )}
+          {boardCards && jobSiteLink}
 
           {boardCards ? (
             <section
