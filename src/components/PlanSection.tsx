@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { billingApi } from "../api/billing";
 import { ApiError } from "../api/client";
+import { trackEvent } from "../utils/analytics";
 import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY } from "../api/onboarding";
 import type { AiAccess } from "../api/types";
 import "./PlanSection.css";
@@ -150,7 +151,10 @@ export function PlanSection({ access }: { access: AiAccess }) {
               type="button"
               className="plan-section__primary plan-section__primary--subscribe"
               disabled={checkoutMutation.isPending}
-              onClick={() => checkoutMutation.mutate()}
+              onClick={() => {
+                trackEvent("begin_checkout");
+                checkoutMutation.mutate();
+              }}
             >
               {checkoutMutation.isPending ? "Opening checkout…" : `Subscribe for ${access.subscription_price_label}`}
             </button>

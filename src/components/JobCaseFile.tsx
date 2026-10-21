@@ -5,6 +5,7 @@ import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY, onboardingApi } from "../api
 import { JobDescription } from "./JobDescription";
 import { applicationsApi } from "../api/applications";
 import { ApiError } from "../api/client";
+import { trackEvent } from "../utils/analytics";
 import { jobsApi } from "../api/jobs";
 import { resumesApi } from "../api/resumes";
 import type { AiAccess, Application, AutoScoreRun, AutoScoreStatus, JobDetail, JobPosting, Resume, User } from "../api/types";
@@ -328,6 +329,7 @@ export function JobCaseFile({
   const recordApplication = useMutation({
     mutationFn: (url: string) => applicationsApi.create(url),
     onSuccess: () => {
+      trackEvent("save_job", { job_id: job.url.id });
       queryClient.invalidateQueries({ queryKey: ["applications"] });
       queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
     },
@@ -376,6 +378,7 @@ export function JobCaseFile({
   const startEvaluation = useMutation({
     mutationFn: () => resumesApi.startAutoScore(jobPostingId),
     onSuccess: (started) => {
+      trackEvent("evaluate_job", { job_id: job.url.id });
       setEvaluateError(null);
       queryClient.setQueryData(["auto-score", jobPostingId], started);
     },
@@ -505,7 +508,13 @@ export function JobCaseFile({
               {/* A failed scan still has its source page — let people open it
                   themselves (job.url.url is only sent to signed-in users). */}
               {job.url.url && (
-                <a href={job.url.url} target="_blank" rel="noopener noreferrer" className="rescan-button">
+                <a
+                  href={job.url.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rescan-button"
+                  onClick={() => trackEvent("job_site_click", { job_id: job.url.id })}
+                >
                   Job site ↗
                 </a>
               )}
@@ -530,7 +539,13 @@ export function JobCaseFile({
             </div>
             <div className="case-file__header-actions">
               {user && (
-                <a href={job.url.url ?? undefined} target="_blank" rel="noopener noreferrer" className="rescan-button">
+                <a
+                  href={job.url.url ?? undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rescan-button"
+                  onClick={() => trackEvent("job_site_click", { job_id: job.url.id })}
+                >
                   Job site ↗
                 </a>
               )}

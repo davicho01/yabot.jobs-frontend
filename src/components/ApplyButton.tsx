@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { applicationsApi } from "../api/applications";
 import { resumesApi } from "../api/resumes";
+import { trackEvent } from "../utils/analytics";
 import "./ConfirmDialog.css";
 import "./ApplyButton.css";
 
@@ -71,6 +72,7 @@ export function ApplyButton({
         rel="noreferrer"
         className={className}
         onClick={(event) => {
+          trackEvent("apply_click", { has_tailored_resume: !!tailored });
           if (application?.status === "saved") markApplied.mutate();
           if (tailored) download.mutate();
           if (!readSkipApplyDialog()) {
