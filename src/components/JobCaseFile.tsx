@@ -482,15 +482,7 @@ export function JobCaseFile({
       className={boardCards ? "case-file__job-site" : "rescan-button"}
       onClick={() => trackEvent("job_site_click", { job_id: job.url.id })}
     >
-      {boardCards ? (
-        <>
-          {/* Phones get the full-width button with the longer label. */}
-          <span className="case-file__job-site-short">Job site</span>
-          <span className="case-file__job-site-long">Apply on company site</span> ↗
-        </>
-      ) : (
-        "Job site ↗"
-      )}
+      {boardCards ? "Apply ↗" : "Job site ↗"}
     </a>
   );
 

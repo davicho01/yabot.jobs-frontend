@@ -796,7 +796,6 @@
   margin-left: auto;
   display: inline-flex;
   align-items: center;
-  gap: 0.3em;
   padding: 0.75rem 1.2rem;
   border-radius: var(--radius-pill);
   font-size: 0.92rem;
@@ -811,10 +810,6 @@
 
 .board--cards .case-file__job-site:hover {
   filter: brightness(1.08);
-}
-
-.case-file__job-site-long {
-  display: none;
 }
 
 /* What's left of the toolbar (Rescan, Original, Report) is a quiet row
@@ -837,14 +832,6 @@
   .board--cards .case-file__job-site {
     flex: 1 1 100%;
     justify-content: center;
-  }
-
-  .case-file__job-site-short {
-    display: none;
-  }
-
-  .case-file__job-site-long {
-    display: inline;
   }
 }
 
