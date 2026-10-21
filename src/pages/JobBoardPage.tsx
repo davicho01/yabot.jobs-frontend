@@ -7,7 +7,7 @@ import { adminApi } from "../api/admin";
 import { applicationsApi } from "../api/applications";
 import type { JobDetail, JobPosting } from "../api/types";
 import { useConfirm } from "../components/ConfirmDialog";
-import { JobCaseFile } from "../components/JobCaseFile";
+import { CompanySiteLink, JobCaseFile } from "../components/JobCaseFile";
 import { Footer } from "../components/Footer";
 import { GettingStartedBanner } from "../components/GettingStarted";
 import { highlightQuery } from "../utils/searchHighlight";
@@ -609,6 +609,11 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
                   />
                 </span>
                 <FoundBadge job={selected} />
+                {/* Apply to the company's site, just under the band on the right
+                    (desktop only; phones get it under the tags, in JobCaseFile). */}
+                <CompanySiteLink job={selected} className="board__detail-apply">
+                  Apply ↗
+                </CompanySiteLink>
               </div>
             ) : (
               !cards && (

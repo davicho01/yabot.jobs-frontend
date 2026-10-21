@@ -180,6 +180,30 @@
   );
 }
 
+/* Apply: the posting on the company's site, a white pill just under the
+   band on the right, across from the logo tile. */
+.board__detail-apply {
+  position: absolute;
+  top: calc(100% + 1rem);
+  right: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.2rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-decoration: none;
+  color: #0a0a0a;
+  background: #ffffff;
+  box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.35);
+}
+
+.board__detail-apply:hover {
+  color: #d1007c;
+}
+
 /* How new the open job is, in the band's top-right corner (under 48 hours
    only; see FoundBadge). */
 .board__detail-age {
@@ -790,12 +814,12 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
-/* Apply (the posting on the company's site): a white pill at the end of
-   the tags row, white in dark mode too, apart from the fit card's sunset
-   button. */
+/* Apply (the posting on the company's site) on phones: a white pill at the
+   end of the tags row, white in dark mode too. Desktop has it on the band
+   instead (.board__detail-apply). */
 .board--cards .case-file__job-site {
   margin-left: auto;
-  display: inline-flex;
+  display: none;
   align-items: center;
   padding: 0.75rem 1.2rem;
   border-radius: var(--radius-pill);
@@ -811,6 +835,23 @@
 
 .board--cards .case-file__job-site:hover {
   color: #d1007c;
+}
+
+/* Room for Apply, level with the company line, on desktop. */
+@media (min-width: 761px) {
+  .board--cards .case-file__employer {
+    padding-right: 8.5rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .board--cards .case-file__job-site {
+    display: inline-flex;
+  }
+
+  .board__detail-apply {
+    display: none;
+  }
 }
 
 /* What's left of the toolbar (Rescan, Original, Report) is a quiet row
@@ -829,7 +870,7 @@
     justify-content: center;
   }
 
-  /* Job site takes a row of its own under the tags, full width. */
+  /* Apply takes a row of its own under the tags, full width. */
   .board--cards .case-file__job-site {
     flex: 1 1 100%;
     justify-content: center;

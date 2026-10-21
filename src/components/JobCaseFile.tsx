@@ -272,6 +272,30 @@ function SimilarJobsSection({
   );
 }
 
+// A link to the posting on the employer's own site, counted as job_site_click.
+export function CompanySiteLink({
+  job,
+  className,
+  children,
+}: {
+  job: JobDetail;
+  className: string;
+  children: ReactNode;
+}) {
+  if (!job.url.url) return null;
+  return (
+    <a
+      href={job.url.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+      onClick={() => trackEvent("job_site_click", { job_id: job.url.id })}
+    >
+      {children}
+    </a>
+  );
+}
+
 export function JobCaseFile({
   job,
   user,
@@ -472,18 +496,13 @@ export function JobCaseFile({
       </button>
     );
 
-  // The posting on the employer's own site. On the board's cards it ends the
-  // tags row, apart from the fit card, which is about the resume.
+  // The posting on the employer's own site. On the board's cards it's
+  // "Apply ↗" in the band's top-right corner on desktop (JobBoardPage), and
+  // here, full width under the tags, on phones.
   const jobSiteLink = job.url.url && (
-    <a
-      href={job.url.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={boardCards ? "case-file__job-site" : "rescan-button"}
-      onClick={() => trackEvent("job_site_click", { job_id: job.url.id })}
-    >
+    <CompanySiteLink job={job} className={boardCards ? "case-file__job-site" : "rescan-button"}>
       {boardCards ? "Apply ↗" : "Job site ↗"}
-    </a>
+    </CompanySiteLink>
   );
 
   // On the board's cards a long description shows its first screen, faded
