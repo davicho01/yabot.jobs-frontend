@@ -688,11 +688,15 @@
   margin-top: 0.25rem;
 }
 
+/* One height for every pill: the pay pill's bigger type made its row 2px
+   taller than a row without pay. */
 .board--cards .case-file__tags .tag {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
+  height: 1.8rem;
   line-height: 1.2;
-  padding: 0.35rem 0.75rem;
+  padding: 0 0.75rem;
   border-radius: 999px;
   font-size: 0.8rem;
   font-weight: 600;
