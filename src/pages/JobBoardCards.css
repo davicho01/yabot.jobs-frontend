@@ -190,7 +190,9 @@
 .board__detail-apply {
   position: absolute;
   top: calc(100% + 1rem);
-  right: 2.25rem;
+  /* Lined up with the case file's right edge: the band spans the pane, the
+     case file inside it stops at 720px (JobBoardPage.css). */
+  right: max(2.25rem, 100% - 720px - 2.25rem);
   display: inline-flex;
   align-items: center;
   padding: 0.75rem 1.2rem;
@@ -827,11 +829,14 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
-/* Apply (the posting on the company's site) on phones, under the tags:
-   the same ink/white pill as .board__detail-apply, which has it on desktop. */
+/* Apply (the posting on the company's site) on phones, full width under
+   the dates: the same ink/white pill as .board__detail-apply, which has it
+   on desktop. */
 .board--cards .case-file__job-site {
-  margin-left: auto;
+  order: -1;
   display: none;
+  justify-content: center;
+  margin-top: 1rem;
   align-items: center;
   padding: 0.75rem 1.2rem;
   border-radius: var(--radius-pill);
@@ -866,7 +871,7 @@
 
 @media (max-width: 760px) {
   .board--cards .case-file__job-site {
-    display: inline-flex;
+    display: flex;
   }
 
   .board__detail-apply {
@@ -888,14 +893,6 @@
   .board--cards .case-file__fit .apply-button {
     width: 100%;
     justify-content: center;
-  }
-
-  /* Apply takes a row of its own under the tags, full width, with some air
-     above it. */
-  .board--cards .case-file__job-site {
-    flex: 1 1 100%;
-    justify-content: center;
-    margin-top: 0.6rem;
   }
 }
 

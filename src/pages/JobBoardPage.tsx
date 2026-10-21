@@ -638,6 +638,7 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
                 titleHighlightQuery={query}
                 onSelectSimilar={selectJob}
                 boardCards={cards}
+                showDates={cards}
               />
             )}
             </div>

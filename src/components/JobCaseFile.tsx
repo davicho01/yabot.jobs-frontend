@@ -497,8 +497,8 @@ export function JobCaseFile({
     );
 
   // The posting on the employer's own site. On the board's cards it's
-  // "Apply ↗" in the band's top-right corner on desktop (JobBoardPage), and
-  // here, full width under the tags, on phones.
+  // "Apply ↗" just under the band on desktop (JobBoardPage, JobDetailPage),
+  // and here, full width under the dates, on phones.
   const jobSiteLink = job.url.url && (
     <CompanySiteLink job={job} className={boardCards ? "case-file__job-site" : "rescan-button"}>
       {boardCards ? "Apply ↗" : "Job site ↗"}
@@ -629,7 +629,6 @@ export function JobCaseFile({
             {boardCards && age && !showDates && age.tone === "older" && (
               <span className={`tag tag--age tag--age-${age.tone}`}>Found {age.ago}</span>
             )}
-            {boardCards && jobSiteLink}
           </div>
 
           {showDates && dateStats(job, posting).length > 0 && (
@@ -643,6 +642,7 @@ export function JobCaseFile({
               ))}
             </dl>
           )}
+          {boardCards && jobSiteLink}
 
           {boardCards ? (
             <section
