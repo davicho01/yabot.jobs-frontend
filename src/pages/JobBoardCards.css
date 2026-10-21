@@ -790,8 +790,8 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
-/* Job site: a white pill at the end of the tags row, white in dark mode
-   too (the static job pages' Job site button). */
+/* Job site: a pill in the Search button's violet-to-blue run at the end of
+   the tags row, apart from the fit card's sunset button. */
 .board--cards .case-file__job-site {
   margin-left: auto;
   display: inline-flex;
@@ -803,13 +803,13 @@
   line-height: 1.3;
   white-space: nowrap;
   text-decoration: none;
-  color: #0a0a0a;
-  background: #ffffff;
-  box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.35);
+  color: #fff;
+  background: var(--btn-run);
+  box-shadow: 0 8px 20px -8px rgba(37, 99, 235, 0.5);
 }
 
 .board--cards .case-file__job-site:hover {
-  color: #d1007c;
+  filter: brightness(1.08);
 }
 
 /* What's left of the toolbar (Rescan, Original, Report) is a quiet row
