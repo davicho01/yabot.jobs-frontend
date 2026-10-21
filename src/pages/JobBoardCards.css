@@ -32,7 +32,6 @@
     --band-card-shadow: 0 0 0 1px #2c2c2e;
     --apply-pill-bg: #ffffff;
     --apply-pill-ink: #0a0a0a;
-    --apply-pill-hover: #d1007c;
   }
 }
 
@@ -43,7 +42,6 @@
   --band-card-shadow: 0 0 0 1px #2c2c2e;
   --apply-pill-bg: #ffffff;
   --apply-pill-ink: #0a0a0a;
-  --apply-pill-hover: #d1007c;
 }
 
 /* Wider list column beside the detail pane; phones keep JobBoardPage.css's
@@ -205,10 +203,18 @@
   color: var(--apply-pill-ink, #ffffff);
   background: var(--apply-pill-bg, #0a0a0a);
   box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-.board__detail-apply:hover {
-  color: var(--apply-pill-hover, #ff4fae);
+/* Hover: a slight lift, no color change (not on touch screens, where a
+   tap leaves a hover behind, nor for reduced motion). */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .board__detail-apply:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.45);
+  }
 }
 
 /* How new the open job is, in the band's top-right corner (under 48 hours
@@ -837,10 +843,18 @@
   color: var(--apply-pill-ink, #ffffff);
   background: var(--apply-pill-bg, #0a0a0a);
   box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-.board--cards .case-file__job-site:hover {
-  color: var(--apply-pill-hover, #ff4fae);
+/* Hover: a slight lift, no color change (not on touch screens, where a
+   tap leaves a hover behind, nor for reduced motion). */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .board--cards .case-file__job-site:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.45);
+  }
 }
 
 /* Room for Apply, level with the company line, on desktop. */
