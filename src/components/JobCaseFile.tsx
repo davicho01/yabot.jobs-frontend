@@ -503,10 +503,10 @@ export function JobCaseFile({
               </button>
             )}
           </div>
-          {user && (
+          {(user || job.url.url) && (
             <div className="case-file__header-actions">
               {/* A failed scan still has its source page — let people open it
-                  themselves (job.url.url is only sent to signed-in users). */}
+                  themselves. */}
               {job.url.url && (
                 <a
                   href={job.url.url}
@@ -518,9 +518,11 @@ export function JobCaseFile({
                   Job site ↗
                 </a>
               )}
-              <button type="button" className="rescan-button" disabled={isRescanning} onClick={onRescan}>
-                {isRescanning ? "Rescanning…" : "Rescan ↻"}
-              </button>
+              {user && (
+                <button type="button" className="rescan-button" disabled={isRescanning} onClick={onRescan}>
+                  {isRescanning ? "Rescanning…" : "Rescan ↻"}
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -538,9 +540,9 @@ export function JobCaseFile({
               )}
             </div>
             <div className="case-file__header-actions">
-              {user && (
+              {job.url.url && (
                 <a
-                  href={job.url.url ?? undefined}
+                  href={job.url.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="rescan-button"
