@@ -545,6 +545,9 @@ export function JobCaseFile({
       {rescanFailed && <p className="rescan-error">Rescan failed, try again in a moment.</p>}
       {posting && !scanFailed && (
         <>
+          {/* Logged out on the board's cards it would be empty (Job site and
+              the main button are in the fit card): leave out its gap too. */}
+          {(user || !boardCards) && (
           <div className="case-file__toolbar">
             <div className="case-file__header-left">
               {user && (
@@ -564,6 +567,7 @@ export function JobCaseFile({
               {!boardCards && addButton}
             </div>
           </div>
+          )}
           {showsAddButton && evaluateChoice && (
             <p className="case-file__evaluate-choice">
               Add for evaluation always {evaluateChoice === "list" ? "adds the job to your list" : "evaluates the job now"}.{" "}
