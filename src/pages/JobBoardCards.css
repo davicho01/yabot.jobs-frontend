@@ -790,16 +790,10 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
-.case-file__fit-actions {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* Job site: a white pill beside the gradient button, white in dark mode too
-   (the static job pages' Job site button). */
+/* Job site: a white pill at the end of the tags row, white in dark mode
+   too (the static job pages' Job site button). */
 .board--cards .case-file__job-site {
+  margin-left: auto;
   display: inline-flex;
   align-items: center;
   padding: 0.75rem 1.2rem;
@@ -829,14 +823,7 @@
     flex-wrap: wrap;
   }
 
-  .case-file__fit-actions {
-    flex: 1 1 100%;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .board--cards .case-file__fit .apply-button,
-  .board--cards .case-file__job-site {
+  .board--cards .case-file__fit .apply-button {
     width: 100%;
     justify-content: center;
   }

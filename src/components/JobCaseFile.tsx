@@ -472,8 +472,8 @@ export function JobCaseFile({
       </button>
     );
 
-  // The posting on the employer's own site. On the board's cards it sits in
-  // the fit card next to the main button, as on the static job pages.
+  // The posting on the employer's own site. On the board's cards it ends the
+  // tags row, apart from the fit card, which is about the resume.
   const jobSiteLink = job.url.url && (
     <a
       href={job.url.url}
@@ -610,6 +610,7 @@ export function JobCaseFile({
             {boardCards && age && !showDates && age.tone === "older" && (
               <span className={`tag tag--age tag--age-${age.tone}`}>Found {age.ago}</span>
             )}
+            {boardCards && jobSiteLink}
           </div>
 
           {showDates && dateStats(job, posting).length > 0 && (
@@ -646,10 +647,7 @@ export function JobCaseFile({
                     : "Score your resume against this job to see your fit, the gaps and the risks."}
                 </p>
               </div>
-              <div className="case-file__fit-actions">
-                {jobSiteLink}
-                {addButton}
-              </div>
+              {addButton}
             </section>
           ) : (
           <section className="case-file__glance" aria-labelledby="case-file-glance-h">
