@@ -190,9 +190,7 @@
 .board__detail-apply {
   position: absolute;
   top: calc(100% + 1rem);
-  /* Lined up with the case file's right edge: the band spans the pane, the
-     case file inside it stops at 720px (JobBoardPage.css). */
-  right: max(2.25rem, 100% - 720px - 2.25rem);
+  right: 2.25rem;
   display: inline-flex;
   align-items: center;
   padding: 0.75rem 1.2rem;
@@ -285,9 +283,13 @@
 /* Identity first, then actions: on the board, the company, title and tags
    come before the button row (Rescan, Original, Report, Add/View), and the
    line under the buttons goes. The standalone job page keeps its order. */
+/* The full width of the card, so the right margin matches the left one
+   (the plain case file stops at 720px, which left a wider gap on the right
+   of a wide pane). */
 .board--cards .case-file {
   display: flex;
   flex-direction: column;
+  max-width: none;
 }
 
 .board--cards .case-file__header-title {
