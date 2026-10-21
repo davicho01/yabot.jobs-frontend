@@ -902,10 +902,11 @@
 
 /* ---------- the open posting's description ---------- */
 
-/* A readable line length, list bullets in the brand magenta, and section
-   headings with a short sunset bar in front. */
+/* The full width of the case file (already capped at 720px, a readable
+   line), so its right edge lines up with the dates and fit card; list
+   bullets in the brand magenta, and section headings with a short sunset
+   bar in front. */
 .board--cards .case-file__description {
-  max-width: 68ch;
   font-size: 0.98rem;
 }
 
