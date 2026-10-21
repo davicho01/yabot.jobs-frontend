@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../api/client";
+import { trackEvent } from "../utils/analytics";
 import { onboardingApi } from "../api/onboarding";
 import { GETTING_STARTED_PATH } from "../utils/onboarding";
 import "./LoginPage.css";
@@ -43,6 +44,7 @@ export function AuthCallbackPage() {
     }
     verify(token)
       .then(async () => {
+        trackEvent("login", { method: "email_link" });
         sessionStorage.removeItem("post_login_next");
         navigate(requestedNext || (await isBrandNewUser() ? GETTING_STARTED_PATH : BOARD_PATH), { replace: true });
       })

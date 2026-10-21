@@ -7,6 +7,7 @@ import { GETTING_STARTED_PATH } from "../utils/onboarding";
 import { jobsApi } from "../api/jobs";
 import { describeSavedSearch, paramsToSavedSearchPayload, savedSearchesApi } from "../api/savedSearches";
 import { ApiError } from "../api/client";
+import { trackEvent } from "../utils/analytics";
 import type { Metro } from "../api/types";
 import { BOARD_PATH, isBoardPath } from "../routes";
 import { ALL_SECTORS, DEFAULT_SECTOR, SECTOR_OPTIONS, boardSector } from "../utils/jobTags";
@@ -509,6 +510,7 @@ export function Header() {
   const submitJobMutation = useMutation({
     mutationFn: (url: string) => jobsApi.submit(url),
     onSuccess: (job) => {
+      trackEvent("submit_job", { job_id: job.url.id });
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
       setJobUrl("");
       setAddJobOpen(false);
@@ -519,6 +521,7 @@ export function Header() {
   const saveSearchMutation = useMutation({
     mutationFn: () => savedSearchesApi.create(paramsToSavedSearchPayload(searchParams, saveSearchName)),
     onSuccess: () => {
+      trackEvent("save_search");
       queryClient.invalidateQueries({ queryKey: ["savedSearches"] });
       setSaveSearchOpen(false);
       setSaveSearchName("");

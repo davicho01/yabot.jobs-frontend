@@ -75,3 +75,10 @@ export function trackPageView(href: string) {
   window.gtag("set", { page_location: pageLocation });
   window.gtag("event", "page_view", { page_location: pageLocation, page_title: document.title });
 }
+
+// An in-app action that doesn't change the URL (page views cover those).
+// Params must never carry personal details: ids, kinds and flags only.
+export function trackEvent(name: string, params: Record<string, string | number | boolean> = {}) {
+  if (!enabled) return;
+  window.gtag("event", name, params);
+}

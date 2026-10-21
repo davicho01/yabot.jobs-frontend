@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { feedbackApi } from "../api/feedback";
 import { ApiError } from "../api/client";
+import { trackEvent } from "../utils/analytics";
 import type { FeedbackKind } from "../api/types";
 // Same modal chrome as the "Report a problem" dialog — reused rather than
 // copied so the two can't drift apart.
@@ -56,6 +57,7 @@ function FeedbackModal({ initialKind, onClose }: { initialKind: FeedbackKind; on
         rating,
         page_url: location.pathname + location.search,
       }),
+    onSuccess: () => trackEvent("feedback_submit", { kind }),
   });
 
   const placeholder = KIND_OPTIONS.find((option) => option.value === kind)?.placeholder;

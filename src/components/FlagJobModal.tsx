@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { jobsApi } from "../api/jobs";
 import { ApiError } from "../api/client";
+import { trackEvent } from "../utils/analytics";
 import type { FlagReason } from "../api/types";
 import "./FlagJobModal.css";
 
@@ -24,6 +25,7 @@ export function FlagJobModal({ urlId, onClose }: { urlId: string; onClose: () =>
   const flagMutation = useMutation({
     mutationFn: () => jobsApi.flag(urlId, reason, note.trim()),
     onSuccess: () => {
+      trackEvent("flag_job", { job_id: urlId, reason });
       queryClient.invalidateQueries({ queryKey: ["job", urlId] });
       onClose();
     },

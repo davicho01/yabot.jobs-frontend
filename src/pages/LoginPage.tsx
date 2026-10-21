@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../api/client";
+import { trackEvent } from "../utils/analytics";
 import "./LoginPage.css";
 
 export function LoginPage() {
@@ -31,6 +32,7 @@ export function LoginPage() {
       const next = searchParams.get("next");
       if (next) sessionStorage.setItem("post_login_next", next);
       await requestLink(email);
+      trackEvent("sign_in_link_requested");
       setStatus("sent");
     } catch (err) {
       setStatus("error");

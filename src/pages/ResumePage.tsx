@@ -4,6 +4,7 @@ import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY, onboardingApi } from "../api
 import { Link } from "react-router-dom";
 import { resumesApi, type ResumeDetail } from "../api/resumes";
 import { ApiError } from "../api/client";
+import { trackEvent } from "../utils/analytics";
 import type { DocumentFormat, Resume } from "../api/types";
 import { DownloadDropdown } from "../components/DownloadDropdown";
 import { useConfirm } from "../components/ConfirmDialog";
@@ -250,6 +251,7 @@ export function ResumePage() {
   const uploadMutation = useMutation({
     mutationFn: (file: File) => resumesApi.upload(file),
     onSuccess: (resume) => {
+      trackEvent("resume_upload");
       queryClient.invalidateQueries({ queryKey: ["resumes"] });
       queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
       // Structuring on upload may have used a free restructure.
