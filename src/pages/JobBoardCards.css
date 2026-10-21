@@ -796,6 +796,7 @@
   margin-left: auto;
   display: inline-flex;
   align-items: center;
+  gap: 0.3em;
   padding: 0.75rem 1.2rem;
   border-radius: var(--radius-pill);
   font-size: 0.92rem;
@@ -812,6 +813,10 @@
   filter: brightness(1.08);
 }
 
+.case-file__job-site-long {
+  display: none;
+}
+
 /* What's left of the toolbar (Rescan, Original, Report) is a quiet row
    under the fit card. */
 .board--cards .case-file__toolbar {
@@ -826,6 +831,20 @@
   .board--cards .case-file__fit .apply-button {
     width: 100%;
     justify-content: center;
+  }
+
+  /* Job site takes a row of its own under the tags, full width. */
+  .board--cards .case-file__job-site {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
+  .case-file__job-site-short {
+    display: none;
+  }
+
+  .case-file__job-site-long {
+    display: inline;
   }
 }
 
