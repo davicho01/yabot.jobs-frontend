@@ -95,10 +95,13 @@ function foundBadge(job: JobDetail): { label: string; tone: JobAgeTone } | null 
 // has no time) and when we first found it, with the time in the viewer's own
 // time zone. A closed job's date is its chip. Posted keeps its column even
 // when the company gave no date, left blank, so First found never moves.
-function dateStats(job: JobDetail, posting: JobPosting): { label: string; value: string; time?: string }[] {
+type DateStat = { label: string; value: string; time?: string; missing?: boolean };
+
+function dateStats(job: JobDetail, posting: JobPosting): DateStat[] {
   const posted = posting.posted_at ? postedDateLabel(job) : null;
   if (!posted && !posting.first_scanned_at) return [];
-  const stats: { label: string; value: string; time?: string }[] = [{ label: "Posted", value: posted ?? "" }];
+  // Many postings give no date; say so rather than leave the column blank.
+  const stats: DateStat[] = [posted ? { label: "Posted", value: posted } : { label: "Posted", value: "Not listed", missing: true }];
   if (posting.first_scanned_at) {
     const date = new Date(posting.first_scanned_at);
     stats.push({
@@ -636,7 +639,7 @@ export function JobCaseFile({
               {dateStats(job, posting).map((stat) => (
                 <div key={stat.label}>
                   <dt>{stat.label}</dt>
-                  <dd>{stat.value}</dd>
+                  <dd className={stat.missing ? "case-file__dates-missing" : undefined}>{stat.value}</dd>
                   {stat.time && <dd className="case-file__dates-time">{stat.time}</dd>}
                 </div>
               ))}
