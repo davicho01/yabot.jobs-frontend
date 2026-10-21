@@ -472,6 +472,20 @@ export function JobCaseFile({
       </button>
     );
 
+  // The posting on the employer's own site. On the board's cards it sits in
+  // the fit card next to the main button, as on the static job pages.
+  const jobSiteLink = job.url.url && (
+    <a
+      href={job.url.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={boardCards ? "case-file__job-site" : "rescan-button"}
+      onClick={() => trackEvent("job_site_click", { job_id: job.url.id })}
+    >
+      Job site ↗
+    </a>
+  );
+
   // On the board's cards a long description shows its first screen, faded
   // out, with "Show full posting" under it; reopening another job folds again.
   const descriptionRef = useRef<HTMLDivElement>(null);
@@ -540,17 +554,7 @@ export function JobCaseFile({
               )}
             </div>
             <div className="case-file__header-actions">
-              {job.url.url && (
-                <a
-                  href={job.url.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rescan-button"
-                  onClick={() => trackEvent("job_site_click", { job_id: job.url.id })}
-                >
-                  Job site ↗
-                </a>
-              )}
+              {!boardCards && jobSiteLink}
               {user && (
                 <button type="button" className="rescan-button" onClick={() => setFlagModalOpen(true)}>
                   {/* "a problem" is dropped on phones so the three small buttons fit on one line. */}
@@ -638,7 +642,10 @@ export function JobCaseFile({
                     : "Score your resume against this job to see your fit, the gaps and the risks."}
                 </p>
               </div>
-              {addButton}
+              <div className="case-file__fit-actions">
+                {jobSiteLink}
+                {addButton}
+              </div>
             </section>
           ) : (
           <section className="case-file__glance" aria-labelledby="case-file-glance-h">
