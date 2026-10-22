@@ -3,27 +3,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../api/client";
 import { trackEvent } from "../utils/analytics";
-import { onboardingApi } from "../api/onboarding";
-import { GETTING_STARTED_PATH } from "../utils/onboarding";
+import { POST_LOGIN_NEXT_KEY, postLoginDestination } from "../auth/postLogin";
 import "./LoginPage.css";
-import { BOARD_PATH } from "../routes";
-
-// Someone who hasn't done a single getting-started step yet lands on the
-// walkthrough instead of the board. Best-effort: any failure just means the
-// board, same as before the walkthrough existed.
-async function isBrandNewUser(): Promise<boolean> {
-  try {
-    const onboarding = await onboardingApi.get();
-    // AI access doesn't count: with the free trial on, that step starts out done.
-    return (
-      !onboarding.completed_at &&
-      !onboarding.dismissed_at &&
-      onboarding.steps.every((step) => step.key === "ai_access" || !step.done)
-    );
-  } catch {
-    return false;
-  }
-}
 
 export function AuthCallbackPage() {
   const { verify } = useAuth();
@@ -37,7 +18,7 @@ export function AuthCallbackPage() {
     attempted.current = true;
 
     const token = searchParams.get("token");
-    const requestedNext = searchParams.get("next") || sessionStorage.getItem("post_login_next");
+    const requestedNext = searchParams.get("next") || sessionStorage.getItem(POST_LOGIN_NEXT_KEY);
     if (!token) {
       setError("Missing sign-in token.");
       return;
@@ -45,8 +26,7 @@ export function AuthCallbackPage() {
     verify(token)
       .then(async () => {
         trackEvent("login", { method: "email_link" });
-        sessionStorage.removeItem("post_login_next");
-        navigate(requestedNext || (await isBrandNewUser() ? GETTING_STARTED_PATH : BOARD_PATH), { replace: true });
+        navigate(await postLoginDestination(requestedNext), { replace: true });
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : "That link is invalid or expired."));
   }, [searchParams, verify, navigate]);

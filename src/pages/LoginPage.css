@@ -147,6 +147,77 @@
   margin: 0;
 }
 
+/* Google renders its own button inside this; it just reserves the row. */
+.google-sign-in {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.login-card__divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.1rem 0;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.login-card__divider::before,
+.login-card__divider::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--line);
+}
+
+/* "Did you mean …?" — a text link, not the big submit button style. */
+.login-card__form .login-card__typo {
+  align-self: flex-start;
+  margin: -0.5rem 0 0.75rem;
+  padding: 0;
+  background: none;
+  color: var(--ink-soft);
+  border-radius: 0;
+  font-weight: 400;
+  font-size: 0.85rem;
+  text-align: left;
+  text-decoration: underline;
+}
+
+.login-card__form .login-card__typo:hover {
+  background: none;
+  filter: none;
+  color: var(--ink);
+}
+
+.login-card__sent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.login-card__sent-actions button {
+  padding: 0.5rem 0.9rem;
+  background: none;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.login-card__sent-actions button:hover:not(:disabled) {
+  border-color: var(--ink-soft);
+}
+
+.login-card__sent-actions button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .login-card__hint {
   margin: 1.25rem 0 0;
   font-size: 0.8rem;
