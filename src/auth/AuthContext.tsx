@@ -8,6 +8,7 @@ interface AuthContextValue {
   isLoading: boolean;
   requestLink: (email: string) => Promise<void>;
   verify: (token: string) => Promise<User>;
+  signInWithGoogle: (credential: string) => Promise<User>;
   logout: () => Promise<void>;
   updateDisplayName: (displayName: string | null) => Promise<User>;
   updateEmailAlertsEnabled: (enabled: boolean) => Promise<User>;
@@ -41,6 +42,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return verifiedUser;
   }, []);
 
+  const signInWithGoogle = useCallback(async (credential: string) => {
+    const { user: signedInUser } = await authApi.google(credential);
+    setUser(signedInUser);
+    return signedInUser;
+  }, []);
+
   const logout = useCallback(async () => {
     await authApi.logout();
     setUser(null);
@@ -60,7 +67,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, requestLink, verify, logout, updateDisplayName, updateEmailAlertsEnabled }}
+      value={{
+        user,
+        isLoading,
+        requestLink,
+        verify,
+        signInWithGoogle,
+        logout,
+        updateDisplayName,
+        updateEmailAlertsEnabled,
+      }}
     >
       {children}
     </AuthContext.Provider>

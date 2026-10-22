@@ -14,6 +14,7 @@ export const authApi = {
   me: () => api.get<User>("/auth/me"),
   requestLink: (email: string) => api.post<{ detail: string }>("/auth/request-link", { email }),
   verify: (token: string) => api.post<{ user: User }>("/auth/verify", { token }),
+  google: (credential: string) => api.post<{ user: User }>("/auth/google", { credential }),
   logout: () => api.post<void>("/auth/logout"),
   updateMe: (payload: UserUpdatePayload) => api.patch<User>("/auth/me", payload),
 };
