@@ -4,7 +4,7 @@ import { useAuth } from "../auth/AuthContext";
 import { jobsApi } from "../api/jobs";
 import { adminApi } from "../api/admin";
 import { useConfirm } from "../components/ConfirmDialog";
-import { CompanySiteLink, JobCaseFile } from "../components/JobCaseFile";
+import { BandStatusBadge, CompanySiteLink, JobCaseFile } from "../components/JobCaseFile";
 import CompanyLogo from "../components/CompanyLogo";
 import { BriefcaseIcon, ListIcon } from "../components/PillIcons";
 import { scannedPosting } from "../utils/jobPosting";
@@ -89,6 +89,7 @@ export function JobDetailPage() {
             <span className="board__detail-tile">
               <CompanyLogo name={company} logoUrl={scannedPosting(job)?.company_logo_url} size={40} />
             </span>
+            <BandStatusBadge job={job} />
             {/* Apply to the company's site, as on the board (desktop only). */}
             <CompanySiteLink job={job} className="board__detail-apply">
               Apply ↗

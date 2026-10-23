@@ -57,6 +57,9 @@ export interface JobPostingUrl {
   scan_error: string | null;
   crawl_source_id: string | null;
   last_scanned_at: string | null;
+  // When its board last listed it — the job page's "Last checked". Null for
+  // a URL no crawl lists (submitted by a user).
+  last_seen_at: string | null;
   created_at: string;
   // Set once the listing is gone from its source board or found expired —
   // it's out of search but still reachable by id (e.g. from Applications).

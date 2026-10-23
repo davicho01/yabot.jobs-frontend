@@ -2,8 +2,10 @@
   /* flex:1, not min-height:100vh — this sits between Header and Footer in
      PageShell's flex column, so forcing a full extra viewport here would
      push the footer a whole screen-height below the fold instead of right
-     after the card. flex:1 fills whatever space actually remains. */
-  flex: 1;
+     after the card. flex:1 fills whatever space actually remains, and no
+     shrinking: overflow:hidden below would otherwise let the column squeeze
+     it shorter than the card on a phone, sliding the footer over the card. */
+  flex: 1 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -227,7 +229,7 @@
 @media (max-width: 480px) {
   .login-page {
     align-items: flex-start;
-    padding: 2rem 1rem;
+    padding: 2rem 1rem 3.5rem;
   }
 
   .login-card {
