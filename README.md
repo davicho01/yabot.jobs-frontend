@@ -58,6 +58,7 @@ The site is four pages, all built by Vite (`vite.config.ts`):
 | `index.html` | `/` | The static landing page: plain HTML/CSS with its own SEO tags and structured data, no app JavaScript. Ported from the signed-off design export. |
 | `questions.html` | `/questions` | Static "Common questions" page. Carries the `FAQPage` structured data, which must stay in step with the visible questions. |
 | `privacy.html` | `/privacy` | Static privacy page. |
+| `terms.html` | `/terms` | Static terms of service page. |
 | `app.html` | everything else | The React app. The job board is at `/jobs`; job pages are `/jobs/:id`; the rest (`/login`, `/profile`, `/applications`, …) keep their paths. |
 
 `src/routes.ts` holds the board's path. Backend and MCP links only ever point at
@@ -74,7 +75,7 @@ sorts them out before anything paints: old shared board links (`/?q=…&jobId=�
 `app.html`, which puts the path back for the router. `npm run dev` does the same routing
 itself.
 
-`/questions` and `/privacy` are extensionless, so they need a rewrite to reach their
+`/questions`, `/privacy`, and `/terms` are extensionless, so they need a rewrite to reach their
 `.html` file. In production that is a CloudFront Function, kept in
 `deploy/cloudfront-pretty-urls.js` and attached by hand (see the comment at the top of
 that file for the steps). The same Function sends the app's routes straight to

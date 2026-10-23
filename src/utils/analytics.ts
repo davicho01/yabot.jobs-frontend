@@ -15,8 +15,8 @@ const PRIVATE_PARAMS = ["token", "request_id", "code", "state"];
 
 // EEA + UK + Switzerland: analytics cookies are off by default there (GDPR/ePrivacy),
 // so those visitors are only counted by cookieless pings; Google resolves the region
-// from the IP. The inline snippets in index.html, about.html, questions.html and
-// privacy.html, and the backend's static pages (templates/seo/assets/analytics.js),
+// from the IP. The inline snippets in index.html, about.html, questions.html,
+// privacy.html and terms.html, and the backend's static pages (templates/seo/assets/analytics.js),
 // copy this list, so keep them in step.
 export const CONSENT_REGIONS = [
   "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV",
