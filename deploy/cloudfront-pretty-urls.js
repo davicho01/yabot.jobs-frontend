@@ -1,5 +1,9 @@
-// CloudFront Function (viewer request) that sends each extensionless path to
-// the file that serves it, so that anything else can be a real 404:
+// CloudFront Function (viewer request) — live as yabot-jobs-frontend-www-redirect,
+// the distribution's only function, since 2026-10-23. It first sends
+// www.yabot.jobs to the apex with a 301 and answers /_meta/* (the backend page
+// generators' manifests, read only through S3) with a 404; then it sends each
+// extensionless path to the file that serves it, so that anything else can be
+// a real 404:
 //
 //   - the static content pages at clean URLs: /questions -> /questions.html,
 //     /privacy -> /privacy.html, /about -> /about.html, /terms -> /terms.html;
@@ -20,15 +24,14 @@
 // Keep APP_ROUTES / APP_ROUTE_PATTERNS in step with src/App.tsx's routes.
 //
 // This file is not bundled or deployed by npm/GitHub Actions. It is kept here so
-// the behavior is reviewable and versioned; attaching it is a manual AWS step:
+// the behavior is reviewable and versioned; changing it is a manual AWS step:
 //
-//   1. CloudFront > Functions > Create function (runtime cloudfront-js-2.0),
-//      or open the existing one
-//   2. Paste this code, Publish
-//   3. Attach to the distribution's default behavior, Viewer request
-//   4. Only once 1-3 are live: distribution > Error pages, edit the 403 and the
-//      404 custom error responses to keep /index.html as the page but set the
-//      HTTP response code to 404
+//   1. CloudFront > Functions > yabot-jobs-frontend-www-redirect
+//      (runtime cloudfront-js-2.0), attached to the default behavior, Viewer request
+//   2. Paste this code, Save, test it (Test tab), Publish
+//
+// The distribution's 403 and 404 error responses serve /index.html with HTTP
+// status 404 (set 2026-10-23, together with this function).
 //
 // Verify after deploying with:
 //   curl -sI https://yabot.jobs/questions          # 200, and not the 55KB landing page
@@ -72,6 +75,35 @@ var APP_ROUTE_PATTERNS = [
 
 function handler(event) {
   var request = event.request;
+  var host = request.headers.host.value;
+
+  if (host === "www.yabot.jobs") {
+    var qs = request.querystring;
+    var parts = [];
+    for (var key in qs) {
+      if (qs[key].multiValue) {
+        for (var i = 0; i < qs[key].multiValue.length; i++) {
+          parts.push(encodeURIComponent(key) + "=" + encodeURIComponent(qs[key].multiValue[i].value));
+        }
+      } else {
+        parts.push(encodeURIComponent(key) + (qs[key].value ? "=" + encodeURIComponent(qs[key].value) : ""));
+      }
+    }
+    var queryString = parts.length ? "?" + parts.join("&") : "";
+
+    return {
+      statusCode: 301,
+      statusDescription: "Moved Permanently",
+      headers: {
+        location: { value: "https://yabot.jobs" + request.uri + queryString },
+      },
+    };
+  }
+
+  if (request.uri.indexOf("/_meta/") === 0) {
+    return { statusCode: 404, statusDescription: "Not Found" };
+  }
+
   // Normalize a trailing slash so /privacy/ behaves like /privacy. "/" itself
   // normalizes to "" and simply misses every lookup, which is correct: the root
   // is already index.html.
