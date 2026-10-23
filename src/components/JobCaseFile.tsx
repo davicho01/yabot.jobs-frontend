@@ -15,8 +15,10 @@ import { type EvaluateChoice, loadEvaluateChoice, saveEvaluateChoice } from "../
 import { freeEvaluationsPhrase } from "../utils/onboarding";
 import { EvaluateChoiceModal, EvaluateProgressModal } from "./EvaluateChoiceModal";
 import { FlagJobModal } from "./FlagJobModal";
-import { SECTOR_SHORT_LABELS, employmentLabel, sectorLabel, workplaceLabel } from "../utils/jobTags";
+import { ALL_SECTORS, SECTOR_SHORT_LABELS, employmentLabel, sectorLabel, workplaceLabel } from "../utils/jobTags";
 import { jobAge, shortLocation, type JobAgeTone } from "../utils/jobPosting";
+import { BOARD_PATH } from "../routes";
+import { useAuth } from "../auth/AuthContext";
 import { fitLabel, fitTier } from "../utils/fitScore";
 import CompanyLogo from "./CompanyLogo";
 
@@ -83,6 +85,42 @@ function closedLabel(job: JobDetail): string | null {
   return `Closed ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
 }
 
+function closedDate(job: JobDetail): string {
+  return new Date(job.url.closed_at!).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+
+// The board searching for what a closed job was: its title without the
+// extras employers tack on ("Seasonal Educator (3 month contract) | Brookfield
+// Place" → "Seasonal Educator"), in its place unless remote, in its sector
+// (or every sector, not the board's Tech default, when it has none the board
+// knows, e.g. "unknown").
+function similarJobsPath(posting: JobPosting): string {
+  const params = new URLSearchParams();
+  const title = (posting.title ?? "").split(/\s[(|–—-]\s?|,|\s\(/)[0].trim();
+  if (title) params.set("q", title);
+  const place = posting.location ? shortLocation(posting.location) : "";
+  if (place && posting.workplace_type !== "remote" && !/remote/i.test(place)) params.set("location", place);
+  params.set("sector", sectorLabel(posting.sector) ? posting.sector : ALL_SECTORS);
+  return `${BOARD_PATH}?${params}`;
+}
+
+// The shared job page's band, top right (as the board's FoundBadge): the red
+// "Closed Oct 12, 2026" once closed, else how new it is for a job found in
+// the last 48 hours — the sunset and a pulsing dot under 24 hours, teal
+// after that. Older open jobs have nothing here; their dates say it.
+export function BandStatusBadge({ job }: { job: JobDetail }) {
+  const closed = closedLabel(job);
+  const age = jobAge(job);
+  const tone = closed ? "closed" : age && age.tone !== "older" ? age.tone : null;
+  if (!tone) return null;
+  return (
+    <span className={`board__detail-age board__detail-age--${tone}`}>
+      <i aria-hidden="true" />
+      {closed ?? (tone === "fresh" ? `New · Found ${age!.ago}` : `Found ${age!.ago}`)}
+    </span>
+  );
+}
+
 // The "Found 20m ago!" badge — see jobAge (utils/jobPosting) for the age rule
 // and colors, shared with the search cards' "Posted 1d ago".
 function foundBadge(job: JobDetail): { label: string; tone: JobAgeTone } | null {
@@ -95,21 +133,42 @@ function foundBadge(job: JobDetail): { label: string; tone: JobAgeTone } | null 
 // has no time) and when we first found it, with the time in the viewer's own
 // time zone. A closed job's date is its chip. Posted keeps its column even
 // when the company gave no date, left blank, so First found never moves.
-type DateStat = { label: string; value: string; time?: string; missing?: boolean };
+// Verified is when its board last listed it (or, for a job no board
+// lists, when we last read it), tinted by the job's age: no words, the
+// visitor reads the dates and colors for themselves. Shown to everyone,
+// signed in or not.
+type CheckedTone = "fresh" | "aging" | "old" | "stale" | "closed";
+type DateStat = { label: string; value: string; missing?: boolean; tone?: CheckedTone };
+
+const DAY_MS = 86_400_000;
+
+// Green under a week, grey under 30 days, amber under 90, orange (between
+// amber and red) past that; red only once closed. Age from the company's posted date (a UTC date), else when we
+// found it.
+function checkedTone(job: JobDetail, posting: JobPosting): CheckedTone {
+  if (job.url.closed_at) return "closed";
+  const since = posting.posted_at ? Date.parse(`${posting.posted_at}T00:00:00Z`) : Date.parse(posting.first_scanned_at ?? "");
+  const days = Number.isNaN(since) ? 0 : (Date.now() - since) / DAY_MS;
+  return days < 7 ? "fresh" : days < 30 ? "aging" : days < 90 ? "old" : "stale";
+}
+
+// "Oct 15, 2026, 4:10 PM": date and time on one line, as on the static job
+// pages (which add "ET").
+function dateTime(iso: string): { value: string } {
+  const date = new Date(iso);
+  const day = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return { value: `${day}, ${date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}` };
+}
 
 function dateStats(job: JobDetail, posting: JobPosting): DateStat[] {
   const posted = posting.posted_at ? postedDateLabel(job) : null;
   if (!posted && !posting.first_scanned_at) return [];
   // Many postings give no date; say so rather than leave the column blank.
   const stats: DateStat[] = [posted ? { label: "Posted", value: posted } : { label: "Posted", value: "Not listed", missing: true }];
-  if (posting.first_scanned_at) {
-    const date = new Date(posting.first_scanned_at);
-    stats.push({
-      label: "First found",
-      value: date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-      time: date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
-    });
-  }
+  if (posting.first_scanned_at) stats.push({ label: "First found", ...dateTime(posting.first_scanned_at) });
+  // A closed job says when it closed instead (its Closed badge's date).
+  const checked = job.url.closed_at ?? job.url.last_seen_at ?? job.url.last_scanned_at;
+  if (checked) stats.push({ label: job.url.closed_at ? "Closed" : "Verified", ...dateTime(checked), tone: checkedTone(job, posting) });
   return stats;
 }
 
@@ -276,6 +335,8 @@ function SimilarJobsSection({
 }
 
 // A link to the posting on the employer's own site, counted as job_site_click.
+// Signed out, it goes to sign in first and comes back to the job. None for a
+// closed job: the posting is gone.
 export function CompanySiteLink({
   job,
   className,
@@ -285,7 +346,19 @@ export function CompanySiteLink({
   className: string;
   children: ReactNode;
 }) {
-  if (!job.url.url) return null;
+  const { user } = useAuth();
+  if (!job.url.url || job.url.closed_at) return null;
+  if (!user) {
+    return (
+      <Link
+        to={`/login?next=${encodeURIComponent(`/jobs/${job.url.id}`)}`}
+        className={className}
+        onClick={() => trackEvent("job_site_sign_in", { job_id: job.url.id })}
+      >
+        {children}
+      </Link>
+    );
+  }
   return (
     <a
       href={job.url.url}
@@ -468,7 +541,7 @@ export function JobCaseFile({
       ? "Evaluating…"
       : belowReady !== null
         ? `Scored ${belowReady} →`
-        : "Add for evaluation →";
+        : "Check my fit →";
   const addButtonMeta = evaluating
     ? (EVALUATING_STEP[run && isAutoScoreActive(run.status) ? run.status : "queued"] ?? null)
     : belowReady !== null
@@ -479,12 +552,12 @@ export function JobCaseFile({
         ? "Evaluation failed, try again"
         : null;
 
-  // The main button: Add for evaluation, or View application once the job is
+  // The main button: Check my fit, or View application once the job is
   // saved. In the toolbar normally; in the fit card on the board's cards.
   const addButton =
     (currentApplication && belowReady === null) || !user ? (
       <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
-        <span>{currentApplication ? "View application →" : "Add for evaluation →"}</span>
+        <span>{currentApplication ? "View application →" : "Check my fit →"}</span>
         {currentApplication && <span className="apply-button__meta">{formatApplicationDate(currentApplication)}</span>}
       </Link>
     ) : (
@@ -592,7 +665,7 @@ export function JobCaseFile({
           )}
           {showsAddButton && evaluateChoice && (
             <p className="case-file__evaluate-choice">
-              Add for evaluation always {evaluateChoice === "list" ? "adds the job to your list" : "evaluates the job now"}.{" "}
+              Check my fit always {evaluateChoice === "list" ? "adds the job to your list" : "evaluates the job now"}.{" "}
               <button type="button" onClick={forgetEvaluateChoice}>
                 Ask me again
               </button>
@@ -626,7 +699,8 @@ export function JobCaseFile({
             {boardCards && sectorLabel(posting.sector) && (
               <span className="tag tag--sector">{SECTOR_SHORT_LABELS[posting.sector] ?? sectorLabel(posting.sector)}</span>
             )}
-            {boardCards && closedLabel(job) && <span className="tag tag--closed">{closedLabel(job)}</span>}
+            {/* The shared job page says Closed in its band (BandStatusBadge). */}
+            {boardCards && !showDates && closedLabel(job) && <span className="tag tag--closed">{closedLabel(job)}</span>}
             {/* Only a job older than 48 hours: a newer one says so in the
                 board's header band instead (JobBoardPage's FoundBadge). */}
             {boardCards && age && !showDates && age.tone === "older" && (
@@ -637,17 +711,33 @@ export function JobCaseFile({
           {showDates && dateStats(job, posting).length > 0 && (
             <dl className="case-file__dates">
               {dateStats(job, posting).map((stat) => (
-                <div key={stat.label}>
+                <div key={stat.label} className={stat.tone && `case-file__dates-checked case-file__dates-checked--${stat.tone}`}>
                   <dt>{stat.label}</dt>
                   <dd className={stat.missing ? "case-file__dates-missing" : undefined}>{stat.value}</dd>
-                  {stat.time && <dd className="case-file__dates-time">{stat.time}</dd>}
                 </div>
               ))}
             </dl>
           )}
           {boardCards && jobSiteLink}
 
-          {boardCards ? (
+          {boardCards && showDates && job.url.closed_at ? (
+            // A closed job has nothing left to score or apply to: in the fit
+            // card's place, the static page's closed box, pointing at what's
+            // still open instead.
+            <section className="case-file__fit case-file__fit--closed" aria-labelledby="case-file-fit-h">
+              <div className="case-file__fit-text">
+                <h2 id="case-file-fit-h">This job closed {closedDate(job)}</h2>
+                <p>The employer is no longer taking applications.</p>
+              </div>
+              <Link
+                to={similarJobsPath(posting)}
+                className="apply-button"
+                onClick={() => trackEvent("similar_jobs_click", { job_id: job.url.id })}
+              >
+                <span>Find similar open jobs →</span>
+              </Link>
+            </section>
+          ) : boardCards ? (
             <section
               className={`case-file__fit${fitScore !== null ? ` case-file__fit--${fitTier(fitScore)}` : ""}`}
               aria-labelledby="case-file-fit-h"

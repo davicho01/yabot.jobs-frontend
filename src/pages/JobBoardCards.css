@@ -274,6 +274,17 @@
   background: #fff;
 }
 
+/* Closed (the shared job page's band): the app's rose, as its Closed chip. */
+.board__detail-age--closed {
+  color: #fff;
+  background: var(--rose);
+  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--rose) 70%, transparent);
+}
+
+.board__detail-age--closed i {
+  background: #fff;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .board__detail-age--fresh i {
     animation: none;
@@ -1187,11 +1198,64 @@
   color: var(--ink-soft);
 }
 
-.case-file__dates .case-file__dates-time {
-  margin-top: 0.1rem;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--ink-soft);
+/* Verified, tinted by the job's age (see checkedTone): the app's teal
+   under a week, grey under 30 days, amber under 90, orange past that, rose
+   once closed — a dot, the label and the date in the tone, on a tint that runs to
+   the row's edges. */
+.case-file__dates .case-file__dates-checked {
+  margin: -0.45rem 0;
+  padding: 0.45rem 1rem;
+  background: color-mix(in srgb, var(--checked) 11%, transparent);
+}
+
+.case-file__dates .case-file__dates-checked dt {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--checked);
+}
+
+.case-file__dates .case-file__dates-checked dt::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--checked);
+}
+
+.case-file__dates .case-file__dates-checked > dd {
+  color: var(--checked-ink, var(--ink));
+}
+
+/* Under a week is the usual case, so it's the quiet one: a faint teal wash
+   and dot, the date in plain ink. */
+.case-file__dates-checked--fresh {
+  --checked: var(--teal);
+}
+
+.case-file__dates .case-file__dates-checked--fresh {
+  background: color-mix(in srgb, var(--teal) 5%, transparent);
+}
+
+.case-file__dates-checked--aging {
+  --checked: var(--ink-soft);
+}
+
+.case-file__dates-checked--old {
+  --checked: var(--amber);
+  --checked-ink: var(--amber);
+}
+
+/* Between the amber and the rose: old, but not closed. */
+.case-file__dates-checked--stale {
+  --checked: color-mix(in srgb, var(--amber), var(--rose));
+  --checked-ink: color-mix(in srgb, var(--amber), var(--rose));
+}
+
+.case-file__dates-checked--closed {
+  --checked: var(--rose);
+  --checked-ink: var(--rose);
 }
 
 /* The shared job page's band is the same for every job, scored or not: the
@@ -1214,4 +1278,36 @@
 .board--cards .case-file__fit--negative .apply-button:hover:not(:disabled) {
   background: var(--btn-run);
   box-shadow: 0 8px 20px -8px rgba(109, 59, 230, 0.5);
+}
+
+/* Phones: Verified gets its own tinted section under Posted and First
+   found (their line, a gap, then the tint, no line below), just above Apply,
+   instead of a squeezed third column. */
+@media (max-width: 760px) {
+  .board--cards .case-file__dates {
+    flex-wrap: wrap;
+  }
+
+  .board--cards .case-file__dates:has(> .case-file__dates-checked) {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  .board--cards .case-file__dates > .case-file__dates-checked {
+    position: relative;
+    flex-basis: 100%;
+    margin: calc(1.6rem + 1px) 0 0;
+    padding: 0.7rem 1rem;
+    border-left: 0;
+  }
+
+  .board--cards .case-file__dates > .case-file__dates-checked::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(-0.8rem - 1px);
+    height: 1px;
+    background: var(--line);
+  }
 }
