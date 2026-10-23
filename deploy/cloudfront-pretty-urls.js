@@ -2,7 +2,7 @@
 // the file that serves it, so that anything else can be a real 404:
 //
 //   - the static content pages at clean URLs: /questions -> /questions.html,
-//     /privacy -> /privacy.html, /about -> /about.html;
+//     /privacy -> /privacy.html, /about -> /about.html, /terms -> /terms.html;
 //   - the app's routes (/jobs, /jobs/<id>, /login, /profile, …) -> /app.html.
 //
 // Why it is needed: S3 has no object for these paths. The distribution's
@@ -40,6 +40,7 @@ var PAGES = {
   "/questions": "/questions.html",
   "/privacy": "/privacy.html",
   "/about": "/about.html",
+  "/terms": "/terms.html",
 };
 
 var APP_ROUTES = {

@@ -11,6 +11,7 @@ const STATIC_PAGES: Record<string, string> = {
   '/questions': '/questions.html',
   '/privacy': '/privacy.html',
   '/about': '/about.html',
+  '/terms': '/terms.html',
 }
 
 // The site is a static landing page (index.html) at "/", a couple of static content
@@ -103,6 +104,7 @@ export default defineConfig({
         questions: resolve(__dirname, 'questions.html'),
         privacy: resolve(__dirname, 'privacy.html'),
         about: resolve(__dirname, 'about.html'),
+        terms: resolve(__dirname, 'terms.html'),
       },
     },
   },

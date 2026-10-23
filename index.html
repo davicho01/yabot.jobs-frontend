@@ -9,7 +9,7 @@
       //  2. The host answers unknown paths with this page (SPA fallback). The static
       //     content pages are a known set, so send those to their own file instead. This
       //     is the safety net for when the CloudFront rewrite (deploy/cloudfront-pretty-urls.js)
-      //     isn't attached yet, which would otherwise leave /questions, /privacy, and /about dead.
+      //     isn't attached yet, which would otherwise leave /questions, /privacy, /about, and /terms dead.
       //  3. Anything else here is a deep link into the app (/login, /jobs/<id>, …): hand it
       //     to the app shell, which puts the path back for its router.
       (function () {
@@ -17,6 +17,7 @@
           "/questions": "/questions.html",
           "/privacy": "/privacy.html",
           "/about": "/about.html",
+          "/terms": "/terms.html",
         };
         var l = location;
         var path = l.pathname;
@@ -2402,6 +2403,7 @@
               <h2 id="foot-help">Help</h2>
               <a href="/help">Help &amp; feedback</a>
               <a href="/privacy">Privacy</a>
+              <a href="/terms">Terms</a>
             </nav>
 
             <nav class="foot__col" aria-labelledby="foot-code">
