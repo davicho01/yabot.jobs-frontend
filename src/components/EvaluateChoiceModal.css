@@ -115,10 +115,13 @@
   color: var(--accent);
 }
 
+/* A sentence, not a button label: it wraps like a paragraph instead of
+   index.css's balanced button text, which split it into two short halves. */
 .evaluate-choice-modal__option-body {
   font-size: 0.83rem;
   color: var(--ink-soft);
   line-height: 1.45;
+  text-wrap: pretty;
 }
 
 .evaluate-choice-modal__option-note {

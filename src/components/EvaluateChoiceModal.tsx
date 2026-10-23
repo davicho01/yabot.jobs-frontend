@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import type { AutoScoreRun, AutoScoreStatus } from "../api/types";
 import { isAutoScoreActive, useShownAutoScoreStatus } from "../utils/autoScore";
@@ -11,7 +12,9 @@ import { BriefcaseIcon, ListIcon } from "./PillIcons";
 // "Don't ask again" — see utils/evaluateChoice): save the job to evaluate
 // later, or run the auto score now (backend: app.services.auto_score —
 // below 75 it stops, otherwise it tailors and re-scores, and at 85+ it adds
-// the application marked ready to apply). Each option acts on click.
+// the application marked ready to apply). Each option acts on click. Both
+// dialogs here render into <body>: inside the job page's pane (its own
+// scroller), the overlay only dimmed that pane.
 export function EvaluateChoiceModal({
   evaluateBlockedReason,
   evaluateNote,
@@ -29,7 +32,7 @@ export function EvaluateChoiceModal({
 }) {
   const [remember, setRemember] = useState(false);
 
-  return (
+  return createPortal(
     <div className="evaluate-choice-modal__overlay" onClick={onClose}>
       <div
         className="evaluate-choice-modal"
@@ -70,7 +73,8 @@ export function EvaluateChoiceModal({
           <span>Don't ask again</span>
         </label>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -166,7 +170,7 @@ export function EvaluateProgressModal({
   const result = startError ? { text: startError, ready: false } : outcome(status, currentRun);
   const untailored = !running && status !== "failed" && firstScore !== null && currentRun?.tailored_score == null;
 
-  return (
+  return createPortal(
     <div className="evaluate-choice-modal__overlay" onClick={onClose}>
       <div
         className="evaluate-choice-modal"
@@ -254,6 +258,7 @@ export function EvaluateProgressModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
