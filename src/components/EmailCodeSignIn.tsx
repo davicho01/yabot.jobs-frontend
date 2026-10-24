@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useAuth } from "../auth/AuthContext";
+import { lastEmail } from "../auth/lastEmail";
 import { ApiError } from "../api/client";
 import { trackEvent } from "../utils/analytics";
 import { suggestEmailFix } from "../utils/emailTypo";
@@ -10,7 +11,8 @@ const CODE_LENGTH = 6;
 // whatever someone was doing (the Apply they tapped) carries on after.
 // Styled by LoginPage.css's .login-card__form; used by LoginPage and
 // SignInModal. `verify` signs in with the code (AuthContext's verifyCode
-// plus whatever comes after) and throws on a wrong one.
+// plus whatever comes after) and throws on a wrong one. The email starts
+// as the last one signed in on this device (see auth/lastEmail).
 export function EmailCodeSignIn({
   idPrefix,
   verify,
@@ -19,7 +21,8 @@ export function EmailCodeSignIn({
   verify: (email: string, code: string) => Promise<void>;
 }) {
   const { requestCode } = useAuth();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(lastEmail);
+  const emailRef = useRef<HTMLInputElement>(null);
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
   const [busy, setBusy] = useState<"sending" | "verifying" | null>(null);
@@ -89,13 +92,16 @@ export function EmailCodeSignIn({
         <input
           id={`${idPrefix}-code`}
           className="login-card__code"
+          // one-time-code: the phone offers the code from the email (or a
+          // text) above the keyboard. No maxLength, which would cut a pasted
+          // "744 350" short; onChange keeps just the digits.
+          name="one-time-code"
           type="text"
           inputMode="numeric"
           autoComplete="one-time-code"
           autoFocus
           required
           pattern={`\\d{${CODE_LENGTH}}`}
-          maxLength={CODE_LENGTH}
           value={code}
           placeholder="••••••"
           onChange={(e) => {
@@ -132,15 +138,35 @@ export function EmailCodeSignIn({
   return (
     <form onSubmit={handleEmail} className="login-card__form">
       <label htmlFor={`${idPrefix}-email`}>Email address</label>
-      <input
-        id={`${idPrefix}-email`}
-        type="email"
-        autoComplete="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="you@example.com"
-      />
+      <div className="login-card__email">
+        <input
+          ref={emailRef}
+          id={`${idPrefix}-email`}
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+        />
+        {/* Clears a remembered (or mistyped) email in one tap. */}
+        {email && (
+          <button
+            type="button"
+            className="login-card__email-clear"
+            aria-label="Clear email"
+            onClick={() => {
+              setEmail("");
+              emailRef.current?.focus();
+            }}
+          >
+            <svg viewBox="0 0 20 20" width="14" height="14" fill="none" aria-hidden="true">
+              <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
+      </div>
       {emailFix && (
         <button type="button" className="login-card__typo" onClick={() => setEmail(emailFix)}>
           Did you mean <strong>{emailFix}</strong>?

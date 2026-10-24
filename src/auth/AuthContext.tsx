@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "../api/client";
 import { authApi } from "../api/auth";
+import { rememberEmail } from "./lastEmail";
 import type { User } from "../api/types";
 
 interface AuthContextValue {
@@ -27,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signedIn = useCallback(
     (signedInUser: User) => {
       setUser(signedInUser);
+      rememberEmail(signedInUser.email);
       queryClient.invalidateQueries();
     },
     [queryClient],

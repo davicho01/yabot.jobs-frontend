@@ -282,3 +282,40 @@
   filter: none;
   color: var(--ink);
 }
+
+/* The email field with its clear (×) button inside, on the right. */
+.login-card__email {
+  position: relative;
+}
+
+.login-card__email input {
+  width: 100%;
+  padding-right: 2.75rem;
+}
+
+.login-card__form .login-card__email-clear {
+  position: absolute;
+  right: 0.55rem;
+  /* Centered on the field, which keeps its margin-bottom below. */
+  top: calc((100% - 0.75rem) / 2);
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--chip);
+  color: var(--ink-soft);
+}
+
+.login-card__form .login-card__email-clear svg {
+  flex-shrink: 0;
+}
+
+.login-card__form .login-card__email-clear:hover:not(:disabled) {
+  background: var(--line);
+  filter: none;
+  color: var(--ink);
+}
