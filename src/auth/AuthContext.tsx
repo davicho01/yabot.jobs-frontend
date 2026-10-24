@@ -74,7 +74,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     await authApi.logout();
     setUser(null);
-  }, []);
+    // Drops everything fetched as them (their applications and scores,
+    // employer links), which queries switched off when signed out would
+    // otherwise keep showing; the rest refetches signed out.
+    queryClient.resetQueries();
+  }, [queryClient]);
 
   const updateDisplayName = useCallback(async (displayName: string | null) => {
     const updatedUser = await authApi.updateMe({ display_name: displayName });
