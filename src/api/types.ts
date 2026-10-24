@@ -51,7 +51,10 @@ export const FLAG_REASON_LABELS: Record<FlagReason, string> = {
 
 export interface JobPostingUrl {
   id: string;
+  // The employer's link, only sent to someone signed in; has_url says there
+  // is one either way, so a signed-out Apply ↗ can ask them to sign in.
   url: string | null;
+  has_url: boolean;
   domain: string;
   scan_status: string;
   scan_error: string | null;

@@ -10,6 +10,7 @@ import { jobsApi } from "../api/jobs";
 import { resumesApi } from "../api/resumes";
 import type { AiAccess, Application, AutoScoreRun, AutoScoreStatus, JobDetail, JobPosting, Resume, User } from "../api/types";
 import { highlightQuery } from "../utils/searchHighlight";
+import { useSignInPrompt } from "../auth/signInPrompt";
 import { AUTO_SCORE_POLL_MS, isAutoScoreActive } from "../utils/autoScore";
 import { type EvaluateChoice, loadEvaluateChoice, saveEvaluateChoice } from "../utils/evaluateChoice";
 import { freeEvaluationsPhrase } from "../utils/onboarding";
@@ -347,13 +348,22 @@ export function CompanySiteLink({
   children: ReactNode;
 }) {
   const { user } = useAuth();
-  if (!job.url.url || job.url.closed_at) return null;
+  const promptSignIn = useSignInPrompt();
+  if (!(job.url.url || job.url.has_url) || job.url.closed_at) return null;
   if (!user) {
+    // A page with a sign-in window (SignInPromptContext) opens it here;
+    // elsewhere this goes to /login and back to the posting.
     return (
       <Link
         to={`/login?next=${encodeURIComponent(`/jobs/${job.url.id}`)}`}
         className={className}
-        onClick={() => trackEvent("job_site_sign_in", { job_id: job.url.id })}
+        onClick={(e) => {
+          trackEvent("job_site_sign_in", { job_id: job.url.id });
+          if (promptSignIn) {
+            e.preventDefault();
+            promptSignIn(job);
+          }
+        }}
       >
         {children}
       </Link>
@@ -361,7 +371,7 @@ export function CompanySiteLink({
   }
   return (
     <a
-      href={job.url.url}
+      href={job.url.url ?? undefined}
       target="_blank"
       rel="noopener noreferrer"
       className={className}
@@ -575,7 +585,7 @@ export function JobCaseFile({
   // The posting on the employer's own site. On the board's cards it's
   // "Apply ↗" just under the band on desktop (JobBoardPage, JobDetailPage),
   // and here, full width under the dates, on phones.
-  const jobSiteLink = job.url.url && (
+  const jobSiteLink = (job.url.url || job.url.has_url) && (
     <CompanySiteLink job={job} className={boardCards ? "case-file__job-site" : "rescan-button"}>
       {boardCards ? "Apply ↗" : "Job site ↗"}
     </CompanySiteLink>

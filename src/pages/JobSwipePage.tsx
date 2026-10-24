@@ -13,6 +13,8 @@ import { listColor, listColorEnd } from "../utils/listGradient";
 import { trackEvent } from "../utils/analytics";
 import { FoundBadge } from "./JobBoardPage";
 import { REVEAL_HEADER_EVENT } from "../components/Header";
+import { SignInModal } from "../components/SignInModal";
+import { SignInPromptContext } from "../auth/signInPrompt";
 import "./JobBoardPage.css";
 import "./JobBoardCards.css";
 import "./JobSwipePage.css";
@@ -55,6 +57,8 @@ let lastPlace = { filters: "", index: 0 };
 // down on its own.
 export function JobSwipePage() {
   const { user } = useAuth();
+  // Signed out, Apply ↗ signs in right here, then goes on to the company.
+  const [signInFor, setSignInFor] = useState<JobDetail | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -260,6 +264,7 @@ export function JobSwipePage() {
   }, [index, jobs.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
+    <SignInPromptContext.Provider value={setSignInFor}>
     <div className="board board--split board--detail-open board--cards board--swipe">
       {/* Stays put while the cards swipe underneath: where this posting sits
           in the results, and My applications, as on the list's open posting. */}
@@ -307,7 +312,9 @@ export function JobSwipePage() {
         )}
       </div>
 
+      {signInFor && <SignInModal job={signInFor} onClose={() => setSignInFor(null)} />}
     </div>
+    </SignInPromptContext.Provider>
   );
 }
 

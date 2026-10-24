@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "../api/client";
 import { authApi } from "../api/auth";
 import type { User } from "../api/types";
@@ -19,6 +20,16 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  // Jobs fetched signed out came without their employer links; signing in
+  // refetches them, so Apply ↗ has somewhere to go.
+  const signedIn = useCallback(
+    (signedInUser: User) => {
+      setUser(signedInUser);
+      queryClient.invalidateQueries();
+    },
+    [queryClient],
+  );
 
   useEffect(() => {
     authApi
@@ -38,15 +49,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const verify = useCallback(async (token: string) => {
     const { user: verifiedUser } = await authApi.verify(token);
-    setUser(verifiedUser);
+    signedIn(verifiedUser);
     return verifiedUser;
-  }, []);
+  }, [signedIn]);
 
   const signInWithGoogle = useCallback(async (credential: string) => {
     const { user: signedInUser } = await authApi.google(credential);
-    setUser(signedInUser);
+    signedIn(signedInUser);
     return signedInUser;
-  }, []);
+  }, [signedIn]);
 
   const logout = useCallback(async () => {
     await authApi.logout();
