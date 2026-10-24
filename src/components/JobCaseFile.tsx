@@ -309,12 +309,33 @@ function SimilarJobsSection({
   companyName: string | null;
   onSelect?: (urlId: string) => void;
 }) {
+  // Fetched only once the reader scrolls near it (most never get this far
+  // down a posting): until then a marker sits where the section goes.
+  // Vertical margin only, so the swipe board's neighboring postings, a
+  // screen to either side, don't count as near.
+  const markerRef = useRef<HTMLDivElement>(null);
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    const marker = markerRef.current;
+    if (near || !marker) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) setNear(true);
+      },
+      { rootMargin: "400px 0px" },
+    );
+    observer.observe(marker);
+    return () => observer.disconnect();
+  }, [near]);
+
   const { data } = useQuery({
     queryKey: ["similar-jobs", jobId],
     queryFn: () => jobsApi.similar(jobId),
+    enabled: near,
   });
   const sameCompany = data?.same_company ?? [];
   const similarTitle = data?.similar_title ?? [];
+  if (!near) return <div ref={markerRef} className="case-file__similar-marker" aria-hidden="true" />;
   if (sameCompany.length === 0 && similarTitle.length === 0) return null;
 
   return (
@@ -809,7 +830,10 @@ export function JobCaseFile({
             </button>
           )}
 
+          {/* Keyed by job, so opening another one waits for the reader to
+              scroll down to it again. */}
           <SimilarJobsSection
+            key={job.url.id}
             jobId={job.url.id}
             companyName={posting.company_name}
             onSelect={onSelectSimilar}
