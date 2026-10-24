@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import type { ServerResponse } from 'node:http'
 import { resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
@@ -14,6 +14,22 @@ const STATIC_PAGES: Record<string, string> = {
   '/terms': '/terms.html',
 }
 
+// Blog posts are matched by pattern, not listed, so a new post needs no routing change:
+// /blog is the index, /blog/<slug> is blog/<slug>.html. Same rule in the Function and
+// index.html. Each post still needs its entry in build.rollupOptions.input below.
+function blogPage(path: string): string | undefined {
+  if (path === '/blog') return '/blog/index.html'
+  if (/^\/blog\/[a-z0-9-]+$/.test(path)) return path + '.html'
+  return undefined
+}
+
+// Every blog/*.html file is a build input, so publishing a post is adding its file.
+const BLOG_INPUTS = Object.fromEntries(
+  readdirSync(resolve(__dirname, 'blog'))
+    .filter((name) => name.endsWith('.html'))
+    .map((name) => ['blog-' + name.replace(/\.html$/, ''), resolve(__dirname, 'blog', name)]),
+)
+
 // The site is a static landing page (index.html) at "/", a couple of static content
 // pages, and the React app (app.html) for everything else — the job board lives at
 // /jobs. In production the host decides which one a path gets; this does the same for
@@ -27,7 +43,8 @@ function appShellFallback(): Plugin {
         const path = url.split('?')[0]
         const wantsPage = req.headers.accept?.includes('text/html')
         if (wantsPage && path !== '/' && !path.includes('.') && !path.startsWith('/@') && !path.startsWith('/src/')) {
-          const staticPage = STATIC_PAGES[path.replace(/\/+$/, '')]
+          const trimmed = path.replace(/\/+$/, '')
+          const staticPage = STATIC_PAGES[trimmed] ?? blogPage(trimmed)
           req.url = staticPage ? staticPage : '/app.html' + url.slice(path.length)
         }
         next()
@@ -105,6 +122,7 @@ export default defineConfig({
         privacy: resolve(__dirname, 'privacy.html'),
         about: resolve(__dirname, 'about.html'),
         terms: resolve(__dirname, 'terms.html'),
+        ...BLOG_INPUTS,
       },
     },
   },

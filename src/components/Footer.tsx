@@ -38,6 +38,13 @@ export function Footer() {
           <Link to="/help" className="site-footer__social-link">
             Help &amp; support
           </Link>
+          {/* Static pages, not app routes: plain links so the host serves them. */}
+          <a href="/about" className="site-footer__social-link">
+            About
+          </a>
+          <a href="/blog" className="site-footer__social-link">
+            Blog
+          </a>
           {user && (
             <>
               <Link to={GETTING_STARTED_PATH} className="site-footer__social-link">

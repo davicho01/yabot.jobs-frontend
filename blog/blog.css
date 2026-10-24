@@ -1,0 +1,788 @@
+/* Shared styles for the blog (/blog and /blog/<slug>). The tokens, nav, h1
+   and footer are the static content pages' (about.html), so the blog reads as
+   part of the same site; on top of that come the article pieces: headings,
+   lists, tables, charts and the end-of-post call to action. One stylesheet
+   for every post, so a new post is just its content. Light only, like the
+   rest of the static pages. */
+:root {
+  --page: #f6f6f7;
+  --card: #ffffff;
+  --chip: #f0f0f3;
+  --ink: #0a0a0a;
+  --ink-soft: #5d5d66;
+  --line: #e7e7ea;
+
+  --plum: #1f1a35;
+  --plum-ink: #f6f6f7;
+  --plum-soft: #b9b4cc;
+  --magenta: #ec008c;
+  --blue: #364ea9;
+  --coral: #fc8b67;
+  --sun: #ffd46d;
+  --sunset: linear-gradient(227deg, var(--magenta) 3%, var(--coral) 69%, var(--sun) 98%);
+  --link: #c4006f;
+  --bar-muted: #cfcfd8;
+
+  --font-display: "Inter", system-ui, -apple-system, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+
+  --radius-pill: 999px;
+  --radius-card: 32px;
+  --shadow: 0 18px 40px rgba(31, 26, 53, 0.1), 0 2px 6px rgba(31, 26, 53, 0.05);
+
+  --wrap: 1200px;
+  --read: 760px;
+  --gutter: 20px;
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--page);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  background:
+    radial-gradient(40% 520px at 12% 0%, rgba(236, 0, 140, 0.2), transparent 70%),
+    radial-gradient(34% 480px at 55% 0%, rgba(252, 139, 103, 0.2), transparent 70%),
+    radial-gradient(38% 520px at 92% 0%, rgba(54, 78, 169, 0.18), transparent 70%),
+    var(--page);
+  background-repeat: no-repeat;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.65;
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+figure {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+strong,
+b {
+  font-weight: 600;
+}
+
+:focus-visible {
+  outline: 2px solid #d1007c;
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+
+.skip {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 50;
+  padding: 0.7rem 1.1rem;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+}
+
+.skip:focus {
+  top: 0.75rem;
+}
+
+.wrap {
+  width: 100%;
+  max-width: var(--wrap);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* ---------- nav (as about.html) ---------- */
+
+.nav {
+  padding: 12px 12px 0;
+}
+
+.nav__bar {
+  max-width: var(--wrap);
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 16px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.32));
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 10px 40px rgba(31, 26, 53, 0.12);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "Outfit", var(--font-display);
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.brand__mark {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  border-radius: 10px;
+  background: var(--sunset);
+  color: #fff;
+  flex: none;
+}
+
+.nav__links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.nav__link {
+  font-weight: 600;
+  font-size: 15px;
+  padding: 9px 14px;
+  border-radius: var(--radius-pill);
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+.nav__link:hover,
+.nav__link[aria-current="page"] {
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--ink);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1;
+  padding: 12px 18px;
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn--ink {
+  background: var(--ink);
+  color: #fff;
+}
+
+/* ---------- article ---------- */
+
+main {
+  max-width: var(--read);
+  margin-inline: auto;
+  padding: 64px var(--gutter) 88px;
+}
+
+.eyebrow {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+
+.eyebrow a {
+  text-decoration: none;
+}
+
+.eyebrow a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Post titles are sentences, longer than the about page's poster line, so
+   they run a size smaller. */
+h1 {
+  margin: 12px 0 18px;
+  font-family: "Outfit", var(--font-display);
+  font-weight: 800;
+  font-size: clamp(36px, 6.4vw, 60px);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.grad {
+  background: var(--sunset);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  padding-inline-end: 0.08em;
+}
+
+.dek {
+  font-size: clamp(19px, 2.2vw, 22px);
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  margin-bottom: 28px;
+  text-wrap: pretty;
+}
+
+.byline {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 32px;
+  margin-bottom: 36px;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+}
+
+.byline__photo {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  padding: 2px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--sunset);
+}
+
+.byline__name {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.byline__meta {
+  color: var(--ink-soft);
+}
+
+/* The photo at the top of a post, with its credit. */
+.photo {
+  margin: 0 0 36px;
+}
+
+.photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  background: var(--chip);
+}
+
+/* The credit stays out of the way: small, pale, no underline until hovered. */
+.photo figcaption {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #a3a3ab;
+}
+
+main .photo figcaption a {
+  color: inherit;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+main .photo figcaption a:hover {
+  text-decoration: underline;
+}
+
+.post h2 {
+  margin: 48px 0 14px;
+  font-family: "Outfit", var(--font-display);
+  font-weight: 800;
+  font-size: clamp(26px, 3.6vw, 34px);
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.post h3 {
+  margin: 36px 0 10px;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+}
+
+.post p,
+.post ul,
+.post ol {
+  margin-bottom: 18px;
+}
+
+.post ul,
+.post ol {
+  padding-left: 24px;
+}
+
+.post li {
+  margin-bottom: 10px;
+  padding-left: 4px;
+}
+
+.post li::marker {
+  color: var(--magenta);
+  font-weight: 700;
+}
+
+main a {
+  color: var(--link);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+/* ---------- tables ---------- */
+
+.table-scroll {
+  overflow-x: auto;
+  margin: 8px 0 24px;
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  padding: 14px 18px;
+  border-top: 1px solid var(--line);
+}
+
+thead th {
+  border-top: 0;
+  background: var(--chip);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+td:first-child {
+  font-weight: 600;
+}
+
+/* ---------- charts ---------- */
+
+/* Charts are plain HTML bars, not images: the text stays readable at phone
+   width, search engines read the numbers, and no script is needed. Each bar
+   sets its own length with --v (percent of the chart's scale). */
+.chart {
+  margin: 28px 0 32px;
+  padding: 28px 28px 22px;
+  border-radius: 24px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.chart__title {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.chart__sub {
+  margin: 4px 0 20px;
+  font-size: 14px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.post .bars {
+  padding: 0;
+  margin: 0;
+}
+
+.bars li {
+  display: grid;
+  grid-template-columns: minmax(96px, 38%) 1fr;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.bars--narrow-labels li {
+  grid-template-columns: minmax(84px, 26%) 1fr;
+}
+
+.bars__label {
+  text-align: right;
+  color: var(--ink);
+}
+
+.bars__track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.bars__bar {
+  flex: none;
+  width: calc(var(--v) * 0.82%);
+  min-width: 3px;
+  height: 22px;
+  border-radius: 4px;
+  background: var(--bar-muted);
+}
+
+.bars__bar--hot {
+  background: var(--magenta);
+}
+
+.bars__value {
+  flex: none;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.bars__value b {
+  font-weight: 700;
+}
+
+.chart__key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.chart__key span::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 2px;
+  background: var(--bar-muted);
+  vertical-align: -1px;
+}
+
+.chart__key .hot::before {
+  background: var(--magenta);
+}
+
+.chart figcaption {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+/* The headline number above a chart. */
+.callout {
+  margin: 0 0 18px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.callout b {
+  font-family: "Outfit", var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--magenta);
+  margin-right: 6px;
+}
+
+/* ---------- end of post ---------- */
+
+/* The plum band, like the landing page's dark sections. */
+.cta {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  padding: 36px 36px 32px;
+  margin: 56px 0 0;
+  color: var(--plum-ink);
+  background:
+    radial-gradient(50% 70% at 10% 0%, rgba(236, 0, 140, 0.45), transparent 70%),
+    radial-gradient(50% 70% at 95% 100%, rgba(54, 78, 169, 0.8), transparent 70%),
+    var(--plum);
+}
+
+.post .cta h2 {
+  margin-top: 0;
+  color: #fff;
+}
+
+.cta p {
+  color: var(--plum-soft);
+}
+
+.cta ul {
+  color: var(--plum-ink);
+}
+
+.cta li::marker {
+  color: var(--coral);
+}
+
+.cta .btn {
+  margin-top: 8px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 16px;
+  padding: 14px 22px;
+  text-decoration: none;
+}
+
+.more {
+  margin-top: 48px;
+}
+
+.post .more h2 {
+  margin: 0 0 14px;
+  font-family: var(--font-body);
+  letter-spacing: 0.1em;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+
+/* ---------- blog index cards ---------- */
+
+.posts {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.posts li,
+.post .posts,
+.post .posts li {
+  margin: 0;
+  padding: 0;
+}
+
+.post-card {
+  display: block;
+  padding: 28px 32px 26px;
+  border-radius: 28px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+
+main a.post-card {
+  color: var(--ink);
+  font-weight: 400;
+  text-decoration: none;
+}
+
+.post-card:hover {
+  transform: translateY(-2px);
+}
+
+.post-card__meta {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+.post-card__title {
+  display: block;
+  margin: 8px 0 8px;
+  font-family: "Outfit", var(--font-display);
+  font-weight: 800;
+  font-size: clamp(22px, 3vw, 28px);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.post-card:hover .post-card__title {
+  color: var(--link);
+}
+
+.post-card__dek {
+  display: block;
+  font-size: 16px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+/* ---------- footer (as about.html) ---------- */
+
+.foot {
+  padding-block: 56px 48px;
+}
+
+.foot__top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+.foot__tagline {
+  margin: 12px 0 0;
+  color: var(--ink-soft);
+}
+
+.foot__cols {
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  gap: 24px 56px;
+}
+
+.foot__col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.foot__col h2 {
+  margin: 0 0 4px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+
+.foot__col a {
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.foot__col a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.foot__legal {
+  margin: 40px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* ---------- narrow screens ---------- */
+
+@media (min-width: 1260px) {
+  .wrap {
+    padding-inline: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .foot__cols {
+    grid-template-columns: repeat(2, auto);
+  }
+}
+
+@media (max-width: 560px) {
+  body {
+    font-size: 17px;
+  }
+
+  main {
+    padding-top: 44px;
+  }
+
+  .nav__link {
+    display: none;
+  }
+
+  .chart {
+    padding: 22px 16px 18px;
+    margin-inline: -4px;
+  }
+
+  .bars li {
+    grid-template-columns: 34% 1fr;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .bars__bar {
+    width: calc(var(--v) * 0.62%);
+  }
+
+  .cta {
+    padding: 28px 22px 26px;
+  }
+
+  .post-card {
+    padding: 24px 22px 22px;
+  }
+
+  th,
+  td {
+    padding: 12px 14px;
+  }
+
+  .foot__cols {
+    grid-template-columns: 1fr;
+  }
+}

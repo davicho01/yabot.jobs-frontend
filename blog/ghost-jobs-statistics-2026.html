@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <script>
+      // Google Analytics 4, same property as the landing page and the app.
+      (function () {
+        var id = "G-CDDT9RZ59T";
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () {
+          window.dataLayer.push(arguments);
+        };
+        // Consent defaults, same as src/utils/analytics.ts (keep the region list in step):
+        // analytics cookies off in the EEA/UK/CH and for Global Privacy Control, never ads.
+        var noAds = { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" };
+        var euRegions = ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV",
+          "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO", "GB", "CH"];
+        window.gtag("consent", "default", Object.assign({ analytics_storage: "denied", region: euRegions }, noAds));
+        window.gtag("consent", "default", Object.assign(
+          { analytics_storage: navigator.globalPrivacyControl === true ? "denied" : "granted" }, noAds));
+        window.gtag("js", new Date());
+        window.gtag("config", id, { allow_google_signals: false, allow_ad_personalization_signals: false });
+        var s = document.createElement("script");
+        s.async = true;
+        s.src = "https://www.googletagmanager.com/gtag/js?id=" + id;
+        document.head.appendChild(s);
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ghost Job Statistics 2026: 45% of Open Tech Jobs Are Over 60 Days Old</title>
+    <meta
+      name="description"
+      content="We checked 29,918 open US jobs at 1,006 tech and startup companies: 45% were posted more than 60 days ago, and 2,311 had been up for over a year."
+    />
+    <link rel="canonical" href="https://yabot.jobs/blog/ghost-jobs-statistics-2026" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#ffffff" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Yabot Jobs" />
+    <meta property="og:title" content="Ghost Job Statistics 2026: Nearly Half of Open Tech Jobs Are Over 60 Days Old" />
+    <meta
+      property="og:description"
+      content="We checked 29,918 open US jobs at 1,006 tech and startup companies: 45% were posted more than 60 days ago, and 2,311 had been up for over a year."
+    />
+    <meta property="og:url" content="https://yabot.jobs/blog/ghost-jobs-statistics-2026" />
+    <meta property="og:image" content="https://yabot.jobs/blog/ghost-jobs-statistics-2026.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="45% of open tech and startup jobs are over 60 days old, with a chart of open jobs by age." />
+    <meta property="article:published_time" content="2026-10-23" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Ghost Job Statistics 2026: Nearly Half of Open Tech Jobs Are Over 60 Days Old" />
+    <meta
+      name="twitter:description"
+      content="We checked 29,918 open US jobs at 1,006 tech and startup companies: 45% were posted more than 60 days ago."
+    />
+    <meta name="twitter:image" content="https://yabot.jobs/blog/ghost-jobs-statistics-2026.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Nearly Half of Open Tech and Startup Jobs Are Over Two Months Old",
+        "description": "We checked 29,918 open US jobs at 1,006 tech and startup companies: 45% were posted more than 60 days ago, and 2,311 had been up for over a year.",
+        "datePublished": "2026-10-23",
+        "dateModified": "2026-10-23",
+        "mainEntityOfPage": "https://yabot.jobs/blog/ghost-jobs-statistics-2026",
+        "image": "https://yabot.jobs/blog/ghost-jobs-statistics-2026.png",
+        "author": { "@type": "Person", "name": "David Garcia", "url": "https://yabot.jobs/about" },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Yabot Jobs",
+          "url": "https://yabot.jobs",
+          "logo": { "@type": "ImageObject", "url": "https://yabot.jobs/apple-touch-icon.png" }
+        }
+      }
+    </script>
+    <!-- Keep in step with the "Common questions" section of the article. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What share of job postings are ghost jobs?",
+            "acceptedAnswer": { "@type": "Answer", "text": "There's no single number. Greenhouse estimates 18–22% of the jobs posted on its platform in a given quarter. In our data, 45% of open tech and startup jobs were over 60 days old, which is a warning sign, not proof." }
+          },
+          {
+            "@type": "Question",
+            "name": "Is a job posted more than 30 days ago a ghost job?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Not necessarily. Some roles take months to fill, and some companies hire for the same role all year. Treat age as one signal, and check whether most of the company's other jobs are old too." }
+          },
+          {
+            "@type": "Question",
+            "name": "How can I tell when a job was really posted?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Check the job on yabot.jobs. It shows the date the company's own site gives, or the day we first found the job, and never a date later than that." }
+          }
+        ]
+      }
+    </script>
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="alternate icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blog/blog.css" />
+    <script type="module" src="/blog/blog.js"></script>
+  </head>
+
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="nav">
+      <div class="nav__bar">
+        <a class="brand" href="/">
+          <svg class="brand__mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <path d="M9 24h6l4-10 6 20 4-10h10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span class="brand__name">Yabot Jobs</span>
+        </a>
+        <nav class="nav__links" aria-label="Main">
+          <a class="nav__link" href="/jobs">Browse jobs</a>
+          <a class="nav__link" href="/blog" aria-current="page">Blog</a>
+          <a class="nav__link" href="/#pricing">Pricing</a>
+          <a class="btn btn--ink" href="/applications">Log in</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <article class="post">
+        <p class="eyebrow"><a href="/blog">Blog</a> &middot; Job market data</p>
+        <h1>Nearly half of open tech and startup jobs are <span class="grad">over two months old</span></h1>
+        <p class="dek">
+          The job you just applied to may have been up since summer. We measured how old open postings really are.
+        </p>
+
+        <div class="byline">
+          <img class="byline__photo" src="/about-david.jpg" alt="" width="52" height="52" />
+          <span>
+            <a class="byline__name" href="/about">David Garcia</a><br />
+            <span class="byline__meta"><time datetime="2026-10-23">October 23, 2026</time> &middot; 7 min read</span>
+          </span>
+        </div>
+
+        <figure class="photo">
+          <img
+            src="/blog/photos/ghost-jobs-statistics-2026.jpg"
+            alt="A job seeker taking notes at her laptop in a home office"
+            width="1280"
+            height="720"
+          />
+          <figcaption>
+            Photo by <a href="https://unsplash.com/photos/a-woman-sitting-at-a-desk-working-on-a-laptop-BkwzVF6mHdc" rel="nofollow">Brandy Kennedy on Unsplash</a>
+          </figcaption>
+        </figure>
+
+        <p>
+          We checked 29,918 open US jobs at 1,006 tech and startup companies in October 2026.
+          <strong>45% had been posted more than 60 days earlier</strong>, and
+          <strong>2,311 had been up for over a year.</strong> The typical open job was 53 days old.
+        </p>
+        <p>
+          If you've sent applications into silence, this may be part of the reason. Some old postings are real roles that
+          are hard to fill. Others are evergreen pipelines, or jobs nobody took down after they were filled. Only about
+          100 of them said so in the title, like "talent pool" or "general application". The rest look exactly like a
+          role that opened yesterday.
+        </p>
+
+        <h2>How we measured it</h2>
+        <p>
+          <a href="/">yabot.jobs</a> collects jobs directly from company career sites, not from other job boards. For
+          this analysis we used the companies whose careers pages run on Greenhouse, Lever, Ashby and Workable. These
+          platforms publish every open job with the date it was posted, so we can see the whole board, old jobs
+          included.
+        </p>
+        <ul>
+          <li>
+            <strong>Still open:</strong> the job was live on the company's own careers page at least once between
+            October 16 and 23, 2026.
+          </li>
+          <li><strong>Age:</strong> days from the posting date the platform published to October 23, 2026.</li>
+          <li>
+            <strong>One posting per job:</strong> duplicates are counted once. US jobs only. We left out a few very
+            large boards that we may not have captured in full.
+          </li>
+        </ul>
+        <p>
+          These platforms are popular with tech companies and startups, so that's what this sample describes. Large
+          employers on Workday or Oracle aren't included. Ages are conservative: when a job had no original publish
+          date, we used its last-updated date.
+        </p>
+
+        <h2>What we found</h2>
+
+        <h3>1. Nearly half of open jobs are over two months old</h3>
+        <figure class="chart" aria-labelledby="chart-age-title">
+          <p class="chart__title" id="chart-age-title">Nearly half of open jobs were posted more than 60 days ago</p>
+          <p class="chart__sub">Share of open US jobs by age of the posting, tech and startup companies, October 2026</p>
+          <p class="callout"><b>45%</b>over 60 days old (13,538 jobs)</p>
+          <ul class="bars">
+            <li><span class="bars__label">0–7 days</span><span class="bars__track"><span class="bars__bar" style="--v: 34.3"></span><span class="bars__value">8%</span></span></li>
+            <li><span class="bars__label">8–14 days</span><span class="bars__track"><span class="bars__bar" style="--v: 30.9"></span><span class="bars__value">7%</span></span></li>
+            <li><span class="bars__label">15–30 days</span><span class="bars__track"><span class="bars__bar" style="--v: 67.2"></span><span class="bars__value">16%</span></span></li>
+            <li><span class="bars__label">31–60 days</span><span class="bars__track"><span class="bars__bar" style="--v: 100"></span><span class="bars__value">24%</span></span></li>
+            <li><span class="bars__label">61–90 days</span><span class="bars__track"><span class="bars__bar bars__bar--hot" style="--v: 46.9"></span><span class="bars__value">11%</span></span></li>
+            <li><span class="bars__label">3–6 months</span><span class="bars__track"><span class="bars__bar bars__bar--hot" style="--v: 69.5"></span><span class="bars__value">16%</span></span></li>
+            <li><span class="bars__label">6–12 months</span><span class="bars__track"><span class="bars__bar bars__bar--hot" style="--v: 42.9"></span><span class="bars__value">10%</span></span></li>
+            <li><span class="bars__label">Over a year</span><span class="bars__track"><span class="bars__bar bars__bar--hot" style="--v: 32.8"></span><span class="bars__value">8%</span></span></li>
+          </ul>
+          <p class="chart__key"><span>60 days or newer</span><span class="hot">Over 60 days</span></p>
+          <figcaption>
+            yabot.jobs data &middot; 29,918 open US jobs on Greenhouse, Lever, Ashby and Workable career pages, live
+            Oct 16–23, 2026
+          </figcaption>
+        </figure>
+        <p>The typical open job was 53 days old. About 1 in 13 had been up for more than a year.</p>
+
+        <h3>2. Every field has the problem</h3>
+        <figure class="chart" aria-labelledby="chart-field-title">
+          <p class="chart__title" id="chart-field-title">Even the freshest field has a third of its open jobs over 60 days old</p>
+          <p class="chart__sub">
+            Share of open US jobs posted more than 60 days ago, by field, tech and startup companies, October 2026.
+            All fields: 45.3%.
+          </p>
+          <ul class="bars">
+            <li><span class="bars__label">Software &amp; IT</span><span class="bars__track"><span class="bars__bar" style="--v: 85.7"></span><span class="bars__value">51.4%</span></span></li>
+            <li><span class="bars__label">Healthcare</span><span class="bars__track"><span class="bars__bar" style="--v: 83.5"></span><span class="bars__value">50.1%</span></span></li>
+            <li><span class="bars__label">Skilled trades &amp; services</span><span class="bars__track"><span class="bars__bar" style="--v: 81.2"></span><span class="bars__value">48.7%</span></span></li>
+            <li><span class="bars__label">Design &amp; product</span><span class="bars__track"><span class="bars__bar" style="--v: 79.7"></span><span class="bars__value">47.8%</span></span></li>
+            <li><span class="bars__label">Engineering (non-software)</span><span class="bars__track"><span class="bars__bar" style="--v: 75.2"></span><span class="bars__value">45.1%</span></span></li>
+            <li><span class="bars__label">Sales</span><span class="bars__track"><span class="bars__bar" style="--v: 74.7"></span><span class="bars__value">44.8%</span></span></li>
+            <li><span class="bars__label">Customer support</span><span class="bars__track"><span class="bars__bar" style="--v: 70.8"></span><span class="bars__value">42.5%</span></span></li>
+            <li><span class="bars__label">Legal</span><span class="bars__track"><span class="bars__bar" style="--v: 70.3"></span><span class="bars__value">42.2%</span></span></li>
+            <li><span class="bars__label">Operations &amp; manufacturing</span><span class="bars__track"><span class="bars__bar" style="--v: 67.5"></span><span class="bars__value">40.5%</span></span></li>
+            <li><span class="bars__label">Marketing</span><span class="bars__track"><span class="bars__bar" style="--v: 63.2"></span><span class="bars__value">37.9%</span></span></li>
+            <li><span class="bars__label">Finance &amp; accounting</span><span class="bars__track"><span class="bars__bar" style="--v: 57.2"></span><span class="bars__value">34.3%</span></span></li>
+            <li><span class="bars__label">HR</span><span class="bars__track"><span class="bars__bar bars__bar--hot" style="--v: 54.8"></span><span class="bars__value"><b>32.9%</b></span></span></li>
+          </ul>
+          <figcaption>
+            yabot.jobs data &middot; open US jobs on Greenhouse, Lever, Ashby and Workable career pages, live Oct
+            16–23, 2026 &middot; fields with 500+ jobs, classified by yabot.jobs
+          </figcaption>
+        </figure>
+        <p>
+          Even the field with the freshest postings, HR, had a third of its open jobs over 60 days old. Stale postings
+          are a habit of how these companies hire, not a quirk of one job type.
+        </p>
+
+        <h3>3. At many companies, most of the board is old</h3>
+        <p>
+          Of the 555 companies with 10 or more open jobs, <strong>224 (40%) had more than half their postings older
+          than 60 days</strong>. At 44 of them, at least 80% were. At those employers, the listing you see is more
+          likely a standing pipeline than a seat someone needs filled this month.
+        </p>
+
+        <h3>4. Almost nothing gets posted on weekends</h3>
+        <p>
+          Across every company yabot.jobs tracks, about 16,000 US jobs were posted on a typical weekday from September
+          28 to October 18, against about 1,400 on a weekend day. New jobs arrive on weekdays, so weekday searches turn
+          up the fresh ones.
+        </p>
+
+        <h2>How this compares with other research</h2>
+        <p>
+          Our numbers measure age, not intent: an old posting can still be a real job. Studies of ghost jobs,
+          postings with no intent to hire, put them at 18–22% of the jobs posted on Greenhouse in a given quarter
+          (<a href="https://www.greenhouse.com/uk/blog/greenhouse-2024-state-of-job-hunting-report">Greenhouse, 2024</a>).
+        </p>
+        <p>
+          Studies of job boards find far fewer old listings. Clarify Capital found that 1 in 7 Indeed listings had
+          been up for 30 days or more (<a href="https://clarifycapital.com/ghost-jobs-2026">Clarify Capital, 2026</a>).
+          On company career pages, we found 69% (20,583 of 29,918 jobs). Part of the gap is the sample: we looked at
+          four platforms popular with tech companies. Part may be the dates: a board shows when a listing was
+          published or refreshed, and as the Caterpillar example below shows, a refreshed listing can look brand
+          new.
+        </p>
+        <p>
+          Employers also say why they leave jobs up. In a survey of 1,000 US employers, 2 in 5 said keeping a
+          position open long-term attracts better candidates
+          (<a href="https://clarifycapital.com/ghost-jobs">Clarify Capital, 2025</a>).
+        </p>
+
+        <h2>Why you can't trust the date on the posting</h2>
+        <p>
+          The date on a careers page, when there is one, isn't always when the job went up. About 1 in 13 open jobs
+          we track come with no posting date at all. Three jobs from October 2026:
+        </p>
+        <ul>
+          <li>
+            <strong>Hidden date:</strong>
+            <a href="https://careers-peraton.icims.com/jobs/172743/cloud-infrastructure-engineer/job" rel="nofollow">Peraton's Cloud Infrastructure Engineer</a>
+            page shows no date. The date, October 23, is only in the page's code. yabot.jobs shows it.
+          </li>
+          <li>
+            <strong>No date anywhere:</strong>
+            <a href="https://www.amazon.jobs/en/jobs/10587542/software-development-engineer-aws-private-pricing" rel="nofollow">Amazon's Software Development Engineer, AWS Private Pricing</a>
+            page has no date at all. yabot.jobs shows October 23, the day it found the job, which matches the date on
+            Amazon's own search listing.
+          </li>
+          <li>
+            <strong>Refreshed date:</strong>
+            <a href="https://cat.wd5.myworkdayjobs.com/CaterpillarCareers/job/Tucson-Arizona/Senior-Autonomy-Systems-Engineer_R0000394553" rel="nofollow">Caterpillar's Senior Autonomy Systems Engineer</a>
+            said "Posted Today" on October 23. When yabot.jobs first found it on September 19, the same listing said it
+            was posted September 15. The listing was refreshed and its date reset, so a job that had been up for more
+            than five weeks looked new. yabot.jobs never dates a job later than the day it first found it, so it
+            still shows this one as posted in mid-September.
+          </li>
+        </ul>
+
+        <h2>How to avoid ghost jobs</h2>
+        <ol>
+          <li>
+            <strong>Check the job's age on yabot.jobs.</strong> Many company careers pages don't show a posting date
+            at all, and some job boards show the day they picked the job up. yabot.jobs shows when the company
+            posted it, or the day we first found it, and marks a job closed when it comes down from a site we read
+            in full.
+          </li>
+          <li>
+            <strong>Treat postings over 60 days old as a long shot.</strong> Apply if it's a great fit, but don't count
+            on it, and spend more of your time on newer ones.
+          </li>
+          <li>
+            <strong>Look at the company's other listings.</strong> If most of its jobs are months old, it's likely
+            recruiting for a pipeline.
+          </li>
+          <li>
+            <strong>Search on weekdays and set alerts.</strong> New postings land Monday to Friday. An alert lets you
+            apply in the first few days.
+          </li>
+        </ol>
+
+        <h2>Common questions</h2>
+        <h3>What share of job postings are ghost jobs?</h3>
+        <p>
+          There's no single number. Greenhouse estimates 18–22% of the jobs posted on its platform in a given
+          quarter. In our data, 45% of open tech and startup jobs were over 60 days old, which is a warning sign, not
+          proof.
+        </p>
+        <h3>Is a job posted more than 30 days ago a ghost job?</h3>
+        <p>
+          Not necessarily. Some roles take months to fill, and some companies hire for the same role all year. Treat
+          age as one signal, and check whether most of the company's other jobs are old too.
+        </p>
+        <h3>How can I tell when a job was really posted?</h3>
+        <p>
+          Check the job on <a href="/jobs">yabot.jobs</a>. It shows the date the company's own site gives, or the
+          day we first found the job, and never a date later than that.
+        </p>
+
+        <section class="cta" aria-labelledby="cta-title">
+          <h2 id="cta-title">Find jobs while they're still open</h2>
+          <p>
+            We built yabot.jobs to make this easier. It pulls jobs straight from thousands of company career sites,
+            then keeps checking them. In the week to October 23 it confirmed more than 440,000 open jobs were still
+            live. In the last 30 days it closed 51,452 jobs that companies had taken down, across 1,974 career sites.
+          </p>
+          <ul>
+            <li><strong>Closed jobs marked:</strong> yabot.jobs keeps checking company sites, and a job that comes down from a site we read in full is marked closed.</li>
+            <li><strong>Real posting dates:</strong> see when the company posted the job, even when its careers page hides the date. If no date exists anywhere, we show the day we found it.</li>
+            <li><strong>Newest first:</strong> results are sorted by when the job was actually posted.</li>
+            <li><strong>Job alerts:</strong> get an email when a matching job goes up, so you apply in the first few days.</li>
+            <li><strong>AI help when you apply:</strong> score how well a job fits you, then draft a cover letter and prep for the interview.</li>
+          </ul>
+          <a class="btn" href="/jobs?posted=7">Search jobs posted this week &rarr;</a>
+        </section>
+
+        <nav class="more" aria-labelledby="more-title">
+          <h2 id="more-title">More from the blog</h2>
+          <ul class="posts">
+            <li>
+              <a class="post-card" href="/blog/introducing-yabot-jobs">
+                <span class="post-card__title">Introducing yabot.jobs</span>
+                <span class="post-card__dek">A free, open-source job search that reads company career pages directly, scores your fit and tailors your resume.</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </article>
+    </main>
+
+    <footer class="foot">
+      <div class="wrap">
+        <div class="foot__top">
+          <div>
+            <span class="brand">
+              <svg class="brand__mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                <path d="M9 24h6l4-10 6 20 4-10h10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <span>Yabot Jobs</span>
+            </span>
+            <p class="foot__tagline">Searching for a job should be free.</p>
+          </div>
+
+          <div class="foot__cols">
+            <nav class="foot__col" aria-labelledby="foot-browse">
+              <h2 id="foot-browse">Browse</h2>
+              <a href="/jobs">All jobs</a>
+              <a href="/jobs?workplace=remote">Remote jobs</a>
+              <a href="/jobs?workplace=hybrid">Hybrid jobs</a>
+              <a href="/jobs?workplace=onsite">On-site jobs</a>
+              <a href="/jobs?posted=1">Posted in the last 24 hours</a>
+            </nav>
+
+            <nav class="foot__col" aria-labelledby="foot-learn">
+              <h2 id="foot-learn">Learn</h2>
+              <a href="/#how-it-works">How it works</a>
+              <a href="/getting-started">Getting started</a>
+              <a href="/questions">Common questions</a>
+              <a href="/about">About</a>
+              <a href="/blog">Blog</a>
+            </nav>
+
+            <nav class="foot__col" aria-labelledby="foot-help">
+              <h2 id="foot-help">Help</h2>
+              <a href="/help">Help &amp; feedback</a>
+              <a href="/privacy">Privacy</a>
+              <a href="/terms">Terms</a>
+            </nav>
+
+            <nav class="foot__col" aria-labelledby="foot-code">
+              <h2 id="foot-code">Code</h2>
+              <a href="https://github.com/davicho01/yabot.jobs-frontend">Website code</a>
+              <a href="https://github.com/davicho01/yabot.jobs-backend">API code</a>
+            </nav>
+          </div>
+        </div>
+
+        <p class="foot__legal">
+          &copy; 2026 Yabot Jobs, a Vectorwell Technologies project. Free to search and track, built in the open. The website is
+          open source under the MIT license. Location data:
+          <a href="https://www.geonames.org">GeoNames</a> (CC BY 4.0), U.S. Census Bureau.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
