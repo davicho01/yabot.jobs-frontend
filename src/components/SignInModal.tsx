@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../auth/AuthContext";
+import { SignInPromptContext } from "../auth/signInPrompt";
 import { GOOGLE_CLIENT_ID } from "../auth/google";
 import { ApiError } from "../api/client";
 import { jobsApi } from "../api/jobs";
@@ -12,7 +13,7 @@ import "../pages/LoginPage.css";
 import "./SignInModal.css";
 
 // Sign-in in a window over the page, for someone signed out who tapped a
-// posting's Apply ↗ (see SignInPromptContext). With Google or an emailed
+// posting's Apply ↗ (see SignInPromptProvider below). With Google or an emailed
 // code, it signs in right here, then offers the company's site a tap away.
 export function SignInModal({ job, onClose }: { job: JobDetail; onClose: () => void }) {
   const { signInWithGoogle, verifyCode } = useAuth();
@@ -108,5 +109,17 @@ export function SignInModal({ job, onClose }: { job: JobDetail; onClose: () => v
       </div>
     </div>,
     document.body,
+  );
+}
+
+// Around the whole app: a signed-out Apply ↗ anywhere opens SignInModal for
+// its job (see CompanySiteLink) instead of leaving for /login.
+export function SignInPromptProvider({ children }: { children: ReactNode }) {
+  const [job, setJob] = useState<JobDetail | null>(null);
+  return (
+    <SignInPromptContext.Provider value={setJob}>
+      {children}
+      {job && <SignInModal job={job} onClose={() => setJob(null)} />}
+    </SignInPromptContext.Provider>
   );
 }

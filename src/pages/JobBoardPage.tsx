@@ -24,6 +24,7 @@ import { fitTier } from "../utils/fitScore";
 import { bandColor } from "../utils/bandColor";
 import { listColor, listColorEnd } from "../utils/listGradient";
 import { trackEvent } from "../utils/analytics";
+import { boardReturn } from "../utils/boardReturn";
 import "./JobBoardPage.css";
 import "./JobBoardCards.css";
 import CompanyLogo from "../components/CompanyLogo";
@@ -170,6 +171,7 @@ function BandJobCard({
     <button
       type="button"
       className={`band-card${active ? " band-card--active" : ""}`}
+      data-job-id={job.url.id}
       style={{ "--band-card-color": color, "--band-card-color-end": colorEnd } as CSSProperties}
       onClick={onSelect}
       aria-current={active ? "true" : undefined}
@@ -433,12 +435,42 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
   }, [updateParams]);
 
   function selectJob(id: string) {
+    // Phones open the posting on a screen of its own (JobSwipePage, which
+    // counts it for the search layout test), a step back in history from
+    // this list.
+    if (cards && isPhone()) {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("view", "posting");
+        next.set("job", id);
+        return next;
+      });
+      return;
+    }
     // Postings opened, for the phone search layout test (see utils/experiments).
     const position = jobs?.findIndex((job) => job.url.id === id) ?? -1;
     trackEvent("job_view", { job_id: id, layout: "list", position: position >= 0 ? (page - 1) * PAGE_SIZE + position + 1 : 0 });
     openedByTap.current = true;
     updateParams((next) => next.set("jobId", id));
   }
+
+  // Back from a posting's own screen (JobSwipePage): the list turns to the
+  // page that posting is on, then brings its card into view.
+  useEffect(() => {
+    if (!boardReturn.jobId) return;
+    if (boardReturn.page !== page) {
+      const returnPage = boardReturn.page;
+      updateParams((next) => {
+        if (returnPage <= 1) next.delete("page");
+        else next.set("page", String(returnPage));
+      });
+      return;
+    }
+    if (!jobs) return;
+    const card = document.querySelector(`[data-job-id="${boardReturn.jobId}"]`);
+    boardReturn.jobId = null;
+    card?.scrollIntoView({ block: "center" });
+  }, [jobs, page, updateParams]);
 
   function closeDetail() {
     const pager = pagerRef.current;

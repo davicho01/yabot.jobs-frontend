@@ -1,10 +1,11 @@
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import { setUserProperties, trackEvent } from "./analytics";
 
-// Phone search layout A/B test: "list" is the board as it is (job cards,
-// tap one to open it); "swipe" shows one posting at a time, swiped sideways
-// to the next (JobSwipePage). Phones only — desktop always gets the list and
-// is never counted. A phone visitor is put on one side, at random, the first
+// Phone search layout A/B test. Both sides start on the list of job cards,
+// and a card tapped opens its posting on a screen of its own (JobSwipePage);
+// they differ only in what that screen does: "list" shows just that
+// posting, and "swipe" swipes on sideways through the rest of the results.
+// Phones only — desktop always gets the list and is never counted. A phone visitor is put on one side, at random, the first
 // time they reach the board, and stays there on this browser.
 //
 // Read the results in GA4 by the user-scoped custom dimension

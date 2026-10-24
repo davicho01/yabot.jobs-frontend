@@ -1,8 +1,9 @@
-/* /jobs on a phone, "swipe" side of the search layout test (JobSwipePage).
-   The row of screens and each posting's card are JobBoardPage.css's and
+/* A posting opened from the phone list, on a screen of its own
+   (JobSwipePage), alone or swiping on through the results. The row of
+   screens and each posting's card are JobBoardPage.css's and
    JobBoardCards.css's phone styles (.board--split, .board--cards). Here only
-   the cards swipe: the page's background and the row above them (the count
-   and My applications) stay put. */
+   the cards move: the page's background and the row above them (All jobs,
+   the count and My applications) stay put. */
 
 /* The page's color washes sit on the swiping row itself, which doesn't
    move, instead of on each screen, which would carry them along. */
@@ -82,8 +83,9 @@
   transform: translateY(calc(-1 * var(--header-height, 0px)));
 }
 
-/* Both chips float over a card scrolled up under them, frosted like the
+/* The chips float over a card scrolled up under them, frosted like the
    header above. */
+.swipe__top .board__back--top,
 .swipe__top .swipe__count,
 .swipe__top .board__detail-applications {
   background: color-mix(in srgb, var(--band-card-bg) 72%, transparent);

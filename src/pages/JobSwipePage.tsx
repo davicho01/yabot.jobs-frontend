@@ -1,20 +1,19 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import { jobsApi, type WorkplaceTypeFilter } from "../api/jobs";
+import { PAGE_SIZE, jobsApi, type WorkplaceTypeFilter } from "../api/jobs";
 import type { JobDetail } from "../api/types";
 import { CompanySiteLink, JobCaseFile } from "../components/JobCaseFile";
 import CompanyLogo from "../components/CompanyLogo";
-import { BriefcaseIcon } from "../components/PillIcons";
+import { BriefcaseIcon, ListIcon } from "../components/PillIcons";
 import { boardSector } from "../utils/jobTags";
 import { scannedPosting } from "../utils/jobPosting";
 import { listColor, listColorEnd } from "../utils/listGradient";
 import { trackEvent } from "../utils/analytics";
 import { FoundBadge } from "./JobBoardPage";
 import { REVEAL_HEADER_EVENT } from "../components/Header";
-import { SignInModal } from "../components/SignInModal";
-import { SignInPromptContext } from "../auth/signInPrompt";
+import { boardReturn } from "../utils/boardReturn";
 import "./JobBoardPage.css";
 import "./JobBoardCards.css";
 import "./JobSwipePage.css";
@@ -44,25 +43,32 @@ const GESTURE_HOLD_MS = 1500;
 
 
 // Where the visitor was, so leaving for a posting's own page (a similar job)
-// and coming back lands on the same screen of the same search.
-let lastPlace = { filters: "", index: 0 };
+// and coming back lands on the same screen.
+let lastPlace = { key: "", index: 0 };
 
-// The phone board's "swipe" side of the search layout test (see
-// utils/experiments): one posting per screen, the same card the list opens,
-// and a sideways swipe moves to the next result or back to the one before.
-// Reads the same URL search and filters as JobBoardPage, set from <Header>.
+// A posting opened from the phone list (JobBoardPage), on a screen of its
+// own: the same card the list opens, under a row with All jobs and My
+// applications that stays put. Both sides of the phone search layout test
+// (see utils/experiments) open postings here:
+//  - "single": just the posting tapped.
+//  - "swipe": the list's results from that posting on, one per screen, and a
+//    sideways swipe moves to the next one or back to the one before.
+// A swipe back past the first goes back to the list, as does All jobs.
+// The URL says which posting (?view=posting&job=<id>), on top of the list's
+// own search, filters and page.
 //
 // Like the list's phone layout (JobBoardPage.css), the row of screens is the
 // browser's own snapping sideways scroll, and each screen scrolls up and
 // down on its own.
-export function JobSwipePage() {
+export function JobSwipePage({ mode }: { mode: "single" | "swipe" }) {
   const { user } = useAuth();
-  // Signed out, Apply ↗ signs in right here, then goes on to the company.
-  const [signInFor, setSignInFor] = useState<JobDetail | null>(null);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const query = searchParams.get("q") ?? "";
+  const openedId = searchParams.get("job") ?? "";
+  const listPage = Number(searchParams.get("page")) || 1;
   const filters = {
     q: query || undefined,
     location: searchParams.get("location") || undefined,
@@ -75,44 +81,102 @@ export function JobSwipePage() {
     salaryMin: Number(searchParams.get("salaryMin")) || undefined,
     salaryMax: Number(searchParams.get("salaryMax")) || undefined,
   };
+  const swipe = mode === "swipe";
 
-  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useInfiniteQuery({
-    queryKey: ["jobs-swipe", filters],
+  // Swiping: the results from the list's page on, more fetched as the
+  // visitor nears the end. Before that page there's nothing: a swipe back
+  // from its first posting is a swipe back to the list.
+  const results = useInfiniteQuery({
+    queryKey: ["jobs-swipe", filters, listPage],
     queryFn: ({ pageParam }) => jobsApi.list({ ...filters, page: pageParam }),
-    initialPageParam: 1,
+    initialPageParam: listPage,
     getNextPageParam: (last) => (last.page * last.page_size < last.total ? last.page + 1 : undefined),
+    enabled: swipe,
   });
-  const jobs: JobDetail[] = data?.pages.flatMap((page) => page.items) ?? [];
-  const total = data?.pages[0]?.total ?? 0;
+  // Not swiping: just the posting tapped.
+  const single = useQuery({
+    queryKey: ["job", openedId],
+    queryFn: () => jobsApi.get(openedId),
+    enabled: !swipe && !!openedId,
+  });
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = results;
+  const isLoading = swipe ? results.isLoading : single.isLoading;
+  const jobs: JobDetail[] = swipe
+    ? (results.data?.pages.flatMap((page) => page.items) ?? [])
+    : single.data
+      ? [single.data]
+      : [];
+  const total = results.data?.pages[0]?.total ?? 0;
+  // The first posting here is this far into the whole result list.
+  const offset = (listPage - 1) * PAGE_SIZE;
 
-  const filtersKey = JSON.stringify(filters);
-  const [index, setIndex] = useState(() => (lastPlace.filters === filtersKey ? lastPlace.index : 0));
+  const placeKey = JSON.stringify([mode, filters, listPage, openedId]);
+  // Which posting the row is on; -1 until the results are in and it's been
+  // put on the one tapped (or back where it was, see lastPlace).
+  const [index, setIndex] = useState(() => (lastPlace.key === placeKey ? lastPlace.index : -1));
   const trackRef = useRef<HTMLDivElement>(null);
-  lastPlace = { filters: filtersKey, index };
+  if (index >= 0) lastPlace = { key: placeKey, index };
 
-  // A new search starts again at its first result.
+  const [placed, setPlaced] = useState(false);
+  if (index < 0 && jobs.length > 0) {
+    const tapped = Math.max(0, jobs.findIndex((job) => job.url.id === openedId));
+    setIndex(tapped);
+  }
+  useLayoutEffect(() => {
+    const track = trackRef.current;
+    if (placed || !track || index < 0 || jobs.length <= index) return;
+    setPlaced(true);
+    track.scrollTo({ left: index * track.clientWidth });
+  }, [jobs.length, index, placed]);
+
+  // Back to the list, at the posting on screen: back through history to it
+  // when that's where the visitor came from, or else (a shared link to a
+  // posting) to the list in place of this.
+  const backToList = () => {
+    const at = jobs[Math.max(0, index)];
+    boardReturn.jobId = at?.url.id ?? openedId;
+    boardReturn.page = listPage + Math.floor(Math.max(0, index) / PAGE_SIZE);
+    if (location.key !== "default") {
+      navigate(-1);
+      return;
+    }
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("view");
+        next.delete("job");
+        if (boardReturn.page > 1) next.set("page", String(boardReturn.page));
+        return next;
+      },
+      { replace: true },
+    );
+  };
+  const backToListRef = useRef(backToList);
+  useEffect(() => {
+    backToListRef.current = backToList;
+  });
+
+  // A new search from the header goes back to the list with it.
+  const filtersKey = JSON.stringify(filters);
   const shownFilters = useRef(filtersKey);
   useEffect(() => {
     if (shownFilters.current === filtersKey) return;
     shownFilters.current = filtersKey;
-    setIndex(0);
-    setShown(0);
-    trackRef.current?.scrollTo({ left: 0 });
-  }, [filtersKey]);
-
-  // Back from elsewhere: once the results are drawn, return to the screen
-  // the visitor left.
-  const restored = useRef(index === 0);
-  useLayoutEffect(() => {
-    const track = trackRef.current;
-    if (restored.current || !track || jobs.length <= index) return;
-    restored.current = true;
-    track.scrollTo({ left: index * track.clientWidth });
-  }, [jobs.length, index]);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("view");
+        next.delete("job");
+        next.delete("page");
+        return next;
+      },
+      { replace: true },
+    );
+  }, [filtersKey, setSearchParams]);
 
   // The count follows the swipe as it moves: whichever posting is mostly on
   // screen. The rest of the page waits for the swipe to settle (below).
-  const [shown, setShown] = useState(index);
+  const [shown, setShown] = useState(Math.max(0, index));
 
   // Which screen the row has settled on, once a swipe comes to rest.
   useEffect(() => {
@@ -133,10 +197,10 @@ export function JobSwipePage() {
     };
   }, []);
 
-  const current = jobs[index];
+  const current = index >= 0 ? jobs[index] : undefined;
   const currentId = current?.url.id;
   useEffect(() => {
-    if (currentId) trackEvent("job_view", { job_id: currentId, layout: "swipe", position: index + 1 });
+    if (currentId) trackEvent("job_view", { job_id: currentId, layout: mode, position: offset + index + 1 });
     // Counted once per posting landed on, not again when more results load.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId]);
@@ -215,7 +279,10 @@ export function JobSwipePage() {
       const latest = samples[samples.length - 1];
       const speed = first && latest ? Math.abs(latest.x - first.x) / Math.max(1, latest.t - first.t) : 0;
       const swiped = Math.abs(dx) >= SWIPE_MIN_PX || (Math.abs(dx) >= FLICK_MIN_PX && speed >= FLICK_SPEED);
-      if (axis === "x" && swiped) goTo(start.index + (dx < 0 ? 1 : -1));
+      if (axis === "x" && swiped && dx > 0 && start.index === 0) {
+        goTo(0);
+        backToListRef.current();
+      } else if (axis === "x" && swiped) goTo(start.index + (dx < 0 ? 1 : -1));
       else goTo(start.index);
       start = null;
       axis = null;
@@ -260,26 +327,30 @@ export function JobSwipePage() {
   }, []);
 
   useEffect(() => {
-    if (hasNextPage && !isFetchingNextPage && index >= jobs.length - PREFETCH_AHEAD) fetchNextPage();
-  }, [index, jobs.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
+    if (swipe && hasNextPage && !isFetchingNextPage && index >= jobs.length - PREFETCH_AHEAD) fetchNextPage();
+  }, [swipe, index, jobs.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <SignInPromptContext.Provider value={setSignInFor}>
     <div className="board board--split board--detail-open board--cards board--swipe">
-      {/* Stays put while the cards swipe underneath: where this posting sits
-          in the results, and My applications, as on the list's open posting. */}
-      {jobs.length > 0 && (
-        <div className="board__detail-top swipe__top">
+      {/* Stays put while the cards scroll and swipe underneath: the way back
+          to the list, where this posting sits in the results (swiping), and
+          My applications, as on the list's open posting. */}
+      <div className="board__detail-top swipe__top">
+        <button type="button" className="board__back board__back--top" onClick={backToList}>
+          <ListIcon />
+          All jobs
+        </button>
+        {swipe && jobs.length > 0 && (
           <span className="swipe__count">
-            {(Math.min(shown, jobs.length - 1) + 1).toLocaleString()} / {total.toLocaleString()}
+            {(offset + Math.min(shown, jobs.length - 1) + 1).toLocaleString()} / {total.toLocaleString()}
             {total >= 1000 ? "+" : ""}
           </span>
-          <Link to="/applications" className="board__detail-applications">
-            <BriefcaseIcon />
-            My applications
-          </Link>
-        </div>
-      )}
+        )}
+        <Link to="/applications" className="board__detail-applications">
+          <BriefcaseIcon />
+          My applications
+        </Link>
+      </div>
       <div className="board__layout" ref={trackRef} data-header-reveal="hold">
         {isLoading && (
           <div className="board__detail">
@@ -288,7 +359,7 @@ export function JobSwipePage() {
         )}
         {!isLoading && jobs.length === 0 && (
           <div className="board__detail">
-            <p className="board__empty">No postings match your filters.</p>
+            <p className="board__empty">{swipe ? "No postings match your filters." : "This posting isn't available."}</p>
           </div>
         )}
         {jobs.map((job, i) => (
@@ -298,10 +369,16 @@ export function JobSwipePage() {
             aria-hidden={i !== index || undefined}
             data-header-reveal="top"
           >
-            {/* Room for the header and the count row. */}
+            {/* Room for the header and the row above the card. */}
             <div className="swipe__spacer" />
-            {Math.abs(i - index) <= RENDER_AHEAD && (
-              <SwipeCard job={job} index={i} query={query} user={user} onSelectSimilar={(id) => navigate(`/jobs/${id}`)} />
+            {index >= 0 && Math.abs(i - index) <= RENDER_AHEAD && (
+              <SwipeCard
+                job={job}
+                index={offset + i}
+                query={query}
+                user={user}
+                onSelectSimilar={(id) => navigate(`/jobs/${id}`)}
+              />
             )}
           </div>
         ))}
@@ -311,10 +388,7 @@ export function JobSwipePage() {
           </div>
         )}
       </div>
-
-      {signInFor && <SignInModal job={signInFor} onClose={() => setSignInFor(null)} />}
     </div>
-    </SignInPromptContext.Provider>
   );
 }
 
