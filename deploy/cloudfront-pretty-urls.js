@@ -7,6 +7,7 @@
 //
 //   - the static content pages at clean URLs: /questions -> /questions.html,
 //     /privacy -> /privacy.html, /about -> /about.html, /terms -> /terms.html;
+//   - the blog: /blog -> /blog/index.html, /blog/<slug> -> /blog/<slug>.html;
 //   - the app's routes (/jobs, /jobs/<id>, /login, /profile, …) -> /app.html.
 //
 // Why it is needed: S3 has no object for these paths. The distribution's
@@ -38,6 +39,8 @@
 //   curl -sI https://yabot.jobs/jobs               # 200, the 2.5KB app shell
 //   curl -sI https://yabot.jobs/jobs/us            # 200, the static country page
 //   curl -sI https://yabot.jobs/not-a-page         # 404
+//   curl -sI https://yabot.jobs/blog               # 200, the blog index
+//   curl -sI https://yabot.jobs/blog/not-a-post    # 404
 
 var PAGES = {
   "/questions": "/questions.html",
@@ -45,6 +48,10 @@ var PAGES = {
   "/about": "/about.html",
   "/terms": "/terms.html",
 };
+
+// The blog, by pattern so a new post needs no change here: /blog is
+// blog/index.html, /blog/<slug> is blog/<slug>.html.
+var BLOG_POST = /^\/blog\/[a-z0-9-]+$/;
 
 var APP_ROUTES = {
   "/jobs": true,
@@ -111,6 +118,11 @@ function handler(event) {
 
   if (PAGES[uri]) {
     request.uri = PAGES[uri];
+  } else if (uri === "/blog") {
+    request.uri = "/blog/index.html";
+  } else if (BLOG_POST.test(uri)) {
+    // A post that doesn't exist misses in S3 and gets the real 404.
+    request.uri = uri + ".html";
   } else if (APP_ROUTES[uri] || APP_ROUTE_PATTERNS.some(function (re) { return re.test(uri); })) {
     request.uri = "/app.html";
   }

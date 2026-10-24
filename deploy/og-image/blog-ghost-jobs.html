@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <!--
+      Source for public/blog/ghost-jobs-statistics-2026.png, the share image of
+      /blog/ghost-jobs-statistics-2026. Rendered at 1200x630 by generate.mjs.
+      The numbers are the post's: keep them in step with it by hand.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@800&display=block"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --plum: #1f1a35;
+        --plum-soft: #b9b4cc;
+        --magenta: #ec008c;
+        --sunset: linear-gradient(227deg, #ec008c 3%, #fc8b67 69%, #ffd46d 98%);
+        --display: "Outfit", system-ui, sans-serif;
+        --body: "Inter", system-ui, sans-serif;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+      }
+
+      body {
+        display: grid;
+        grid-template-columns: 1fr 430px;
+        gap: 56px;
+        align-items: center;
+        padding: 0 72px;
+        color: #fff;
+        font-family: var(--body);
+        -webkit-font-smoothing: antialiased;
+        background:
+          radial-gradient(45% 65% at 8% 0%, rgba(236, 0, 140, 0.45), transparent 70%),
+          radial-gradient(45% 65% at 95% 100%, rgba(54, 78, 169, 0.8), transparent 70%),
+          var(--plum);
+      }
+
+      .kicker {
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--plum-soft);
+      }
+
+      .big {
+        margin: 6px 0 0;
+        font-family: var(--display);
+        font-weight: 800;
+        font-size: 220px;
+        line-height: 0.95;
+        letter-spacing: -0.05em;
+        background: var(--sunset);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        padding-right: 0.06em;
+      }
+
+      .line {
+        margin-top: 14px;
+        font-family: var(--display);
+        font-weight: 800;
+        font-size: 50px;
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 40px;
+        font-family: var(--display);
+        font-weight: 800;
+        font-size: 28px;
+        letter-spacing: -0.03em;
+      }
+
+      .brand svg {
+        width: 44px;
+        height: 44px;
+        padding: 8px;
+        border-radius: 12px;
+        background: var(--sunset);
+      }
+
+      .brand span {
+        font-family: var(--body);
+        font-weight: 500;
+        font-size: 20px;
+        letter-spacing: 0;
+        color: var(--plum-soft);
+        margin-left: 6px;
+      }
+
+      /* The post's age chart, in brief. */
+      .chart {
+        padding: 28px 28px 22px;
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+      }
+
+      .chart p {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--plum-soft);
+        margin-bottom: 16px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 118px 1fr;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 9px;
+        font-size: 17px;
+      }
+
+      .row span:first-child {
+        text-align: right;
+        color: #e8e6f0;
+      }
+
+      .bar {
+        height: 22px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.28);
+      }
+
+      .bar.hot {
+        background: var(--magenta);
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <p class="kicker">Ghost job statistics 2026</p>
+      <p class="big">45%</p>
+      <p class="line">of open tech and startup jobs are over 60 days old</p>
+      <p class="brand">
+        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <path d="M9 24h6l4-10 6 20 4-10h10" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        yabot.jobs<span>29,918 open US jobs, October 2026</span>
+      </p>
+    </div>
+    <div class="chart">
+      <p>Open jobs by age of the posting</p>
+      <div class="row"><span>0–7 days</span><span class="bar" style="width: 34%"></span></div>
+      <div class="row"><span>8–14 days</span><span class="bar" style="width: 31%"></span></div>
+      <div class="row"><span>15–30 days</span><span class="bar" style="width: 67%"></span></div>
+      <div class="row"><span>31–60 days</span><span class="bar" style="width: 100%"></span></div>
+      <div class="row"><span>61–90 days</span><span class="bar hot" style="width: 47%"></span></div>
+      <div class="row"><span>3–6 months</span><span class="bar hot" style="width: 70%"></span></div>
+      <div class="row"><span>6–12 months</span><span class="bar hot" style="width: 43%"></span></div>
+      <div class="row"><span>Over a year</span><span class="bar hot" style="width: 33%"></span></div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <script>
+      // Google Analytics 4, same property as the landing page and the app.
+      (function () {
+        var id = "G-CDDT9RZ59T";
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () {
+          window.dataLayer.push(arguments);
+        };
+        // Consent defaults, same as src/utils/analytics.ts (keep the region list in step):
+        // analytics cookies off in the EEA/UK/CH and for Global Privacy Control, never ads.
+        var noAds = { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" };
+        var euRegions = ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV",
+          "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO", "GB", "CH"];
+        window.gtag("consent", "default", Object.assign({ analytics_storage: "denied", region: euRegions }, noAds));
+        window.gtag("consent", "default", Object.assign(
+          { analytics_storage: navigator.globalPrivacyControl === true ? "denied" : "granted" }, noAds));
+        window.gtag("js", new Date());
+        window.gtag("config", id, { allow_google_signals: false, allow_ad_personalization_signals: false });
+        var s = document.createElement("script");
+        s.async = true;
+        s.src = "https://www.googletagmanager.com/gtag/js?id=" + id;
+        document.head.appendChild(s);
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Blog | Yabot Jobs</title>
+    <meta
+      name="description"
+      content="Job market data from over a million jobs on company career sites, plus how yabot.jobs works: ghost jobs, posting dates, fit scores and more."
+    />
+    <link rel="canonical" href="https://yabot.jobs/blog" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#ffffff" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Yabot Jobs" />
+    <meta property="og:title" content="The Yabot Jobs blog" />
+    <meta
+      property="og:description"
+      content="Job market data from over a million jobs on company career sites, plus how yabot.jobs works."
+    />
+    <meta property="og:url" content="https://yabot.jobs/blog" />
+    <meta property="og:image" content="https://yabot.jobs/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="The Yabot Jobs blog" />
+    <meta
+      name="twitter:description"
+      content="Job market data from over a million jobs on company career sites, plus how yabot.jobs works."
+    />
+    <meta name="twitter:image" content="https://yabot.jobs/og-image.png" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="alternate icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blog/blog.css" />
+  </head>
+
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="nav">
+      <div class="nav__bar">
+        <a class="brand" href="/">
+          <svg class="brand__mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <path d="M9 24h6l4-10 6 20 4-10h10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span class="brand__name">Yabot Jobs</span>
+        </a>
+        <nav class="nav__links" aria-label="Main">
+          <a class="nav__link" href="/jobs">Browse jobs</a>
+          <a class="nav__link" href="/blog" aria-current="page">Blog</a>
+          <a class="nav__link" href="/#pricing">Pricing</a>
+          <a class="btn btn--ink" href="/applications">Log in</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <p class="eyebrow">Blog</p>
+      <h1>What we learn from <span class="grad">a million jobs</span></h1>
+      <p class="dek">
+        yabot.jobs reads jobs straight from company career sites. Here's what that data shows about the job market,
+        and how we build the tool.
+      </p>
+
+      <!-- Newest first. Add a card here when a post goes live. -->
+      <ul class="posts">
+        <li>
+          <a class="post-card" href="/blog/ghost-jobs-statistics-2026">
+            <span class="post-card__meta"><time datetime="2026-10-23">October 23, 2026</time> &middot; Job market data</span>
+            <span class="post-card__title">Nearly half of open tech and startup jobs are over two months old</span>
+            <span class="post-card__dek">We checked 29,918 open US jobs at 1,006 companies. Here's how old they really are, and how to avoid ghost jobs.</span>
+          </a>
+        </li>
+        <li>
+          <a class="post-card" href="/blog/introducing-yabot-jobs">
+            <span class="post-card__meta"><time datetime="2026-10-23">October 23, 2026</time> &middot; Product</span>
+            <span class="post-card__title">Introducing yabot.jobs</span>
+            <span class="post-card__dek">A free, open-source job search that reads company career pages directly, scores your fit and tailors your resume.</span>
+          </a>
+        </li>
+        <li>
+          <a class="post-card" href="/blog/yabot-jobs-is-live">
+            <span class="post-card__meta"><time datetime="2026-10-23">October 23, 2026</time> &middot; Announcement</span>
+            <span class="post-card__title">yabot.jobs is live: job search straight from company career pages</span>
+            <span class="post-card__dek">Over a million jobs from more than 10,000 companies, open to everyone today.</span>
+          </a>
+        </li>
+      </ul>
+    </main>
+
+    <footer class="foot">
+      <div class="wrap">
+        <div class="foot__top">
+          <div>
+            <span class="brand">
+              <svg class="brand__mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                <path d="M9 24h6l4-10 6 20 4-10h10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <span>Yabot Jobs</span>
+            </span>
+            <p class="foot__tagline">Searching for a job should be free.</p>
+          </div>
+
+          <div class="foot__cols">
+            <nav class="foot__col" aria-labelledby="foot-browse">
+              <h2 id="foot-browse">Browse</h2>
+              <a href="/jobs">All jobs</a>
+              <a href="/jobs?workplace=remote">Remote jobs</a>
+              <a href="/jobs?workplace=hybrid">Hybrid jobs</a>
+              <a href="/jobs?workplace=onsite">On-site jobs</a>
+              <a href="/jobs?posted=1">Posted in the last 24 hours</a>
+            </nav>
+
+            <nav class="foot__col" aria-labelledby="foot-learn">
+              <h2 id="foot-learn">Learn</h2>
+              <a href="/#how-it-works">How it works</a>
+              <a href="/getting-started">Getting started</a>
+              <a href="/questions">Common questions</a>
+              <a href="/about">About</a>
+              <a href="/blog">Blog</a>
+            </nav>
+
+            <nav class="foot__col" aria-labelledby="foot-help">
+              <h2 id="foot-help">Help</h2>
+              <a href="/help">Help &amp; feedback</a>
+              <a href="/privacy">Privacy</a>
+              <a href="/terms">Terms</a>
+            </nav>
+
+            <nav class="foot__col" aria-labelledby="foot-code">
+              <h2 id="foot-code">Code</h2>
+              <a href="https://github.com/davicho01/yabot.jobs-frontend">Website code</a>
+              <a href="https://github.com/davicho01/yabot.jobs-backend">API code</a>
+            </nav>
+          </div>
+        </div>
+
+        <p class="foot__legal">
+          &copy; 2026 Yabot Jobs, a Vectorwell Technologies project. Free to search and track, built in the open. The website is
+          open source under the MIT license. Location data:
+          <a href="https://www.geonames.org">GeoNames</a> (CC BY 4.0), U.S. Census Bureau.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

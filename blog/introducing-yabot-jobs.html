@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <script>
+      // Google Analytics 4, same property as the landing page and the app.
+      (function () {
+        var id = "G-CDDT9RZ59T";
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () {
+          window.dataLayer.push(arguments);
+        };
+        // Consent defaults, same as src/utils/analytics.ts (keep the region list in step):
+        // analytics cookies off in the EEA/UK/CH and for Global Privacy Control, never ads.
+        var noAds = { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" };
+        var euRegions = ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV",
+          "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO", "GB", "CH"];
+        window.gtag("consent", "default", Object.assign({ analytics_storage: "denied", region: euRegions }, noAds));
+        window.gtag("consent", "default", Object.assign(
+          { analytics_storage: navigator.globalPrivacyControl === true ? "denied" : "granted" }, noAds));
+        window.gtag("js", new Date());
+        window.gtag("config", id, { allow_google_signals: false, allow_ad_personalization_signals: false });
+        var s = document.createElement("script");
+        s.async = true;
+        s.src = "https://www.googletagmanager.com/gtag/js?id=" + id;
+        document.head.appendChild(s);
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Introducing yabot.jobs: Free Job Search From Company Career Pages | Yabot Jobs</title>
+    <meta
+      name="description"
+      content="yabot.jobs is a free, open-source job search that reads company career pages directly, tells you how well you fit before you apply, and helps you tailor your resume."
+    />
+    <link rel="canonical" href="https://yabot.jobs/blog/introducing-yabot-jobs" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#ffffff" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Yabot Jobs" />
+    <meta property="og:title" content="Introducing yabot.jobs" />
+    <meta
+      property="og:description"
+      content="A free, open-source job search that reads company career pages directly, tells you how well you fit before you apply, and helps you tailor your resume."
+    />
+    <meta property="og:url" content="https://yabot.jobs/blog/introducing-yabot-jobs" />
+    <meta property="og:image" content="https://yabot.jobs/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="article:published_time" content="2026-10-23" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Introducing yabot.jobs" />
+    <meta
+      name="twitter:description"
+      content="A free, open-source job search that reads company career pages directly and tells you how well you fit before you apply."
+    />
+    <meta name="twitter:image" content="https://yabot.jobs/og-image.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Introducing yabot.jobs",
+        "description": "A free, open-source job search that reads company career pages directly, tells you how well you fit before you apply, and helps you tailor your resume.",
+        "datePublished": "2026-10-23",
+        "dateModified": "2026-10-23",
+        "mainEntityOfPage": "https://yabot.jobs/blog/introducing-yabot-jobs",
+        "image": "https://yabot.jobs/og-image.png",
+        "author": { "@type": "Person", "name": "David Garcia", "url": "https://yabot.jobs/about" },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Yabot Jobs",
+          "url": "https://yabot.jobs",
+          "logo": { "@type": "ImageObject", "url": "https://yabot.jobs/apple-touch-icon.png" }
+        }
+      }
+    </script>
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="alternate icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blog/blog.css" />
+  </head>
+
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="nav">
+      <div class="nav__bar">
+        <a class="brand" href="/">
+          <svg class="brand__mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <path d="M9 24h6l4-10 6 20 4-10h10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span class="brand__name">Yabot Jobs</span>
+        </a>
+        <nav class="nav__links" aria-label="Main">
+          <a class="nav__link" href="/jobs">Browse jobs</a>
+          <a class="nav__link" href="/blog" aria-current="page">Blog</a>
+          <a class="nav__link" href="/#pricing">Pricing</a>
+          <a class="btn btn--ink" href="/applications">Log in</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <article class="post">
+        <p class="eyebrow"><a href="/blog">Blog</a> &middot; Product</p>
+        <h1>Introducing <span class="grad">yabot.jobs</span></h1>
+        <p class="dek">
+          A free, open-source job search that reads company career pages directly, tells you how well you fit, and
+          helps you put your best application forward.
+        </p>
+
+        <div class="byline">
+          <img class="byline__photo" src="/about-david.jpg" alt="" width="52" height="52" />
+          <span>
+            <a class="byline__name" href="/about">David Garcia</a><br />
+            <span class="byline__meta"><time datetime="2026-10-23">October 23, 2026</time> &middot; 4 min read</span>
+          </span>
+        </div>
+
+        <figure class="photo">
+          <img
+            src="/blog/photos/introducing-yabot-jobs.jpg"
+            alt="A smiling job seeker on a phone call at her laptop"
+            width="1280"
+            height="720"
+          />
+          <figcaption>
+            Photo by <a href="https://unsplash.com/photos/woman-talking-on-phone-while-working-on-laptop-at-desk-vbd1ONgbZlY" rel="nofollow">Vitaly Gariev on Unsplash</a>
+          </figcaption>
+        </figure>
+
+        <h2>Finding a job shouldn't be a second job</h2>
+        <p>
+          Job searching today means scrolling the same reposted listings on five sites, applying to roles that were
+          filled weeks ago, and rewriting your resume for every application. Then you hear nothing back.
+        </p>
+        <p>
+          We built yabot.jobs to fix the parts of that we could. It's a free, open-source job search that pulls jobs
+          straight from company career pages, tells you how well you fit before you apply, and helps you put your best
+          application forward.
+        </p>
+
+        <h2>Jobs straight from the source</h2>
+        <p>
+          yabot.jobs doesn't copy listings from other job boards. It reads company career sites directly. That's over
+          a million jobs so far, from more than 10,000 companies, with about 30,000 new ones every weekday, in every
+          sector, not just tech.
+        </p>
+        <ul>
+          <li>
+            <strong>You see roles early.</strong> Most new postings show up the same day the company publishes them,
+            and nearly all by the next day.
+          </li>
+          <li>
+            <strong>Closed jobs disappear.</strong> yabot.jobs keeps checking company sites, and when a job comes down
+            from a site we read in full, it's marked closed. In the last 30 days alone, we closed 51,452 jobs that
+            companies had taken down.
+          </li>
+          <li>
+            <strong>You see the real date.</strong> Many careers pages hide when a job was posted, or reset the date
+            when they refresh a listing. yabot.jobs never dates a job later than the day it first found it, so a
+            refreshed listing can't pass as new.
+          </li>
+        </ul>
+        <p>
+          Why that matters: in our data,
+          <a href="/blog/ghost-jobs-statistics-2026">nearly half of open tech and startup jobs are over two months old</a>.
+        </p>
+
+        <h2>Finding the right jobs</h2>
+        <p>You can browse without signing up.</p>
+        <ul>
+          <li>
+            <strong>Search by title or company.</strong> A tech title also finds its related titles, so "software
+            engineer" finds Backend Engineer jobs too. Results show the newest postings first, sorted by when the
+            company actually posted them.
+          </li>
+          <li>
+            <strong>Search a whole metro area.</strong> One search covers a city and its suburbs, so "Austin" includes
+            Round Rock and Cedar Park.
+          </li>
+          <li>
+            <strong>Filter by how you want to work.</strong> Remote, hybrid or on-site, or only jobs posted in the last
+            24 hours.
+          </li>
+          <li>
+            <strong>Get alerts.</strong> Save a search and get an email when a matching job goes up, so you can apply
+            in the first few days.
+          </li>
+        </ul>
+
+        <h2>Applying, from fit score to interview prep</h2>
+        <p>Once you find a job, yabot.jobs takes you through five steps in one place:</p>
+        <ol>
+          <li>
+            <strong>Evaluate your resume.</strong> You get a fit score out of 100, the gaps between your resume and the
+            job, and a plain-English read that includes the honest risks. Every point is broken down by category, so
+            you can see where it came from.
+          </li>
+          <li>
+            <strong>Tailor your resume.</strong> One click rebuilds your resume for the job and scores it again. You
+            review what the AI added and keep only what you can speak to.
+          </li>
+          <li><strong>Write a cover letter.</strong> A draft written for that job, from your resume.</li>
+          <li>
+            <strong>Apply on the company's site.</strong> You hit apply yourself. Nothing is ever submitted for you.
+          </li>
+          <li>
+            <strong>Prep for the interview.</strong> Likely questions, talking points from your experience, and
+            questions to ask them.
+          </li>
+        </ol>
+        <p>
+          Every job you work on is tracked with its status, notes and reminders, so you always know where each
+          application stands.
+        </p>
+
+        <h2>Free to start, fair after</h2>
+        <p>
+          Searching, tracking, notes and reminders are always free. The AI steps cost something to run, so they work
+          like this:
+        </p>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>Plan</th><th>Price</th><th>What you get</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Start here</td><td>Free</td><td>Score, tailor and prep 10 jobs. No credit card needed.</td></tr>
+              <tr><td>We run the AI</td><td>$5/month</td><td>Up to 100 job evaluations a month on our hosted AI. Cancel anytime.</td></tr>
+              <tr>
+                <td>Bring your own AI</td>
+                <td>$0</td>
+                <td>
+                  As many jobs as you want, using your own Anthropic (Claude), OpenAI (GPT), DeepSeek or other
+                  OpenAI-compatible account. Your provider may charge you for usage.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          yabot.jobs is open source, so you can read exactly how it works: the
+          <a href="https://github.com/davicho01/yabot.jobs-frontend">website code</a> and the
+          <a href="https://github.com/davicho01/yabot.jobs-backend">API code</a>. You can delete anything in your
+          account at any time.
+        </p>
+
+        <section class="cta" aria-labelledby="cta-title">
+          <h2 id="cta-title">Try it</h2>
+          <p>
+            Look around first: you can browse jobs without signing up. When you find one you like, add your resume
+            and see your fit. Your first 10 jobs are free.
+          </p>
+          <a class="btn" href="/jobs">Browse jobs &rarr;</a>
+        </section>
+
+        <nav class="more" aria-labelledby="more-title">
+          <h2 id="more-title">More from the blog</h2>
+          <ul class="posts">
+            <li>
+              <a class="post-card" href="/blog/ghost-jobs-statistics-2026">
+                <span class="post-card__title">Nearly half of open tech and startup jobs are over two months old</span>
+                <span class="post-card__dek">We checked 29,918 open US jobs at 1,006 companies. Here's how old they really are, and how to avoid ghost jobs.</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </article>
+    </main>
+
+    <footer class="foot">
+      <div class="wrap">
+        <div class="foot__top">
+          <div>
+            <span class="brand">
+              <svg class="brand__mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                <path d="M9 24h6l4-10 6 20 4-10h10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <span>Yabot Jobs</span>
+            </span>
+            <p class="foot__tagline">Searching for a job should be free.</p>
+          </div>
+
+          <div class="foot__cols">
+            <nav class="foot__col" aria-labelledby="foot-browse">
+              <h2 id="foot-browse">Browse</h2>
+              <a href="/jobs">All jobs</a>
+              <a href="/jobs?workplace=remote">Remote jobs</a>
+              <a href="/jobs?workplace=hybrid">Hybrid jobs</a>
+              <a href="/jobs?workplace=onsite">On-site jobs</a>
+              <a href="/jobs?posted=1">Posted in the last 24 hours</a>
+            </nav>
+
+            <nav class="foot__col" aria-labelledby="foot-learn">
+              <h2 id="foot-learn">Learn</h2>
+              <a href="/#how-it-works">How it works</a>
+              <a href="/getting-started">Getting started</a>
+              <a href="/questions">Common questions</a>
+              <a href="/about">About</a>
+              <a href="/blog">Blog</a>
+            </nav>
+
+            <nav class="foot__col" aria-labelledby="foot-help">
+              <h2 id="foot-help">Help</h2>
+              <a href="/help">Help &amp; feedback</a>
+              <a href="/privacy">Privacy</a>
+              <a href="/terms">Terms</a>
+            </nav>
+
+            <nav class="foot__col" aria-labelledby="foot-code">
+              <h2 id="foot-code">Code</h2>
+              <a href="https://github.com/davicho01/yabot.jobs-frontend">Website code</a>
+              <a href="https://github.com/davicho01/yabot.jobs-backend">API code</a>
+            </nav>
+          </div>
+        </div>
+
+        <p class="foot__legal">
+          &copy; 2026 Yabot Jobs, a Vectorwell Technologies project. Free to search and track, built in the open. The website is
+          open source under the MIT license. Location data:
+          <a href="https://www.geonames.org">GeoNames</a> (CC BY 4.0), U.S. Census Bureau.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -27,10 +27,10 @@
       })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>About | Yabot Jobs</title>
+    <title>About Yabot Jobs | Vectorwell Technologies</title>
     <meta
       name="description"
-      content="Yabot Jobs is built and run by one engineer who needed a free way to search, track, and tailor his resume after a layoff."
+      content="Yabot Jobs, by Vectorwell Technologies, collects jobs straight from company career sites and gives every job seeker free search and AI help to apply well."
     />
     <link rel="canonical" href="https://yabot.jobs/about" />
     <meta name="robots" content="index, follow" />
@@ -38,10 +38,10 @@
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Yabot Jobs" />
-    <meta property="og:title" content="About | Yabot Jobs" />
+    <meta property="og:title" content="About Yabot Jobs | Vectorwell Technologies" />
     <meta
       property="og:description"
-      content="Yabot Jobs is built and run by one engineer who needed a free way to search, track, and tailor his resume after a layoff."
+      content="Yabot Jobs, by Vectorwell Technologies, collects jobs straight from company career sites and gives every job seeker free search and AI help to apply well."
     />
     <meta property="og:url" content="https://yabot.jobs/about" />
     <meta property="og:image" content="https://yabot.jobs/og-image.png" />
@@ -49,12 +49,37 @@
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Yabot Jobs: every job scored, every resume tailored." />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="About | Yabot Jobs" />
+    <meta name="twitter:title" content="About Yabot Jobs | Vectorwell Technologies" />
     <meta
       name="twitter:description"
-      content="Yabot Jobs is built and run by one engineer who needed a free way to search, track, and tailor his resume after a layoff."
+      content="Yabot Jobs, by Vectorwell Technologies, collects jobs straight from company career sites and gives every job seeker free search and AI help to apply well."
     />
     <meta name="twitter:image" content="https://yabot.jobs/og-image.png" />
+
+    <!-- Who's behind the site, for search engines. Keep in step with the page. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "AboutPage",
+        "url": "https://yabot.jobs/about",
+        "mainEntity": {
+          "@type": "Organization",
+          "@id": "https://yabot.jobs/#organization",
+          "name": "Vectorwell Technologies",
+          "brand": { "@type": "Brand", "name": "Yabot Jobs" },
+          "url": "https://yabot.jobs",
+          "logo": "https://yabot.jobs/apple-touch-icon.png",
+          "sameAs": ["https://github.com/davicho01/yabot.jobs-frontend", "https://github.com/davicho01/yabot.jobs-backend"],
+          "founder": {
+            "@type": "Person",
+            "name": "David Garcia",
+            "jobTitle": "Founder",
+            "image": "https://yabot.jobs/about-david.jpg",
+            "sameAs": ["https://www.linkedin.com/in/johnydgarcia"]
+          }
+        }
+      }
+    </script>
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
@@ -574,81 +599,81 @@
 
     <main id="main">
       <p class="eyebrow">About</p>
-      <h1>Built by someone who <span class="grad">needed it too.</span></h1>
+      <h1>Job search, <span class="grad">straight from the source.</span></h1>
       <p class="intro">
-        Yabot Jobs isn't a company with a growth plan. It's one engineer's tool, opened up for anyone else on the
-        same job hunt.
+        Yabot Jobs is a job search built by Vectorwell Technologies. We collect jobs directly from company career
+        sites, keep checking that they're still open, and give every job seeker the tools to apply well.
       </p>
 
-      <div class="byline">
-        <img class="byline__photo" src="/about-david.jpg" alt="David Garcia" width="72" height="72" />
-        <span>
-          <span class="byline__name">David Garcia</span><br />
-          <span class="byline__role">Software engineer, Utah &middot; builder of Yabot Jobs</span>
-        </span>
+      <div class="table" role="list" aria-label="Yabot Jobs by the numbers">
+        <div class="row" role="listitem"><b>Over 1 million</b><span>jobs collected from company career sites</span></div>
+        <div class="row" role="listitem"><b>10,000+</b><span>companies, in every sector</span></div>
+        <div class="row" role="listitem"><b>About 30,000</b><span>new jobs added every weekday</span></div>
+        <div class="row" role="listitem"><b>74</b><span>kinds of career sites we read directly, from Workday and Greenhouse to Amazon's own</span></div>
       </div>
 
       <section class="card">
+        <h2>Why we built it</h2>
         <p>
-          I was born in Peru and moved to the U.S. with my family when I was 15. These days I live in Utah, where my
-          three grown children, who I could not be prouder of, keep me honest about what actually matters. I've
-          been a software engineer for more than 15 years.
+          Job searching has become a second job. The same listings get reposted across a dozen sites, roles stay up
+          long after they're filled, and the date on a posting often says when it was last refreshed, not when it
+          opened. Then candidates rewrite their resume for every application and hear nothing back.
+        </p>
+        <p>
+          We built Yabot Jobs to fix the parts of that we can: real jobs from the company's own site, honest dates,
+          and AI that helps you put your best application forward instead of sending more of them.
         </p>
       </section>
 
       <section class="card">
-        <h2>Why I built this</h2>
-        <p>
-          I built Yabot Jobs after getting laid off. I needed a way to search for jobs, track what I'd applied to, and
-          use modern AI tools to sharpen my resume for each posting, and I needed it to be affordable while I had no
-          income coming in. Nothing I found did all three without charging a subscription for the privilege.
-        </p>
-        <p>
-          So I built the tool I wished existed. Once it was working for me, it was obvious it could help anyone else
-          in the same spot, so I opened it up.
-        </p>
-      </section>
-
-      <section class="card">
-        <h2>How it stays free</h2>
-        <p>
-          Searching the board, saving jobs, and tracking applications cost nothing, for anyone. The part that costs
-          real money is AI: scoring, tailoring, and writing all run on a model, and model usage isn't free. Every
-          account gets a handful of free evaluations to try all of it with no key and no card. After that, you can
-          bring your own AI API key (Anthropic, OpenAI, DeepSeek, or any OpenAI-compatible service) and keep using
-          every feature for free; you pay your provider directly for what you use, and I add nothing on top. If you'd
-          rather not manage a key, there's an optional $5/month plan that covers it for you.
-        </p>
-        <p>
-          I'd like to offer more for free outright. The honest constraint is that AI costs money, and bring-your-own-key
-          is how I can keep the whole thing free without running it at a loss.
-        </p>
+        <h2>What we stand for</h2>
+        <ul>
+          <li><strong>Searching should be free.</strong> Browsing, saving, tracking and alerts cost nothing, for anyone, with no account needed to browse.</li>
+          <li><strong>Real jobs, real dates.</strong> Jobs come from company career sites, not copies on other boards, and we never show a job as newer than the day we first found it.</li>
+          <li><strong>You stay in control.</strong> We never apply for you. You see every score, every change to your resume, and you hit apply.</li>
+          <li><strong>Your data is yours.</strong> We don't sell it or use it to train AI models, and you can delete anything in your account at any time.</li>
+        </ul>
       </section>
 
       <div class="summary">
-        <h2>The short version</h2>
+        <h2>How Yabot Jobs is paid for</h2>
         <ul>
-          <li>One person builds and runs this, not a company with investors to answer to.</li>
-          <li>Searching, saving, and tracking jobs is free for everyone, no account required to browse.</li>
-          <li>Bring your own AI key and every AI feature is free of charge from me; you only pay your AI provider for what you use.</li>
-          <li>The code is open source, so you can see exactly what it does with your data.</li>
+          <li>Search, tracking and alerts are free. Only the AI features cost money to run.</li>
+          <li>Every account gets 10 jobs of AI help free, with no card.</li>
+          <li>After that, it's $5 a month for up to 100 jobs on our hosted AI.</li>
+          <li>Or connect your own Anthropic, OpenAI, DeepSeek or OpenAI-compatible account and pay us nothing; your provider bills you directly, and we add nothing on top.</li>
         </ul>
       </div>
 
       <section class="card">
-        <h2>Open source</h2>
+        <h2>Built in the open</h2>
         <p>
-          Yabot Jobs is open source. You can read the code, see what's sent where, and run it yourself:
-          <a href="https://github.com/davicho01/yabot.jobs-frontend">frontend</a> and
-          <a href="https://github.com/davicho01/yabot.jobs-backend">backend</a> on GitHub.
+          Yabot Jobs is open source, so anyone can check what it does with their data: read the
+          <a href="https://github.com/davicho01/yabot.jobs-frontend">website code</a> and the
+          <a href="https://github.com/davicho01/yabot.jobs-backend">API code</a> on GitHub.
         </p>
       </section>
 
       <section class="card">
-        <h2>Say hello</h2>
+        <h2>Leadership</h2>
+        <div class="byline">
+          <img class="byline__photo" src="/about-david.jpg" alt="David Garcia" width="72" height="72" />
+          <span>
+            <span class="byline__name">David Garcia</span><br />
+            <span class="byline__role">Founder, Vectorwell Technologies</span>
+          </span>
+        </div>
         <p>
-          I read everything that comes in through <a href="/help">the help page</a>. You can also find me on
+          David leads Yabot Jobs. He has been a software engineer for more than 15 years. Find him on
           <a href="https://www.linkedin.com/in/johnydgarcia">LinkedIn</a>.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Contact us</h2>
+        <p>
+          Questions, feedback or a job we got wrong? Reach us through <a href="/help">the help page</a>. We read
+          every message.
         </p>
       </section>
     </main>
@@ -681,6 +706,8 @@
               <a href="/#how-it-works">How it works</a>
               <a href="/getting-started">Getting started</a>
               <a href="/questions">Common questions</a>
+              <a href="/about">About</a>
+              <a href="/blog">Blog</a>
             </nav>
 
             <nav class="foot__col" aria-labelledby="foot-help">

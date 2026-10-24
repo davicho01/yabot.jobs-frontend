@@ -25,7 +25,10 @@
           window.yabotRedirecting = true;
           l.replace("/jobs" + l.search + l.hash);
         } else if (path !== "/" && path !== "/index.html") {
-          var staticPage = STATIC_PAGES[path.replace(/\/+$/, "")];
+          var trimmed = path.replace(/\/+$/, "");
+          // Blog pages by pattern, as in the CloudFront Function.
+          var staticPage = STATIC_PAGES[trimmed] ||
+            (trimmed === "/blog" ? "/blog/index.html" : /^\/blog\/[a-z0-9-]+$/.test(trimmed) ? trimmed + ".html" : null);
           window.yabotRedirecting = true;
           if (staticPage) {
             l.replace(staticPage);
@@ -2354,6 +2357,8 @@
           <div class="trust-links">
             <a class="btn btn--soft" href="https://github.com/davicho01/yabot.jobs-frontend">Read the code on GitHub &rsaquo;</a>
             <a class="btn btn--soft" href="/privacy">Privacy details &rsaquo;</a>
+            <a class="btn btn--soft" href="/blog/ghost-jobs-statistics-2026">Our ghost-job data &rsaquo;</a>
+            <a class="btn btn--soft" href="/about">About us &rsaquo;</a>
           </div>
         </div>
       </section>
@@ -2397,6 +2402,8 @@
               <a href="#how-it-works">How it works</a>
               <a href="/getting-started">Getting started</a>
               <a href="/questions">Common questions</a>
+              <a href="/about">About</a>
+              <a href="/blog">Blog</a>
             </nav>
 
             <nav class="foot__col" aria-labelledby="foot-help">
