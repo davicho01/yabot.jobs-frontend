@@ -244,3 +244,41 @@
     font-size: 1.6rem;
   }
 }
+/* The emailed sign-in code (EmailCodeSignIn): one big field, the digits
+   spaced out like the email shows them. */
+.login-card__code-sent {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem;
+}
+
+.login-card__form .login-card__code {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.5em;
+  text-align: center;
+  /* Balances the trailing letter-spacing so the digits sit centered. */
+  padding-left: calc(1rem + 0.5em);
+  font-variant-numeric: tabular-nums;
+}
+
+.login-card__code-help {
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  margin: 0.75rem 0 0;
+}
+
+/* Resend / different email: quiet outline pills, not the big submit. */
+.login-card__form .login-card__sent-actions button {
+  padding: 0.45rem 0.9rem;
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+}
+
+.login-card__form .login-card__sent-actions button:hover:not(:disabled) {
+  background: var(--chip);
+  filter: none;
+  color: var(--ink);
+}

@@ -7,7 +7,8 @@ import type { User } from "../api/types";
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
-  requestLink: (email: string) => Promise<void>;
+  requestCode: (email: string) => Promise<void>;
+  verifyCode: (email: string, code: string) => Promise<User>;
   verify: (token: string) => Promise<User>;
   signInWithGoogle: (credential: string) => Promise<User>;
   logout: () => Promise<void>;
@@ -43,9 +44,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const requestLink = useCallback(async (email: string) => {
-    await authApi.requestLink(email);
+  const requestCode = useCallback(async (email: string) => {
+    await authApi.requestCode(email);
   }, []);
+
+  const verifyCode = useCallback(
+    async (email: string, code: string) => {
+      const { user: signedInUser } = await authApi.verifyCode(email, code);
+      signedIn(signedInUser);
+      return signedInUser;
+    },
+    [signedIn],
+  );
 
   const verify = useCallback(async (token: string) => {
     const { user: verifiedUser } = await authApi.verify(token);
@@ -81,7 +91,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isLoading,
-        requestLink,
+        requestCode,
+        verifyCode,
         verify,
         signInWithGoogle,
         logout,
