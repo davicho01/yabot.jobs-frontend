@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Routes, Route, Outlet, Navigate, useLocation, useParams } from "react-router-dom";
 import { BOARD_PATH } from "./routes";
 import { LoginPage } from "./pages/LoginPage";
@@ -5,6 +6,7 @@ import { AuthCallbackPage } from "./pages/AuthCallbackPage";
 import { OAuthAuthorizePage } from "./pages/OAuthAuthorizePage";
 import { JobBoardPage } from "./pages/JobBoardPage";
 import { JobDetailPage } from "./pages/JobDetailPage";
+import { JobSwipePage } from "./pages/JobSwipePage";
 import { ApplyPage2 } from "./pages/ApplyPage2";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ResumePage } from "./pages/ResumePage";
@@ -29,6 +31,7 @@ import { GETTING_STARTED_PATH } from "./utils/onboarding";
 import { GettingStartedPage } from "./pages/GettingStartedPage";
 import { HelpPage } from "./pages/HelpPage";
 import { usePageViews } from "./hooks/usePageViews";
+import { phoneSearchLayout, reportSearchLayoutExposure, useIsPhone } from "./utils/experiments";
 
 // Rendered once for every route (via the layout Route below) rather than
 // per-page, so Header — and the search/filter/add-job controls it owns —
@@ -57,13 +60,24 @@ function StaticJobPageFallback() {
   return <Navigate to={`/jobs/${urlId}${search}${hash}`} replace />;
 }
 
+// The board, or on a phone whichever side of the search layout test this
+// visitor is on (see utils/experiments).
+function BoardRoute() {
+  const isPhone = useIsPhone();
+  const layout = isPhone ? phoneSearchLayout() : null;
+  useEffect(() => {
+    if (layout) reportSearchLayoutExposure(layout);
+  }, [layout]);
+  return layout === "swipe" ? <JobSwipePage /> : <JobBoardPage variant="cards" />;
+}
+
 export default function App() {
   usePageViews();
 
   return (
     <Routes>
       <Route element={<RootLayout />}>
-        <Route path={BOARD_PATH} element={<JobBoardPage variant="cards" />} />
+        <Route path={BOARD_PATH} element={<BoardRoute />} />
         <Route path="/jobs/:urlId" element={<JobDetailPage />} />
         <Route path="/job/:urlId" element={<StaticJobPageFallback />} />
         <Route path="/login" element={<LoginPage />} />

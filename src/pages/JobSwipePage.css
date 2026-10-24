@@ -1,0 +1,112 @@
+/* /jobs on a phone, "swipe" side of the search layout test (JobSwipePage).
+   The row of screens and each posting's card are JobBoardPage.css's and
+   JobBoardCards.css's phone styles (.board--split, .board--cards). Here only
+   the cards swipe: the page's background and the row above them (the count
+   and My applications) stay put. */
+
+/* The page's color washes sit on the swiping row itself, which doesn't
+   move, instead of on each screen, which would carry them along. */
+.board.board--swipe .board__layout {
+  background-color: var(--page);
+  background-image: var(--page-washes, none);
+  background-repeat: no-repeat;
+}
+
+.board.board--swipe .board__detail {
+  background: transparent;
+}
+
+/* No scrollbars on the row or on a posting: they flash in while swiping. */
+.board.board--swipe .board__layout,
+.board.board--swipe .board__detail {
+  scrollbar-width: none;
+}
+
+.board.board--swipe .board__layout::-webkit-scrollbar,
+.board.board--swipe .board__detail::-webkit-scrollbar {
+  display: none;
+}
+
+/* The row of postings starts under the header and moves up with it as it
+   slides away, in the same motion, so each posting's top is always just
+   under the count row (see JobSwipePage.tsx). Each screen leaves room at
+   its top for that row. */
+.board.board--swipe .board__layout {
+  /* A transform, not top: moving it lays nothing out again, so it stays
+     smooth mid-scroll. Its bottom edge sits off screen while the header
+     shows, which is only ever at a posting's top. */
+  transform: translateY(var(--header-height, 0px));
+  transition: transform 0.2s ease;
+}
+
+.page-shell:has(.site-header--hidden) .board.board--swipe .board__layout {
+  transform: none;
+}
+
+.board--swipe .board__detail::before {
+  display: none;
+}
+
+/* The count row (2.5rem), with the card 12px (the screen's padding) under it. */
+.swipe__spacer,
+.board--swipe .board__detail:not(.board__detail--swipe)::before {
+  display: block;
+  height: 2.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board.board--swipe .board__layout {
+    transition: none;
+  }
+}
+
+.swipe__top {
+  position: fixed;
+  top: var(--header-height, 0px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin: 0;
+  /* 8px under the header, the same as the header's own inset from the top. */
+  padding: 0.5rem 0.75rem 0;
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
+
+.swipe__top > * {
+  pointer-events: auto;
+}
+
+/* Slides up and away with the header when it hides on scroll. */
+.page-shell:has(.site-header--hidden) .swipe__top {
+  transform: translateY(calc(-1 * var(--header-height, 0px)));
+}
+
+/* Both chips float over a card scrolled up under them, frosted like the
+   header above. */
+.swipe__top .swipe__count,
+.swipe__top .board__detail-applications {
+  background: color-mix(in srgb, var(--band-card-bg) 72%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  backdrop-filter: blur(14px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 6px 18px -8px rgba(31, 26, 53, 0.3);
+}
+
+.swipe__count {
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swipe__top {
+    transition: none;
+  }
+}

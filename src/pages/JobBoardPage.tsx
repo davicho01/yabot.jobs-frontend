@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, type CSSProperties } f
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import { jobsApi, type WorkplaceTypeFilter } from "../api/jobs";
+import { PAGE_SIZE, jobsApi, type WorkplaceTypeFilter } from "../api/jobs";
 import { adminApi } from "../api/admin";
 import { applicationsApi } from "../api/applications";
 import type { JobDetail, JobPosting } from "../api/types";
@@ -23,6 +23,7 @@ import { jobAge, shortLocation, type JobAgeTone } from "../utils/jobPosting";
 import { fitTier } from "../utils/fitScore";
 import { bandColor } from "../utils/bandColor";
 import { listColor, listColorEnd } from "../utils/listGradient";
+import { trackEvent } from "../utils/analytics";
 import "./JobBoardPage.css";
 import "./JobBoardCards.css";
 import CompanyLogo from "../components/CompanyLogo";
@@ -216,7 +217,7 @@ function BandJobCard({
 // in the last 48 hours: the sunset and a pulsing dot under 24 hours, a white
 // pill after that. Older jobs keep their "Found 3d ago" chip with the others
 // (JobCaseFile).
-function FoundBadge({ job }: { job: JobDetail }) {
+export function FoundBadge({ job }: { job: JobDetail }) {
   const age = jobAge(job);
   if (!age || age.tone === "older") return null;
   return (
@@ -432,6 +433,9 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
   }, [updateParams]);
 
   function selectJob(id: string) {
+    // Postings opened, for the phone search layout test (see utils/experiments).
+    const position = jobs?.findIndex((job) => job.url.id === id) ?? -1;
+    trackEvent("job_view", { job_id: id, layout: "list", position: position >= 0 ? (page - 1) * PAGE_SIZE + position + 1 : 0 });
     openedByTap.current = true;
     updateParams((next) => next.set("jobId", id));
   }
