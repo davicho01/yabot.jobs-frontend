@@ -1227,6 +1227,52 @@
   bottom: calc(100% + 0.5rem);
 }
 
+/* The phone header unanchors the combobox (position: static, so its list spans
+   the whole pill); in the sheet that would hang the list off the bottom of the
+   screen, so here it anchors to its own field again. */
+.search-sheet .site-header__combobox,
+.search-sheet__clearable {
+  position: relative;
+  display: block;
+}
+
+/* Room for the X, so long text never runs under it. */
+.search-sheet .search-sheet__clearable .search-sheet__input,
+.search-sheet .site-header__combobox .site-header__search {
+  padding-right: 2.75rem;
+}
+
+.search-sheet__clear {
+  position: absolute;
+  top: 50%;
+  right: 0.65rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+/* A bigger tap target than the visible circle. */
+.search-sheet__clear::before {
+  content: "";
+  position: absolute;
+  inset: -0.7rem;
+}
+
+.search-sheet__clear svg {
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+}
+
 .search-sheet .site-header__combobox-list {
   left: 0;
   right: 0;
@@ -1270,11 +1316,35 @@
 }
 
 .search-sheet__footer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   padding: 0.75rem 1.25rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--glass-edge);
 }
 
+.search-sheet__reset-all {
+  flex-shrink: 0;
+  min-height: 3.25rem;
+  padding: 0 1.25rem;
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-pill);
+  background: var(--glass-chip);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.search-sheet__reset-all:disabled {
+  color: var(--ink-soft);
+  opacity: 0.6;
+  cursor: default;
+}
+
 .search-sheet__submit {
+  flex: 1;
   width: 100%;
   min-height: 3.25rem;
   border: 0;
