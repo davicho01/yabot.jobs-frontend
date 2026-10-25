@@ -200,9 +200,9 @@
 .board__detail-apply {
   display: inline-flex;
   align-items: center;
-  padding: 0.75rem 1.2rem;
+  padding: 0.6rem 1.05rem;
   border-radius: var(--radius-pill);
-  font-size: 0.92rem;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.3;
   white-space: nowrap;
@@ -231,8 +231,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
+  /* Apply's height. */
+  width: 2.35rem;
+  height: 2.35rem;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -894,7 +895,7 @@
 
 /* Room for Share and Apply, level with the company line. */
 .board--cards .case-file__employer {
-  padding-right: 11.5rem;
+  padding-right: 10.5rem;
 }
 
 /* Phones: lined up with the card's narrower padding. */
