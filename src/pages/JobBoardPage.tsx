@@ -25,6 +25,7 @@ import { bandColor } from "../utils/bandColor";
 import { listColor, listColorEnd } from "../utils/listGradient";
 import { trackEvent } from "../utils/analytics";
 import { boardReturn } from "../utils/boardReturn";
+import { JobSwipePage } from "./JobSwipePage";
 import "./JobBoardPage.css";
 import "./JobBoardCards.css";
 import CompanyLogo from "../components/CompanyLogo";
@@ -233,8 +234,9 @@ export function FoundBadge({ job }: { job: JobDetail }) {
 // variant "cards" is the board at /jobs: banded job cards and fit pills for
 // jobs already scored, over the classic variant's search, filters, paging and
 // detail pane.
-// openPostingScreen: on a phone, a card tapped opens its posting on a screen
-// of its own (JobSwipePage) instead of sliding it in beside the list.
+// openPostingScreen: on a phone, the list leads a row of postings that swipe
+// on through the results (JobSwipePage), instead of sliding in just the one
+// tapped beside it.
 export function JobBoardPage({
   variant = "classic",
   openPostingScreen = false,
@@ -443,14 +445,12 @@ export function JobBoardPage({
   }, [updateParams]);
 
   function selectJob(id: string) {
-    // Its own screen (JobSwipePage, which counts it for the search layout
-    // test), a step back in history from this list.
-    if (cards && openPostingScreen && isPhone()) {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
+    // The row of postings after the list (JobSwipePage, which counts it for
+    // the search layout test).
+    if (cards && openPostingScreen) {
+      updateParams((next) => {
         next.set("view", "posting");
         next.set("job", id);
-        return next;
       });
       return;
     }
@@ -491,130 +491,143 @@ export function JobBoardPage({
     }
   }
 
+  const listPane = (
+    <div className="board__list">
+      {/* On phones each pane is a page of its own, scrolling by itself, so
+          each carries the page's footer (the list the banner too); the
+          page's own are hidden there. */}
+      <div className="board__phone-only">
+        <GettingStartedBanner />
+      </div>
+      {cards ? (
+        <div className="board__cards-head">
+          <div className="board__cards-heading">
+            <h1 className="board__cards-title">
+              {sector ? `${SECTOR_SHORT_LABELS[sector] ?? sectorLabel(sector) ?? "Matching"} jobs` : "All jobs"}
+              {location && <span> in {location === "United States" ? "the US" : location}</span>}
+            </h1>
+            <p className="board__cards-count">
+              {data
+                ? // GET /jobs counts at most 1,000 matches ahead (COUNT_AHEAD), so
+                  // a total that reaches it means "at least".
+                  `${data.total.toLocaleString()}${data.total >= 1000 ? "+" : ""} ${data.total === 1 ? "job" : "jobs"}`
+                : "Loading jobs…"}
+            </p>
+          </div>
+          {/* One-tap versions of the header's filters; tapping an active one
+              clears it. */}
+          <div className="board__quick" role="group" aria-label="Quick filters">
+            {QUICK_FILTERS.map((filter) => {
+              const on = searchParams.get(filter.param) === filter.value;
+              return (
+                <button
+                  key={filter.label}
+                  type="button"
+                  className={`board__quick-chip${on ? " board__quick-chip--on" : ""}`}
+                  style={{ "--chip": filter.color } as CSSProperties}
+                  aria-pressed={on}
+                  onClick={() =>
+                    updateParams((next) => {
+                      if (on) next.delete(filter.param);
+                      else next.set(filter.param, filter.value);
+                      next.delete("page");
+                    })
+                  }
+                >
+                  {filter.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <Link to="/applications" className="board__applications-link">
+          My applications →
+        </Link>
+      )}
+      <div className="board__list-scroll">
+          {searchArea && (
+            <p className="board__search-area">
+              Nearest first, within {searchArea.radius_miles} miles of {searchArea.label}
+              {widerRadius <= MAX_RADIUS && (
+                <>
+                  {" · "}
+                  <button type="button" className="board__widen" onClick={widenSearch}>
+                    Search {widerRadius} miles
+                  </button>
+                </>
+              )}
+            </p>
+          )}
+          {isLoading && <p className="board__empty">Loading postings…</p>}
+          {!isLoading && jobs?.length === 0 && <p className="board__empty">No postings match your filters.</p>}
+          {jobs?.map((job, index) =>
+            cards ? (
+              <BandJobCard
+                key={job.url.id}
+                job={job}
+                color={listColor(index)}
+                colorEnd={listColorEnd(index)}
+                // Only a job you picked is ringed, not the first one shown by default.
+                active={job.url.id === selectedId}
+                query={query}
+                fit={fitByUrlId.get(job.url.id) ?? null}
+                onSelect={() => selectJob(job.url.id)}
+              />
+            ) : (
+              <JobCard
+                key={job.url.id}
+                job={job}
+                active={job.url.id === (selected?.url.id ?? "")}
+                query={query}
+                onSelect={() => selectJob(job.url.id)}
+              />
+            ),
+          )}
+        </div>
+        {data && data.total > 0 && (
+          <div className="board__pagination">
+            <button
+              type="button"
+              className="board__page-button"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              ‹ Prev
+            </button>
+            <span className="board__page-status">
+              Page {page} of {totalPages}
+            </span>
+            <button
+              type="button"
+              className="board__page-button"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Next ›
+            </button>
+          </div>
+        )}
+        <div className="board__phone-only">
+          <Footer />
+        </div>
+      </div>
+  );
+
+  if (cards && openPostingScreen) {
+    return (
+      <>
+        {dialog}
+        <JobSwipePage list={listPane} firstPage={data} />
+      </>
+    );
+  }
+
   return (
     <div className={`board board--split${selectedId ? " board--detail-open" : ""}${cards ? " board--cards" : ""}`}>
       {dialog}
       <div className="board__layout" ref={pagerRef}>
-        <div className="board__list">
-          {/* On phones each pane is a page of its own, scrolling by itself, so
-              each carries the page's footer (the list the banner too); the
-              page's own are hidden there. */}
-          <div className="board__phone-only">
-            <GettingStartedBanner />
-          </div>
-          {cards ? (
-            <div className="board__cards-head">
-              <div className="board__cards-heading">
-                <h1 className="board__cards-title">
-                  {sector ? `${SECTOR_SHORT_LABELS[sector] ?? sectorLabel(sector) ?? "Matching"} jobs` : "All jobs"}
-                  {location && <span> in {location === "United States" ? "the US" : location}</span>}
-                </h1>
-                <p className="board__cards-count">
-                  {data
-                    ? // GET /jobs counts at most 1,000 matches ahead (COUNT_AHEAD), so
-                      // a total that reaches it means "at least".
-                      `${data.total.toLocaleString()}${data.total >= 1000 ? "+" : ""} ${data.total === 1 ? "job" : "jobs"}`
-                    : "Loading jobs…"}
-                </p>
-              </div>
-              {/* One-tap versions of the header's filters; tapping an active one
-                  clears it. */}
-              <div className="board__quick" role="group" aria-label="Quick filters">
-                {QUICK_FILTERS.map((filter) => {
-                  const on = searchParams.get(filter.param) === filter.value;
-                  return (
-                    <button
-                      key={filter.label}
-                      type="button"
-                      className={`board__quick-chip${on ? " board__quick-chip--on" : ""}`}
-                      style={{ "--chip": filter.color } as CSSProperties}
-                      aria-pressed={on}
-                      onClick={() =>
-                        updateParams((next) => {
-                          if (on) next.delete(filter.param);
-                          else next.set(filter.param, filter.value);
-                          next.delete("page");
-                        })
-                      }
-                    >
-                      {filter.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <Link to="/applications" className="board__applications-link">
-              My applications →
-            </Link>
-          )}
-          <div className="board__list-scroll">
-              {searchArea && (
-                <p className="board__search-area">
-                  Nearest first, within {searchArea.radius_miles} miles of {searchArea.label}
-                  {widerRadius <= MAX_RADIUS && (
-                    <>
-                      {" · "}
-                      <button type="button" className="board__widen" onClick={widenSearch}>
-                        Search {widerRadius} miles
-                      </button>
-                    </>
-                  )}
-                </p>
-              )}
-              {isLoading && <p className="board__empty">Loading postings…</p>}
-              {!isLoading && jobs?.length === 0 && <p className="board__empty">No postings match your filters.</p>}
-              {jobs?.map((job, index) =>
-                cards ? (
-                  <BandJobCard
-                    key={job.url.id}
-                    job={job}
-                    color={listColor(index)}
-                    colorEnd={listColorEnd(index)}
-                    // Only a job you picked is ringed, not the first one shown by default.
-                    active={job.url.id === selectedId}
-                    query={query}
-                    fit={fitByUrlId.get(job.url.id) ?? null}
-                    onSelect={() => selectJob(job.url.id)}
-                  />
-                ) : (
-                  <JobCard
-                    key={job.url.id}
-                    job={job}
-                    active={job.url.id === (selected?.url.id ?? "")}
-                    query={query}
-                    onSelect={() => selectJob(job.url.id)}
-                  />
-                ),
-              )}
-            </div>
-            {data && data.total > 0 && (
-              <div className="board__pagination">
-                <button
-                  type="button"
-                  className="board__page-button"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                >
-                  ‹ Prev
-                </button>
-                <span className="board__page-status">
-                  Page {page} of {totalPages}
-                </span>
-                <button
-                  type="button"
-                  className="board__page-button"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                >
-                  Next ›
-                </button>
-              </div>
-            )}
-            <div className="board__phone-only">
-              <Footer />
-            </div>
-          </div>
+        {listPane}
 
           <div className="board__detail" ref={detailRef}>
             {cards && (

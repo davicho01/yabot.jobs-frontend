@@ -1,9 +1,9 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { PAGE_SIZE, jobsApi, type WorkplaceTypeFilter } from "../api/jobs";
-import type { JobDetail } from "../api/types";
+import type { JobDetail, JobList } from "../api/types";
 import { CompanySiteLink, JobCaseFile } from "../components/JobCaseFile";
 import CompanyLogo from "../components/CompanyLogo";
 import { BriefcaseIcon, ListIcon } from "../components/PillIcons";
@@ -40,32 +40,27 @@ const FLICK_SPEED = 0.2;
 const FLICK_WINDOW_MS = 100;
 // For this long after a gesture, the row is held to the posting it chose.
 const GESTURE_HOLD_MS = 1500;
-// A two-finger trackpad swipe right this far, on the first posting, goes
-// back to the list; wheel events this far apart are separate swipes.
-const WHEEL_BACK_PX = 80;
-const WHEEL_GAP_MS = 250;
 
 // Where the visitor was, so leaving for a posting's own page (a similar job)
 // and coming back lands on the same screen.
 let lastPlace = { key: "", index: 0 };
 
-// A posting opened from the phone list (JobBoardPage), on a screen of its
-// own: the same card the list opens, under a row with All jobs and My
-// applications that stays put, for the "swipe" side of the phone search
-// layout test (see utils/experiments): the list's results from that posting
-// on, one per screen, and a sideways swipe moves to the next one or back to
-// the one before. A swipe back past the first goes back to the list, as does
-// All jobs.
-// The URL says which posting (?view=posting&job=<id>), on top of the list's
-// own search, filters and page.
+// The phone board on the "swipe" side of the phone search layout test (see
+// utils/experiments): one row of screens, the list (JobBoardPage's, passed
+// in as `list`) first, and once a card is tapped, the results from that
+// posting on, one per screen, sliding in beside the list. A sideways swipe
+// moves to the next posting or back to the one before, and from the first
+// one back to the list, which slides in the way it slid out; so does All
+// jobs. The URL says which posting was opened
+// (?view=posting&job=<id>), on top of the list's own search, filters and
+// page.
 //
 // Like the list's phone layout (JobBoardPage.css), the row of screens is the
 // browser's own snapping sideways scroll, and each screen scrolls up and
 // down on its own.
-export function JobSwipePage() {
+export function JobSwipePage({ list, firstPage }: { list: ReactNode; firstPage?: JobList }) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const query = searchParams.get("q") ?? "";
@@ -83,65 +78,93 @@ export function JobSwipePage() {
     salaryMin: Number(searchParams.get("salaryMin")) || undefined,
     salaryMax: Number(searchParams.get("salaryMax")) || undefined,
   };
-  // Swiping: the results from the list's page on, more fetched as the
-  // visitor nears the end. Before that page there's nothing: a swipe back
-  // from its first posting is a swipe back to the list.
+  // The results from the list's page on (starting from the page the list
+  // already has), more fetched as the visitor nears the end, shown from the
+  // posting tapped: the ones before it are on the list, a swipe back.
   const results = useInfiniteQuery({
     queryKey: ["jobs-swipe", filters, listPage],
     queryFn: ({ pageParam }) => jobsApi.list({ ...filters, page: pageParam }),
     initialPageParam: listPage,
+    initialData: firstPage ? { pages: [firstPage], pageParams: [listPage] } : undefined,
     getNextPageParam: (last) => (last.page * last.page_size < last.total ? last.page + 1 : undefined),
+    enabled: !!openedId,
   });
   const { hasNextPage, isFetchingNextPage, fetchNextPage, isLoading } = results;
-  const jobs: JobDetail[] = results.data?.pages.flatMap((page) => page.items) ?? [];
+  const opened = !!openedId;
+  const fromListPage = opened ? (results.data?.pages.flatMap((page) => page.items) ?? []) : [];
+  const tapped = Math.max(0, fromListPage.findIndex((job) => job.url.id === openedId));
+  const jobs: JobDetail[] = fromListPage.slice(tapped);
   const total = results.data?.pages[0]?.total ?? 0;
   // The first posting here is this far into the whole result list.
-  const offset = (listPage - 1) * PAGE_SIZE;
+  const offset = (listPage - 1) * PAGE_SIZE + tapped;
 
   const placeKey = JSON.stringify([filters, listPage, openedId]);
-  // Which posting the row is on; -1 until the results are in and it's been
-  // put on the one tapped (or back where it was, see lastPlace).
+  // Which posting the row is on (its screen is index + 1, after the list);
+  // -1 on the list, and until the results are in and it's been put on the
+  // first, the one tapped (or back where it was, see lastPlace).
   const [index, setIndex] = useState(() => (lastPlace.key === placeKey ? lastPlace.index : -1));
-  const trackRef = useRef<HTMLDivElement>(null);
-  if (index >= 0) lastPlace = { key: placeKey, index };
-
-  const [placed, setPlaced] = useState(false);
-  if (index < 0 && jobs.length > 0) {
-    const tapped = Math.max(0, jobs.findIndex((job) => job.url.id === openedId));
-    setIndex(tapped);
+  const [placedFor, setPlacedFor] = useState<string | null>(null);
+  const [shownKey, setShownKey] = useState(placeKey);
+  if (shownKey !== placeKey) {
+    setShownKey(placeKey);
+    setIndex(-1);
+    setPlacedFor(null);
   }
-  useLayoutEffect(() => {
-    const track = trackRef.current;
-    if (placed || !track || index < 0 || jobs.length <= index) return;
-    setPlaced(true);
-    track.scrollTo({ left: index * track.clientWidth });
-  }, [jobs.length, index, placed]);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
+  if (opened && index >= 0) lastPlace = { key: placeKey, index };
+  if (opened && index < 0 && jobs.length > 0) setIndex(0);
 
-  // Back to the list, at the posting on screen: back through history to it
-  // when that's where the visitor came from, or else (a shared link to a
-  // posting) to the list in place of this.
-  const backToList = () => {
+  // Steers the row to a screen (set by the gesture effect below, which keeps
+  // track of where the row is headed).
+  const goToRef = useRef<(screen: number, instant?: boolean) => void>(() => {});
+
+  // Onto the posting tapped: sliding over from the list when it was just
+  // tapped there, or straight there when the board opened on it (a link to
+  // a posting, or back from a similar job's page).
+  const openedOnLoad = useRef(opened ? placeKey : null);
+  useLayoutEffect(() => {
+    if (!opened || placedFor === placeKey || index < 0 || jobs.length <= index) return;
+    setPlacedFor(placeKey);
+    goToRef.current(index + 1, placeKey === openedOnLoad.current);
+  }, [opened, placeKey, placedFor, jobs.length, index]);
+
+  // Headed back to the list: it turns to the page of the posting on screen
+  // (JobBoardPage, through boardReturn), or if that's the page it's on,
+  // brings its card into view, before it slides in. And the header comes
+  // back for it.
+  const returnPage = useRef(listPage);
+  const onReturn = () => {
     const at = jobs[Math.max(0, index)];
-    boardReturn.jobId = at?.url.id ?? openedId;
-    boardReturn.page = listPage + Math.floor(Math.max(0, index) / PAGE_SIZE);
-    if (location.key !== "default") {
-      navigate(-1);
-      return;
+    returnPage.current = listPage + Math.floor((tapped + Math.max(0, index)) / PAGE_SIZE);
+    if (returnPage.current === listPage) {
+      if (at) document.querySelector(`[data-job-id="${at.url.id}"]`)?.scrollIntoView({ block: "nearest" });
+    } else if (at) {
+      boardReturn.jobId = at.url.id;
+      boardReturn.page = returnPage.current;
     }
+    window.dispatchEvent(new Event(REVEAL_HEADER_EVENT));
+  };
+  const onReturnRef = useRef(onReturn);
+  // Back on the list: the postings close.
+  const closePostings = () => {
+    if (!opened) return;
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev);
         next.delete("view");
         next.delete("job");
-        if (boardReturn.page > 1) next.set("page", String(boardReturn.page));
+        if (returnPage.current > 1) next.set("page", String(returnPage.current));
+        else next.delete("page");
         return next;
       },
       { replace: true },
     );
   };
-  const backToListRef = useRef(backToList);
+  const closePostingsRef = useRef(closePostings);
   useEffect(() => {
-    backToListRef.current = backToList;
+    onReturnRef.current = onReturn;
+    closePostingsRef.current = closePostings;
   });
 
   // A new search from the header goes back to the list with it.
@@ -166,16 +189,22 @@ export function JobSwipePage() {
   // screen. The rest of the page waits for the swipe to settle (below).
   const [shown, setShown] = useState(Math.max(0, index));
 
-  // Which screen the row has settled on, once a swipe comes to rest.
+  // Which screen the row has settled on, once a swipe comes to rest. The
+  // row above the postings fades out as the list slides in.
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
     let timer = 0;
-    const onScroll = () => {
-      setShown(Math.round(track.scrollLeft / track.clientWidth));
+    const onScroll = (event: Event) => {
+      if (event.target !== track) return;
+      const screens = track.scrollLeft / track.clientWidth;
+      setShown(Math.max(0, Math.round(screens) - 1));
+      if (topRef.current) topRef.current.style.opacity = String(Math.min(1, screens));
       window.clearTimeout(timer);
       timer = window.setTimeout(() => {
-        setIndex(Math.round(track.scrollLeft / track.clientWidth));
+        const screen = Math.round(track.scrollLeft / track.clientWidth);
+        if (screen === 0) closePostingsRef.current();
+        else setIndex(screen - 1);
       }, 120);
     };
     track.addEventListener("scroll", onScroll, { passive: true });
@@ -194,17 +223,17 @@ export function JobSwipePage() {
   }, [currentId]);
 
   // The header slides away as soon as a posting scrolls down (Header.tsx),
-  // and the row of postings moves up with it (JobSwipePage.css), so the
-  // top of every posting's scroll is always just under the count row: a
-  // flick back up slows and stops there the way any scroll stops at its top.
-  // Scrolling never brings the header back; pulling a posting on past its
-  // top by REVEAL_PULL_PX of finger travel does.
+  // and the postings move up with it (JobSwipePage.css), so the top of every
+  // posting's scroll is always just under the count row: a flick back up
+  // slows and stops there the way any scroll stops at its top. Scrolling
+  // never brings the header back; pulling a posting on past its top by
+  // REVEAL_PULL_PX of finger travel does.
   //
-  // And each gesture moves at most one posting, decided by the finger rather
+  // And each gesture moves at most one screen, decided by the finger rather
   // than by wherever the row happens to be: a sideways swipe of
-  // SWIPE_MIN_PX or more, or a quick flick, goes one posting over in its
+  // SWIPE_MIN_PX or more, or a quick flick, goes one screen over in its
   // direction, anything less back to where it started, and a mostly
-  // up-and-down one never changes postings. Each swipe counts from the posting the last one was heading
+  // up-and-down one never changes screens. Each swipe counts from the screen the last one was heading
   // to, so a finger landing while a swipe is still gliding into place (which
   // the browser hands to the row, not the posting) can't send it back or on
   // to another. The row is only steered once the finger lifts: changing its
@@ -219,25 +248,28 @@ export function JobSwipePage() {
     // Recent finger positions, for how fast it was going as it lifted.
     let samples: { x: number; t: number }[] = [];
     let axis: "x" | "y" | null = null;
-    // The posting the row is on or gliding to.
+    // The screen the row is on or gliding to.
     let target = Math.round(track.scrollLeft / track.clientWidth);
     const headerHidden = () => !!document.querySelector(".site-header--hidden");
     // When a gesture last chose `target`.
     let chosenAt = 0;
-    const goTo = (i: number) => {
-      const last = track.querySelectorAll(".board__detail").length - 1;
-      target = Math.max(0, Math.min(last, i));
+    const goTo = (i: number, instant = false) => {
+      const was = target;
+      target = Math.max(0, Math.min(track.children.length - 1, i));
       chosenAt = Date.now();
+      if (target === 0 && was !== 0) onReturnRef.current();
       const left = target * track.clientWidth;
       if (Math.abs(track.scrollLeft - left) > 1) {
         const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        requestAnimationFrame(() => track.scrollTo({ left, behavior: reduced ? "auto" : "smooth" }));
+        const behavior = instant || reduced ? "auto" : "smooth";
+        requestAnimationFrame(() => track.scrollTo({ left, behavior }));
       }
     };
+    goToRef.current = goTo;
     // Where the row comes to rest. Just after a gesture, it has to be the
-    // posting that gesture chose: the browser's own fling can start after
+    // screen that gesture chose: the browser's own fling can start after
     // goTo and carry the row on past it, so it's brought back. Otherwise
-    // (a restored place, a new search) wherever it rests is the posting now.
+    // (a restored place, a new search) wherever it rests is the screen now.
     let restTimer = 0;
     const onTrackScroll = (event: Event) => {
       if (event.target !== track) return;
@@ -267,10 +299,7 @@ export function JobSwipePage() {
       const latest = samples[samples.length - 1];
       const speed = first && latest ? Math.abs(latest.x - first.x) / Math.max(1, latest.t - first.t) : 0;
       const swiped = Math.abs(dx) >= SWIPE_MIN_PX || (Math.abs(dx) >= FLICK_MIN_PX && speed >= FLICK_SPEED);
-      if (axis === "x" && swiped && dx > 0 && start.index === 0) {
-        goTo(0);
-        backToListRef.current();
-      } else if (axis === "x" && swiped) goTo(start.index + (dx < 0 ? 1 : -1));
+      if (axis === "x" && swiped) goTo(start.index + (dx < 0 ? 1 : -1));
       else goTo(start.index);
       start = null;
       axis = null;
@@ -299,31 +328,6 @@ export function JobSwipePage() {
       pullFrom ??= y;
       if (y - pullFrom > REVEAL_PULL_PX && headerHidden()) window.dispatchEvent(new Event(REVEAL_HEADER_EVENT));
     };
-    // A trackpad has no touches: a two-finger swipe right on the first
-    // posting goes back to the list too (the row's overscroll-behavior keeps
-    // the browser's own back swipe from doing it). Once per swipe: the
-    // trackpad's glide after it keeps sending wheel events.
-    let wheelX = 0;
-    let wheelAt = 0;
-    let wheelDone = false;
-    const onWheel = (event: WheelEvent) => {
-      if (event.timeStamp - wheelAt > WHEEL_GAP_MS) {
-        wheelX = 0;
-        wheelDone = false;
-      }
-      wheelAt = event.timeStamp;
-      if (wheelDone || Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
-      if (track.scrollLeft > 1) {
-        wheelX = 0;
-        return;
-      }
-      wheelX += event.deltaX;
-      if (wheelX < -WHEEL_BACK_PX) {
-        wheelDone = true;
-        backToListRef.current();
-      }
-    };
-    track.addEventListener("wheel", onWheel, { passive: true });
     track.addEventListener("scroll", onTrackScroll, { passive: true });
     track.addEventListener("touchstart", onTouchStart, { passive: true });
     track.addEventListener("touchmove", onTouchMove, { passive: true });
@@ -331,7 +335,6 @@ export function JobSwipePage() {
     track.addEventListener("touchcancel", onTouchEnd, { passive: true });
     return () => {
       window.clearTimeout(restTimer);
-      track.removeEventListener("wheel", onWheel);
       track.removeEventListener("scroll", onTrackScroll);
       track.removeEventListener("touchstart", onTouchStart);
       track.removeEventListener("touchmove", onTouchMove);
@@ -341,39 +344,37 @@ export function JobSwipePage() {
   }, []);
 
   useEffect(() => {
-    if (hasNextPage && !isFetchingNextPage && index >= jobs.length - PREFETCH_AHEAD) fetchNextPage();
-  }, [index, jobs.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
+    if (opened && hasNextPage && !isFetchingNextPage && index >= jobs.length - PREFETCH_AHEAD) fetchNextPage();
+  }, [opened, index, jobs.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <div className="board board--split board--detail-open board--cards board--swipe">
+    <div className={`board board--split board--cards board--swipe${opened ? " board--detail-open" : ""}`}>
       {/* Stays put while the cards scroll and swipe underneath: the way back
-          to the list, where this posting sits in the results (swiping), and
-          My applications, as on the list's open posting. */}
-      <div className="board__detail-top swipe__top">
-        <button type="button" className="board__back board__back--top" onClick={backToList}>
-          <ListIcon />
-          All jobs
-        </button>
-        {jobs.length > 0 && (
-          <span className="swipe__count">
-            {(offset + Math.min(shown, jobs.length - 1) + 1).toLocaleString()} / {total.toLocaleString()}
-            {total >= 1000 ? "+" : ""}
-          </span>
-        )}
-        <Link to="/applications" className="board__detail-applications">
-          <BriefcaseIcon />
-          My applications
-        </Link>
-      </div>
+          to the list, where this posting sits in the results, and My
+          applications, as on the list's open posting. */}
+      {opened && (
+        <div className="board__detail-top swipe__top" ref={topRef} style={{ opacity: 0 }}>
+          <button type="button" className="board__back board__back--top" onClick={() => goToRef.current(0, index > 0)}>
+            <ListIcon />
+            All jobs
+          </button>
+          {jobs.length > 0 && (
+            <span className="swipe__count">
+              {(offset + Math.min(shown, jobs.length - 1) + 1).toLocaleString()} / {total.toLocaleString()}
+              {total >= 1000 ? "+" : ""}
+            </span>
+          )}
+          <Link to="/applications" className="board__detail-applications">
+            <BriefcaseIcon />
+            My applications
+          </Link>
+        </div>
+      )}
       <div className="board__layout" ref={trackRef} data-header-reveal="hold">
-        {isLoading && (
+        {list}
+        {opened && isLoading && (
           <div className="board__detail">
             <p className="board__empty">Loading postings…</p>
-          </div>
-        )}
-        {!isLoading && jobs.length === 0 && (
-          <div className="board__detail">
-            <p className="board__empty">No postings match your filters.</p>
           </div>
         )}
         {jobs.map((job, i) => (

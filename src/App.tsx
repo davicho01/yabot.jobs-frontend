@@ -1,12 +1,11 @@
 import { useEffect } from "react";
-import { Routes, Route, Outlet, Navigate, useLocation, useParams, useSearchParams } from "react-router-dom";
+import { Routes, Route, Outlet, Navigate, useLocation, useParams } from "react-router-dom";
 import { BOARD_PATH } from "./routes";
 import { LoginPage } from "./pages/LoginPage";
 import { AuthCallbackPage } from "./pages/AuthCallbackPage";
 import { OAuthAuthorizePage } from "./pages/OAuthAuthorizePage";
 import { JobBoardPage } from "./pages/JobBoardPage";
 import { JobDetailPage } from "./pages/JobDetailPage";
-import { JobSwipePage } from "./pages/JobSwipePage";
 import { ApplyPage2 } from "./pages/ApplyPage2";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ResumePage } from "./pages/ResumePage";
@@ -66,16 +65,14 @@ function StaticJobPageFallback() {
 // The board, or on a phone whichever side of the search layout test this
 // visitor is on (see utils/experiments).
 // Phones start on the list either way. On "list", a posting tapped slides
-// in beside it; on "swipe", it opens on a screen of its own (?view=posting)
-// that swipes on through the results.
+// in beside it; on "swipe", it slides in at the start of a row of postings
+// that swipes on through the results (?view=posting).
 function BoardRoute() {
   const isPhone = useIsPhone();
-  const [searchParams] = useSearchParams();
   const layout = isPhone ? phoneSearchLayout() : null;
   useEffect(() => {
     if (layout) reportSearchLayoutExposure(layout);
   }, [layout]);
-  if (layout === "swipe" && searchParams.get("view") === "posting") return <JobSwipePage />;
   return <JobBoardPage variant="cards" openPostingScreen={layout === "swipe"} />;
 }
 

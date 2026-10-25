@@ -1,9 +1,9 @@
-/* A posting opened from the phone list, on a screen of its own
-   (JobSwipePage), alone or swiping on through the results. The row of
-   screens and each posting's card are JobBoardPage.css's and
-   JobBoardCards.css's phone styles (.board--split, .board--cards). Here only
-   the cards move: the page's background and the row above them (All jobs,
-   the count and My applications) stay put. */
+/* The phone board's row of screens on the "swipe" side of the search layout
+   test (JobSwipePage): the list, then the postings swiping on through the
+   results. The row and each posting's card are JobBoardPage.css's and
+   JobBoardCards.css's phone styles (.board--split, .board--cards). Between
+   postings only the cards move: the page's background and the row above
+   them (All jobs, the count and My applications) stay put. */
 
 /* The page's color washes sit on the swiping row itself, which doesn't
    move, instead of on each screen, which would carry them along. */
@@ -17,11 +17,11 @@
   background: transparent;
 }
 
-/* The row of postings starts under the header and moves up with it as it
-   slides away, in the same motion, so each posting's top is always just
-   under the count row (see JobSwipePage.tsx). Each screen leaves room at
-   its top for that row. */
-.board.board--swipe .board__layout {
+/* The postings start under the header and move up with it as it slides
+   away, in the same motion, so each posting's top is always just under the
+   count row (see JobSwipePage.tsx). Each screen leaves room at its top for
+   that row. The list, under the header like any page, stays where it is. */
+.board.board--swipe .board__detail {
   /* A transform, not top: moving it lays nothing out again, so it stays
      smooth mid-scroll. Its bottom edge sits off screen while the header
      shows, which is only ever at a posting's top. */
@@ -29,7 +29,7 @@
   transition: transform 0.2s ease;
 }
 
-.page-shell:has(.site-header--hidden) .board.board--swipe .board__layout {
+.page-shell:has(.site-header--hidden) .board.board--swipe .board__detail {
   transform: none;
 }
 
@@ -45,7 +45,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .board.board--swipe .board__layout {
+  .board.board--swipe .board__detail {
     transition: none;
   }
 }
