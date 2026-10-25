@@ -84,6 +84,24 @@ const SALARY_MAX_OPTIONS: { value: string; label: string }[] = [
   { value: "200000", label: "Up to $200,000" },
 ];
 
+// The X inside a search sheet field. mousedown is cancelled so a focused field
+// keeps focus (and the phone keeps its keyboard up) through the tap.
+function ClearButton({ label, onClear }: { label: string; onClear: () => void }) {
+  return (
+    <button
+      type="button"
+      className="search-sheet__clear"
+      aria-label={label}
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onClear}
+    >
+      <svg viewBox="0 0 20 20" width="9" height="9" fill="none" aria-hidden="true">
+        <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      </svg>
+    </button>
+  );
+}
+
 function FilterDropdown({
   options,
   value,
@@ -547,6 +565,60 @@ export function Header() {
     });
   }
 
+  // The search sheet's X buttons: a cleared field applies at once, like a
+  // picked suggestion, rather than waiting out the typing debounce.
+  function clearSearchInput() {
+    if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    setSearchInput("");
+    updateBoardParams((next) => {
+      next.delete("q");
+      next.delete("page");
+    });
+  }
+
+  function clearLocationInput() {
+    if (locationDebounce.current) clearTimeout(locationDebounce.current);
+    setLocationInput("");
+    setActivePlace(-1);
+    updateBoardParams((next) => {
+      next.delete("metro");
+      next.delete("location");
+      next.delete("radius");
+      next.delete("page");
+    });
+  }
+
+  function clearCompanyInput() {
+    if (companyDebounce.current) clearTimeout(companyDebounce.current);
+    setCompanyInput("");
+    updateBoardParams((next) => {
+      next.delete("company");
+      next.delete("page");
+    });
+  }
+
+  // The sheet's Reset: every field back to how a fresh visit to the board
+  // starts — no title, the default place and sector, no filters.
+  function resetSearch() {
+    if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    if (locationDebounce.current) clearTimeout(locationDebounce.current);
+    if (companyDebounce.current) clearTimeout(companyDebounce.current);
+    setSearchInput("");
+    setLocationInput(DEFAULT_LOCATION);
+    setPlacesOpen(false);
+    setActivePlace(-1);
+    setCompanyInput("");
+    updateBoardParams((next) => {
+      for (const key of ["q", "metro", "radius", "sector", "company", "workplace", "posted", "salaryMin", "salaryMax", "page"]) {
+        next.delete(key);
+      }
+      next.set("location", DEFAULT_LOCATION);
+    });
+  }
+
+  const searchIsDefault =
+    !searchInput && locationInput === DEFAULT_LOCATION && !metroSlug && sectorFilter === DEFAULT_SECTOR && activeFilterCount === 0;
+
   // Suggestions follow what's been typed, keystroke by keystroke (they come from
   // an in-memory list on the server, so it's cheap), and keep showing the
   // previous options meanwhile so the list doesn't flicker empty in between.
@@ -658,7 +730,8 @@ export function Header() {
   // part when no display name is set, same fallback the initial above uses.
   // The place field and its suggestions: in the header's search bar, and on
   // a phone in the search sheet (each with its own element ids).
-  function locationField(idPrefix: string) {
+  function locationField(idPrefix: string, clearable = false) {
+    const value = metroSlug && selectedMetro ? metroLabel(selectedMetro) : locationInput;
     return (
     <div className="site-header__combobox">
       <input
@@ -672,12 +745,13 @@ export function Header() {
         aria-activedescendant={showPlaces && activePlace >= 0 ? `${idPrefix}-option-${activePlace}` : undefined}
         autoComplete="off"
         placeholder="Search by city or state…"
-        value={metroSlug && selectedMetro ? metroLabel(selectedMetro) : locationInput}
+        value={value}
         onChange={(e) => handleLocationInputChange(e.target.value)}
         onFocus={() => setPlacesOpen(true)}
         onBlur={() => setPlacesOpen(false)}
         onKeyDown={handleLocationKeyDown}
       />
+      {clearable && value && <ClearButton label="Clear city or state" onClear={clearLocationInput} />}
       {showPlaces && (
         <ul className="site-header__combobox-list" id={`${idPrefix}-options`} role="listbox">
           {placeOptions?.map((place, index) => {
@@ -1097,18 +1171,21 @@ export function Header() {
               <div className="search-sheet__body">
                 <label className="search-sheet__field">
                   <span className="search-sheet__label">Job title or keyword</span>
-                  <input
-                    className="site-header__search search-sheet__input"
-                    type="search"
-                    placeholder="e.g. product designer"
-                    title="Add a word starting with - to exclude it, e.g. -senior"
-                    value={searchInput}
-                    onChange={(e) => handleSearchInputChange(e.target.value)}
-                  />
+                  <span className="search-sheet__clearable">
+                    <input
+                      className="site-header__search search-sheet__input"
+                      type="search"
+                      placeholder="e.g. product designer"
+                      title="Add a word starting with - to exclude it, e.g. -senior"
+                      value={searchInput}
+                      onChange={(e) => handleSearchInputChange(e.target.value)}
+                    />
+                    {searchInput && <ClearButton label="Clear job title" onClear={clearSearchInput} />}
+                  </span>
                 </label>
                 <div className="search-sheet__field">
                   <span className="search-sheet__label">City or state</span>
-                  {locationField("sheet-location")}
+                  {locationField("sheet-location", true)}
                 </div>
                 <div className="search-sheet__field">
                   <span className="search-sheet__label">Sector</span>
@@ -1153,13 +1230,16 @@ export function Header() {
                 </div>
                 <label className="search-sheet__field">
                   <span className="search-sheet__label">Company</span>
-                  <input
-                    className="site-header__search search-sheet__input"
-                    type="text"
-                    placeholder="Any company"
-                    value={companyInput}
-                    onChange={(e) => handleCompanyInputChange(e.target.value)}
-                  />
+                  <span className="search-sheet__clearable">
+                    <input
+                      className="site-header__search search-sheet__input"
+                      type="text"
+                      placeholder="Any company"
+                      value={companyInput}
+                      onChange={(e) => handleCompanyInputChange(e.target.value)}
+                    />
+                    {companyInput && <ClearButton label="Clear company" onClear={clearCompanyInput} />}
+                  </span>
                 </label>
                 <div className="search-sheet__pair">
                   <div className="search-sheet__field">
@@ -1186,6 +1266,9 @@ export function Header() {
               </div>
 
               <div className="search-sheet__footer">
+                <button type="button" className="search-sheet__reset-all" onClick={resetSearch} disabled={searchIsDefault}>
+                  Reset
+                </button>
                 <button type="submit" className="search-sheet__submit">
                   Show jobs
                 </button>
