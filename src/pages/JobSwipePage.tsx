@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { PAGE_SIZE, jobsApi, type WorkplaceTypeFilter } from "../api/jobs";
@@ -51,19 +51,18 @@ let lastPlace = { key: "", index: 0 };
 
 // A posting opened from the phone list (JobBoardPage), on a screen of its
 // own: the same card the list opens, under a row with All jobs and My
-// applications that stays put. Both sides of the phone search layout test
-// (see utils/experiments) open postings here:
-//  - "single": just the posting tapped.
-//  - "swipe": the list's results from that posting on, one per screen, and a
-//    sideways swipe moves to the next one or back to the one before.
-// A swipe back past the first goes back to the list, as does All jobs.
+// applications that stays put, for the "swipe" side of the phone search
+// layout test (see utils/experiments): the list's results from that posting
+// on, one per screen, and a sideways swipe moves to the next one or back to
+// the one before. A swipe back past the first goes back to the list, as does
+// All jobs.
 // The URL says which posting (?view=posting&job=<id>), on top of the list's
 // own search, filters and page.
 //
 // Like the list's phone layout (JobBoardPage.css), the row of screens is the
 // browser's own snapping sideways scroll, and each screen scrolls up and
 // down on its own.
-export function JobSwipePage({ mode }: { mode: "single" | "swipe" }) {
+export function JobSwipePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -84,8 +83,6 @@ export function JobSwipePage({ mode }: { mode: "single" | "swipe" }) {
     salaryMin: Number(searchParams.get("salaryMin")) || undefined,
     salaryMax: Number(searchParams.get("salaryMax")) || undefined,
   };
-  const swipe = mode === "swipe";
-
   // Swiping: the results from the list's page on, more fetched as the
   // visitor nears the end. Before that page there's nothing: a swipe back
   // from its first posting is a swipe back to the list.
@@ -94,26 +91,14 @@ export function JobSwipePage({ mode }: { mode: "single" | "swipe" }) {
     queryFn: ({ pageParam }) => jobsApi.list({ ...filters, page: pageParam }),
     initialPageParam: listPage,
     getNextPageParam: (last) => (last.page * last.page_size < last.total ? last.page + 1 : undefined),
-    enabled: swipe,
   });
-  // Not swiping: just the posting tapped.
-  const single = useQuery({
-    queryKey: ["job", openedId],
-    queryFn: () => jobsApi.get(openedId),
-    enabled: !swipe && !!openedId,
-  });
-  const { hasNextPage, isFetchingNextPage, fetchNextPage } = results;
-  const isLoading = swipe ? results.isLoading : single.isLoading;
-  const jobs: JobDetail[] = swipe
-    ? (results.data?.pages.flatMap((page) => page.items) ?? [])
-    : single.data
-      ? [single.data]
-      : [];
+  const { hasNextPage, isFetchingNextPage, fetchNextPage, isLoading } = results;
+  const jobs: JobDetail[] = results.data?.pages.flatMap((page) => page.items) ?? [];
   const total = results.data?.pages[0]?.total ?? 0;
   // The first posting here is this far into the whole result list.
   const offset = (listPage - 1) * PAGE_SIZE;
 
-  const placeKey = JSON.stringify([mode, filters, listPage, openedId]);
+  const placeKey = JSON.stringify([filters, listPage, openedId]);
   // Which posting the row is on; -1 until the results are in and it's been
   // put on the one tapped (or back where it was, see lastPlace).
   const [index, setIndex] = useState(() => (lastPlace.key === placeKey ? lastPlace.index : -1));
@@ -203,7 +188,7 @@ export function JobSwipePage({ mode }: { mode: "single" | "swipe" }) {
   const current = index >= 0 ? jobs[index] : undefined;
   const currentId = current?.url.id;
   useEffect(() => {
-    if (currentId) trackEvent("job_view", { job_id: currentId, layout: mode, position: offset + index + 1 });
+    if (currentId) trackEvent("job_view", { job_id: currentId, layout: "swipe", position: offset + index + 1 });
     // Counted once per posting landed on, not again when more results load.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId]);
@@ -356,8 +341,8 @@ export function JobSwipePage({ mode }: { mode: "single" | "swipe" }) {
   }, []);
 
   useEffect(() => {
-    if (swipe && hasNextPage && !isFetchingNextPage && index >= jobs.length - PREFETCH_AHEAD) fetchNextPage();
-  }, [swipe, index, jobs.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
+    if (hasNextPage && !isFetchingNextPage && index >= jobs.length - PREFETCH_AHEAD) fetchNextPage();
+  }, [index, jobs.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <div className="board board--split board--detail-open board--cards board--swipe">
@@ -369,7 +354,7 @@ export function JobSwipePage({ mode }: { mode: "single" | "swipe" }) {
           <ListIcon />
           All jobs
         </button>
-        {swipe && jobs.length > 0 && (
+        {jobs.length > 0 && (
           <span className="swipe__count">
             {(offset + Math.min(shown, jobs.length - 1) + 1).toLocaleString()} / {total.toLocaleString()}
             {total >= 1000 ? "+" : ""}
@@ -388,7 +373,7 @@ export function JobSwipePage({ mode }: { mode: "single" | "swipe" }) {
         )}
         {!isLoading && jobs.length === 0 && (
           <div className="board__detail">
-            <p className="board__empty">{swipe ? "No postings match your filters." : "This posting isn't available."}</p>
+            <p className="board__empty">No postings match your filters.</p>
           </div>
         )}
         {jobs.map((job, i) => (

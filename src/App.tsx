@@ -65,9 +65,9 @@ function StaticJobPageFallback() {
 
 // The board, or on a phone whichever side of the search layout test this
 // visitor is on (see utils/experiments).
-// Phones start on the list either way; a posting tapped there opens on a
-// screen of its own (?view=posting), alone or swiping on through the
-// results, by the visitor's side of the search layout test.
+// Phones start on the list either way. On "list", a posting tapped slides
+// in beside it; on "swipe", it opens on a screen of its own (?view=posting)
+// that swipes on through the results.
 function BoardRoute() {
   const isPhone = useIsPhone();
   const [searchParams] = useSearchParams();
@@ -75,10 +75,8 @@ function BoardRoute() {
   useEffect(() => {
     if (layout) reportSearchLayoutExposure(layout);
   }, [layout]);
-  if (layout && searchParams.get("view") === "posting") {
-    return <JobSwipePage mode={layout === "swipe" ? "swipe" : "single"} />;
-  }
-  return <JobBoardPage variant="cards" />;
+  if (layout === "swipe" && searchParams.get("view") === "posting") return <JobSwipePage />;
+  return <JobBoardPage variant="cards" openPostingScreen={layout === "swipe"} />;
 }
 
 export default function App() {

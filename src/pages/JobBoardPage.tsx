@@ -233,7 +233,15 @@ export function FoundBadge({ job }: { job: JobDetail }) {
 // variant "cards" is the board at /jobs: banded job cards and fit pills for
 // jobs already scored, over the classic variant's search, filters, paging and
 // detail pane.
-export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "cards" }) {
+// openPostingScreen: on a phone, a card tapped opens its posting on a screen
+// of its own (JobSwipePage) instead of sliding it in beside the list.
+export function JobBoardPage({
+  variant = "classic",
+  openPostingScreen = false,
+}: {
+  variant?: "classic" | "cards";
+  openPostingScreen?: boolean;
+}) {
   const cards = variant === "cards";
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -435,10 +443,9 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
   }, [updateParams]);
 
   function selectJob(id: string) {
-    // Phones open the posting on a screen of its own (JobSwipePage, which
-    // counts it for the search layout test), a step back in history from
-    // this list.
-    if (cards && isPhone()) {
+    // Its own screen (JobSwipePage, which counts it for the search layout
+    // test), a step back in history from this list.
+    if (cards && openPostingScreen && isPhone()) {
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         next.set("view", "posting");
