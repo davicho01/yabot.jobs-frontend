@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AI_ACCESS_QUERY_KEY, ONBOARDING_QUERY_KEY, onboardingApi } from "../api/onboarding";
 import { JobDescription } from "./JobDescription";
@@ -15,6 +15,7 @@ import { AUTO_SCORE_POLL_MS, isAutoScoreActive } from "../utils/autoScore";
 import { type EvaluateChoice, loadEvaluateChoice, saveEvaluateChoice } from "../utils/evaluateChoice";
 import { freeEvaluationsPhrase } from "../utils/onboarding";
 import { EvaluateChoiceModal, EvaluateProgressModal } from "./EvaluateChoiceModal";
+import { SignInModal } from "./SignInModal";
 import { FlagJobModal } from "./FlagJobModal";
 import { ALL_SECTORS, SECTOR_SHORT_LABELS, employmentLabel, sectorLabel, workplaceLabel } from "../utils/jobTags";
 import { jobAge, shortLocation, type JobAgeTone } from "../utils/jobPosting";
@@ -471,7 +472,11 @@ export function JobCaseFile({
   // again", which it then just does. Evaluating shows its progress
   // (EvaluateProgressModal) until it's done or sent to the background.
   const [evaluateChoice, setEvaluateChoice] = useState(loadEvaluateChoice);
-  const [modal, setModal] = useState<"choice" | "progress" | null>(null);
+  const [modal, setModal] = useState<"choice" | "progress" | "sign-in" | null>(null);
+  // Set when a signed-out "Check my fit" signs in (SignInModal): once what
+  // the button decides on has loaded, it carries on as if tapped signed in.
+  const checkAfterSignIn = useRef(false);
+  const navigate = useNavigate();
   const [evaluateError, setEvaluateError] = useState<string | null>(null);
   const jobPostingId = posting?.id ?? "";
   const showsAddButton = !!user && !!posting && !currentApplication;
@@ -551,6 +556,21 @@ export function JobCaseFile({
     else setModal("choice");
   }
 
+  // After signing in from "Check my fit": a job already saved goes to its
+  // application, as the signed-in button would; otherwise the tap goes on
+  // (the Evaluate choice, or a saved one) once the queries it reads are in.
+  const signedInCheckReady =
+    !!user &&
+    applications !== undefined &&
+    (!!currentApplication || (resumes !== undefined && aiAccess !== undefined && !autoScoreQuery.isPending));
+  useEffect(() => {
+    if (!signedInCheckReady || !checkAfterSignIn.current) return;
+    checkAfterSignIn.current = false;
+    if (currentApplication) navigate(`/jobs/${job.url.id}/apply`);
+    else onAddClick();
+    // oxlint-disable-next-line react/exhaustive-deps -- a one-shot hand-off: only the data turning ready should run it.
+  }, [signedInCheckReady]);
+
   function onChoose(choice: EvaluateChoice, remember: boolean) {
     setModal(null);
     trackEvent("evaluate_choice", {
@@ -591,13 +611,18 @@ export function JobCaseFile({
 
   // The main button: Check my fit, or View application once the job is
   // saved. In the toolbar normally; in the fit card on the board's cards.
-  const addButton =
-    (currentApplication && belowReady === null) || !user ? (
-      <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
-        <span>{currentApplication ? "View application →" : "Check my fit →"}</span>
-        {currentApplication && <span className="apply-button__meta">{formatApplicationDate(currentApplication)}</span>}
-      </Link>
-    ) : (
+  // Signed out, Check my fit signs in on the spot (SignInModal) and then
+  // carries on here: going to /apply through /login skipped the choice.
+  const addButton = !user ? (
+    <button type="button" className="apply-button" onClick={() => setModal("sign-in")}>
+      <span>Check my fit →</span>
+    </button>
+  ) : currentApplication && belowReady === null ? (
+    <Link to={`/jobs/${job.url.id}/apply`} className="apply-button">
+      <span>View application →</span>
+      <span className="apply-button__meta">{formatApplicationDate(currentApplication)}</span>
+    </Link>
+  ) : (
       <button
         type="button"
         className="apply-button"
@@ -859,6 +884,16 @@ export function JobCaseFile({
         </>
       )}
       {flagModalOpen && <FlagJobModal urlId={job.url.id} onClose={() => setFlagModalOpen(false)} />}
+      {modal === "sign-in" && (
+        <SignInModal
+          job={job}
+          onClose={() => setModal(null)}
+          onSignedIn={() => {
+            checkAfterSignIn.current = true;
+            setModal(null);
+          }}
+        />
+      )}
       {modal === "choice" && (
         <EvaluateChoiceModal
           evaluateBlockedReason={blockedReason}
