@@ -40,7 +40,10 @@ const FLICK_SPEED = 0.2;
 const FLICK_WINDOW_MS = 100;
 // For this long after a gesture, the row is held to the posting it chose.
 const GESTURE_HOLD_MS = 1500;
-
+// A two-finger trackpad swipe right this far, on the first posting, goes
+// back to the list; wheel events this far apart are separate swipes.
+const WHEEL_BACK_PX = 80;
+const WHEEL_GAP_MS = 250;
 
 // Where the visitor was, so leaving for a posting's own page (a similar job)
 // and coming back lands on the same screen.
@@ -311,6 +314,31 @@ export function JobSwipePage({ mode }: { mode: "single" | "swipe" }) {
       pullFrom ??= y;
       if (y - pullFrom > REVEAL_PULL_PX && headerHidden()) window.dispatchEvent(new Event(REVEAL_HEADER_EVENT));
     };
+    // A trackpad has no touches: a two-finger swipe right on the first
+    // posting goes back to the list too (the row's overscroll-behavior keeps
+    // the browser's own back swipe from doing it). Once per swipe: the
+    // trackpad's glide after it keeps sending wheel events.
+    let wheelX = 0;
+    let wheelAt = 0;
+    let wheelDone = false;
+    const onWheel = (event: WheelEvent) => {
+      if (event.timeStamp - wheelAt > WHEEL_GAP_MS) {
+        wheelX = 0;
+        wheelDone = false;
+      }
+      wheelAt = event.timeStamp;
+      if (wheelDone || Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
+      if (track.scrollLeft > 1) {
+        wheelX = 0;
+        return;
+      }
+      wheelX += event.deltaX;
+      if (wheelX < -WHEEL_BACK_PX) {
+        wheelDone = true;
+        backToListRef.current();
+      }
+    };
+    track.addEventListener("wheel", onWheel, { passive: true });
     track.addEventListener("scroll", onTrackScroll, { passive: true });
     track.addEventListener("touchstart", onTouchStart, { passive: true });
     track.addEventListener("touchmove", onTouchMove, { passive: true });
@@ -318,6 +346,7 @@ export function JobSwipePage({ mode }: { mode: "single" | "swipe" }) {
     track.addEventListener("touchcancel", onTouchEnd, { passive: true });
     return () => {
       window.clearTimeout(restTimer);
+      track.removeEventListener("wheel", onWheel);
       track.removeEventListener("scroll", onTrackScroll);
       track.removeEventListener("touchstart", onTouchStart);
       track.removeEventListener("touchmove", onTouchMove);
