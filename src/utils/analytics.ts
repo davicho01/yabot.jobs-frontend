@@ -82,11 +82,3 @@ export function trackEvent(name: string, params: Record<string, string | number 
   if (!enabled) return;
   window.gtag("event", name, params);
 }
-
-// A fact about the visitor that every later event carries, for splitting
-// reports (e.g. which side of an experiment they're on). Like event params,
-// never anything personal.
-export function setUserProperties(props: Record<string, string>) {
-  if (!enabled) return;
-  window.gtag("set", "user_properties", props);
-}

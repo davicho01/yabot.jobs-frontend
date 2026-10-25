@@ -47,8 +47,7 @@ const GESTURE_HOLD_MS = 1500;
 // and coming back lands on the same screen.
 let lastPlace = { key: "", index: 0 };
 
-// The phone board on the "swipe" side of the phone search layout test (see
-// utils/experiments): one row of screens, the list (JobBoardPage's, passed
+// The phone board: one row of screens, the list (JobBoardPage's, passed
 // in as `list`) first, and once a card is tapped, the results from that
 // posting on, one per screen, sliding in beside the list. A sideways swipe
 // moves to the next posting or back to the one before, and from the first
@@ -219,7 +218,7 @@ export function JobSwipePage({ list, firstPage }: { list: ReactNode; firstPage?:
   const current = index >= 0 ? jobs[index] : undefined;
   const currentId = current?.url.id;
   useEffect(() => {
-    if (currentId) trackEvent("job_view", { job_id: currentId, layout: "swipe", position: offset + index + 1 });
+    if (currentId) trackEvent("job_view", { job_id: currentId, position: offset + index + 1 });
     // Counted once per posting landed on, not again when more results load.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId]);

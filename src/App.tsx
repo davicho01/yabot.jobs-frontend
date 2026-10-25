@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Routes, Route, Outlet, Navigate, useLocation, useParams } from "react-router-dom";
 import { BOARD_PATH } from "./routes";
 import { LoginPage } from "./pages/LoginPage";
@@ -31,7 +30,6 @@ import { GETTING_STARTED_PATH } from "./utils/onboarding";
 import { GettingStartedPage } from "./pages/GettingStartedPage";
 import { HelpPage } from "./pages/HelpPage";
 import { usePageViews } from "./hooks/usePageViews";
-import { phoneSearchLayout, reportSearchLayoutExposure, useIsPhone } from "./utils/experiments";
 
 // Rendered once for every route (via the layout Route below) rather than
 // per-page, so Header — and the search/filter/add-job controls it owns —
@@ -62,27 +60,13 @@ function StaticJobPageFallback() {
   return <Navigate to={`/jobs/${urlId}${search}${hash}`} replace />;
 }
 
-// The board, or on a phone whichever side of the search layout test this
-// visitor is on (see utils/experiments).
-// Phones start on the list either way. On "list", a posting tapped slides
-// in beside it; on "swipe", it slides in at the start of a row of postings
-// that swipes on through the results (?view=posting).
-function BoardRoute() {
-  const isPhone = useIsPhone();
-  const layout = isPhone ? phoneSearchLayout() : null;
-  useEffect(() => {
-    if (layout) reportSearchLayoutExposure(layout);
-  }, [layout]);
-  return <JobBoardPage variant="cards" openPostingScreen={layout === "swipe"} />;
-}
-
 export default function App() {
   usePageViews();
 
   return (
     <Routes>
       <Route element={<RootLayout />}>
-        <Route path={BOARD_PATH} element={<BoardRoute />} />
+        <Route path={BOARD_PATH} element={<JobBoardPage variant="cards" />} />
         <Route path="/jobs/:urlId" element={<JobDetailPage />} />
         <Route path="/job/:urlId" element={<StaticJobPageFallback />} />
         <Route path="/login" element={<LoginPage />} />

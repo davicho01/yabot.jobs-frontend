@@ -26,6 +26,7 @@ import { listColor, listColorEnd } from "../utils/listGradient";
 import { trackEvent } from "../utils/analytics";
 import { boardReturn } from "../utils/boardReturn";
 import { JobSwipePage } from "./JobSwipePage";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 import "./JobBoardPage.css";
 import "./JobBoardCards.css";
 import CompanyLogo from "../components/CompanyLogo";
@@ -234,17 +235,11 @@ export function FoundBadge({ job }: { job: JobDetail }) {
 // variant "cards" is the board at /jobs: banded job cards and fit pills for
 // jobs already scored, over the classic variant's search, filters, paging and
 // detail pane.
-// openPostingScreen: on a phone, the list leads a row of postings that swipe
-// on through the results (JobSwipePage), instead of sliding in just the one
-// tapped beside it.
-export function JobBoardPage({
-  variant = "classic",
-  openPostingScreen = false,
-}: {
-  variant?: "classic" | "cards";
-  openPostingScreen?: boolean;
-}) {
+export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "cards" }) {
   const cards = variant === "cards";
+  // Phones get the list at the head of a row of postings that swipe on
+  // through the results (JobSwipePage).
+  const phone = useMediaQuery(SPLIT_COLLAPSED_QUERY);
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -447,18 +442,18 @@ export function JobBoardPage({
   }, [updateParams]);
 
   function selectJob(id: string) {
-    // The row of postings after the list (JobSwipePage, which counts it for
-    // the search layout test).
-    if (cards && openPostingScreen) {
+    // The row of postings after the list (JobSwipePage, which counts the
+    // views).
+    if (cards && phone) {
       updateParams((next) => {
         next.set("view", "posting");
         next.set("job", id);
       });
       return;
     }
-    // Postings opened, for the phone search layout test (see utils/experiments).
+    // Postings opened.
     const position = jobs?.findIndex((job) => job.url.id === id) ?? -1;
-    trackEvent("job_view", { job_id: id, layout: "list", position: position >= 0 ? (page - 1) * PAGE_SIZE + position + 1 : 0 });
+    trackEvent("job_view", { job_id: id, position: position >= 0 ? (page - 1) * PAGE_SIZE + position + 1 : 0 });
     openedByTap.current = true;
     updateParams((next) => next.set("jobId", id));
   }
@@ -616,7 +611,7 @@ export function JobBoardPage({
       </div>
   );
 
-  if (cards && openPostingScreen) {
+  if (cards && phone) {
     return (
       <>
         {dialog}
