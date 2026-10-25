@@ -156,6 +156,13 @@
   min-height: 44px;
 }
 
+/* Google's button is a light page in a frame. On our dark page, a frame
+   whose color scheme differs from its page gets an opaque white backdrop,
+   a square behind the round button; matching it keeps the frame clear. */
+.google-sign-in iframe {
+  color-scheme: light;
+}
+
 .login-card__divider {
   display: flex;
   align-items: center;
