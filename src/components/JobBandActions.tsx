@@ -64,14 +64,13 @@ function ShareJobButton({ job, company }: { job: JobDetail; company: string }) {
           <path d="M4.5 10.5l3.5 3.5 7.5-8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       ) : (
+        // Three linked dots, which reads as sharing everywhere (iOS's box and
+        // arrow looked like an upload).
         <svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true">
-          <path
-            d="M10 12.5V2.75M6.5 6 10 2.5 13.5 6M6.75 8.5H5.5A1.5 1.5 0 0 0 4 10v6a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 16 16v-6a1.5 1.5 0 0 0-1.5-1.5h-1.25"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <path d="M7.1 9 12.9 5.9M7.1 11l5.8 3.1" stroke="currentColor" strokeWidth="1.7" />
+          <circle cx="5" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.7" />
+          <circle cx="15" cy="4.8" r="2.4" stroke="currentColor" strokeWidth="1.7" />
+          <circle cx="15" cy="15.2" r="2.4" stroke="currentColor" strokeWidth="1.7" />
         </svg>
       )}
       {copied && <span className="board__detail-share-copied">Link copied</span>}
