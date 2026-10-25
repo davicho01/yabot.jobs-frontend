@@ -17,17 +17,6 @@
   background: transparent;
 }
 
-/* No scrollbars on the row or on a posting: they flash in while swiping. */
-.board.board--swipe .board__layout,
-.board.board--swipe .board__detail {
-  scrollbar-width: none;
-}
-
-.board.board--swipe .board__layout::-webkit-scrollbar,
-.board.board--swipe .board__detail::-webkit-scrollbar {
-  display: none;
-}
-
 /* The row of postings starts under the header and moves up with it as it
    slides away, in the same motion, so each posting's top is always just
    under the count row (see JobSwipePage.tsx). Each screen leaves room at
