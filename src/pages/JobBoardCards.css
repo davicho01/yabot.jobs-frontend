@@ -1141,10 +1141,6 @@
   mask-image: none;
 }
 
-.board--standalone .board__back--top {
-  display: inline-flex;
-}
-
 @media (max-width: 760px) {
   .board--standalone .board__detail.board__detail--standalone {
     margin: 0.75rem;

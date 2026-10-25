@@ -6,7 +6,7 @@ import { adminApi } from "../api/admin";
 import { useConfirm } from "../components/ConfirmDialog";
 import { BandStatusBadge, CompanySiteLink, JobCaseFile } from "../components/JobCaseFile";
 import CompanyLogo from "../components/CompanyLogo";
-import { BriefcaseIcon, ListIcon } from "../components/PillIcons";
+import { BriefcaseIcon } from "../components/PillIcons";
 import { scannedPosting } from "../utils/jobPosting";
 import "./JobBoardPage.css";
 import "./JobBoardCards.css";
@@ -65,25 +65,23 @@ export function JobDetailPage() {
 
   const company = scannedPosting(job)?.company_name ?? job.url.domain;
 
-  // The shared job page wears the board's card style: the pills above the
-  // card, the My applications header's plum band with the logo tile, and the card
-  // layout of the posting itself.
+  // The shared job page wears the board's card style: My applications above
+  // the card (signed in), the My applications header's plum band with the
+  // logo tile, and the card layout of the posting itself.
   return (
     <div className="board board--cards board--standalone">
       {dialog}
       <div className="board__detail board__detail--standalone">
-        <div className="board__detail-top">
-          <Link to={BOARD_PATH} className="board__back--top">
-            <ListIcon />
-            All jobs
-          </Link>
-          {user && (
+        {/* No way back to a list: someone who followed a shared link came
+            from somewhere else, and the header's search is right above. */}
+        {user && (
+          <div className="board__detail-top">
             <Link to="/applications" className="board__detail-applications">
               <BriefcaseIcon />
               My applications
             </Link>
-          )}
-        </div>
+          </div>
+        )}
         <div className="board__detail-inner">
           <div className="board__detail-band board__detail-band--plum">
             <span className="board__detail-tile">
