@@ -1,0 +1,49 @@
+/* The sign-in card (LoginPage.css's .login-card) over the page. */
+.sign-in-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: safe center;
+  justify-content: center;
+  /* The overlay scrolls, not the card, so the card's tab on its top edge
+     isn't clipped. */
+  overflow-y: auto;
+  padding: 2rem 1rem 1.5rem;
+  z-index: 1000;
+}
+
+.sign-in-modal__close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.7rem;
+  background: none;
+  border: none;
+  color: var(--ink-soft);
+  font-size: 1.6rem;
+  line-height: 1;
+  padding: 0.2rem 0.4rem;
+  cursor: pointer;
+}
+
+.sign-in-modal__close:hover {
+  color: var(--ink);
+}
+
+.sign-in-modal__continue {
+  display: block;
+  text-align: center;
+  padding: 0.85rem 1rem;
+  background: var(--btn-run);
+  color: #ffffff;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+
+.sign-in-modal__continue:hover {
+  filter: brightness(1.1);
+}

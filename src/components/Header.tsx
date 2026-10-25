@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useCallback, type FormEvent, type KeyboardEvent } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, type FormEvent, type KeyboardEvent } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../auth/AuthContext";
@@ -11,6 +12,7 @@ import { trackEvent } from "../utils/analytics";
 import type { Metro } from "../api/types";
 import { BOARD_PATH, isBoardPath } from "../routes";
 import { ALL_SECTORS, DEFAULT_SECTOR, SECTOR_OPTIONS, boardSector } from "../utils/jobTags";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 import "./Header.css";
 
 // The board's location when nothing else says otherwise — see the effect in
@@ -25,12 +27,20 @@ const PLACE_SUGGESTION_LIMIT = 10;
 // first flick of the thumb. On desktop it always stays. Must match the phone
 // breakpoint in Header.css.
 const PHONE_QUERY = "(max-width: 760px)";
+// Where the header's search hides behind the search icon (Header.css's
+// .site-header__center--collapsed), and opening it brings up the sheet.
+const SHEET_QUERY = "(max-width: 520px)";
 const PHONE_REVEAL_SCROLL_UP_PX = 700;
 // Scrolled down past this, the header can hide; above it, it's always shown.
 const HIDE_AFTER_SCROLL_PX = 80;
 // And it only hides after this many pixels of continuous scrolling down, so a
 // short scroll while reading leaves it in place.
 const PHONE_HIDE_SCROLL_DOWN_PX = 240;
+// A pinned pane (see onScroll) hides the header once scrolled this far down.
+const PINNED_HIDE_PX = 4;
+
+// Brings a hidden header back (see the pinned panes in onScroll).
+export const REVEAL_HEADER_EVENT = "yabot:reveal-header";
 
 // What an area named by an old shared ?metro= link reads as in the search box.
 function metroLabel(metro: Metro): string {
@@ -88,7 +98,28 @@ function FilterDropdown({
   ariaLabel: string;
 }) {
   const [open, setOpen] = useState(false);
+  // Opens upward when the menu would run past the bottom of what's visible
+  // (the phone search sheet's last row sits right above its Show jobs bar).
+  const [openUp, setOpenUp] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const menu = menuRef.current;
+    const container = containerRef.current;
+    if (!open || !menu || !container) {
+      setOpenUp(false);
+      return;
+    }
+    const scroller = container.closest(".search-sheet__body");
+    const bounds = scroller ? scroller.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+    const trigger = container.getBoundingClientRect();
+    const height = menu.offsetHeight;
+    const roomBelow = bounds.bottom - trigger.bottom;
+    const roomAbove = trigger.top - bounds.top;
+    if (height + 8 > roomBelow && roomAbove > roomBelow) setOpenUp(true);
+    else menu.scrollIntoView({ block: "nearest" });
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -117,7 +148,11 @@ function FilterDropdown({
         </svg>
       </button>
       {open && (
-        <div className="site-header__dropdown" role="menu">
+        <div
+          className={`site-header__dropdown${openUp ? " site-header__dropdown--up" : ""}`}
+          role="menu"
+          ref={menuRef}
+        >
           {options.map((option) => (
             <button
               key={option.value || "any"}
@@ -181,6 +216,21 @@ export function Header() {
       if (last === undefined) return;
       const delta = y - last;
 
+      // The row the swipe board's postings slide along
+      // (data-header-reveal="hold") leaves the header as it is: a swipe to
+      // the next posting isn't a scroll to the top.
+      if (pane?.matches("[data-header-reveal='hold']")) return;
+      // A pane that pins its content under the header (the swipe board's
+      // postings, data-header-reveal="top"): the header slides away as soon
+      // as it starts scrolling down, and scrolling never brings it back —
+      // the pane asks for it with REVEAL_HEADER_EVENT on a deliberate pull.
+      if (pane?.closest("[data-header-reveal='top']") && window.matchMedia(PHONE_QUERY).matches) {
+        if (y > PINNED_HIDE_PX && !headerRef.current?.contains(document.activeElement)) setHidden(true);
+        scrolledUp = 0;
+        scrolledDown = 0;
+        return;
+      }
+
       if (!window.matchMedia(PHONE_QUERY).matches) {
         setHidden(false);
         scrolledUp = 0;
@@ -204,9 +254,14 @@ export function Header() {
         if (scrolledUp >= PHONE_REVEAL_SCROLL_UP_PX) setHidden(false);
       }
     }
+    const reveal = () => setHidden(false);
     // Capturing, since an element's scroll event doesn't bubble.
     document.addEventListener("scroll", onScroll, { passive: true, capture: true });
-    return () => document.removeEventListener("scroll", onScroll, { capture: true });
+    window.addEventListener(REVEAL_HEADER_EVENT, reveal);
+    return () => {
+      document.removeEventListener("scroll", onScroll, { capture: true });
+      window.removeEventListener(REVEAL_HEADER_EVENT, reveal);
+    };
   }, []);
 
   // The header is position:fixed (see Header.css) so it no longer reserves
@@ -234,6 +289,10 @@ export function Header() {
   const boardJobId = onBoard ? searchParams.get("jobId") : null;
   const searchContext = `${routerLocation.pathname}#${boardJobId ?? ""}`;
   const mobileSearchOpen = mobileSearchOpenFor === searchContext;
+  // On a phone the search opens as a full-screen sheet (SearchSheet below)
+  // rather than unfolding inside the header, where it was all crunched up.
+  const sheetMode = useMediaQuery(SHEET_QUERY);
+  const sheetOpen = mobileSearchOpen && sheetMode;
   const query = onBoard ? (searchParams.get("q") ?? "") : "";
   const locationFilter = onBoard ? (searchParams.get("location") ?? "") : "";
   const metroSlug = onBoard ? (searchParams.get("metro") ?? "") : "";
@@ -597,6 +656,73 @@ export function Header() {
   const initial = (user?.display_name?.trim()?.[0] ?? user?.email?.[0])?.toUpperCase() ?? "?";
   // "Hi <first name>!" under the avatar — falls back to the email's local
   // part when no display name is set, same fallback the initial above uses.
+  // The place field and its suggestions: in the header's search bar, and on
+  // a phone in the search sheet (each with its own element ids).
+  function locationField(idPrefix: string) {
+    return (
+    <div className="site-header__combobox">
+      <input
+        className="site-header__search"
+        type="search"
+        role="combobox"
+        aria-label="City or state"
+        aria-expanded={showPlaces}
+        aria-controls={`${idPrefix}-options`}
+        aria-autocomplete="list"
+        aria-activedescendant={showPlaces && activePlace >= 0 ? `${idPrefix}-option-${activePlace}` : undefined}
+        autoComplete="off"
+        placeholder="Search by city or state…"
+        value={metroSlug && selectedMetro ? metroLabel(selectedMetro) : locationInput}
+        onChange={(e) => handleLocationInputChange(e.target.value)}
+        onFocus={() => setPlacesOpen(true)}
+        onBlur={() => setPlacesOpen(false)}
+        onKeyDown={handleLocationKeyDown}
+      />
+      {showPlaces && (
+        <ul className="site-header__combobox-list" id={`${idPrefix}-options`} role="listbox">
+          {placeOptions?.map((place, index) => {
+            // "Bountiful, Utah, United States": the place stands out, the
+            // state and country after it are context.
+            const [name, ...rest] = place.split(", ");
+            return (
+              <li
+                key={place}
+                id={`${idPrefix}-option-${index}`}
+                role="option"
+                aria-selected={index === activePlace}
+                className={`site-header__combobox-option${index === activePlace ? " site-header__combobox-option--active" : ""}`}
+                // mousedown, not click: it fires before the input's blur closes the list.
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  selectPlace(place);
+                }}
+                onMouseEnter={() => setActivePlace(index)}
+              >
+                <span>{name}</span>
+                {rest.length > 0 && <span className="site-header__combobox-context">, {rest.join(", ")}</span>}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+    );
+  }
+
+  useEffect(() => {
+    if (!sheetOpen) return;
+    function onKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key === "Escape" && !event.defaultPrevented) setMobileSearchOpenFor(null);
+    }
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = overflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [sheetOpen]);
+
   const firstName = user?.display_name?.trim().split(/\s+/)[0] || user?.email?.split("@")[0];
 
   return (
@@ -625,7 +751,7 @@ export function Header() {
         </a>
 
         <div
-          className={`site-header__center${mobileSearchOpen ? "" : " site-header__center--collapsed"}`}
+          className={`site-header__center${mobileSearchOpen && !sheetMode ? "" : " site-header__center--collapsed"}`}
         >
           <form className="site-header__searchbar" role="search" onSubmit={handleSearchSubmit}>
             <FilterDropdown
@@ -646,52 +772,7 @@ export function Header() {
               onChange={(e) => handleSearchInputChange(e.target.value)}
             />
             <span className="site-header__searchbar-rule" aria-hidden="true" />
-            <div className="site-header__combobox">
-              <input
-                className="site-header__search"
-                type="search"
-                role="combobox"
-                aria-label="City or state"
-                aria-expanded={showPlaces}
-                aria-controls="job-location-options"
-                aria-autocomplete="list"
-                aria-activedescendant={showPlaces && activePlace >= 0 ? `job-location-option-${activePlace}` : undefined}
-                autoComplete="off"
-                placeholder="Search by city or state…"
-                value={metroSlug && selectedMetro ? metroLabel(selectedMetro) : locationInput}
-                onChange={(e) => handleLocationInputChange(e.target.value)}
-                onFocus={() => setPlacesOpen(true)}
-                onBlur={() => setPlacesOpen(false)}
-                onKeyDown={handleLocationKeyDown}
-              />
-              {showPlaces && (
-                <ul className="site-header__combobox-list" id="job-location-options" role="listbox">
-                  {placeOptions?.map((place, index) => {
-                    // "Bountiful, Utah, United States": the place stands out, the
-                    // state and country after it are context.
-                    const [name, ...rest] = place.split(", ");
-                    return (
-                      <li
-                        key={place}
-                        id={`job-location-option-${index}`}
-                        role="option"
-                        aria-selected={index === activePlace}
-                        className={`site-header__combobox-option${index === activePlace ? " site-header__combobox-option--active" : ""}`}
-                        // mousedown, not click: it fires before the input's blur closes the list.
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          selectPlace(place);
-                        }}
-                        onMouseEnter={() => setActivePlace(index)}
-                      >
-                        <span>{name}</span>
-                        {rest.length > 0 && <span className="site-header__combobox-context">, {rest.join(", ")}</span>}
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
+            {locationField("job-location")}
             <button type="submit" className="site-header__search-submit">
               Search
             </button>
@@ -986,6 +1067,133 @@ export function Header() {
           )}
         </div>
       )}
+      {sheetOpen &&
+        createPortal(
+          <div className="search-sheet" role="dialog" aria-modal="true" aria-labelledby="search-sheet-title">
+            <form
+              className="search-sheet__form"
+              role="search"
+              onSubmit={(event) => {
+                handleSearchSubmit(event);
+                setMobileSearchOpenFor(null);
+              }}
+            >
+              <div className="search-sheet__top">
+                <h2 className="search-sheet__title" id="search-sheet-title">
+                  Search jobs
+                </h2>
+                <button
+                  type="button"
+                  className="search-sheet__close"
+                  onClick={() => setMobileSearchOpenFor(null)}
+                  aria-label="Close search"
+                >
+                  <svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true">
+                    <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="search-sheet__body">
+                <label className="search-sheet__field">
+                  <span className="search-sheet__label">Job title or keyword</span>
+                  <input
+                    className="site-header__search search-sheet__input"
+                    type="search"
+                    placeholder="e.g. product designer"
+                    title="Add a word starting with - to exclude it, e.g. -senior"
+                    value={searchInput}
+                    onChange={(e) => handleSearchInputChange(e.target.value)}
+                  />
+                </label>
+                <div className="search-sheet__field">
+                  <span className="search-sheet__label">City or state</span>
+                  {locationField("sheet-location")}
+                </div>
+                <div className="search-sheet__field">
+                  <span className="search-sheet__label">Sector</span>
+                  <FilterDropdown
+                    options={SECTOR_OPTIONS}
+                    value={sectorFilter}
+                    onChange={setSector}
+                    defaultLabel="All sectors"
+                    ariaLabel="Sector"
+                  />
+                </div>
+
+                <div className="search-sheet__section">
+                  <h3 className="search-sheet__section-title">Filters</h3>
+                  {activeFilterCount > 0 && (
+                    <button type="button" className="search-sheet__reset" onClick={resetFilters}>
+                      Reset
+                    </button>
+                  )}
+                </div>
+                <div className="search-sheet__pair">
+                  <div className="search-sheet__field">
+                    <span className="search-sheet__label">Workplace</span>
+                    <FilterDropdown
+                      options={WORKPLACE_OPTIONS}
+                      value={workplaceType}
+                      onChange={setWorkplaceType}
+                      defaultLabel="Any workplace"
+                      ariaLabel="Workplace type"
+                    />
+                  </div>
+                  <div className="search-sheet__field">
+                    <span className="search-sheet__label">Posted</span>
+                    <FilterDropdown
+                      options={POSTED_WITHIN_OPTIONS}
+                      value={postedWithin}
+                      onChange={setPostedWithin}
+                      defaultLabel="Any time posted"
+                      ariaLabel="Posted date"
+                    />
+                  </div>
+                </div>
+                <label className="search-sheet__field">
+                  <span className="search-sheet__label">Company</span>
+                  <input
+                    className="site-header__search search-sheet__input"
+                    type="text"
+                    placeholder="Any company"
+                    value={companyInput}
+                    onChange={(e) => handleCompanyInputChange(e.target.value)}
+                  />
+                </label>
+                <div className="search-sheet__pair">
+                  <div className="search-sheet__field">
+                    <span className="search-sheet__label">Minimum pay</span>
+                    <FilterDropdown
+                      options={SALARY_MIN_OPTIONS}
+                      value={salaryMinFilter}
+                      onChange={setSalaryMin}
+                      defaultLabel="Any minimum"
+                      ariaLabel="Minimum pay"
+                    />
+                  </div>
+                  <div className="search-sheet__field">
+                    <span className="search-sheet__label">Maximum pay</span>
+                    <FilterDropdown
+                      options={SALARY_MAX_OPTIONS}
+                      value={salaryMaxFilter}
+                      onChange={setSalaryMax}
+                      defaultLabel="Any maximum"
+                      ariaLabel="Maximum pay"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="search-sheet__footer">
+                <button type="submit" className="search-sheet__submit">
+                  Show jobs
+                </button>
+              </div>
+            </form>
+          </div>,
+          document.body,
+        )}
     </header>
   );
 }

@@ -2,12 +2,13 @@ import { useCallback, useEffect, useLayoutEffect, useRef, type CSSProperties } f
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import { jobsApi, type WorkplaceTypeFilter } from "../api/jobs";
+import { PAGE_SIZE, jobsApi, type WorkplaceTypeFilter } from "../api/jobs";
 import { adminApi } from "../api/admin";
 import { applicationsApi } from "../api/applications";
 import type { JobDetail, JobPosting } from "../api/types";
 import { useConfirm } from "../components/ConfirmDialog";
-import { CompanySiteLink, JobCaseFile } from "../components/JobCaseFile";
+import { JobCaseFile } from "../components/JobCaseFile";
+import { JobBandActions } from "../components/JobBandActions";
 import { Footer } from "../components/Footer";
 import { GettingStartedBanner } from "../components/GettingStarted";
 import { highlightQuery } from "../utils/searchHighlight";
@@ -23,6 +24,10 @@ import { jobAge, shortLocation, type JobAgeTone } from "../utils/jobPosting";
 import { fitTier } from "../utils/fitScore";
 import { bandColor } from "../utils/bandColor";
 import { listColor, listColorEnd } from "../utils/listGradient";
+import { trackEvent } from "../utils/analytics";
+import { boardReturn } from "../utils/boardReturn";
+import { JobSwipePage } from "./JobSwipePage";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 import "./JobBoardPage.css";
 import "./JobBoardCards.css";
 import CompanyLogo from "../components/CompanyLogo";
@@ -169,6 +174,7 @@ function BandJobCard({
     <button
       type="button"
       className={`band-card${active ? " band-card--active" : ""}`}
+      data-job-id={job.url.id}
       style={{ "--band-card-color": color, "--band-card-color-end": colorEnd } as CSSProperties}
       onClick={onSelect}
       aria-current={active ? "true" : undefined}
@@ -216,7 +222,7 @@ function BandJobCard({
 // in the last 48 hours: the sunset and a pulsing dot under 24 hours, a white
 // pill after that. Older jobs keep their "Found 3d ago" chip with the others
 // (JobCaseFile).
-function FoundBadge({ job }: { job: JobDetail }) {
+export function FoundBadge({ job }: { job: JobDetail }) {
   const age = jobAge(job);
   if (!age || age.tone === "older") return null;
   return (
@@ -232,6 +238,9 @@ function FoundBadge({ job }: { job: JobDetail }) {
 // detail pane.
 export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "cards" }) {
   const cards = variant === "cards";
+  // Phones get the list at the head of a row of postings that swipe on
+  // through the results (JobSwipePage).
+  const phone = useMediaQuery(SPLIT_COLLAPSED_QUERY);
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -337,11 +346,13 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
   // Fetched directly by id (not just looked up in the current page's
   // results) so a selected job stays visible on refresh or when the URL is
   // shared — the target job may live on a different page/filter than
-  // whatever this session's board happens to be showing.
+  // whatever this session's board happens to be showing. A job on this page
+  // shows from the list right away while it's fetched.
   const { data: selectedJob, isLoading: selectedJobLoading } = useQuery({
     queryKey: ["job", selectedId],
     queryFn: () => jobsApi.get(selectedId!),
     enabled: !!selectedId,
+    placeholderData: () => jobs?.find((job) => job.url.id === selectedId),
   });
   const selected = selectedId ? selectedJob : jobs?.[0];
   // The open posting's band matches its card's place in the list, diagonal
@@ -432,9 +443,39 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
   }, [updateParams]);
 
   function selectJob(id: string) {
+    // The row of postings after the list (JobSwipePage, which counts the
+    // views).
+    if (cards && phone) {
+      updateParams((next) => {
+        next.set("view", "posting");
+        next.set("job", id);
+      });
+      return;
+    }
+    // Postings opened.
+    const position = jobs?.findIndex((job) => job.url.id === id) ?? -1;
+    trackEvent("job_view", { job_id: id, position: position >= 0 ? (page - 1) * PAGE_SIZE + position + 1 : 0 });
     openedByTap.current = true;
     updateParams((next) => next.set("jobId", id));
   }
+
+  // Back from a posting's own screen (JobSwipePage): the list turns to the
+  // page that posting is on, then brings its card into view.
+  useEffect(() => {
+    if (!boardReturn.jobId) return;
+    if (boardReturn.page !== page) {
+      const returnPage = boardReturn.page;
+      updateParams((next) => {
+        if (returnPage <= 1) next.delete("page");
+        else next.set("page", String(returnPage));
+      });
+      return;
+    }
+    if (!jobs) return;
+    const card = document.querySelector(`[data-job-id="${boardReturn.jobId}"]`);
+    boardReturn.jobId = null;
+    card?.scrollIntoView({ block: "center" });
+  }, [jobs, page, updateParams]);
 
   function closeDetail() {
     const pager = pagerRef.current;
@@ -448,130 +489,143 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
     }
   }
 
+  const listPane = (
+    <div className="board__list">
+      {/* On phones each pane is a page of its own, scrolling by itself, so
+          each carries the page's footer (the list the banner too); the
+          page's own are hidden there. */}
+      <div className="board__phone-only">
+        <GettingStartedBanner />
+      </div>
+      {cards ? (
+        <div className="board__cards-head">
+          <div className="board__cards-heading">
+            <h1 className="board__cards-title">
+              {sector ? `${SECTOR_SHORT_LABELS[sector] ?? sectorLabel(sector) ?? "Matching"} jobs` : "All jobs"}
+              {location && <span> in {location === "United States" ? "the US" : location}</span>}
+            </h1>
+            <p className="board__cards-count">
+              {data
+                ? // GET /jobs counts at most 1,000 matches ahead (COUNT_AHEAD), so
+                  // a total that reaches it means "at least".
+                  `${data.total.toLocaleString()}${data.total >= 1000 ? "+" : ""} ${data.total === 1 ? "job" : "jobs"}`
+                : "Loading jobs…"}
+            </p>
+          </div>
+          {/* One-tap versions of the header's filters; tapping an active one
+              clears it. */}
+          <div className="board__quick" role="group" aria-label="Quick filters">
+            {QUICK_FILTERS.map((filter) => {
+              const on = searchParams.get(filter.param) === filter.value;
+              return (
+                <button
+                  key={filter.label}
+                  type="button"
+                  className={`board__quick-chip${on ? " board__quick-chip--on" : ""}`}
+                  style={{ "--chip": filter.color } as CSSProperties}
+                  aria-pressed={on}
+                  onClick={() =>
+                    updateParams((next) => {
+                      if (on) next.delete(filter.param);
+                      else next.set(filter.param, filter.value);
+                      next.delete("page");
+                    })
+                  }
+                >
+                  {filter.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <Link to="/applications" className="board__applications-link">
+          My applications →
+        </Link>
+      )}
+      <div className="board__list-scroll">
+          {searchArea && (
+            <p className="board__search-area">
+              Nearest first, within {searchArea.radius_miles} miles of {searchArea.label}
+              {widerRadius <= MAX_RADIUS && (
+                <>
+                  {" · "}
+                  <button type="button" className="board__widen" onClick={widenSearch}>
+                    Search {widerRadius} miles
+                  </button>
+                </>
+              )}
+            </p>
+          )}
+          {isLoading && <p className="board__empty">Loading postings…</p>}
+          {!isLoading && jobs?.length === 0 && <p className="board__empty">No postings match your filters.</p>}
+          {jobs?.map((job, index) =>
+            cards ? (
+              <BandJobCard
+                key={job.url.id}
+                job={job}
+                color={listColor(index)}
+                colorEnd={listColorEnd(index)}
+                // Only a job you picked is ringed, not the first one shown by default.
+                active={job.url.id === selectedId}
+                query={query}
+                fit={fitByUrlId.get(job.url.id) ?? null}
+                onSelect={() => selectJob(job.url.id)}
+              />
+            ) : (
+              <JobCard
+                key={job.url.id}
+                job={job}
+                active={job.url.id === (selected?.url.id ?? "")}
+                query={query}
+                onSelect={() => selectJob(job.url.id)}
+              />
+            ),
+          )}
+        </div>
+        {data && data.total > 0 && (
+          <div className="board__pagination">
+            <button
+              type="button"
+              className="board__page-button"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              ‹ Prev
+            </button>
+            <span className="board__page-status">
+              Page {page} of {totalPages}
+            </span>
+            <button
+              type="button"
+              className="board__page-button"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Next ›
+            </button>
+          </div>
+        )}
+        <div className="board__phone-only">
+          <Footer />
+        </div>
+      </div>
+  );
+
+  if (cards && phone) {
+    return (
+      <>
+        {dialog}
+        <JobSwipePage list={listPane} firstPage={data} />
+      </>
+    );
+  }
+
   return (
     <div className={`board board--split${selectedId ? " board--detail-open" : ""}${cards ? " board--cards" : ""}`}>
       {dialog}
       <div className="board__layout" ref={pagerRef}>
-        <div className="board__list">
-          {/* On phones each pane is a page of its own, scrolling by itself, so
-              each carries the page's footer (the list the banner too); the
-              page's own are hidden there. */}
-          <div className="board__phone-only">
-            <GettingStartedBanner />
-          </div>
-          {cards ? (
-            <div className="board__cards-head">
-              <div className="board__cards-heading">
-                <h1 className="board__cards-title">
-                  {sector ? `${SECTOR_SHORT_LABELS[sector] ?? sectorLabel(sector) ?? "Matching"} jobs` : "All jobs"}
-                  {location && <span> in {location === "United States" ? "the US" : location}</span>}
-                </h1>
-                <p className="board__cards-count">
-                  {data
-                    ? // GET /jobs counts at most 1,000 matches ahead (COUNT_AHEAD), so
-                      // a total that reaches it means "at least".
-                      `${data.total.toLocaleString()}${data.total >= 1000 ? "+" : ""} ${data.total === 1 ? "job" : "jobs"}`
-                    : "Loading jobs…"}
-                </p>
-              </div>
-              {/* One-tap versions of the header's filters; tapping an active one
-                  clears it. */}
-              <div className="board__quick" role="group" aria-label="Quick filters">
-                {QUICK_FILTERS.map((filter) => {
-                  const on = searchParams.get(filter.param) === filter.value;
-                  return (
-                    <button
-                      key={filter.label}
-                      type="button"
-                      className={`board__quick-chip${on ? " board__quick-chip--on" : ""}`}
-                      style={{ "--chip": filter.color } as CSSProperties}
-                      aria-pressed={on}
-                      onClick={() =>
-                        updateParams((next) => {
-                          if (on) next.delete(filter.param);
-                          else next.set(filter.param, filter.value);
-                          next.delete("page");
-                        })
-                      }
-                    >
-                      {filter.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <Link to="/applications" className="board__applications-link">
-              My applications →
-            </Link>
-          )}
-          <div className="board__list-scroll">
-              {searchArea && (
-                <p className="board__search-area">
-                  Nearest first, within {searchArea.radius_miles} miles of {searchArea.label}
-                  {widerRadius <= MAX_RADIUS && (
-                    <>
-                      {" · "}
-                      <button type="button" className="board__widen" onClick={widenSearch}>
-                        Search {widerRadius} miles
-                      </button>
-                    </>
-                  )}
-                </p>
-              )}
-              {isLoading && <p className="board__empty">Loading postings…</p>}
-              {!isLoading && jobs?.length === 0 && <p className="board__empty">No postings match your filters.</p>}
-              {jobs?.map((job, index) =>
-                cards ? (
-                  <BandJobCard
-                    key={job.url.id}
-                    job={job}
-                    color={listColor(index)}
-                    colorEnd={listColorEnd(index)}
-                    // Only a job you picked is ringed, not the first one shown by default.
-                    active={job.url.id === selectedId}
-                    query={query}
-                    fit={fitByUrlId.get(job.url.id) ?? null}
-                    onSelect={() => selectJob(job.url.id)}
-                  />
-                ) : (
-                  <JobCard
-                    key={job.url.id}
-                    job={job}
-                    active={job.url.id === (selected?.url.id ?? "")}
-                    query={query}
-                    onSelect={() => selectJob(job.url.id)}
-                  />
-                ),
-              )}
-            </div>
-            {data && data.total > 0 && (
-              <div className="board__pagination">
-                <button
-                  type="button"
-                  className="board__page-button"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                >
-                  ‹ Prev
-                </button>
-                <span className="board__page-status">
-                  Page {page} of {totalPages}
-                </span>
-                <button
-                  type="button"
-                  className="board__page-button"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                >
-                  Next ›
-                </button>
-              </div>
-            )}
-            <div className="board__phone-only">
-              <Footer />
-            </div>
-          </div>
+        {listPane}
 
           <div className="board__detail" ref={detailRef}>
             {cards && (
@@ -609,11 +663,10 @@ export function JobBoardPage({ variant = "classic" }: { variant?: "classic" | "c
                   />
                 </span>
                 <FoundBadge job={selected} />
-                {/* Apply to the company's site, just under the band on the right
-                    (desktop only; phones get it under the tags, in JobCaseFile). */}
-                <CompanySiteLink job={selected} className="board__detail-apply">
-                  Apply ↗
-                </CompanySiteLink>
+                <JobBandActions
+                  job={selected}
+                  company={scannedPosting(selected)?.company_name ?? selected.url.domain}
+                />
               </div>
             ) : (
               !cards && (

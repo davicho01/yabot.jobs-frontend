@@ -1,12 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "../api/client";
 import { authApi } from "../api/auth";
+import { rememberEmail } from "./lastEmail";
 import type { User } from "../api/types";
 
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
-  requestLink: (email: string) => Promise<void>;
+  requestCode: (email: string) => Promise<void>;
+  verifyCode: (email: string, code: string) => Promise<User>;
   verify: (token: string) => Promise<User>;
   signInWithGoogle: (credential: string) => Promise<User>;
   logout: () => Promise<void>;
@@ -19,6 +22,17 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  // Jobs fetched signed out came without their employer links; signing in
+  // refetches them, so Apply ↗ has somewhere to go.
+  const signedIn = useCallback(
+    (signedInUser: User) => {
+      setUser(signedInUser);
+      rememberEmail(signedInUser.email);
+      queryClient.invalidateQueries();
+    },
+    [queryClient],
+  );
 
   useEffect(() => {
     authApi
@@ -32,26 +46,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const requestLink = useCallback(async (email: string) => {
-    await authApi.requestLink(email);
+  const requestCode = useCallback(async (email: string) => {
+    await authApi.requestCode(email);
   }, []);
+
+  const verifyCode = useCallback(
+    async (email: string, code: string) => {
+      const { user: signedInUser } = await authApi.verifyCode(email, code);
+      signedIn(signedInUser);
+      return signedInUser;
+    },
+    [signedIn],
+  );
 
   const verify = useCallback(async (token: string) => {
     const { user: verifiedUser } = await authApi.verify(token);
-    setUser(verifiedUser);
+    signedIn(verifiedUser);
     return verifiedUser;
-  }, []);
+  }, [signedIn]);
 
   const signInWithGoogle = useCallback(async (credential: string) => {
     const { user: signedInUser } = await authApi.google(credential);
-    setUser(signedInUser);
+    signedIn(signedInUser);
     return signedInUser;
-  }, []);
+  }, [signedIn]);
 
   const logout = useCallback(async () => {
     await authApi.logout();
     setUser(null);
-  }, []);
+    // Drops everything fetched as them (their applications and scores,
+    // employer links), which queries switched off when signed out would
+    // otherwise keep showing; the rest refetches signed out.
+    queryClient.resetQueries();
+  }, [queryClient]);
 
   const updateDisplayName = useCallback(async (displayName: string | null) => {
     const updatedUser = await authApi.updateMe({ display_name: displayName });
@@ -70,7 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isLoading,
-        requestLink,
+        requestCode,
+        verifyCode,
         verify,
         signInWithGoogle,
         logout,

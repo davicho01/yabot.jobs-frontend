@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { jobsApi } from "../api/jobs";
 import { ApiError } from "../api/client";
@@ -31,7 +32,9 @@ export function FlagJobModal({ urlId, onClose }: { urlId: string; onClose: () =>
     },
   });
 
-  return (
+  // On <body>, so a moved or transformed ancestor (the phone swipe board's
+  // row of postings) can't shift or clip the overlay.
+  return createPortal(
     <div className="flag-job-modal__overlay" onClick={onClose}>
       <div
         className="flag-job-modal"
@@ -97,6 +100,7 @@ export function FlagJobModal({ urlId, onClose }: { urlId: string; onClose: () =>
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

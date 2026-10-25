@@ -24,6 +24,7 @@ import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { PageShell } from "./components/PageShell";
 import { FeedbackProvider } from "./components/FeedbackModal";
+import { SignInPromptProvider } from "./components/SignInModal";
 import { GettingStartedBanner } from "./components/GettingStarted";
 import { GETTING_STARTED_PATH } from "./utils/onboarding";
 import { GettingStartedPage } from "./pages/GettingStartedPage";
@@ -38,10 +39,12 @@ function RootLayout() {
   return (
     <PageShell>
       <FeedbackProvider>
-        <Header />
-        <GettingStartedBanner />
-        <Outlet />
-        <Footer />
+        <SignInPromptProvider>
+          <Header />
+          <GettingStartedBanner />
+          <Outlet />
+          <Footer />
+        </SignInPromptProvider>
       </FeedbackProvider>
     </PageShell>
   );

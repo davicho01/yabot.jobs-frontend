@@ -12,7 +12,11 @@ export interface UserUpdatePayload {
 
 export const authApi = {
   me: () => api.get<User>("/auth/me"),
-  requestLink: (email: string) => api.post<{ detail: string }>("/auth/request-link", { email }),
+  // A six-digit code by email, typed in where it was asked for, so signing
+  // in doesn't leave the page (unlike the old emailed links, which /verify
+  // still redeems for any left in inboxes).
+  requestCode: (email: string) => api.post<{ detail: string }>("/auth/request-code", { email }),
+  verifyCode: (email: string, code: string) => api.post<{ user: User }>("/auth/verify-code", { email, code }),
   verify: (token: string) => api.post<{ user: User }>("/auth/verify", { token }),
   google: (credential: string) => api.post<{ user: User }>("/auth/google", { credential }),
   logout: () => api.post<void>("/auth/logout"),

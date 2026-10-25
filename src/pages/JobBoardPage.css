@@ -698,6 +698,13 @@
     overscroll-behavior-y: contain;
     scroll-snap-align: start;
     scroll-snap-stop: always;
+    /* No scrollbars: they flash in on every scroll and swipe. */
+    scrollbar-width: none;
+  }
+
+  .board--split .board__list::-webkit-scrollbar,
+  .board--split .board__detail::-webkit-scrollbar {
+    display: none;
   }
 
   /* Room for the fixed glass header at the top of each pane. A spacer rather
