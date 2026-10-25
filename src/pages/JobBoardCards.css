@@ -184,13 +184,20 @@
   );
 }
 
-/* Apply: the posting on the company's site, just under the band on the
-   right, across from the logo tile. Ink on the light card, white on the
-   dark one (--apply-pill-*), so it stands out in both. */
-.board__detail-apply {
+/* Share and Apply, just under the band on the right, across from the logo
+   tile (JobBandActions). */
+.board__detail-actions {
   position: absolute;
   top: calc(100% + 1rem);
   right: 2.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Apply: the posting on the company's site. Ink on the light card, white
+   on the dark one (--apply-pill-*), so it stands out in both. */
+.board__detail-apply {
   display: inline-flex;
   align-items: center;
   padding: 0.75rem 1.2rem;
@@ -215,6 +222,45 @@
     transform: translateY(-2px);
     box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.45);
   }
+}
+
+/* Share: a quiet round button beside Apply, in the card's chip color. A
+   copied link (no share sheet, as on desktop) says so beneath it. */
+.board__detail-share {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--ink);
+  background: var(--band-card-chip);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .board__detail-share:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.board__detail-share-copied {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--apply-pill-ink, #ffffff);
+  background: var(--apply-pill-bg, #0a0a0a);
+  pointer-events: none;
 }
 
 /* How new the open job is, in the band's top-right corner (under 48 hours
@@ -846,53 +892,15 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
-/* Apply (the posting on the company's site) on phones, full width under
-   the dates: the same ink/white pill as .board__detail-apply, which has it
-   on desktop. */
-.board--cards .case-file__job-site {
-  order: -1;
-  display: none;
-  justify-content: center;
-  margin-top: 1rem;
-  align-items: center;
-  padding: 0.75rem 1.2rem;
-  border-radius: var(--radius-pill);
-  font-size: 0.92rem;
-  font-weight: 600;
-  line-height: 1.3;
-  white-space: nowrap;
-  text-decoration: none;
-  color: var(--apply-pill-ink, #ffffff);
-  background: var(--apply-pill-bg, #0a0a0a);
-  box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.35);
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
+/* Room for Share and Apply, level with the company line. */
+.board--cards .case-file__employer {
+  padding-right: 11.5rem;
 }
 
-/* Hover: a slight lift, no color change (not on touch screens, where a
-   tap leaves a hover behind, nor for reduced motion). */
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .board--cards .case-file__job-site:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.45);
-  }
-}
-
-/* Room for Apply, level with the company line, on desktop. */
-@media (min-width: 761px) {
-  .board--cards .case-file__employer {
-    padding-right: 8.5rem;
-  }
-}
-
+/* Phones: lined up with the card's narrower padding. */
 @media (max-width: 760px) {
-  .board--cards .case-file__job-site {
-    display: flex;
-  }
-
-  .board__detail-apply {
-    display: none;
+  .board__detail-actions {
+    right: 1rem;
   }
 }
 

@@ -4,7 +4,8 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { PAGE_SIZE, jobsApi, type WorkplaceTypeFilter } from "../api/jobs";
 import type { JobDetail, JobList } from "../api/types";
-import { CompanySiteLink, JobCaseFile } from "../components/JobCaseFile";
+import { JobCaseFile } from "../components/JobCaseFile";
+import { JobBandActions } from "../components/JobBandActions";
 import CompanyLogo from "../components/CompanyLogo";
 import { BriefcaseIcon, ListIcon } from "../components/PillIcons";
 import { boardSector } from "../utils/jobTags";
@@ -438,9 +439,7 @@ function SwipeCard({
           <CompanyLogo name={company} logoUrl={posting?.company_logo_url} size={40} />
         </span>
         <FoundBadge job={job} />
-        <CompanySiteLink job={job} className="board__detail-apply">
-          Apply ↗
-        </CompanySiteLink>
+        <JobBandActions job={job} company={company} />
       </div>
       <JobCaseFile
         job={job}

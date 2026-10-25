@@ -604,11 +604,11 @@ export function JobCaseFile({
     );
 
   // The posting on the employer's own site. On the board's cards it's
-  // "Apply ↗" just under the band on desktop (JobBoardPage, JobDetailPage),
-  // and here, full width under the dates, on phones.
+  // "Apply ↗" just under the band instead (JobBoardPage, JobSwipePage,
+  // JobDetailPage).
   const jobSiteLink = (job.url.url || job.url.has_url) && (
-    <CompanySiteLink job={job} className={boardCards ? "case-file__job-site" : "rescan-button"}>
-      {boardCards ? "Apply ↗" : "Job site ↗"}
+    <CompanySiteLink job={job} className="rescan-button">
+      Job site ↗
     </CompanySiteLink>
   );
 
@@ -749,7 +749,6 @@ export function JobCaseFile({
               ))}
             </dl>
           )}
-          {boardCards && jobSiteLink}
 
           {boardCards && showDates && job.url.closed_at ? (
             // A closed job has nothing left to score or apply to: in the fit
