@@ -553,6 +553,12 @@ export function JobCaseFile({
 
   function onChoose(choice: EvaluateChoice, remember: boolean) {
     setModal(null);
+    trackEvent("evaluate_choice", {
+      job_id: job.url.id,
+      choice,
+      remembered: remember,
+      evaluate_blocked: blockedReason !== null,
+    });
     if (remember) {
       saveEvaluateChoice(choice);
       setEvaluateChoice(choice);
@@ -858,7 +864,15 @@ export function JobCaseFile({
           evaluateBlockedReason={blockedReason}
           evaluateNote={evaluateNote(aiAccess, jobPostingId)}
           onChoose={onChoose}
-          onClose={() => setModal(null)}
+          onClose={() => {
+            trackEvent("evaluate_choice", {
+              job_id: job.url.id,
+              choice: "close",
+              remembered: false,
+              evaluate_blocked: blockedReason !== null,
+            });
+            setModal(null);
+          }}
         />
       )}
       {modal === "progress" && (

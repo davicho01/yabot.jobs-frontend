@@ -26,8 +26,7 @@
 
 /* Dark mode: the page and --paper are both black, so a light black overlay
    barely dims the page and the modal blends into it. Dim harder and lift the
-   modal onto --surface; the option cards stay --paper, so they still stand
-   out inside it. Same two selectors index.css uses for the dark theme. */
+   modal onto --surface. Same two selectors index.css uses for the dark theme. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .evaluate-choice-modal__overlay {
     background: rgba(0, 0, 0, 0.75);
@@ -35,10 +34,6 @@
 
   :root:not([data-theme="light"]) .evaluate-choice-modal {
     background: var(--surface);
-  }
-
-  :root:not([data-theme="light"]) .evaluate-choice-modal__option:hover:not(:disabled) {
-    background: var(--paper);
   }
 }
 
@@ -48,10 +43,6 @@
 
 :root[data-theme="dark"] .evaluate-choice-modal {
   background: var(--surface);
-}
-
-:root[data-theme="dark"] .evaluate-choice-modal__option:hover:not(:disabled) {
-  background: var(--paper);
 }
 
 .evaluate-choice-modal__header {
@@ -81,26 +72,46 @@
   color: var(--ink);
 }
 
+/* The two choices as buttons of the same shape, told apart by fill alone:
+   "Evaluate now" in the main buttons' violet-blue, "Add to my list" on a
+   soft chip (the progress modal's secondary pill), each with an arrow on the
+   right. A blocked "Evaluate now" is an empty dashed slot instead: no fill,
+   no arrow, so it doesn't read as a third kind of button. */
 .evaluate-choice-modal__option {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
   text-align: left;
-  background: var(--paper);
-  border: 1px solid var(--line);
+  border: 0;
   border-radius: var(--radius-card);
-  padding: 0.9rem 1rem;
+  padding: 1rem 3rem 1rem 1.1rem;
   color: var(--ink);
   font-family: var(--font-body);
   cursor: pointer;
 }
 
-.evaluate-choice-modal__option:hover:not(:disabled) {
-  border-color: var(--accent);
+.evaluate-choice-modal__option--primary,
+.evaluate-choice-modal__option--primary:hover:not(:disabled) {
+  background: var(--btn-run);
+  box-shadow: 0 10px 24px -10px rgba(109, 59, 230, 0.55);
+}
+
+.evaluate-choice-modal__option--primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.evaluate-choice-modal__option--secondary,
+.evaluate-choice-modal__option--secondary:hover:not(:disabled) {
   background: var(--chip);
 }
 
-.evaluate-choice-modal__option:disabled {
+.evaluate-choice-modal__option--blocked,
+.evaluate-choice-modal__option--blocked:disabled {
+  background: transparent;
+  border: 1.5px dashed var(--line);
+  padding-right: 1.1rem;
+  opacity: 1;
   cursor: default;
 }
 
@@ -111,8 +122,42 @@
 
 .evaluate-choice-modal__option-title {
   font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--accent);
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.evaluate-choice-modal__option-arrow {
+  position: absolute;
+  right: 1.1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.25rem;
+  color: var(--ink);
+  transition: transform 0.15s ease;
+}
+
+.evaluate-choice-modal__option:hover:not(:disabled) .evaluate-choice-modal__option-arrow {
+  transform: translate(3px, -50%);
+}
+
+.evaluate-choice-modal__option--secondary:hover .evaluate-choice-modal__option-title,
+.evaluate-choice-modal__option--secondary:hover .evaluate-choice-modal__option-arrow {
+  color: var(--focus);
+}
+
+.evaluate-choice-modal__option--primary .evaluate-choice-modal__option-title,
+.evaluate-choice-modal__option--primary .evaluate-choice-modal__option-arrow {
+  color: #ffffff;
+}
+
+.evaluate-choice-modal__option--primary .evaluate-choice-modal__option-body {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evaluate-choice-modal__option-arrow {
+    transition: none;
+  }
 }
 
 /* A sentence, not a button label: it wraps like a paragraph instead of
@@ -124,14 +169,21 @@
   text-wrap: pretty;
 }
 
+/* "Uses 1 free evaluation (2 left)": a small tag on the violet-blue. */
 .evaluate-choice-modal__option-note {
-  font-size: 0.8rem;
-  color: var(--ink);
+  align-self: flex-start;
+  margin-top: 0.2rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 0.75rem;
+  color: #ffffff;
 }
 
 /* Pulled up under the disabled "Evaluate now" option it explains. */
 .evaluate-choice-modal__blocked {
   margin: -0.5rem 0 0;
+  padding: 0 1.1rem;
   font-size: 0.8rem;
   color: var(--rose);
 }
