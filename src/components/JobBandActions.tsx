@@ -29,7 +29,10 @@ function ShareJobButton({ job, company }: { job: JobDetail; company: string }) {
     return () => window.clearTimeout(timer);
   }, [copied]);
 
+  // Every tap counts (share_click), even one that closes the share sheet
+  // unused; a share that goes through is also GA4's share event.
   async function share() {
+    trackEvent("share_click", { job_id: job.url.id });
     const url = `${window.location.origin}/jobs/${job.url.id}`;
     const jobTitle = scannedPosting(job)?.title;
     const title = jobTitle ? `${jobTitle} at ${company}` : company;
