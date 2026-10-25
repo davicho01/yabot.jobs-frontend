@@ -31,6 +31,7 @@ export function EvaluateChoiceModal({
   onClose: () => void;
 }) {
   const [remember, setRemember] = useState(false);
+  const evaluateBlocked = evaluateBlockedReason !== null;
 
   return createPortal(
     <div className="evaluate-choice-modal__overlay" onClick={onClose}>
@@ -47,26 +48,41 @@ export function EvaluateChoiceModal({
             ×
           </button>
         </div>
-        <button type="button" className="evaluate-choice-modal__option" onClick={() => onChoose("list", remember)}>
-          <span className="evaluate-choice-modal__option-title">Add to my list</span>
-          <span className="evaluate-choice-modal__option-body">Evaluate it later from My applications.</span>
-        </button>
-
+        {/* Evaluate now is always first, so the top spot never changes what a
+            habitual tap does: when it can't run it stays there, disabled (a
+            dashed empty slot), with the reason and its fix right under it. */}
         <button
           type="button"
-          className="evaluate-choice-modal__option"
-          disabled={evaluateBlockedReason !== null}
+          className={`evaluate-choice-modal__option ${
+            evaluateBlocked ? "evaluate-choice-modal__option--blocked" : "evaluate-choice-modal__option--primary"
+          }`}
+          disabled={evaluateBlocked}
           onClick={() => onChoose("evaluate", remember)}
         >
           <span className="evaluate-choice-modal__option-title">Evaluate now</span>
           <span className="evaluate-choice-modal__option-body">
             Score your resume against this job and save it to My applications.
           </span>
-          {!evaluateBlockedReason && evaluateNote && (
-            <span className="evaluate-choice-modal__option-note">{evaluateNote}</span>
+          {!evaluateBlocked && evaluateNote && <span className="evaluate-choice-modal__option-note">{evaluateNote}</span>}
+          {!evaluateBlocked && (
+            <span className="evaluate-choice-modal__option-arrow" aria-hidden="true">
+              →
+            </span>
           )}
         </button>
-        {evaluateBlockedReason && <p className="evaluate-choice-modal__blocked">{evaluateBlockedReason}</p>}
+        {evaluateBlocked && <p className="evaluate-choice-modal__blocked">{evaluateBlockedReason}</p>}
+
+        <button
+          type="button"
+          className="evaluate-choice-modal__option evaluate-choice-modal__option--secondary"
+          onClick={() => onChoose("list", remember)}
+        >
+          <span className="evaluate-choice-modal__option-title">Add to my list</span>
+          <span className="evaluate-choice-modal__option-body">Evaluate it later from My applications.</span>
+          <span className="evaluate-choice-modal__option-arrow" aria-hidden="true">
+            →
+          </span>
+        </button>
 
         <label className="evaluate-choice-modal__remember">
           <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
