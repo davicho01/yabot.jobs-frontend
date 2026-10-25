@@ -20,9 +20,11 @@ import "./JobSwipePage.css";
 
 // Fetch the next page of results once the visitor is this close to the end.
 const PREFETCH_AHEAD = 3;
-// Postings drawn in full on each side of the one on screen; the rest are
-// empty screens of the same width, so a long run of results stays light.
-const RENDER_AHEAD = 1;
+// Postings drawn in full on each side of the one on screen (and of the one
+// the row last settled on, which a quick run of swipes gets ahead of); the
+// rest are empty screens of the same width, so a long run of results stays
+// light.
+const RENDER_AHEAD = 2;
 
 // How far a finger has to drag a posting on past its top to bring the
 // header back.
@@ -386,7 +388,7 @@ export function JobSwipePage({ list, firstPage }: { list: ReactNode; firstPage?:
           >
             {/* Room for the header and the row above the card. */}
             <div className="swipe__spacer" />
-            {index >= 0 && Math.abs(i - index) <= RENDER_AHEAD && (
+            {index >= 0 && (Math.abs(i - index) <= RENDER_AHEAD || Math.abs(i - shown) <= RENDER_AHEAD) && (
               <SwipeCard
                 job={job}
                 index={offset + i}

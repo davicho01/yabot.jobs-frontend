@@ -350,11 +350,13 @@ export function JobBoardPage({
   // Fetched directly by id (not just looked up in the current page's
   // results) so a selected job stays visible on refresh or when the URL is
   // shared — the target job may live on a different page/filter than
-  // whatever this session's board happens to be showing.
+  // whatever this session's board happens to be showing. A job on this page
+  // shows from the list right away while it's fetched.
   const { data: selectedJob, isLoading: selectedJobLoading } = useQuery({
     queryKey: ["job", selectedId],
     queryFn: () => jobsApi.get(selectedId!),
     enabled: !!selectedId,
+    placeholderData: () => jobs?.find((job) => job.url.id === selectedId),
   });
   const selected = selectedId ? selectedJob : jobs?.[0];
   // The open posting's band matches its card's place in the list, diagonal
