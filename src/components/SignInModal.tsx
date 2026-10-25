@@ -15,7 +15,17 @@ import "./SignInModal.css";
 // Sign-in in a window over the page, for someone signed out who tapped a
 // posting's Apply ↗ (see SignInPromptProvider below). With Google or an emailed
 // code, it signs in right here, then offers the company's site a tap away.
-export function SignInModal({ job, onClose }: { job: JobDetail; onClose: () => void }) {
+// With onSignedIn (a signed-out "Check my fit", JobCaseFile) it asks to sign
+// in to check the fit instead and, once in, hands back to the page.
+export function SignInModal({
+  job,
+  onClose,
+  onSignedIn,
+}: {
+  job: JobDetail;
+  onClose: () => void;
+  onSignedIn?: () => void;
+}) {
   const { signInWithGoogle, verifyCode } = useAuth();
   const [status, setStatus] = useState<"idle" | "signing-in" | "signed-in">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +48,10 @@ export function SignInModal({ job, onClose }: { job: JobDetail; onClose: () => v
   // so "Continue to apply" opens it.
   async function signedIn(method: string) {
     trackEvent("login", { method });
+    if (onSignedIn) {
+      onSignedIn();
+      return;
+    }
     setCompanyUrl((await jobsApi.get(job.url.id)).url.url);
     setStatus("signed-in");
   }
@@ -66,7 +80,7 @@ export function SignInModal({ job, onClose }: { job: JobDetail; onClose: () => v
         className="login-card sign-in-modal"
         role="dialog"
         aria-modal="true"
-        aria-label="Sign in to apply"
+        aria-label={onSignedIn ? "Sign in to check your fit" : "Sign in to apply"}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="login-card__tab">Sign-in</div>
@@ -93,7 +107,7 @@ export function SignInModal({ job, onClose }: { job: JobDetail; onClose: () => v
           </>
         ) : (
           <>
-            <h2 className="login-card__title">Sign in to apply.</h2>
+            <h2 className="login-card__title">{onSignedIn ? "Sign in to check your fit." : "Sign in to apply."}</h2>
             <p className="login-card__subtitle">
               {GOOGLE_CLIENT_ID
                 ? "No password: continue with Google, or get a one-time code by email."
