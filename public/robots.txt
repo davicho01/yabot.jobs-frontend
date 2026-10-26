@@ -10,6 +10,37 @@ Disallow: /resume
 Disallow: /api-keys
 Disallow: /applications
 Disallow: /admin
+# A job's app page (/jobs/<id>) loads it from the API on every visit, so
+# crawlers stay out; the job's static page under /jobs/us/ is the one to
+# index. Longest match wins, so these Allows beat the Disallow. "/jobs/us"
+# without a slash keeps the country page (/jobs/us) too; an id is hex, so
+# none starts with "us". /jobs (the search page, no slash) is unaffected.
+Disallow: /jobs/
+Allow: /jobs/us
+Allow: /jobs/_assets/
+
+# Link-preview bots fetch only a shared link, to show its title and
+# description. They may read /jobs/<id> (a crawler matching this group
+# ignores the one above, so it repeats the rest of its rules).
+User-agent: Twitterbot
+User-agent: facebookexternalhit
+User-agent: Facebot
+User-agent: LinkedInBot
+User-agent: Slackbot
+User-agent: WhatsApp
+User-agent: Discordbot
+User-agent: TelegramBot
+User-agent: SkypeUriPreview
+Allow: /
+Disallow: /app.html
+Disallow: /login
+Disallow: /auth/
+Disallow: /oauth/
+Disallow: /profile
+Disallow: /resume
+Disallow: /api-keys
+Disallow: /applications
+Disallow: /admin
 Disallow: /jobs/*/apply
 
 Sitemap: https://yabot.jobs/sitemap.xml
