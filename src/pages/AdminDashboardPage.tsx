@@ -209,10 +209,10 @@ export function AdminDashboardPage() {
                 Sources flagged{flaggedOnly ? " (showing)" : dashboard.totals.crawl_sources_flagged > 0 ? " →" : ""}
               </span>
             </button>
-            <div className="admin-totals__tile">
+            <Link to="/admin/users" className="admin-totals__tile admin-totals__tile--button">
               <span className="admin-totals__value">{dashboard.totals.users.toLocaleString()}</span>
-              <span className="admin-totals__label">Users</span>
-            </div>
+              <span className="admin-totals__label">Users →</span>
+            </Link>
             <Link
               to="/admin/feedback"
               className={`admin-totals__tile admin-totals__tile--button${

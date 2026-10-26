@@ -18,6 +18,7 @@ import { AdminCrawlSourceStatsPage } from "./pages/AdminCrawlSourceStatsPage";
 import { AdminJobsPage } from "./pages/AdminJobsPage";
 import { AdminDuplicatesPage } from "./pages/AdminDuplicatesPage";
 import { AdminFeedbackPage } from "./pages/AdminFeedbackPage";
+import { AdminUsersPage } from "./pages/AdminUsersPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 import { Header } from "./components/Header";
@@ -181,6 +182,14 @@ export default function App() {
           element={
             <AdminRoute>
               <AdminDuplicatesPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute>
+              <AdminUsersPage />
             </AdminRoute>
           }
         />

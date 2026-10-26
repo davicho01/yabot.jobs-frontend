@@ -112,6 +112,10 @@
   cursor: pointer;
 }
 
+.scan-chart__hit-target--static {
+  cursor: default;
+}
+
 .scan-chart__bar {
   fill: var(--accent);
   pointer-events: none;

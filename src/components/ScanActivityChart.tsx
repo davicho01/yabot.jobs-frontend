@@ -125,7 +125,26 @@ const MIN_LABEL_SPACING = 56;
 // left over its neighbor.
 const TOOLTIP_OVERHANG = 12;
 
-export function ScanActivityChart({ title, sourceId }: { title: string; sourceId?: string }) {
+// What the bars count. Scans drill into the matching listings on click;
+// users-joined has no admin user list to drill into, so its bars are hover-only.
+type Series = "scans" | "users-joined";
+
+const SERIES_TEXT: Record<Series, { column: string; unit: string; empty: string }> = {
+  scans: { column: "Listings scanned", unit: "scanned", empty: "No scan activity yet." },
+  "users-joined": { column: "Users joined", unit: "joined", empty: "No sign-ups yet." },
+};
+
+export function ScanActivityChart({
+  title,
+  sourceId,
+  series = "scans",
+}: {
+  title: string;
+  sourceId?: string;
+  series?: Series;
+}) {
+  const clickable = series === "scans";
+  const text = SERIES_TEXT[series];
   const navigate = useNavigate();
   const [granularity, setGranularity] = useState<Granularity>("hr");
   const [showTable, setShowTable] = useState(false);
@@ -136,31 +155,41 @@ export function ScanActivityChart({ title, sourceId }: { title: string; sourceId
   const [hourEnd, setHourEnd] = useState<string | null>(null);
 
   const hourQuery = useQuery({
-    queryKey: ["admin", "scans-by-hour", sourceId ?? "all", hourEnd],
+    queryKey: ["admin", `${series}-by-hour`, sourceId ?? "all", hourEnd],
     queryFn: () =>
-      sourceId
+      series === "users-joined"
+        ? adminApi.usersJoinedByHour(REQUEST_COUNT.hr, hourEnd ?? undefined)
+        : sourceId
         ? adminApi.crawlSourceScansByHour(sourceId, REQUEST_COUNT.hr, hourEnd ?? undefined)
         : adminApi.scansByHour(REQUEST_COUNT.hr, hourEnd ?? undefined),
     enabled: granularity === "hr",
   });
   const dayQuery = useQuery({
-    queryKey: ["admin", "scans-by-day", sourceId ?? "all"],
+    queryKey: ["admin", `${series}-by-day`, sourceId ?? "all"],
     queryFn: () =>
-      sourceId ? adminApi.crawlSourceScansByDay(sourceId, REQUEST_COUNT.day) : adminApi.scansByDay(REQUEST_COUNT.day),
+      series === "users-joined"
+        ? adminApi.usersJoinedByDay(REQUEST_COUNT.day)
+        : sourceId
+          ? adminApi.crawlSourceScansByDay(sourceId, REQUEST_COUNT.day)
+          : adminApi.scansByDay(REQUEST_COUNT.day),
     enabled: granularity === "day",
   });
   const weekQuery = useQuery({
-    queryKey: ["admin", "scans-by-week", sourceId ?? "all"],
+    queryKey: ["admin", `${series}-by-week`, sourceId ?? "all"],
     queryFn: () =>
-      sourceId
+      series === "users-joined"
+        ? adminApi.usersJoinedByWeek(REQUEST_COUNT.week)
+        : sourceId
         ? adminApi.crawlSourceScansByWeek(sourceId, REQUEST_COUNT.week)
         : adminApi.scansByWeek(REQUEST_COUNT.week),
     enabled: granularity === "week",
   });
   const monthQuery = useQuery({
-    queryKey: ["admin", "scans-by-month", sourceId ?? "all"],
+    queryKey: ["admin", `${series}-by-month`, sourceId ?? "all"],
     queryFn: () =>
-      sourceId
+      series === "users-joined"
+        ? adminApi.usersJoinedByMonth(REQUEST_COUNT.month)
+        : sourceId
         ? adminApi.crawlSourceScansByMonth(sourceId, REQUEST_COUNT.month)
         : adminApi.scansByMonth(REQUEST_COUNT.month),
     enabled: granularity === "month",
@@ -206,6 +235,7 @@ export function ScanActivityChart({ title, sourceId }: { title: string; sourceId
   }, [tooltipNode, hovered]);
 
   function goToJobs(bucket: Bucket) {
+    if (!clickable) return;
     const params = new URLSearchParams();
     if (sourceId) params.set("sourceId", sourceId);
     params.set("scanFrom", bucket.from);
@@ -281,7 +311,7 @@ export function ScanActivityChart({ title, sourceId }: { title: string; sourceId
 
       {loading && <p className="admin-page__hint">Loading…</p>}
 
-      {!loading && buckets.length === 0 && <p className="admin-page__hint">No scan activity yet.</p>}
+      {!loading && buckets.length === 0 && <p className="admin-page__hint">{text.empty}</p>}
 
       {!loading && buckets.length > 0 && showTable && (
         <div className="scan-chart__table-wrap admin-table-wrap">
@@ -289,7 +319,7 @@ export function ScanActivityChart({ title, sourceId }: { title: string; sourceId
             <thead>
               <tr>
                 <th>Period</th>
-                <th>Listings scanned</th>
+                <th>{text.column}</th>
               </tr>
             </thead>
             <tbody>
@@ -345,10 +375,10 @@ export function ScanActivityChart({ title, sourceId }: { title: string; sourceId
                     width={slot}
                     height={plotHeight}
                     fill="transparent"
-                    className="scan-chart__hit-target"
+                    className={`scan-chart__hit-target${clickable ? "" : " scan-chart__hit-target--static"}`}
                     tabIndex={0}
-                    role="button"
-                    aria-label={`${bucket.rangeLabel}: ${bucket.count.toLocaleString()} scanned. View listings.`}
+                    role={clickable ? "button" : "img"}
+                    aria-label={`${bucket.rangeLabel}: ${bucket.count.toLocaleString()} ${text.unit}.${clickable ? " View listings." : ""}`}
                     onPointerEnter={() => setHovered(i)}
                     onPointerLeave={() => setHovered(null)}
                     onFocus={() => setHovered(i)}
