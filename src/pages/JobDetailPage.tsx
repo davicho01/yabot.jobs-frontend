@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
@@ -25,6 +26,19 @@ export function JobDetailPage() {
     queryFn: () => jobsApi.get(urlId!),
     enabled: !!urlId,
   });
+
+  // The tab names the job, as Share does ("<title> at <company>"); the app
+  // shell's own <title> is just "Yabot Jobs", put back on the way out.
+  useEffect(() => {
+    if (!job) return;
+    const jobTitle = scannedPosting(job)?.title;
+    const company = scannedPosting(job)?.company_name ?? job.url.domain;
+    const previous = document.title;
+    document.title = `${jobTitle ? `${jobTitle} at ${company}` : company} | Yabot Jobs`;
+    return () => {
+      document.title = previous;
+    };
+  }, [job]);
 
   const rescanMutation = useMutation({
     mutationFn: (id: string) => jobsApi.rescan(id),
