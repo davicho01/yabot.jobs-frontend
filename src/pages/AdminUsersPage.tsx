@@ -25,6 +25,11 @@ export function AdminUsersPage() {
       )}
 
       <ScanActivityChart title="Users joined" series="users-joined" />
+      <ScanActivityChart title="Returning users" series="returning-users" />
+      <p className="admin-page__hint">
+        Returning users: people who used the site that day and signed up on an earlier day (admins left out). Recorded
+        from the day this chart shipped.
+      </p>
     </main>
   );
 }
