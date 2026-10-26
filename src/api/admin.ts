@@ -152,4 +152,9 @@ export const adminApi = {
   scansByMonth: (months = 6) => api.get<ScanMonthCount[]>(`/admin/scans-by-month?months=${months}`),
   crawlSourceScansByMonth: (sourceId: string, months = 6) =>
     api.get<ScanMonthCount[]>(`/admin/crawl-sources/${sourceId}/scans-by-month?months=${months}`),
+  usersJoinedByHour: (hours = 24, end?: string) =>
+    api.get<ScanHourCount[]>("/admin/users-joined-by-hour", { hours, end }),
+  usersJoinedByDay: (days = 30) => api.get<ScanDayCount[]>(`/admin/users-joined-by-day?days=${days}`),
+  usersJoinedByWeek: (weeks = 26) => api.get<ScanWeekCount[]>(`/admin/users-joined-by-week?weeks=${weeks}`),
+  usersJoinedByMonth: (months = 6) => api.get<ScanMonthCount[]>(`/admin/users-joined-by-month?months=${months}`),
 };
