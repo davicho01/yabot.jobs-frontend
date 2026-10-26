@@ -10,6 +10,15 @@
 //   - the blog: /blog -> /blog/index.html, /blog/<slug> -> /blog/<slug>.html;
 //   - the app's routes (/jobs, /jobs/<id>, /login, /profile, …) -> /app.html.
 //
+// Except that a link-preview bot (Slack, iMessage, LinkedIn, X, WhatsApp…)
+// asking for a job's app page, /jobs/<id>, is sent to the API's
+// GET /jobs/<id>/share instead: the job's own title and description as
+// preview tags. A bot doesn't run the app, so app.html alone only ever says
+// "Yabot Jobs". The URI becomes /jobs/<id>/share, so the cached copy is
+// kept apart from the people's app.html one (the cache key is the path).
+// The bots are matched by user agent, and Googlebot is never one of them
+// (robots.txt keeps search crawlers off /jobs/<id>).
+//
 // Why it is needed: S3 has no object for these paths. The distribution's
 // 403/404 custom error response answers missing objects with /index.html and
 // status 404, so search engines see a real 404 for a URL that doesn't exist
@@ -41,6 +50,8 @@
 //   curl -sI https://yabot.jobs/not-a-page         # 404
 //   curl -sI https://yabot.jobs/blog               # 200, the blog index
 //   curl -sI https://yabot.jobs/blog/not-a-post    # 404
+//   curl -s -A "Slackbot-LinkExpanding 1.0" https://yabot.jobs/jobs/<id> | grep og:title   # the job's title
+//   curl -s https://yabot.jobs/jobs/<id> | grep '<title>'                                    # Yabot Jobs (the app)
 
 var PAGES = {
   "/questions": "/questions.html",
@@ -79,6 +90,14 @@ var APP_ROUTE_PATTERNS = [
   new RegExp("^/jobs/" + UUID + "(/apply2?)?$"),
   /^\/admin\/crawl-sources\/[^/]+$/,
 ];
+
+var cf = require("cloudfront");
+
+// Link-preview bots, by user agent. iMessage previews as
+// "facebookexternalhit ... Facebot Twitterbot".
+var PREVIEW_BOT = /Twitterbot|facebookexternalhit|Facebot|LinkedInBot|Slackbot|WhatsApp|Discordbot|TelegramBot|SkypeUriPreview|Iframely|Embedly|redditbot|Pinterestbot/i;
+var JOB_APP_PAGE = new RegExp("^/jobs/" + UUID + "$");
+var API_HOST = "api.yabot.jobs";
 
 function handler(event) {
   var request = event.request;
@@ -123,6 +142,14 @@ function handler(event) {
   } else if (BLOG_POST.test(uri)) {
     // A post that doesn't exist misses in S3 and gets the real 404.
     request.uri = uri + ".html";
+  } else if (JOB_APP_PAGE.test(uri) && request.headers["user-agent"] && PREVIEW_BOT.test(request.headers["user-agent"].value)) {
+    request.uri = uri + "/share";
+    cf.updateRequestOrigin({
+      domainName: API_HOST,
+      customOriginConfig: { port: 443, protocol: "https", sslProtocols: ["TLSv1.2"] },
+      // The S3 origin's access control would sign the request for S3.
+      originAccessControlConfig: { enabled: false },
+    });
   } else if (APP_ROUTES[uri] || APP_ROUTE_PATTERNS.some(function (re) { return re.test(uri); })) {
     request.uri = "/app.html";
   }
