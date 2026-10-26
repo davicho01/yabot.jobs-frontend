@@ -59,6 +59,18 @@
   cursor: pointer;
 }
 
+.scan-chart__hour-nav-day {
+  display: flex;
+  align-items: center;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  padding: 0 0.6rem;
+  border-right: 1px solid var(--line);
+  white-space: nowrap;
+}
+
 .scan-chart__hour-nav-btn:first-child {
   border-right: 1px solid var(--line);
 }

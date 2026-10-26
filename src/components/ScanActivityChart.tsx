@@ -15,9 +15,32 @@ const GRANULARITIES: { key: Granularity; label: string }[] = [
 ];
 
 // How many trailing buckets each granularity requests from the backend —
-// hourly is a fixed 24h window (paged via the nav arrows), the others are
-// however many bars the chart shows at once.
-const REQUEST_COUNT: Record<Granularity, number> = { hr: 24, day: 30, week: 26, month: 6 };
+// the bars the chart shows at once. Hourly isn't here: it shows one local
+// calendar day (see hourWindow), paged a day at a time via the nav arrows.
+const REQUEST_COUNT: Record<Exclude<Granularity, "hr">, number> = { day: 30, week: 26, month: 6 };
+
+const HOUR_MS = 60 * 60 * 1000;
+
+// The hourly request for the local calendar day `daysAgo` days back: its
+// hours from midnight through 11pm, or through the current hour for today.
+// Counted from real midnights, so DST days get their 23 or 25 hours.
+function hourWindow(daysAgo: number): { dayStart: Date; hours: number; end?: string } {
+  const now = new Date();
+  const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysAgo);
+  if (daysAgo === 0) {
+    const currentHour = new Date(now);
+    currentHour.setMinutes(0, 0, 0);
+    return { dayStart, hours: Math.round((currentHour.getTime() - dayStart.getTime()) / HOUR_MS) + 1 };
+  }
+  const nextDayStart = new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate() + 1);
+  return {
+    dayStart,
+    hours: Math.round((nextDayStart.getTime() - dayStart.getTime()) / HOUR_MS),
+    end: new Date(nextDayStart.getTime() - HOUR_MS).toISOString(),
+  };
+}
+
+const HOUR_DAY_FMT: Intl.DateTimeFormatOptions = { weekday: "short", month: "short", day: "numeric" };
 
 type Bucket = { key: string; label: string; rangeLabel: string; count: number; from: string; to: string };
 
@@ -127,7 +150,7 @@ const TOOLTIP_OVERHANG = 12;
 
 // What the bars count. Scans drill into the matching listings on click;
 // the user series have no admin user list to drill into, so their bars are
-// hover-only. Returning users are recorded per day, so they have no Hr view.
+// hover-only.
 type Series = "scans" | "users-joined" | "returning-users";
 
 const SERIES_TEXT: Record<Series, { column: string; unit: string; empty: string }> = {
@@ -146,26 +169,26 @@ export function ScanActivityChart({
   series?: Series;
 }) {
   const clickable = series === "scans";
-  const hasHourly = series !== "returning-users";
-  const granularities = hasHourly ? GRANULARITIES : GRANULARITIES.filter(({ key }) => key !== "hr");
   const text = SERIES_TEXT[series];
   const navigate = useNavigate();
-  const [granularity, setGranularity] = useState<Granularity>(hasHourly ? "hr" : "day");
+  const [granularity, setGranularity] = useState<Granularity>("hr");
   const [showTable, setShowTable] = useState(false);
   const [hovered, setHovered] = useState<number | null>(null);
-  // The right edge of the hourly window — null means "live" (always the
-  // current hour), a fixed ISO string means the back/forward arrows have
-  // paged away from live.
-  const [hourEnd, setHourEnd] = useState<string | null>(null);
+  // Which local calendar day the hourly view shows — 0 is today (live up to
+  // the current hour), 1 yesterday, and so on via the back/forward arrows.
+  const [hourDaysAgo, setHourDaysAgo] = useState(0);
+  const hourWin = hourWindow(hourDaysAgo);
 
   const hourQuery = useQuery({
-    queryKey: ["admin", `${series}-by-hour`, sourceId ?? "all", hourEnd],
+    queryKey: ["admin", `${series}-by-hour`, sourceId ?? "all", hourDaysAgo, hourWin.hours],
     queryFn: () =>
-      series === "users-joined"
-        ? adminApi.usersJoinedByHour(REQUEST_COUNT.hr, hourEnd ?? undefined)
+      series === "returning-users"
+        ? adminApi.returningUsersByHour(hourWin.hours, hourWin.end)
+        : series === "users-joined"
+        ? adminApi.usersJoinedByHour(hourWin.hours, hourWin.end)
         : sourceId
-        ? adminApi.crawlSourceScansByHour(sourceId, REQUEST_COUNT.hr, hourEnd ?? undefined)
-        : adminApi.scansByHour(REQUEST_COUNT.hr, hourEnd ?? undefined),
+        ? adminApi.crawlSourceScansByHour(sourceId, hourWin.hours, hourWin.end)
+        : adminApi.scansByHour(hourWin.hours, hourWin.end),
     enabled: granularity === "hr",
   });
   const dayQuery = useQuery({
@@ -205,21 +228,6 @@ export function ScanActivityChart({
     enabled: granularity === "month",
   });
 
-  function goBackHour() {
-    const first = hourQuery.data?.[0];
-    if (!first) return;
-    setHourEnd(new Date(new Date(first.hour).getTime() - 60 * 60 * 1000).toISOString());
-  }
-
-  function goForwardHour() {
-    const data = hourQuery.data;
-    if (!data || data.length === 0) return;
-    const last = new Date(data[data.length - 1].hour);
-    const candidate = new Date(last.getTime() + REQUEST_COUNT.hr * 60 * 60 * 1000);
-    const currentHour = new Date();
-    currentHour.setUTCMinutes(0, 0, 0);
-    setHourEnd(candidate.getTime() >= currentHour.getTime() ? null : candidate.toISOString());
-  }
 
   // The SVG is drawn at the container's real pixel width (rather than a fixed
   // viewBox stretched to fit) so text and bars keep their proportions on a
@@ -286,7 +294,7 @@ export function ScanActivityChart({
         <h2 className="admin-section__title">{title}</h2>
         <div className="scan-chart__controls">
           <div className="scan-chart__granularity" role="group" aria-label="Group by">
-            {granularities.map(({ key, label }) => (
+            {GRANULARITIES.map(({ key, label }) => (
               <button
                 key={key}
                 type="button"
@@ -298,16 +306,24 @@ export function ScanActivityChart({
             ))}
           </div>
           {granularity === "hr" && (
-            <div className="scan-chart__hour-nav" role="group" aria-label="Shift 24-hour window">
-              <button type="button" className="scan-chart__hour-nav-btn" onClick={goBackHour} aria-label="Back 24 hours">
-                ‹
-              </button>
+            <div className="scan-chart__hour-nav" role="group" aria-label="Change day">
               <button
                 type="button"
                 className="scan-chart__hour-nav-btn"
-                onClick={goForwardHour}
-                disabled={hourEnd === null}
-                aria-label="Forward 24 hours"
+                onClick={() => setHourDaysAgo((d) => d + 1)}
+                aria-label="Previous day"
+              >
+                ‹
+              </button>
+              <span className="scan-chart__hour-nav-day">
+                {hourDaysAgo === 0 ? "Today" : hourWin.dayStart.toLocaleDateString("en-US", HOUR_DAY_FMT)}
+              </span>
+              <button
+                type="button"
+                className="scan-chart__hour-nav-btn"
+                onClick={() => setHourDaysAgo((d) => Math.max(0, d - 1))}
+                disabled={hourDaysAgo === 0}
+                aria-label="Next day"
               >
                 ›
               </button>
