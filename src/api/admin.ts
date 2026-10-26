@@ -157,4 +157,8 @@ export const adminApi = {
   usersJoinedByDay: (days = 30) => api.get<ScanDayCount[]>(`/admin/users-joined-by-day?days=${days}`),
   usersJoinedByWeek: (weeks = 26) => api.get<ScanWeekCount[]>(`/admin/users-joined-by-week?weeks=${weeks}`),
   usersJoinedByMonth: (months = 6) => api.get<ScanMonthCount[]>(`/admin/users-joined-by-month?months=${months}`),
+  returningUsersByDay: (days = 30) => api.get<ScanDayCount[]>(`/admin/returning-users-by-day?days=${days}`),
+  returningUsersByWeek: (weeks = 26) => api.get<ScanWeekCount[]>(`/admin/returning-users-by-week?weeks=${weeks}`),
+  returningUsersByMonth: (months = 6) =>
+    api.get<ScanMonthCount[]>(`/admin/returning-users-by-month?months=${months}`),
 };

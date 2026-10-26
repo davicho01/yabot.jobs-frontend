@@ -126,12 +126,14 @@ const MIN_LABEL_SPACING = 56;
 const TOOLTIP_OVERHANG = 12;
 
 // What the bars count. Scans drill into the matching listings on click;
-// users-joined has no admin user list to drill into, so its bars are hover-only.
-type Series = "scans" | "users-joined";
+// the user series have no admin user list to drill into, so their bars are
+// hover-only. Returning users are recorded per day, so they have no Hr view.
+type Series = "scans" | "users-joined" | "returning-users";
 
 const SERIES_TEXT: Record<Series, { column: string; unit: string; empty: string }> = {
   scans: { column: "Listings scanned", unit: "scanned", empty: "No scan activity yet." },
   "users-joined": { column: "Users joined", unit: "joined", empty: "No sign-ups yet." },
+  "returning-users": { column: "Returning users", unit: "returning", empty: "No returning users recorded yet." },
 };
 
 export function ScanActivityChart({
@@ -144,9 +146,11 @@ export function ScanActivityChart({
   series?: Series;
 }) {
   const clickable = series === "scans";
+  const hasHourly = series !== "returning-users";
+  const granularities = hasHourly ? GRANULARITIES : GRANULARITIES.filter(({ key }) => key !== "hr");
   const text = SERIES_TEXT[series];
   const navigate = useNavigate();
-  const [granularity, setGranularity] = useState<Granularity>("hr");
+  const [granularity, setGranularity] = useState<Granularity>(hasHourly ? "hr" : "day");
   const [showTable, setShowTable] = useState(false);
   const [hovered, setHovered] = useState<number | null>(null);
   // The right edge of the hourly window — null means "live" (always the
@@ -167,7 +171,9 @@ export function ScanActivityChart({
   const dayQuery = useQuery({
     queryKey: ["admin", `${series}-by-day`, sourceId ?? "all"],
     queryFn: () =>
-      series === "users-joined"
+      series === "returning-users"
+        ? adminApi.returningUsersByDay(REQUEST_COUNT.day)
+        : series === "users-joined"
         ? adminApi.usersJoinedByDay(REQUEST_COUNT.day)
         : sourceId
           ? adminApi.crawlSourceScansByDay(sourceId, REQUEST_COUNT.day)
@@ -177,7 +183,9 @@ export function ScanActivityChart({
   const weekQuery = useQuery({
     queryKey: ["admin", `${series}-by-week`, sourceId ?? "all"],
     queryFn: () =>
-      series === "users-joined"
+      series === "returning-users"
+        ? adminApi.returningUsersByWeek(REQUEST_COUNT.week)
+        : series === "users-joined"
         ? adminApi.usersJoinedByWeek(REQUEST_COUNT.week)
         : sourceId
         ? adminApi.crawlSourceScansByWeek(sourceId, REQUEST_COUNT.week)
@@ -187,7 +195,9 @@ export function ScanActivityChart({
   const monthQuery = useQuery({
     queryKey: ["admin", `${series}-by-month`, sourceId ?? "all"],
     queryFn: () =>
-      series === "users-joined"
+      series === "returning-users"
+        ? adminApi.returningUsersByMonth(REQUEST_COUNT.month)
+        : series === "users-joined"
         ? adminApi.usersJoinedByMonth(REQUEST_COUNT.month)
         : sourceId
         ? adminApi.crawlSourceScansByMonth(sourceId, REQUEST_COUNT.month)
@@ -276,7 +286,7 @@ export function ScanActivityChart({
         <h2 className="admin-section__title">{title}</h2>
         <div className="scan-chart__controls">
           <div className="scan-chart__granularity" role="group" aria-label="Group by">
-            {GRANULARITIES.map(({ key, label }) => (
+            {granularities.map(({ key, label }) => (
               <button
                 key={key}
                 type="button"
