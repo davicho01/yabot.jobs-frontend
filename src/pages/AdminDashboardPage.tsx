@@ -69,6 +69,11 @@ export function AdminDashboardPage() {
     queryFn: () => adminApi.feedback({ status: "new", pageSize: 1 }),
   });
   const newFeedback = feedbackQuery.data?.new_count ?? 0;
+  const collectionsQuery = useQuery({
+    queryKey: ["admin", "collections", "waiting-count"],
+    queryFn: () => adminApi.collections({ view: "waiting", pageSize: 1 }),
+  });
+  const waitingPages = collectionsQuery.data?.total ?? 0;
   const dashboard = dashboardQuery.data;
 
   const [sortKey, setSortKey] = useState<SortKey>("name");
@@ -209,6 +214,20 @@ export function AdminDashboardPage() {
                 Sources flagged{flaggedOnly ? " (showing)" : dashboard.totals.crawl_sources_flagged > 0 ? " →" : ""}
               </span>
             </button>
+            <Link
+              to="/admin/collections"
+              className={`admin-totals__tile admin-totals__tile--button${
+                waitingPages === 0 ? " admin-totals__tile--empty" : ""
+              }`}
+            >
+              <span
+                className="admin-totals__value"
+                style={waitingPages > 0 ? { color: "var(--amber)" } : undefined}
+              >
+                {waitingPages.toLocaleString()}
+              </span>
+              <span className="admin-totals__label">Job pages waiting →</span>
+            </Link>
             <Link to="/admin/users" className="admin-totals__tile admin-totals__tile--button">
               <span className="admin-totals__value">{dashboard.totals.users.toLocaleString()}</span>
               <span className="admin-totals__label">Users →</span>
