@@ -152,6 +152,18 @@ export function AdminCollectionsPage() {
     onError: (error: Error) => setMessage(error.message),
   });
 
+  // The tab is opened before the fetch so the popup blocker allows it.
+  const preview = async (item: AdminCollection) => {
+    const tab = window.open("", "_blank");
+    try {
+      const blob = await adminApi.collectionPreview(item.id);
+      if (tab) tab.location.href = URL.createObjectURL(blob);
+    } catch (error) {
+      tab?.close();
+      setMessage(`Preview of ${item.name}: ${(error as Error).message}`);
+    }
+  };
+
   const data = listQuery.data;
   const totalPages = data ? Math.max(1, Math.ceil(data.total / pageSize)) : 1;
   const counts = data?.counts ?? {};
@@ -310,6 +322,7 @@ export function AdminCollectionsPage() {
                     onToggle={() => toggle(item.id)}
                     onOpen={() => setOpenId(openId === item.id ? null : item.id)}
                     onAction={(action) => actMutation.mutate({ id: item.id, action })}
+                    onPreview={() => preview(item)}
                   />
                 ))}
               </tbody>
@@ -342,6 +355,7 @@ function CollectionRow({
   onToggle,
   onOpen,
   onAction,
+  onPreview,
 }: {
   item: AdminCollection;
   selected: boolean;
@@ -350,6 +364,7 @@ function CollectionRow({
   onToggle: () => void;
   onOpen: () => void;
   onAction: (action: CollectionAction) => void;
+  onPreview: () => void;
 }) {
   return (
     <>
@@ -387,6 +402,11 @@ function CollectionRow({
                 {ACTION_LABELS[action]}
               </button>
             ))}
+            {item.path && (
+              <button type="button" onClick={onPreview}>
+                Preview
+              </button>
+            )}
             <button type="button" className="admin-collections__more" aria-expanded={open} onClick={onOpen}>
               {open ? "Hide" : "Details"}
             </button>
