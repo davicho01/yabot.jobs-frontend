@@ -38,7 +38,8 @@ jobs:
       - name: Sync to S3
         # --exclude protects what the backend publishes separately into this
         # same bucket: the SEO static-job-pages tree (jobs/, job/, _meta/,
-        # sitemap-jobs.xml, sitemap-job-pages*.xml, sitemap-hubs*.xml, from
+        # sitemap-jobs.xml, sitemap-job-pages*.xml, sitemap-hubs*.xml,
+        # sitemap-collections*.xml, from
         # generate_static_job_pages.py) and company logos (logos/, from the
         # logo sync and admin uploads — some exist nowhere else). None of it
         # comes from dist/, so without these excludes --delete would wipe it.
@@ -56,6 +57,7 @@ jobs:
             --exclude "sitemap-jobs.xml" \
             --exclude "sitemap-job-pages*" \
             --exclude "sitemap-hubs*" \
+            --exclude "sitemap-collections*" \
             --exclude "logos/*"
 
       - name: Invalidate CloudFront cache
