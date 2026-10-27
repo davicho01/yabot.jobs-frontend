@@ -298,7 +298,17 @@ export function ScanActivityChart({
   return (
     <section className="admin-section">
       <div className="admin-section__header">
-        <h2 className="admin-section__title">{title}</h2>
+        <div className="scan-chart__title-row">
+          <h2 className="admin-section__title">{title}</h2>
+          {granularity === "hr" && hourQuery.data && (
+            <span className="scan-chart__day-total">
+              {hourQuery.data.reduce((sum, h) => sum + h.count, 0).toLocaleString()}
+              <span className="scan-chart__day-total-label">
+                {text.unit} {hourDaysAgo === 0 ? "today" : `on ${hourWin.dayStart.toLocaleDateString("en-US", HOUR_DAY_FMT)}`}
+              </span>
+            </span>
+          )}
+        </div>
         <div className="scan-chart__controls">
           <div className="scan-chart__granularity" role="group" aria-label="Group by">
             {GRANULARITIES.map(({ key, label }) => (
@@ -324,7 +334,6 @@ export function ScanActivityChart({
               </button>
               <span className="scan-chart__hour-nav-day">
                 {hourDaysAgo === 0 ? "Today" : hourWin.dayStart.toLocaleDateString("en-US", HOUR_DAY_FMT)}
-                {hourQuery.data && ` · ${hourQuery.data.reduce((sum, h) => sum + h.count, 0).toLocaleString()}`}
               </span>
               <button
                 type="button"
