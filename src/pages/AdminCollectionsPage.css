@@ -1,0 +1,132 @@
+.admin-collections__count {
+  margin-left: 0.25rem;
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+.admin-collections__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-collections__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.admin-collections__reason {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1 1 18rem;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.admin-collections__reason input {
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+}
+
+.admin-collections__bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-collections__message {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  font-size: 0.88rem;
+}
+
+.admin-collections__table tr.is-selected td {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.admin-collections__issues {
+  max-width: 16rem;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  white-space: normal;
+}
+
+.admin-collections__score {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-collections__score--high {
+  color: var(--green, #1a7f37);
+}
+
+.admin-collections__score--mid {
+  color: var(--amber);
+}
+
+.admin-collections__score--low {
+  color: var(--red, #cf222e);
+}
+
+.admin-collections__more {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.admin-collections__detail-row td {
+  background: color-mix(in srgb, var(--line) 25%, transparent);
+}
+
+.admin-collections__detail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem 2rem;
+  padding: 0.5rem 0.25rem;
+  white-space: normal;
+}
+
+.admin-collections__detail h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.admin-collections__parts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem 1rem;
+  margin: 0 0 0.5rem;
+}
+
+.admin-collections__parts dt {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.admin-collections__parts dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.admin-collections__events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}

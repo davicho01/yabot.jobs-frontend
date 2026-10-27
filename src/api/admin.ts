@@ -1,9 +1,14 @@
 import { api } from "./client";
 import { PAGE_SIZE } from "./jobs";
 import type {
+  AdminCollectionBulkResult,
+  AdminCollectionDetail,
+  AdminCollectionList,
   AdminDashboard,
   AdminFeedback,
   AdminFeedbackList,
+  CollectionAction,
+  CollectionView,
   CrawlSource,
   CrawlSourceStats,
   FeedbackKind,
@@ -88,6 +93,19 @@ export const adminApi = {
     }),
   updateFeedbackStatus: (feedbackId: string, status: FeedbackStatus) =>
     api.patch<AdminFeedback>(`/admin/feedback/${feedbackId}`, { status }),
+  collections: (params: { view: CollectionView; type?: string; q?: string; page?: number; pageSize?: number }) =>
+    api.get<AdminCollectionList>("/admin/collections", {
+      view: params.view,
+      type: params.type,
+      q: params.q,
+      page: params.page ?? 1,
+      page_size: params.pageSize ?? 50,
+    }),
+  collection: (collectionId: string) => api.get<AdminCollectionDetail>(`/admin/collections/${collectionId}`),
+  actOnCollection: (collectionId: string, action: CollectionAction, reason: string) =>
+    api.post<AdminCollectionDetail>(`/admin/collections/${collectionId}/actions`, { action, reason }),
+  actOnCollections: (ids: string[], action: CollectionAction, reason: string) =>
+    api.post<AdminCollectionBulkResult>("/admin/collections/bulk", { ids, action, reason }),
   dashboard: () => api.get<AdminDashboard>("/admin/dashboard"),
   crawlSources: () => api.get<CrawlSource[]>("/admin/crawl-sources"),
   crawlSourceStats: (sourceId: string) => api.get<CrawlSourceStats>(`/admin/crawl-sources/${sourceId}/stats`),

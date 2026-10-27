@@ -512,6 +512,52 @@ export interface AdminFeedback extends Feedback {
   user_agent: string | null;
 }
 
+export type CollectionAction = "approve" | "noindex" | "archive" | "restore";
+export type CollectionView = "waiting" | "live" | "noindex" | "archived" | "all";
+
+export interface AdminCollection {
+  id: string;
+  key: string;
+  collection_type: string;
+  status: string;
+  name: string;
+  url: string | null;
+  indexable: boolean;
+  qualification_score: number | null;
+  recommendation: string | null;
+  issues: string[];
+  open_jobs: number | null;
+  companies: number | null;
+  last_evaluated_at: string | null;
+  updated_at: string;
+  actions: CollectionAction[];
+}
+
+export interface AdminCollectionEvent {
+  created_at: string;
+  previous_status: string | null;
+  new_status: string;
+  trigger: string;
+  reason: string;
+  actor_email: string | null;
+}
+
+export interface AdminCollectionDetail extends AdminCollection {
+  qualification: Record<string, unknown> | null;
+  events: AdminCollectionEvent[];
+}
+
+export interface AdminCollectionList {
+  items: AdminCollection[];
+  total: number;
+  counts: Record<string, number>;
+}
+
+export interface AdminCollectionBulkResult {
+  updated: AdminCollection[];
+  errors: { id: string; detail: string }[];
+}
+
 export interface AdminFeedbackList {
   items: AdminFeedback[];
   total: number;
