@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api, fetchBlob } from "./client";
 import { PAGE_SIZE } from "./jobs";
 import type {
   AdminCollectionBulkResult,
@@ -106,6 +106,8 @@ export const adminApi = {
     api.post<AdminCollectionDetail>(`/admin/collections/${collectionId}/actions`, { action, reason }),
   reevaluateCollection: (collectionId: string) =>
     api.post<AdminCollectionDetail>(`/admin/collections/${collectionId}/reevaluate`, {}),
+  // Its page as it would render now, as an HTML blob to open in a tab.
+  collectionPreview: (collectionId: string) => fetchBlob(`/admin/collections/${collectionId}/preview`),
   actOnCollections: (ids: string[], action: CollectionAction, reason: string) =>
     api.post<AdminCollectionBulkResult>("/admin/collections/bulk", { ids, action, reason }),
   dashboard: () => api.get<AdminDashboard>("/admin/dashboard"),
