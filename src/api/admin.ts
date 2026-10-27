@@ -104,6 +104,8 @@ export const adminApi = {
   collection: (collectionId: string) => api.get<AdminCollectionDetail>(`/admin/collections/${collectionId}`),
   actOnCollection: (collectionId: string, action: CollectionAction, reason: string) =>
     api.post<AdminCollectionDetail>(`/admin/collections/${collectionId}/actions`, { action, reason }),
+  reevaluateCollection: (collectionId: string) =>
+    api.post<AdminCollectionDetail>(`/admin/collections/${collectionId}/reevaluate`, {}),
   actOnCollections: (ids: string[], action: CollectionAction, reason: string) =>
     api.post<AdminCollectionBulkResult>("/admin/collections/bulk", { ids, action, reason }),
   dashboard: () => api.get<AdminDashboard>("/admin/dashboard"),
