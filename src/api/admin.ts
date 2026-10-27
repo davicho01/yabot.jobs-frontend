@@ -140,27 +140,37 @@ export const adminApi = {
     api.patch<CrawlSource>(`/admin/crawl-sources/${sourceId}`, payload),
   runCrawlSource: (sourceId: string) => api.post<{ queued: boolean }>(`/admin/crawl-sources/${sourceId}/crawl`),
   rescanCrawlSource: (sourceId: string) => api.post<{ queued: number }>(`/admin/crawl-sources/${sourceId}/rescan`),
-  scansByDay: (days = 180) => api.get<ScanDayCount[]>(`/admin/scans-by-day?days=${days}`),
+  // Activity charts: day/week/month buckets are grouped on the viewer's own
+  // calendar (tz), so a 9pm scan lands on today's bar, not tomorrow's UTC one.
+  scansByDay: (days = 180) => api.get<ScanDayCount[]>("/admin/scans-by-day", { days, tz: viewerTz() }),
   crawlSourceScansByDay: (sourceId: string, days = 180) =>
-    api.get<ScanDayCount[]>(`/admin/crawl-sources/${sourceId}/scans-by-day?days=${days}`),
+    api.get<ScanDayCount[]>(`/admin/crawl-sources/${sourceId}/scans-by-day`, { days, tz: viewerTz() }),
   scansByHour: (hours = 24, end?: string) => api.get<ScanHourCount[]>("/admin/scans-by-hour", { hours, end }),
   crawlSourceScansByHour: (sourceId: string, hours = 24, end?: string) =>
     api.get<ScanHourCount[]>(`/admin/crawl-sources/${sourceId}/scans-by-hour`, { hours, end }),
-  scansByWeek: (weeks = 26) => api.get<ScanWeekCount[]>(`/admin/scans-by-week?weeks=${weeks}`),
+  scansByWeek: (weeks = 26) => api.get<ScanWeekCount[]>("/admin/scans-by-week", { weeks, tz: viewerTz() }),
   crawlSourceScansByWeek: (sourceId: string, weeks = 26) =>
-    api.get<ScanWeekCount[]>(`/admin/crawl-sources/${sourceId}/scans-by-week?weeks=${weeks}`),
-  scansByMonth: (months = 6) => api.get<ScanMonthCount[]>(`/admin/scans-by-month?months=${months}`),
+    api.get<ScanWeekCount[]>(`/admin/crawl-sources/${sourceId}/scans-by-week`, { weeks, tz: viewerTz() }),
+  scansByMonth: (months = 6) => api.get<ScanMonthCount[]>("/admin/scans-by-month", { months, tz: viewerTz() }),
   crawlSourceScansByMonth: (sourceId: string, months = 6) =>
-    api.get<ScanMonthCount[]>(`/admin/crawl-sources/${sourceId}/scans-by-month?months=${months}`),
+    api.get<ScanMonthCount[]>(`/admin/crawl-sources/${sourceId}/scans-by-month`, { months, tz: viewerTz() }),
   usersJoinedByHour: (hours = 24, end?: string) =>
     api.get<ScanHourCount[]>("/admin/users-joined-by-hour", { hours, end }),
-  usersJoinedByDay: (days = 30) => api.get<ScanDayCount[]>(`/admin/users-joined-by-day?days=${days}`),
-  usersJoinedByWeek: (weeks = 26) => api.get<ScanWeekCount[]>(`/admin/users-joined-by-week?weeks=${weeks}`),
-  usersJoinedByMonth: (months = 6) => api.get<ScanMonthCount[]>(`/admin/users-joined-by-month?months=${months}`),
+  usersJoinedByDay: (days = 30) => api.get<ScanDayCount[]>("/admin/users-joined-by-day", { days, tz: viewerTz() }),
+  usersJoinedByWeek: (weeks = 26) =>
+    api.get<ScanWeekCount[]>("/admin/users-joined-by-week", { weeks, tz: viewerTz() }),
+  usersJoinedByMonth: (months = 6) =>
+    api.get<ScanMonthCount[]>("/admin/users-joined-by-month", { months, tz: viewerTz() }),
   returningUsersByHour: (hours = 24, end?: string) =>
-    api.get<ScanHourCount[]>("/admin/returning-users-by-hour", { hours, end }),
-  returningUsersByDay: (days = 30) => api.get<ScanDayCount[]>(`/admin/returning-users-by-day?days=${days}`),
-  returningUsersByWeek: (weeks = 26) => api.get<ScanWeekCount[]>(`/admin/returning-users-by-week?weeks=${weeks}`),
+    api.get<ScanHourCount[]>("/admin/returning-users-by-hour", { hours, end, tz: viewerTz() }),
+  returningUsersByDay: (days = 30) =>
+    api.get<ScanDayCount[]>("/admin/returning-users-by-day", { days, tz: viewerTz() }),
+  returningUsersByWeek: (weeks = 26) =>
+    api.get<ScanWeekCount[]>("/admin/returning-users-by-week", { weeks, tz: viewerTz() }),
   returningUsersByMonth: (months = 6) =>
-    api.get<ScanMonthCount[]>(`/admin/returning-users-by-month?months=${months}`),
+    api.get<ScanMonthCount[]>("/admin/returning-users-by-month", { months, tz: viewerTz() }),
 };
+
+function viewerTz(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+}

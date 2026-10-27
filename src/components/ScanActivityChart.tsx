@@ -44,12 +44,19 @@ const HOUR_DAY_FMT: Intl.DateTimeFormatOptions = { weekday: "short", month: "sho
 
 type Bucket = { key: string; label: string; rangeLabel: string; count: number; from: string; to: string };
 
+// Day/week/month dates come back grouped on the viewer's own calendar (the
+// API sends their timezone), so they're local midnights, not UTC ones.
 function parseDay(dateStr: string): Date {
-  return new Date(`${dateStr}T00:00:00Z`);
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
 }
 
-const DAY_FMT: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", timeZone: "UTC" };
-const MONTH_FMT: Intl.DateTimeFormatOptions = { month: "short", year: "numeric", timeZone: "UTC" };
+function addLocalDays(date: Date, days: number): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+}
+
+const DAY_FMT: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+const MONTH_FMT: Intl.DateTimeFormatOptions = { month: "short", year: "numeric" };
 const HOUR_FMT: Intl.DateTimeFormatOptions = { hour: "numeric" };
 const HOUR_RANGE_FMT: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" };
 
@@ -71,7 +78,7 @@ function bucketHourlyData(data: ScanHourCount[]): Bucket[] {
 function bucketDayData(data: ScanDayCount[]): Bucket[] {
   return data.map((d) => {
     const date = parseDay(d.date);
-    const to = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+    const to = addLocalDays(date, 1);
     const label = date.toLocaleDateString("en-US", DAY_FMT);
     return { key: d.date, label, rangeLabel: label, count: d.count, from: date.toISOString(), to: to.toISOString() };
   });
@@ -80,7 +87,7 @@ function bucketDayData(data: ScanDayCount[]): Bucket[] {
 function bucketWeekData(data: ScanWeekCount[]): Bucket[] {
   return data.map((d) => {
     const start = parseDay(d.week);
-    const to = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const to = addLocalDays(start, 7);
     const label = start.toLocaleDateString("en-US", DAY_FMT);
     return {
       key: d.week,
@@ -96,7 +103,7 @@ function bucketWeekData(data: ScanWeekCount[]): Bucket[] {
 function bucketMonthData(data: ScanMonthCount[]): Bucket[] {
   return data.map((d) => {
     const start = parseDay(d.month);
-    const to = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 1));
+    const to = new Date(start.getFullYear(), start.getMonth() + 1, 1);
     const label = start.toLocaleDateString("en-US", MONTH_FMT);
     return { key: d.month, label, rangeLabel: label, count: d.count, from: start.toISOString(), to: to.toISOString() };
   });
@@ -291,7 +298,17 @@ export function ScanActivityChart({
   return (
     <section className="admin-section">
       <div className="admin-section__header">
-        <h2 className="admin-section__title">{title}</h2>
+        <div className="scan-chart__title-row">
+          <h2 className="admin-section__title">{title}</h2>
+          {granularity === "hr" && hourQuery.data && (
+            <span className="scan-chart__day-total">
+              {hourQuery.data.reduce((sum, h) => sum + h.count, 0).toLocaleString()}
+              <span className="scan-chart__day-total-label">
+                {text.unit} {hourDaysAgo === 0 ? "today" : `on ${hourWin.dayStart.toLocaleDateString("en-US", HOUR_DAY_FMT)}`}
+              </span>
+            </span>
+          )}
+        </div>
         <div className="scan-chart__controls">
           <div className="scan-chart__granularity" role="group" aria-label="Group by">
             {GRANULARITIES.map(({ key, label }) => (
