@@ -522,15 +522,24 @@ export interface AdminCollection {
   status: string;
   name: string;
   url: string | null;
+  // Where its page is or would be ("/jobs/us/<role>…"), for kinds with pages.
+  path: string | null;
   indexable: boolean;
   qualification_score: number | null;
   recommendation: string | null;
   issues: string[];
   open_jobs: number | null;
   companies: number | null;
+  freshness_score: number | null; // points out of 20
+  // From the nightly re-scoring: other collections with nearly the same jobs,
+  // and since when (Eastern dates) it's scored below the bar or had no jobs.
+  duplicates: string[];
+  below_bar_since: string | null;
+  empty_since: string | null;
   last_evaluated_at: string | null;
   updated_at: string;
   actions: CollectionAction[];
+  can_reevaluate: boolean;
 }
 
 export interface AdminCollectionEvent {

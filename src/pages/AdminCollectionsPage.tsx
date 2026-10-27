@@ -70,6 +70,28 @@ function formatDate(value: string): string {
   return new Date(value).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
+// An Eastern calendar date from the backend ("2026-10-25"), as "Oct 25".
+function formatDay(value: string): string {
+  return new Date(`${value}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+// "role=data-engineer;location=remote" -> "data-engineer · remote".
+function keyLabel(key: string): string {
+  return key
+    .split(";")
+    .map((part) => part.split("=")[1] ?? part)
+    .join(" · ");
+}
+
+// What the scorer and the nightly re-scoring say about it, in words.
+function reasons(item: AdminCollection): string[] {
+  const out = item.issues.map((issue) => ISSUE_LABELS[issue] ?? issue);
+  if (item.below_bar_since) out.push(`Below the bar since ${formatDay(item.below_bar_since)}`);
+  if (item.empty_since) out.push(`No open jobs since ${formatDay(item.empty_since)}`);
+  if (item.duplicates.length) out.push(`Nearly the same jobs as ${item.duplicates.length} other page(s)`);
+  return out;
+}
+
 // Review of the job collection pages (/jobs/us/<role>…): what's waiting with
 // its score and why, approving, no-indexing or archiving one or a selection,
 // and each page's history. Changes show on the site after the next generator
@@ -160,7 +182,9 @@ export function AdminCollectionsPage() {
       <h1>Job pages{countFor(VIEWS[0].statuses) > 0 ? ` (${countFor(VIEWS[0].statuses)} waiting)` : ""}</h1>
       <p className="admin-page__hint">
         Approving puts a page on the site, indexed by Google, on the next generator run (every two hours on
-        weekdays). Noindex keeps it up but out of Google; archive takes it down.
+        weekdays). Noindex keeps it up but out of Google; archive takes it down. Every page is re-scored each
+        weeknight: one below the bar for 3 days is taken out of Google, and one with no jobs for 2 weeks is
+        archived, unless you approved it since. Nothing is ever approved for you.
       </p>
 
       <div className="admin-toolbar admin-feedback__toolbar">
@@ -269,6 +293,7 @@ export function AdminCollectionsPage() {
                   <th>Score</th>
                   <th>Jobs</th>
                   <th>Employers</th>
+                  <th>Freshness</th>
                   <th>Why</th>
                   <th>Status</th>
                   <th />
@@ -340,16 +365,18 @@ function CollectionRow({
           ) : (
             <strong>{item.name}</strong>
           )}
-          <div className="admin-table__sub">{TYPE_LABELS[item.collection_type] ?? item.collection_type}</div>
+          <div className="admin-table__sub">
+            {TYPE_LABELS[item.collection_type] ?? item.collection_type}
+            {!item.url && item.path ? ` · ${item.path}` : ""}
+          </div>
         </td>
         <td>
           <span className={scoreClass(item.qualification_score)}>{item.qualification_score ?? "–"}</span>
         </td>
         <td>{item.open_jobs?.toLocaleString() ?? "–"}</td>
         <td>{item.companies?.toLocaleString() ?? "–"}</td>
-        <td className="admin-collections__issues">
-          {item.issues.length ? item.issues.map((issue) => ISSUE_LABELS[issue] ?? issue).join(", ") : "–"}
-        </td>
+        <td>{item.freshness_score === null ? "–" : `${Math.round(item.freshness_score)} / 20`}</td>
+        <td className="admin-collections__issues">{reasons(item).join(", ") || "–"}</td>
         <td>
           <span className={statusStampClass(item.status)}>{item.status}</span>
         </td>
@@ -368,7 +395,7 @@ function CollectionRow({
       </tr>
       {open && (
         <tr className="admin-collections__detail-row">
-          <td colSpan={8}>
+          <td colSpan={9}>
             <CollectionDetail id={item.id} />
           </td>
         </tr>
@@ -378,7 +405,12 @@ function CollectionRow({
 }
 
 function CollectionDetail({ id }: { id: string }) {
+  const queryClient = useQueryClient();
   const detailQuery = useQuery({ queryKey: ["admin", "collections", "detail", id], queryFn: () => adminApi.collection(id) });
+  const reevaluate = useMutation({
+    mutationFn: () => adminApi.reevaluateCollection(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "collections"] }),
+  });
   const detail = detailQuery.data;
   if (detailQuery.isLoading) return <p className="admin-page__hint">Loading…</p>;
   if (!detail) return <p className="admin-page__hint">Couldn't load the details.</p>;
@@ -403,7 +435,24 @@ function CollectionDetail({ id }: { id: string }) {
           <p className="admin-page__hint">Not scored yet.</p>
         )}
         {detail.last_evaluated_at && <p className="admin-table__sub">Scored {formatDate(detail.last_evaluated_at)}</p>}
+        {detail.can_reevaluate && (
+          <button type="button" disabled={reevaluate.isPending} onClick={() => reevaluate.mutate()}>
+            {reevaluate.isPending ? "Scoring…" : "Re-evaluate now"}
+          </button>
+        )}
+        {reevaluate.isError && <p className="admin-table__sub">{reevaluate.error.message}</p>}
       </section>
+      {detail.duplicates.length > 0 && (
+        <section>
+          <h3>Possible duplicates</h3>
+          <p className="admin-table__sub">These list nearly the same jobs. Usually only one should be in Google.</p>
+          <ul className="admin-collections__events">
+            {detail.duplicates.map((key) => (
+              <li key={key}>{keyLabel(key)}</li>
+            ))}
+          </ul>
+        </section>
+      )}
       <section>
         <h3>History</h3>
         <ol className="admin-collections__events">
