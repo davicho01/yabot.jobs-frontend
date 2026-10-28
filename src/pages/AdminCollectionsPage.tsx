@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from "../api/admin";
 import { AdminPagination } from "../components/AdminPagination";
+import { AdminCollectionSearches } from "./AdminCollectionSearches";
 import type { AdminCollection, CollectionAction, CollectionView } from "../api/types";
 import "./AdminCommon.css";
 import "./AdminFeedbackPage.css";
@@ -95,11 +96,12 @@ function reasons(item: AdminCollection): string[] {
 // Review of the job collection pages (/jobs/us/<role>…): what's waiting with
 // its score and why, approving, no-indexing or archiving one or a selection,
 // and each page's history. Changes show on the site after the next generator
-// run (every two hours on weekdays). Filters live in the URL.
+// run (every two hours on weekdays). Filters live in the URL. The "Google
+// searches" tab lists what people searched for (AdminCollectionSearches).
 export function AdminCollectionsPage() {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  const view = (searchParams.get("view") ?? "waiting") as CollectionView;
+  const view = (searchParams.get("view") ?? "waiting") as CollectionView | "searches";
   const type = searchParams.get("type") ?? "";
   const q = searchParams.get("q") ?? "";
   const page = Number(searchParams.get("page")) || 1;
@@ -123,8 +125,10 @@ export function AdminCollectionsPage() {
 
   const listQuery = useQuery({
     queryKey: ["admin", "collections", view, type, q, page, pageSize],
-    queryFn: () => adminApi.collections({ view, type: type || undefined, q: q || undefined, page, pageSize }),
+    queryFn: () =>
+      adminApi.collections({ view: view as CollectionView, type: type || undefined, q: q || undefined, page, pageSize }),
     placeholderData: keepPreviousData,
+    enabled: view !== "searches",
   });
 
   const done = (text: string) => {
@@ -217,131 +221,152 @@ export function AdminCollectionsPage() {
               {option.label} {data ? <span className="admin-collections__count">{countFor(option.statuses)}</span> : null}
             </button>
           ))}
-        </div>
-        <div className="admin-collections__filters">
-          <input
-            type="search"
-            aria-label="Search pages"
-            placeholder="Search, e.g. data engineer"
-            className="admin-feedback__kind-select"
-            defaultValue={q}
-            onKeyDown={(e) => {
-              if (e.key !== "Enter") return;
-              const value = e.currentTarget.value.trim();
+          <button
+            type="button"
+            aria-pressed={view === "searches"}
+            className={view === "searches" ? "is-active" : ""}
+            onClick={() =>
               updateParams((next) => {
-                if (value) next.set("q", value);
-                else next.delete("q");
-                next.delete("page");
-              });
-            }}
-          />
-          <select
-            aria-label="Type"
-            className="admin-feedback__kind-select"
-            value={type}
-            onChange={(e) =>
-              updateParams((next) => {
-                if (e.target.value) next.set("type", e.target.value);
-                else next.delete("type");
+                next.set("view", "searches");
                 next.delete("page");
               })
             }
           >
-            <option value="">All types</option>
-            {Object.entries(TYPE_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+            Google searches
+          </button>
         </div>
-      </div>
-
-      <div className="admin-section admin-collections__bar">
-        <label className="admin-collections__reason">
-          <span>Reason (saved with each change)</span>
-          <input
-            type="text"
-            maxLength={500}
-            placeholder={DEFAULT_REASON}
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-          />
-        </label>
-        <div className="admin-collections__bulk">
-          <span className="admin-table__sub">{selected.size ? `${selected.size} selected` : "Select pages to act on several at once"}</span>
-          {bulkActions.map((action) => (
-            <button key={action} type="button" disabled={busy} onClick={() => bulkMutation.mutate({ action })}>
-              {ACTION_LABELS[action]} {selected.size}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {message && (
-        <p className="admin-collections__message" role="status">
-          {message}
-        </p>
-      )}
-      {listQuery.isLoading && <p className="admin-page__hint">Loading…</p>}
-      {listQuery.isError && <p className="admin-page__hint">Couldn't load the pages.</p>}
-      {data && items.length === 0 && <p className="admin-page__hint">Nothing here.</p>}
-
-      {items.length > 0 && (
-        <>
-          <div className="admin-section admin-table-wrap">
-            <table className="admin-table admin-collections__table">
-              <thead>
-                <tr>
-                  <th>
-                    <input
-                      type="checkbox"
-                      aria-label="Select all on this page"
-                      checked={allSelected}
-                      onChange={() => setSelected(allSelected ? new Set() : new Set(items.map((item) => item.id)))}
-                    />
-                  </th>
-                  <th>Page</th>
-                  <th>Score</th>
-                  <th>Jobs</th>
-                  <th>Employers</th>
-                  <th>Freshness</th>
-                  <th title="Clicks and times shown in Google over the last 28 days">Google, 28 days</th>
-                  <th>Why</th>
-                  <th>Status</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item) => (
-                  <CollectionRow
-                    key={item.id}
-                    item={item}
-                    selected={selected.has(item.id)}
-                    open={openId === item.id}
-                    busy={busy}
-                    onToggle={() => toggle(item.id)}
-                    onOpen={() => setOpenId(openId === item.id ? null : item.id)}
-                    onAction={(action) => actMutation.mutate({ id: item.id, action })}
-                    onPreview={() => preview(item)}
-                  />
-                ))}
-              </tbody>
-            </table>
+        {view !== "searches" && (
+          <div className="admin-collections__filters">
+            <input
+              type="search"
+              aria-label="Search pages"
+              placeholder="Search, e.g. data engineer"
+              className="admin-feedback__kind-select"
+              defaultValue={q}
+              onKeyDown={(e) => {
+                if (e.key !== "Enter") return;
+                const value = e.currentTarget.value.trim();
+                updateParams((next) => {
+                  if (value) next.set("q", value);
+                  else next.delete("q");
+                  next.delete("page");
+                });
+              }}
+            />
+            <select
+              aria-label="Type"
+              className="admin-feedback__kind-select"
+              value={type}
+              onChange={(e) =>
+                updateParams((next) => {
+                  if (e.target.value) next.set("type", e.target.value);
+                  else next.delete("type");
+                  next.delete("page");
+                })
+              }
+            >
+              <option value="">All types</option>
+              {Object.entries(TYPE_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
           </div>
-          <AdminPagination
-            page={Math.min(page, totalPages)}
-            totalPages={totalPages}
-            total={data?.total ?? 0}
-            pageSize={pageSize}
-            onPageChange={(target) => updateParams((next) => next.set("page", String(target)))}
-            onPageSizeChange={(size) =>
-              updateParams((next) => {
-                next.set("pageSize", String(size));
-                next.delete("page");
-              })
-            }
-          />
+        )}
+      </div>
+
+      {view === "searches" ? (
+        <AdminCollectionSearches />
+      ) : (
+        <>
+          <div className="admin-section admin-collections__bar">
+            <label className="admin-collections__reason">
+              <span>Reason (saved with each change)</span>
+              <input
+                type="text"
+                maxLength={500}
+                placeholder={DEFAULT_REASON}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              />
+            </label>
+            <div className="admin-collections__bulk">
+              <span className="admin-table__sub">{selected.size ? `${selected.size} selected` : "Select pages to act on several at once"}</span>
+              {bulkActions.map((action) => (
+                <button key={action} type="button" disabled={busy} onClick={() => bulkMutation.mutate({ action })}>
+                  {ACTION_LABELS[action]} {selected.size}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {message && (
+            <p className="admin-collections__message" role="status">
+              {message}
+            </p>
+          )}
+          {listQuery.isLoading && <p className="admin-page__hint">Loading…</p>}
+          {listQuery.isError && <p className="admin-page__hint">Couldn't load the pages.</p>}
+          {data && items.length === 0 && <p className="admin-page__hint">Nothing here.</p>}
+
+          {items.length > 0 && (
+            <>
+              <div className="admin-section admin-table-wrap">
+                <table className="admin-table admin-collections__table">
+                  <thead>
+                    <tr>
+                      <th>
+                        <input
+                          type="checkbox"
+                          aria-label="Select all on this page"
+                          checked={allSelected}
+                          onChange={() => setSelected(allSelected ? new Set() : new Set(items.map((item) => item.id)))}
+                        />
+                      </th>
+                      <th>Page</th>
+                      <th>Score</th>
+                      <th>Jobs</th>
+                      <th>Employers</th>
+                      <th>Freshness</th>
+                      <th title="Clicks and times shown in Google over the last 28 days">Google, 28 days</th>
+                      <th>Why</th>
+                      <th>Status</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map((item) => (
+                      <CollectionRow
+                        key={item.id}
+                        item={item}
+                        selected={selected.has(item.id)}
+                        open={openId === item.id}
+                        busy={busy}
+                        onToggle={() => toggle(item.id)}
+                        onOpen={() => setOpenId(openId === item.id ? null : item.id)}
+                        onAction={(action) => actMutation.mutate({ id: item.id, action })}
+                        onPreview={() => preview(item)}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <AdminPagination
+                page={Math.min(page, totalPages)}
+                totalPages={totalPages}
+                total={data?.total ?? 0}
+                pageSize={pageSize}
+                onPageChange={(target) => updateParams((next) => next.set("page", String(target)))}
+                onPageSizeChange={(size) =>
+                  updateParams((next) => {
+                    next.set("pageSize", String(size));
+                    next.delete("page");
+                  })
+                }
+              />
+            </>
+          )}
         </>
       )}
     </main>

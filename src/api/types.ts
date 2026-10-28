@@ -565,6 +565,31 @@ export interface AdminCollectionList {
   counts: Record<string, number>;
 }
 
+export type SearchKind = "role" | "location" | "company" | "other";
+
+// Google searches grouped by what they were after (search_opportunities).
+export interface AdminSearchOpportunity {
+  key: string;
+  kind: SearchKind;
+  label: string;
+  clicks: number;
+  impressions: number;
+  position: number;
+  open_jobs: number | null;
+  queries: { query: string; clicks: number; impressions: number }[];
+  pages: { page: string; impressions: number }[];
+  collection_key: string | null;
+  collection_id: string | null;
+  collection_status: string | null;
+}
+
+export interface AdminSearchOpportunityList {
+  items: AdminSearchOpportunity[];
+  total: number;
+  counts: Record<string, number>;
+  updated_on: string | null;
+}
+
 export interface AdminCollectionBulkResult {
   updated: AdminCollection[];
   errors: { id: string; detail: string }[];

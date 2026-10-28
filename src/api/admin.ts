@@ -7,6 +7,7 @@ import type {
   AdminDashboard,
   AdminFeedback,
   AdminFeedbackList,
+  AdminSearchOpportunityList,
   CollectionAction,
   CollectionView,
   CrawlSource,
@@ -19,6 +20,7 @@ import type {
   ScanHourCount,
   ScanMonthCount,
   ScanWeekCount,
+  SearchKind,
 } from "./types";
 
 export interface CrawlSourceUpdatePayload {
@@ -98,6 +100,12 @@ export const adminApi = {
       view: params.view,
       type: params.type,
       q: params.q,
+      page: params.page ?? 1,
+      page_size: params.pageSize ?? 50,
+    }),
+  collectionSearches: (params: { kind?: SearchKind; page?: number; pageSize?: number }) =>
+    api.get<AdminSearchOpportunityList>("/admin/collections/searches", {
+      kind: params.kind,
       page: params.page ?? 1,
       page_size: params.pageSize ?? 50,
     }),
