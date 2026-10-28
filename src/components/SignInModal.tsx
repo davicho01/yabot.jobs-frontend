@@ -1,14 +1,14 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../auth/AuthContext";
 import { SignInPromptContext } from "../auth/signInPrompt";
 import { GOOGLE_CLIENT_ID } from "../auth/google";
 import { ApiError } from "../api/client";
 import { jobsApi } from "../api/jobs";
-import type { JobDetail } from "../api/types";
+import type { JobDetail, User } from "../api/types";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { EmailCodeSignIn } from "./EmailCodeSignIn";
-import { trackEvent } from "../utils/analytics";
+import { trackAuthCompleted, trackEvent, type AuthTrigger } from "../utils/analytics";
 import "../pages/LoginPage.css";
 import "./SignInModal.css";
 
@@ -32,6 +32,15 @@ export function SignInModal({
   // Signed out, the job came without its employer link; it's fetched again
   // once signed in.
   const [companyUrl, setCompanyUrl] = useState(job.url.url);
+  const trigger: AuthTrigger = onSignedIn ? "fit" : "apply";
+
+  // Once per opening (a ref, so a re-render doesn't count it again).
+  const prompted = useRef(false);
+  useEffect(() => {
+    if (prompted.current) return;
+    prompted.current = true;
+    trackEvent("auth_prompted", { trigger, job_id: job.url.id });
+  }, [trigger, job.url.id]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -46,22 +55,24 @@ export function SignInModal({
 
   // Not window.open: browsers block a new tab that isn't opened by a tap,
   // so "Continue to apply" opens it.
-  async function signedIn(method: string) {
-    trackEvent("login", { method });
+  async function signedIn(method: string, user: User) {
+    trackAuthCompleted(method, trigger, user);
     if (onSignedIn) {
+      trackEvent("action_resumed", { action: "fit", job_id: job.url.id });
       onSignedIn();
       return;
     }
     setCompanyUrl((await jobsApi.get(job.url.id)).url.url);
     setStatus("signed-in");
+    trackEvent("action_resumed", { action: "apply", job_id: job.url.id });
   }
 
   async function handleGoogleCredential(credential: string) {
     setStatus("signing-in");
     setError(null);
+    trackEvent("auth_started", { method: "google", trigger });
     try {
-      await signInWithGoogle(credential);
-      await signedIn("google");
+      await signedIn("google", await signInWithGoogle(credential));
     } catch (err) {
       setStatus("idle");
       setError(err instanceof ApiError ? err.message : "Google sign-in failed. Try again.");
@@ -69,8 +80,7 @@ export function SignInModal({
   }
 
   async function verifyEmailCode(email: string, code: string) {
-    await verifyCode(email, code);
-    await signedIn("email_code");
+    await signedIn("email_code", await verifyCode(email, code));
   }
 
   // On <body>, so the swipe board's moving row can't shift or clip it.
@@ -117,7 +127,7 @@ export function SignInModal({
             {status === "signing-in" && <p className="login-card__hint">Signing in…</p>}
             {error && <p className="login-card__error">{error}</p>}
             {GOOGLE_CLIENT_ID && <div className="login-card__divider">or</div>}
-            <EmailCodeSignIn idPrefix="sign-in-modal" verify={verifyEmailCode} />
+            <EmailCodeSignIn idPrefix="sign-in-modal" verify={verifyEmailCode} trigger={trigger} />
           </>
         )}
       </div>

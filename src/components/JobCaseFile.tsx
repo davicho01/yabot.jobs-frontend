@@ -530,10 +530,19 @@ export function JobCaseFile({
     const previous = lastRunStatus.current;
     lastRunStatus.current = run?.status;
     if (isAutoScoreActive(previous) && !isAutoScoreActive(run?.status)) {
+      // Seen ending here, so counted once (a run already over on load isn't).
+      if (run) {
+        trackEvent("fit_completed", {
+          job_id: job.url.id,
+          status: run.status,
+          ...(run.best_score !== null ? { score: run.best_score } : {}),
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["applications"] });
       queryClient.invalidateQueries({ queryKey: AI_ACCESS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ONBOARDING_QUERY_KEY });
     }
+    // oxlint-disable-next-line react/exhaustive-deps -- counts the status turning over, not the job or run changing.
   }, [run?.status, queryClient]);
 
   function runChoice(choice: EvaluateChoice) {

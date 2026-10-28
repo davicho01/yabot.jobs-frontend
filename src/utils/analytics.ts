@@ -82,3 +82,22 @@ export function trackEvent(name: string, params: Record<string, string | number 
   if (!enabled) return;
   window.gtag("event", name, params);
 }
+
+// The sign-in funnel (the growth plan's event list): auth_prompted (a sign-in
+// asked for) -> auth_started (a method picked) -> auth_completed -> action_resumed
+// (back to what they were doing). `trigger` says what asked: an Apply, a
+// "Check my fit", a page that needs an account (/login?next=), or /login itself.
+export type AuthTrigger = "apply" | "fit" | "page" | "direct";
+
+// An account this recent was made by this sign-in (the email code's account
+// is made when the code is sent, minutes before).
+const NEW_ACCOUNT_MS = 30 * 60 * 1000;
+
+// "login" is GA's own event and keeps being sent, so its history carries on;
+// sign_up is GA's own event for a new account.
+export function trackAuthCompleted(method: string, trigger: AuthTrigger, user: { created_at: string }) {
+  const newUser = Date.now() - Date.parse(user.created_at) < NEW_ACCOUNT_MS;
+  trackEvent("login", { method });
+  trackEvent("auth_completed", { method, trigger, new_user: newUser });
+  if (newUser) trackEvent("sign_up", { method });
+}
