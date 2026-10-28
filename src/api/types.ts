@@ -534,6 +534,9 @@ export interface AdminCollection {
   // From the nightly re-scoring: other collections with nearly the same jobs,
   // and since when (Eastern dates) it's scored below the bar or had no jobs.
   duplicates: string[];
+  // Its pages' Google results over the last 28 days; null until there's data.
+  search_clicks: number | null;
+  search_impressions: number | null;
   below_bar_since: string | null;
   empty_since: string | null;
   last_evaluated_at: string | null;

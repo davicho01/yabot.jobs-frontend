@@ -306,6 +306,7 @@ export function AdminCollectionsPage() {
                   <th>Jobs</th>
                   <th>Employers</th>
                   <th>Freshness</th>
+                  <th title="Clicks and times shown in Google over the last 28 days">Google, 28 days</th>
                   <th>Why</th>
                   <th>Status</th>
                   <th />
@@ -391,6 +392,16 @@ function CollectionRow({
         <td>{item.open_jobs?.toLocaleString() ?? "–"}</td>
         <td>{item.companies?.toLocaleString() ?? "–"}</td>
         <td>{item.freshness_score === null ? "–" : `${Math.round(item.freshness_score)} / 20`}</td>
+        <td>
+          {item.search_impressions == null ? ( // also before the backend sends it
+            "–"
+          ) : (
+            <>
+              {(item.search_clicks ?? 0).toLocaleString()} clicks
+              <div className="admin-table__sub">{item.search_impressions.toLocaleString()} shown</div>
+            </>
+          )}
+        </td>
         <td className="admin-collections__issues">{reasons(item).join(", ") || "–"}</td>
         <td>
           <span className={statusStampClass(item.status)}>{item.status}</span>
@@ -415,7 +426,7 @@ function CollectionRow({
       </tr>
       {open && (
         <tr className="admin-collections__detail-row">
-          <td colSpan={9}>
+          <td colSpan={10}>
             <CollectionDetail id={item.id} />
           </td>
         </tr>
