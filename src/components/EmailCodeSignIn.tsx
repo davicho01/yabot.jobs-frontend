@@ -2,7 +2,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { lastEmail } from "../auth/lastEmail";
 import { ApiError } from "../api/client";
-import { trackEvent } from "../utils/analytics";
+import { trackEvent, type AuthTrigger } from "../utils/analytics";
 import { suggestEmailFix } from "../utils/emailTypo";
 
 const CODE_LENGTH = 6;
@@ -12,13 +12,16 @@ const CODE_LENGTH = 6;
 // Styled by LoginPage.css's .login-card__form; used by LoginPage and
 // SignInModal. `verify` signs in with the code (AuthContext's verifyCode
 // plus whatever comes after) and throws on a wrong one. The email starts
-// as the last one signed in on this device (see auth/lastEmail).
+// as the last one signed in on this device (see auth/lastEmail). `trigger`
+// is what asked for the sign-in, for analytics.
 export function EmailCodeSignIn({
   idPrefix,
   verify,
+  trigger,
 }: {
   idPrefix: string;
   verify: (email: string, code: string) => Promise<void>;
+  trigger: AuthTrigger;
 }) {
   const { requestCode } = useAuth();
   const [email, setEmail] = useState(lastEmail);
@@ -42,6 +45,7 @@ export function EmailCodeSignIn({
     setError(null);
     try {
       await sendCode();
+      trackEvent("auth_started", { method: "email_code", trigger });  // not on a resend
       setStep("code");
       setCode("");
     } catch (err) {

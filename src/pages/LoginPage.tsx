@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { postLoginDestination } from "../auth/postLogin";
 import { ApiError } from "../api/client";
+import type { User } from "../api/types";
 import { GOOGLE_CLIENT_ID } from "../auth/google";
 import { GoogleSignInButton } from "../components/GoogleSignInButton";
 import { EmailCodeSignIn } from "../components/EmailCodeSignIn";
-import { trackEvent } from "../utils/analytics";
+import { trackAuthCompleted, trackEvent, type AuthTrigger } from "../utils/analytics";
 import "./LoginPage.css";
 
 export function LoginPage() {
@@ -15,6 +16,24 @@ export function LoginPage() {
   const navigate = useNavigate();
   const [signingIn, setSigningIn] = useState<"google" | "email" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Sent here by a page that needs an account (ProtectedRoute, a static
+  // page's "Log in to apply"), or came to sign in.
+  const trigger: AuthTrigger = searchParams.get("next") ? "page" : "direct";
+
+  // Once, when the form shows to someone signed out.
+  const prompted = useRef(false);
+  useEffect(() => {
+    if (isLoading || user || prompted.current) return;
+    prompted.current = true;
+    trackEvent("auth_prompted", { trigger });
+  }, [isLoading, user, trigger]);
+
+  // After signing in: counted, and back to where they were headed, if anywhere.
+  async function finish(method: string, signedInUser: User) {
+    trackAuthCompleted(method, trigger, signedInUser);
+    if (trigger === "page") trackEvent("action_resumed", { action: "page" });
+    navigate(await postLoginDestination(searchParams.get("next")), { replace: true });
+  }
 
   // Mid Google sign-in, `user` gets set before handleGoogleCredential has
   // picked where to go, so hold here instead of the redirect below.
@@ -33,10 +52,9 @@ export function LoginPage() {
   async function handleGoogleCredential(credential: string) {
     setSigningIn("google");
     setError(null);
+    trackEvent("auth_started", { method: "google", trigger });
     try {
-      await signInWithGoogle(credential);
-      trackEvent("login", { method: "google" });
-      navigate(await postLoginDestination(searchParams.get("next")), { replace: true });
+      await finish("google", await signInWithGoogle(credential));
     } catch (err) {
       setSigningIn(null);
       setError(err instanceof ApiError ? err.message : "Google sign-in failed. Try again.");
@@ -45,14 +63,14 @@ export function LoginPage() {
 
   async function verifyEmailCode(email: string, code: string) {
     setSigningIn("email");
+    let signedInUser;
     try {
-      await verifyCode(email, code);
+      signedInUser = await verifyCode(email, code);
     } catch (err) {
       setSigningIn(null);
       throw err;
     }
-    trackEvent("login", { method: "email_code" });
-    navigate(await postLoginDestination(searchParams.get("next")), { replace: true });
+    await finish("email_code", signedInUser);
   }
 
   return (
@@ -70,7 +88,7 @@ export function LoginPage() {
         <GoogleSignInButton onCredential={handleGoogleCredential} />
         {error && <p className="login-card__error">{error}</p>}
         {GOOGLE_CLIENT_ID && <div className="login-card__divider">or</div>}
-        <EmailCodeSignIn idPrefix="login" verify={verifyEmailCode} />
+        <EmailCodeSignIn idPrefix="login" verify={verifyEmailCode} trigger={trigger} />
         {searchParams.get("next") && (
           <p className="login-card__hint">You'll return to where you left off after signing in.</p>
         )}

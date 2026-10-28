@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../api/client";
-import { trackEvent } from "../utils/analytics";
+import { trackAuthCompleted, trackEvent } from "../utils/analytics";
 import { POST_LOGIN_NEXT_KEY, postLoginDestination } from "../auth/postLogin";
 import "./LoginPage.css";
 
@@ -24,8 +24,9 @@ export function AuthCallbackPage() {
       return;
     }
     verify(token)
-      .then(async () => {
-        trackEvent("login", { method: "email_link" });
+      .then(async (user) => {
+        trackAuthCompleted("email_link", requestedNext ? "page" : "direct", user);
+        if (requestedNext) trackEvent("action_resumed", { action: "page" });
         navigate(await postLoginDestination(requestedNext), { replace: true });
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : "That link is invalid or expired."));
