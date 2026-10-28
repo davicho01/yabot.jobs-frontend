@@ -8,8 +8,10 @@ import App from "./App.tsx";
 import "./cardStyle.css";
 import { AuthProvider } from "./auth/AuthContext.tsx";
 import { initAnalytics } from "./utils/analytics.ts";
+import { captureLanding } from "./utils/attribution.ts";
 
 initAnalytics();
+captureLanding();
 
 const queryClient = new QueryClient({
   defaultOptions: {
