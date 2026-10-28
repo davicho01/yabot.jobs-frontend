@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../api/client";
-import { trackAuthCompleted, trackEvent } from "../utils/analytics";
+import { trackEvent } from "../utils/analytics";
+import { trackSignIn } from "../utils/attribution";
 import { POST_LOGIN_NEXT_KEY, postLoginDestination } from "../auth/postLogin";
 import "./LoginPage.css";
 
@@ -25,7 +26,7 @@ export function AuthCallbackPage() {
     }
     verify(token)
       .then(async (user) => {
-        trackAuthCompleted("email_link", requestedNext ? "page" : "direct", user);
+        trackSignIn("email_link", requestedNext ? "page" : "direct", user);
         if (requestedNext) trackEvent("action_resumed", { action: "page" });
         navigate(await postLoginDestination(requestedNext), { replace: true });
       })

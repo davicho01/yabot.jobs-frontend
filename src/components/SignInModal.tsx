@@ -8,7 +8,8 @@ import { jobsApi } from "../api/jobs";
 import type { JobDetail, User } from "../api/types";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { EmailCodeSignIn } from "./EmailCodeSignIn";
-import { trackAuthCompleted, trackEvent, type AuthTrigger } from "../utils/analytics";
+import { trackEvent, type AuthTrigger } from "../utils/analytics";
+import { trackSignIn } from "../utils/attribution";
 import "../pages/LoginPage.css";
 import "./SignInModal.css";
 
@@ -56,7 +57,7 @@ export function SignInModal({
   // Not window.open: browsers block a new tab that isn't opened by a tap,
   // so "Continue to apply" opens it.
   async function signedIn(method: string, user: User) {
-    trackAuthCompleted(method, trigger, user);
+    trackSignIn(method, trigger, user);
     if (onSignedIn) {
       trackEvent("action_resumed", { action: "fit", job_id: job.url.id });
       onSignedIn();
