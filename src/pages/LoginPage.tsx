@@ -7,7 +7,8 @@ import type { User } from "../api/types";
 import { GOOGLE_CLIENT_ID } from "../auth/google";
 import { GoogleSignInButton } from "../components/GoogleSignInButton";
 import { EmailCodeSignIn } from "../components/EmailCodeSignIn";
-import { trackAuthCompleted, trackEvent, type AuthTrigger } from "../utils/analytics";
+import { trackEvent, type AuthTrigger } from "../utils/analytics";
+import { trackSignIn } from "../utils/attribution";
 import "./LoginPage.css";
 
 export function LoginPage() {
@@ -30,7 +31,7 @@ export function LoginPage() {
 
   // After signing in: counted, and back to where they were headed, if anywhere.
   async function finish(method: string, signedInUser: User) {
-    trackAuthCompleted(method, trigger, signedInUser);
+    trackSignIn(method, trigger, signedInUser);
     if (trigger === "page") trackEvent("action_resumed", { action: "page" });
     navigate(await postLoginDestination(searchParams.get("next")), { replace: true });
   }

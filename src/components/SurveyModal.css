@@ -1,0 +1,622 @@
+/* The survey dialog: a fixed header and footer around a scrolling body, so the
+   Next/Submit button never falls off the bottom on a short window. */
+.survey-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 1000;
+}
+
+.survey-modal {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: 0 16px 56px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  max-width: 1040px;
+  max-height: 96vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Colour comes from the brand sunset gradient (index.css --sunset): a stripe
+   across the top, the progress bar, numbered questions, and the buttons.
+   --survey-gradient is its shorter magenta-to-coral form, so white text stays
+   readable on the buttons. */
+.survey-modal {
+  --survey-gradient: linear-gradient(135deg, #ec008c 0%, #fc6f5a 100%);
+}
+
+.survey-modal__header {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.75rem 2rem 1.25rem;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--focus) 12%, transparent) 0%,
+    transparent 100%
+  );
+}
+
+.survey-modal__header::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 5px;
+  background: var(--sunset);
+}
+
+.survey-modal__header h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  color: var(--ink);
+}
+
+.survey-modal__sub {
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.survey-modal__close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--ink-soft);
+  font-size: 1.7rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.1rem 0.4rem;
+}
+
+.survey-modal__close:hover {
+  color: var(--ink);
+}
+
+.survey-modal__progress {
+  height: 3px;
+  background: var(--line);
+}
+
+.survey-modal__progress span {
+  display: block;
+  height: 100%;
+  background: var(--sunset);
+  transition: width 0.25s ease;
+}
+
+/* Wraps the scrolling body so the "More questions" cue can sit over its bottom edge. */
+.survey-modal__scroller {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.survey-modal__more {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 5.5rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 0.75rem;
+  background: linear-gradient(180deg, transparent 0%, var(--paper) 85%);
+  pointer-events: none;
+}
+
+.survey-modal__more button {
+  pointer-events: auto;
+  padding: 0.45rem 1.1rem;
+  border: 1px solid var(--focus);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--focus);
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--focus) 30%, transparent);
+  cursor: pointer;
+  animation: survey-more-bounce 1.6s ease-in-out infinite;
+}
+
+@keyframes survey-more-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .survey-modal__more button {
+    animation: none;
+  }
+}
+
+.survey-modal__body {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  /* Reaching the end of the questions doesn't start scrolling the page behind. */
+  overscroll-behavior: contain;
+  overflow-y: auto;
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.survey-modal__question {
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Each question gets a numbered magenta badge. */
+.survey-modal__body {
+  counter-reset: survey-question;
+}
+
+.survey-modal__question {
+  counter-increment: survey-question;
+}
+
+.survey-modal__legend {
+  position: relative;
+  display: block;
+  padding: 0 0 0 2.2rem;
+  font-size: 1.02rem;
+  font-weight: 600;
+  line-height: 1.5rem;
+  color: var(--ink);
+}
+
+/* A fieldset's legend ignores the flex gap, so it needs its own space above
+   the options (the text-field questions get it from the gap). */
+fieldset.survey-modal__question > .survey-modal__legend {
+  margin-bottom: 1.5rem;
+}
+
+.survey-modal__question {
+  gap: 1.5rem;
+}
+
+.survey-modal__legend::before {
+  content: counter(survey-question);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--focus) 16%, transparent);
+  color: var(--focus);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.5rem;
+  text-align: center;
+}
+
+.survey-modal__hint {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+
+.survey-modal__options {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.survey-modal__options--1 {
+  grid-template-columns: 1fr;
+}
+
+.survey-modal__options--2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.survey-modal__options--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.survey-modal__options--4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.survey-modal__options--5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* A radio button or checkbox with its label: the whole row is the click target. */
+.survey-modal__option {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  font-size: 0.95rem;
+  line-height: 1.3;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+/* Custom radio buttons and checkboxes: a clear outline when empty, filled with
+   the accent colour and a mark in the on-accent colour when ticked, so they
+   read the same in light and dark mode. */
+.survey-modal__option input {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 1.3rem;
+  height: 1.3rem;
+  margin: 0;
+  border: 2px solid var(--ink-soft);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.survey-modal__option input[type="checkbox"] {
+  border-radius: 0.35rem;
+}
+
+.survey-modal__option input[type="radio"] {
+  border-radius: 50%;
+}
+
+/* The brand magenta (--focus), the same as the text fields' hover/focus. */
+.survey-modal__option:hover input {
+  border-color: var(--focus);
+}
+
+.survey-modal__option input:checked {
+  background: var(--focus);
+  border-color: var(--focus);
+}
+
+/* The tick. */
+.survey-modal__option input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 0.36rem;
+  top: 0.12rem;
+  width: 0.3rem;
+  height: 0.6rem;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* The dot. */
+.survey-modal__option input[type="radio"]:checked::after {
+  content: "";
+  position: absolute;
+  inset: 0.28rem;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.survey-modal__option:hover {
+  border-color: var(--focus);
+}
+
+.survey-modal__option.is-checked {
+  border-color: var(--focus);
+  background: color-mix(in srgb, var(--focus) 10%, transparent);
+  font-weight: 600;
+}
+
+.survey-modal__option.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.survey-modal__option.is-disabled input {
+  cursor: not-allowed;
+}
+
+.survey-modal__option:has(input:focus-visible) {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent);
+}
+
+/* The Posted / First found / Verified ratings: a label, then its three options. */
+.survey-modal__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.survey-modal__row {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.survey-modal__row-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+@media (max-width: 640px) {
+  .survey-modal__row {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+}
+
+.survey-modal__input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+}
+
+.survey-modal__input::placeholder {
+  color: var(--ink-soft);
+}
+
+.survey-modal__input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.survey-modal__textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.survey-modal__note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.survey-modal__thanks {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.survey-modal__error {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--rose);
+}
+
+.survey-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.1rem 2rem;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.survey-modal__primary,
+.survey-modal__secondary {
+  padding: 0.7rem 1.6rem;
+  border-radius: var(--radius-field);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.survey-modal__primary {
+  border: none;
+  background: var(--survey-gradient);
+  color: #fff;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--focus) 35%, transparent);
+}
+
+.survey-modal__primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.survey-modal__primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.survey-modal__secondary {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.survey-modal__secondary:hover {
+  background: var(--chip);
+}
+
+/* Narrower windows: fewer columns, so labels don't get squeezed. */
+@media (max-width: 900px) {
+  .survey-modal__options--3,
+  .survey-modal__options--4,
+  .survey-modal__options--5 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .survey-modal__options--3,
+  .survey-modal__options--4,
+  .survey-modal__options--5 {
+    grid-template-columns: 1fr;
+  }
+
+  .survey-modal__overlay {
+    padding: 0.5rem;
+  }
+
+  .survey-modal__header,
+  .survey-modal__body,
+  .survey-modal__footer {
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
+  }
+
+  .survey-modal__options--2,
+  .survey-modal__options--3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The corner badge that opens the survey any time. */
+.survey-badge {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 900;
+  padding: 0.65rem 1.2rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, #ec008c 0%, #fc6f5a 100%);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--focus) 40%, transparent);
+  cursor: pointer;
+  animation: survey-pulse 2.4s ease-out infinite;
+}
+
+.survey-badge:hover {
+  filter: brightness(1.08);
+  animation-play-state: paused;
+}
+
+/* A soft ring that grows out of the badge and fades, to catch the eye. */
+@keyframes survey-pulse {
+  0% {
+    box-shadow:
+      0 4px 14px color-mix(in srgb, var(--focus) 40%, transparent),
+      0 0 0 0 color-mix(in srgb, var(--focus) 55%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow:
+      0 4px 14px color-mix(in srgb, var(--focus) 40%, transparent),
+      0 0 0 14px color-mix(in srgb, var(--focus) 0%, transparent);
+  }
+}
+
+.survey-invite::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 5px;
+  background: var(--sunset);
+}
+
+/* The invite slides up when it appears. */
+@keyframes survey-invite-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .survey-badge,
+  .survey-invite {
+    animation: none;
+  }
+}
+
+/* The "Help us improve?" invite, just above the badge. */
+.survey-invite {
+  position: fixed;
+  right: 1rem;
+  bottom: 4.25rem;
+  z-index: 900;
+  width: min(340px, calc(100vw - 2rem));
+  padding: 1.5rem 1.25rem 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: survey-invite-in 0.4s ease-out;
+}
+
+.survey-invite h2 {
+  font-size: 1.05rem;
+  margin: 0;
+  color: var(--ink);
+}
+
+.survey-invite p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  color: var(--ink);
+  opacity: 0.85;
+}
+
+.survey-invite__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.survey-invite__actions button {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.survey-invite__actions button:hover {
+  background: var(--chip);
+}
+
+.survey-invite__actions .survey-invite__primary {
+  background: linear-gradient(135deg, #ec008c 0%, #fc6f5a 100%);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+
+.survey-invite__actions .survey-invite__primary:hover {
+  background: linear-gradient(135deg, #ec008c 0%, #fc6f5a 100%);
+  filter: brightness(1.08);
+}

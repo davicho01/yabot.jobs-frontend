@@ -246,6 +246,10 @@ export function AdminDashboardPage() {
               </span>
               <span className="admin-totals__label">New feedback →</span>
             </Link>
+            <Link to="/admin/survey" className="admin-totals__tile admin-totals__tile--button">
+              <span className="admin-totals__value">Survey</span>
+              <span className="admin-totals__label">Answers →</span>
+            </Link>
           </section>
 
           <section className="admin-section">

@@ -10,8 +10,9 @@
 
 const MEASUREMENT_ID = "G-CDDT9RZ59T";
 
-// Query parameters that carry credentials or one-time IDs and must never reach GA.
-const PRIVATE_PARAMS = ["token", "request_id", "code", "state"];
+// Query parameters that carry credentials or one-time IDs and must never reach GA
+// in a URL. A share id (sid) goes as its own event param instead.
+const PRIVATE_PARAMS = ["token", "request_id", "code", "state", "sid"];
 
 // EEA + UK + Switzerland: analytics cookies are off by default there (GDPR/ePrivacy),
 // so those visitors are only counted by cookieless pings; Google resolves the region
@@ -76,11 +77,40 @@ export function trackPageView(href: string) {
   window.gtag("event", "page_view", { page_location: pageLocation, page_title: document.title });
 }
 
+// What someone who first came by a shared link does later, counted as the
+// spec's shared_* events too (see utils/attribution).
+const SHARED_FOLLOW_UPS: Record<string, string> = {
+  fit_completed: "shared_fit_completed",
+  job_site_click: "shared_application",
+};
+
 // An in-app action that doesn't change the URL (page views cover those).
 // Params must never carry personal details: ids, kinds and flags only.
 export function trackEvent(name: string, params: Record<string, string | number | boolean> = {}) {
   if (!enabled) return;
   window.gtag("event", name, params);
+  const followUp = SHARED_FOLLOW_UPS[name];
+  const shareId = followUp ? readFirstTouch()?.share_id : null;
+  if (followUp && shareId) window.gtag("event", followUp, { ...params, share_id: shareId });
+}
+
+// The first visit on this device (utils/attribution's captureLanding).
+export const FIRST_TOUCH_KEY = "first_touch";
+export interface FirstTouch {
+  share_id: string | null;
+  source: string | null;
+  medium: string | null;
+  campaign: string | null;
+  landing_page: string | null;
+}
+
+export function readFirstTouch(): FirstTouch | null {
+  try {
+    const raw = localStorage.getItem(FIRST_TOUCH_KEY);
+    return raw ? (JSON.parse(raw) as FirstTouch) : null;
+  } catch {
+    return null;
+  }
 }
 
 // The sign-in funnel (the growth plan's event list): auth_prompted (a sign-in
@@ -94,10 +124,11 @@ export type AuthTrigger = "apply" | "fit" | "page" | "direct";
 const NEW_ACCOUNT_MS = 30 * 60 * 1000;
 
 // "login" is GA's own event and keeps being sent, so its history carries on;
-// sign_up is GA's own event for a new account.
-export function trackAuthCompleted(method: string, trigger: AuthTrigger, user: { created_at: string }) {
+// sign_up is GA's own event for a new account. Whether the account is new.
+export function trackAuthCompleted(method: string, trigger: AuthTrigger, user: { created_at: string }): boolean {
   const newUser = Date.now() - Date.parse(user.created_at) < NEW_ACCOUNT_MS;
   trackEvent("login", { method });
   trackEvent("auth_completed", { method, trigger, new_user: newUser });
   if (newUser) trackEvent("sign_up", { method });
+  return newUser;
 }

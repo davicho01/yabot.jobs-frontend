@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import type { JobDetail } from "../api/types";
 import { CompanySiteLink } from "./JobCaseFile";
+import { useAuth } from "../auth/AuthContext";
 import { trackEvent } from "../utils/analytics";
+import { newShareId, recordShare, shareUrl } from "../utils/attribution";
 import { scannedPosting } from "../utils/jobPosting";
 
 // Just under a posting's color band on the right, across from the logo
@@ -20,8 +22,11 @@ export function JobBandActions({ job, company }: { job: JobDetail; company: stri
 }
 
 // Shares the posting's own page (/jobs/<id>, JobDetailPage): the phone's
-// share sheet where there is one, or else the link copied.
+// share sheet where there is one, or else the link copied. The link carries
+// a new share id each tap (utils/attribution); signed in, the share is
+// recorded so a sign-up it brings is credited.
 function ShareJobButton({ job, company }: { job: JobDetail; company: string }) {
+  const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (!copied) return;
@@ -33,13 +38,18 @@ function ShareJobButton({ job, company }: { job: JobDetail; company: string }) {
   // unused; a share that goes through is also GA4's share event.
   async function share() {
     trackEvent("share_click", { job_id: job.url.id });
-    const url = `${window.location.origin}/jobs/${job.url.id}`;
+    const shareId = newShareId();
+    const url = shareUrl(job.url.id, shareId);
+    const shared = (method: "share_sheet" | "copy_link") => {
+      trackEvent("share", { method, content_type: "job", item_id: job.url.id, share_id: shareId });
+      if (user) recordShare(shareId, job.url.id, method);
+    };
     const jobTitle = scannedPosting(job)?.title;
     const title = jobTitle ? `${jobTitle} at ${company}` : company;
     if (navigator.share) {
       try {
         await navigator.share({ title, url });
-        trackEvent("share", { method: "share_sheet", content_type: "job", item_id: job.url.id });
+        shared("share_sheet");
       } catch {
         // Closed without sharing.
       }
@@ -48,7 +58,7 @@ function ShareJobButton({ job, company }: { job: JobDetail; company: string }) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      trackEvent("share", { method: "copy_link", content_type: "job", item_id: job.url.id });
+      shared("copy_link");
     } catch {
       // No clipboard (an insecure page, or blocked): nothing to do.
     }
