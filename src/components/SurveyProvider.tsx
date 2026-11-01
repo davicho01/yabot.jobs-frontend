@@ -20,8 +20,8 @@ const INVITE_DELAY_MS = 60_000;
 const QUIET_PATHS = ["/login", "/auth", "/oauth"];
 
 // The in-site survey (POST /survey): a small invite — Take it now / Remind me
-// later (asks again in 3 days) / No thanks — shown after a minute on the page, even on a first visit,
-// plus a corner badge that opens the survey any time until it's finished.
+// later (asks again in 3 days) / No thanks — shown after a minute on the page, from a
+// visitor's second visit on, plus a corner badge that opens the survey any time until it's finished.
 export function SurveyProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [state, setState] = useState<SurveyState>(() => countVisit(loadSurveyState()));
