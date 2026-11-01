@@ -38,7 +38,8 @@ import {
 } from "../utils/autoScore";
 import { formatFollowUp } from "../utils/followUp";
 import { prerequisiteMessage, genericErrorMessage } from "../utils/apiErrors";
-import { scannedPosting, formatSalary, formatPostedAt, shortLocation } from "../utils/jobPosting";
+import { addImportWatch } from "../utils/importWatch";
+import { scannedPosting,formatSalary, formatPostedAt, shortLocation } from "../utils/jobPosting";
 import { employmentLabel, workplaceLabel } from "../utils/jobTags";
 import { sliceBand } from "../utils/listGradient";
 import { EvaluateButton, FitnessReportBody, StepNextButton } from "./ApplyPage";
@@ -211,13 +212,12 @@ const IMPORT_SLOW_SECONDS = 60;
 function ImportProgress({
   done,
   onDone,
-  notifyBody,
+  urlId,
   children,
 }: {
   done: boolean;
   onDone: () => void;
-  // What the desktop notification says once the import completes.
-  notifyBody: string;
+  urlId: string;
   // Extra controls shown to the right of the notify button.
   children?: ReactNode;
 }) {
@@ -225,7 +225,6 @@ function ImportProgress({
   const notifySupported = typeof Notification !== "undefined";
   const [notifyOn, setNotifyOn] = useState(notifySupported && Notification.permission === "granted");
   const [notifyDenied, setNotifyDenied] = useState(notifySupported && Notification.permission === "denied");
-  const notifyBodyRef = useRef(notifyBody);
 
   async function enableNotify() {
     const permission = await Notification.requestPermission();
@@ -233,17 +232,11 @@ function ImportProgress({
     setNotifyDenied(permission === "denied");
   }
 
-  // Only when the candidate has switched away — if they're looking at the
-  // page, the dashboard appearing is the notification.
+  // Hand this job to ImportWatcher (mounted above the pages), which tells the
+  // candidate when it finishes — even if they've gone off to keep searching.
   useEffect(() => {
-    notifyBodyRef.current = notifyBody;
-    if (!done || !notifyOn || !document.hidden) return;
-    const n = new Notification("Job imported", { body: notifyBodyRef.current });
-    n.onclick = () => {
-      window.focus();
-      n.close();
-    };
-  }, [done, notifyOn, notifyBody]);
+    if (notifyOn && !done) addImportWatch(urlId);
+  }, [notifyOn, done, urlId]);
 
   const [forced, setForced] = useState<number | null>(null);
   const timedActive = IMPORT_STEPS.reduce((acc, step, i) => (seconds >= step.atSeconds ? i : acc), 0);
@@ -968,11 +961,7 @@ function ApplyPage2Content({
         <ImportProgress
           done={!!posting}
           onDone={() => setImportPhase("finished")}
-          notifyBody={
-            posting?.title
-              ? `${posting.title}${posting.company_name ? ` at ${posting.company_name}` : ""} is ready.`
-              : "Your job is ready."
-          }
+          urlId={job.url.id}
         >
           <button type="button" className="rescan-button" disabled={isFetching} onClick={() => void refetch()}>
             {isFetching ? "Refreshing…" : "Refresh job content ↻"}
