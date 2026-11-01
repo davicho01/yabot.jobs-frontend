@@ -61,10 +61,14 @@ export function saveSurveyState(state: SurveyState): void {
   }
 }
 
-// Counts a visit once per browser tab session (not per page view).
+// Counts a visit once per browser tab session (not per page view). A state
+// with no visits yet is always counted and saved, even when this tab already
+// marked a visit: the saved state can be cleared (site data, devtools) while
+// the tab's own flag survives, and the visitor would otherwise never be
+// counted, so the invite would never show.
 export function countVisit(state: SurveyState): SurveyState {
   try {
-    if (window.sessionStorage.getItem(VISIT_COUNTED_KEY)) return state;
+    if (state.visits > 0 && window.sessionStorage.getItem(VISIT_COUNTED_KEY)) return state;
     window.sessionStorage.setItem(VISIT_COUNTED_KEY, "1");
   } catch {
     return state;
