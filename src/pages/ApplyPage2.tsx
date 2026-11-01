@@ -38,7 +38,8 @@ import {
 } from "../utils/autoScore";
 import { formatFollowUp } from "../utils/followUp";
 import { prerequisiteMessage, genericErrorMessage } from "../utils/apiErrors";
-import { scannedPosting, formatSalary, formatPostedAt, shortLocation } from "../utils/jobPosting";
+import { addImportWatch } from "../utils/importWatch";
+import { scannedPosting,formatSalary, formatPostedAt, shortLocation } from "../utils/jobPosting";
 import { employmentLabel, workplaceLabel } from "../utils/jobTags";
 import { sliceBand } from "../utils/listGradient";
 import { EvaluateButton, FitnessReportBody, StepNextButton } from "./ApplyPage";
@@ -192,6 +193,126 @@ function CardStep({
 // mounted across prev/next clicks — and is only ever fetched once per
 // visit, while the content below fully remounts on urlId change instead of
 // reusing another job's mutation state.
+const IMPORT_POLL_MS = 2500;
+const FAILED_POLL_MS = 10000;
+
+// General steps shown while a new job is being imported. The server only
+// reports pending / done, so these advance on a timer; the last one stays
+// active until the scan actually finishes and the page swaps to the dashboard.
+const IMPORT_STEPS: { label: string; atSeconds: number }[] = [
+  { label: "Opening the job posting", atSeconds: 0 },
+  { label: "Reading the job details", atSeconds: 4 },
+  { label: "Organizing the description, pay and location", atSeconds: 9 },
+  { label: "Getting your dashboard ready", atSeconds: 15 },
+];
+const IMPORT_SLOW_SECONDS = 60;
+
+// When the import finishes before the timer has reached the last step, `done`
+// runs the remaining steps quickly (checking each off) before calling onDone.
+function ImportProgress({
+  done,
+  onDone,
+  urlId,
+  children,
+}: {
+  done: boolean;
+  onDone: () => void;
+  urlId: string;
+  // Extra controls shown to the right of the notify button.
+  children?: ReactNode;
+}) {
+  const [seconds, setSeconds] = useState(0);
+  const notifySupported = typeof Notification !== "undefined";
+  const [notifyOn, setNotifyOn] = useState(notifySupported && Notification.permission === "granted");
+  const [notifyDenied, setNotifyDenied] = useState(notifySupported && Notification.permission === "denied");
+
+  async function enableNotify() {
+    const permission = await Notification.requestPermission();
+    setNotifyOn(permission === "granted");
+    setNotifyDenied(permission === "denied");
+  }
+
+  // Hand this job to ImportWatcher (mounted above the pages), which tells the
+  // candidate when it finishes — even if they've gone off to keep searching.
+  useEffect(() => {
+    if (notifyOn && !done) addImportWatch(urlId);
+  }, [notifyOn, done, urlId]);
+
+  const [forced, setForced] = useState<number | null>(null);
+  const timedActive = IMPORT_STEPS.reduce((acc, step, i) => (seconds >= step.atSeconds ? i : acc), 0);
+  const active = forced ?? timedActive;
+  const timedActiveRef = useRef(timedActive);
+  const onDoneRef = useRef(onDone);
+  useEffect(() => {
+    timedActiveRef.current = timedActive;
+    onDoneRef.current = onDone;
+  });
+
+  useEffect(() => {
+    const id = window.setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (!done) return;
+    let step = timedActiveRef.current;
+    let finishTimer: number | undefined;
+    const id = window.setInterval(() => {
+      step += 1;
+      setForced(step);
+      if (step >= IMPORT_STEPS.length) {
+        window.clearInterval(id);
+        finishTimer = window.setTimeout(() => onDoneRef.current(), 500);
+      }
+    }, 450);
+    return () => {
+      window.clearInterval(id);
+      window.clearTimeout(finishTimer);
+    };
+  }, [done]);
+
+  return (
+    <section className="apply2-import" role="status" aria-live="polite">
+      <h1 className="apply2-import__title">Importing this job…</h1>
+      <p className="apply2-import__sub">
+        {seconds >= IMPORT_SLOW_SECONDS
+          ? "This one is taking longer than usual. It will appear here as soon as it's ready."
+          : "This usually takes less than a minute. You can stay on this page."}
+      </p>
+      <ol className="apply2-import__steps">
+        {IMPORT_STEPS.map((step, i) => (
+          <li
+            key={step.label}
+            className={`apply2-import__step${i < active ? " apply2-import__step--done" : ""}${
+              i === active ? " apply2-import__step--active" : ""
+            }`}
+          >
+            <span className="apply2-import__mark" aria-hidden="true">
+              {i < active ? "✓" : ""}
+            </span>
+            {step.label}
+          </li>
+        ))}
+      </ol>
+      {!done && (
+        <div className="apply2-import__actions">
+          {notifySupported &&
+            (notifyOn ? (
+              <span className="apply2-import__notify">We'll send a notification when it's ready.</span>
+            ) : notifyDenied ? (
+              <span className="apply2-import__notify">Notifications are blocked in your browser settings.</span>
+            ) : (
+              <button type="button" className="apply2-btn apply2-btn--ink apply2-btn--sm" onClick={() => void enableNotify()}>
+                Notify me when it's ready
+              </button>
+            ))}
+          {children}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function ApplyPage2() {
   const { urlId } = useParams<{ urlId: string }>();
   const applicationsQuery = useQuery({ queryKey: ["applications"], queryFn: applicationsApi.list });
@@ -310,6 +431,18 @@ function ApplyPage2Content({
     queryKey: ["job", urlId],
     queryFn: () => jobsApi.get(urlId!),
     enabled: !!urlId,
+    // A just-added job is still being imported: keep checking so the
+    // dashboard appears on its own once the scan finishes — including while
+    // the tab is in the background, which is when the notification matters.
+    refetchIntervalInBackground: true,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data) return false;
+      // A failed scan is retried on the server with backoff — keep an eye
+      // out for it succeeding. needs_review means retries are used up.
+      if (data.url.scan_status === "failed") return FAILED_POLL_MS;
+      return data.url.scan_status !== "needs_review" && !scannedPosting(data) ? IMPORT_POLL_MS : false;
+    },
   });
 
   const resumesQuery = useQuery({ queryKey: ["resumes"], queryFn: resumesApi.list });
@@ -327,6 +460,15 @@ function ApplyPage2Content({
 
   const posting = job ? scannedPosting(job) : null;
   const jobPostingId = posting?.id;
+
+  // Set once this visit has shown the import progress, so a scan that
+  // finishes early plays out the remaining steps before the dashboard
+  // appears (a job that was already complete on arrival skips this).
+  const [importPhase, setImportPhase] = useState<"idle" | "importing" | "finished">("idle");
+  const importPending = !!job && job.url.scan_status !== "failed" && !posting;
+  useEffect(() => {
+    if (importPending) setImportPhase((p) => (p === "idle" ? "importing" : p));
+  }, [importPending]);
 
   const rescanMutation = useMutation({
     mutationFn: (id: string) => jobsApi.rescan(id),
@@ -772,12 +914,18 @@ function ApplyPage2Content({
     );
   }
 
-  if (job.url.scan_status === "failed") {
+  if (job.url.scan_status === "failed" || job.url.scan_status === "needs_review") {
+    const retrying = job.url.scan_status === "failed";
     return (
       <main className="apply2 apply2--state">
         {dialog}
         {stateNav}
-        <span className="stamp stamp--neutral">Scan failed</span>
+        <h1 className="apply2-import__title">We couldn't import this job</h1>
+        <p className="apply2-import__sub">
+          {retrying
+            ? "We'll keep trying in the background, and it will appear here if it works. You can also retry now."
+            : "We tried several times and couldn't read this posting. You can retry it or remove it."}
+        </p>
         <p>{job.url.scan_error ?? "This posting couldn't be scanned."}</p>
         <div className="job-dashboard__actions">
           {user && (
@@ -805,16 +953,20 @@ function ApplyPage2Content({
     );
   }
 
-  if (!posting) {
+  if (!posting || importPhase === "importing") {
     return (
       <main className="apply2 apply2--state">
         {dialog}
         {stateNav}
-        <span className="stamp stamp--neutral">Still scanning</span>
-        <p>This posting hasn't finished being scanned yet. Check back shortly.</p>
-        <button type="button" className="rescan-button" disabled={isFetching} onClick={() => void refetch()}>
-          {isFetching ? "Refreshing…" : "Refresh job content ↻"}
-        </button>
+        <ImportProgress
+          done={!!posting}
+          onDone={() => setImportPhase("finished")}
+          urlId={job.url.id}
+        >
+          <button type="button" className="rescan-button" disabled={isFetching} onClick={() => void refetch()}>
+            {isFetching ? "Refreshing…" : "Refresh job content ↻"}
+          </button>
+        </ImportProgress>
         {isRefetchError && <p className="job-dashboard__error">Couldn't refresh this posting. Try again.</p>}
       </main>
     );

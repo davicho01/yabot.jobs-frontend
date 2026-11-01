@@ -24,6 +24,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
+import { ImportWatcher } from "./components/ImportWatcher";
 import { PageShell } from "./components/PageShell";
 import { FeedbackProvider } from "./components/FeedbackModal";
 import { SignInPromptProvider } from "./components/SignInModal";
@@ -48,6 +49,7 @@ function RootLayout() {
             <Header />
             <GettingStartedBanner />
             <Outlet />
+            <ImportWatcher />
             <Footer />
           </SurveyProvider>
         </SignInPromptProvider>
