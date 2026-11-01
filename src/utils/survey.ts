@@ -17,10 +17,10 @@ const VISIT_COUNTED_KEY = "yabot.survey.visitCounted";
 
 // "Remind me later" asks again after this long.
 export const REMIND_LATER_MS = 3 * 24 * 60 * 60 * 1000;
-// The invite shows on the very first visit too (see INVITE_DELAY_MS in
-// SurveyProvider: only after a minute on the page), since most visitors never
-// come back. The count is kept so this can be raised again.
-const MIN_VISITS_FOR_INVITE = 1;
+// The invite waits for a returning visitor (second visit onward), so cold
+// first-time traffic isn't interrupted; the corner badge still lets a first
+// visit opt in. Lower to 1 to invite on the first visit too.
+const MIN_VISITS_FOR_INVITE = 2;
 
 function newVisitorId(): string {
   return crypto.randomUUID().replace(/-/g, "");
