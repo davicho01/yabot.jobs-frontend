@@ -111,7 +111,12 @@ function ResponseItem({ item }: { item: AdminSurveyResponse }) {
         </span>{" "}
         {formatDate(item.created_at)} ·{" "}
         {who ? <a href={`mailto:${who}`}>{who}</a> : "anonymous"}
-        {item.user_email ? " (account)" : item.contact_email ? " (open to a chat)" : ""}
+        {item.user_email ? " (account)" : ""}{" "}
+        {item.contact_ok ? (
+          <span className="stamp stamp--positive">OK to contact</span>
+        ) : item.user_email && item.completed ? (
+          <span className="stamp stamp--neutral">don&apos;t contact</span>
+        ) : null}
       </p>
       <p>
         <strong>Role:</strong> {item.role_name ?? "—"} · <strong>Industries:</strong> {list(item.industries)} ·{" "}

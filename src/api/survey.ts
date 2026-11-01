@@ -43,6 +43,8 @@ export interface SurveySubmitPayload {
   wanted?: SurveyWanted[];
   comments?: string;
   contact_email?: string;
+  // Signed-in visitors' "OK to email me" checkbox.
+  contact_ok?: boolean;
 }
 
 export interface AdminSurveyResponse {
@@ -53,6 +55,7 @@ export interface AdminSurveyResponse {
   user_id: string | null;
   user_email: string | null;
   contact_email: string | null;
+  contact_ok: boolean;
   source: string | null;
   search_duration: string | null;
   industries: string[] | null;

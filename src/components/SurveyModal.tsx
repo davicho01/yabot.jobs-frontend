@@ -172,6 +172,7 @@ export function SurveyModal({
   const [wanted, setWanted] = useState<SurveyWanted[]>([]);
   const [comments, setComments] = useState("");
   const [email, setEmail] = useState("");
+  const [contactOk, setContactOk] = useState(false);
 
   const submitMutation = useMutation({
     mutationFn: (payload: SurveySubmitPayload) => surveyApi.submit(payload),
@@ -226,6 +227,8 @@ export function SurveyModal({
       ...(comments.trim() && { comments: comments.trim() }),
       // Signed-in visitors are identified by their account instead.
       ...(!user && email.trim() && { contact_email: email.trim() }),
+      // Signed-in visitors say yes or no with a checkbox instead.
+      ...(user && { contact_ok: contactOk }),
     };
   }
 
@@ -388,6 +391,16 @@ export function SurveyModal({
                   onChange={(e) => setComments(e.target.value)}
                 />
               </div>
+              {user && (
+                <div className="survey-modal__question">
+                  <span className="survey-modal__legend">Want to help more?</span>
+                  <label className={`survey-modal__option${contactOk ? " is-checked" : ""}`}>
+                    <input type="checkbox" checked={contactOk} onChange={(e) => setContactOk(e.target.checked)} />
+                    <span>It&apos;s OK to email me for a short chat about this survey</span>
+                  </label>
+                  <p className="survey-modal__note">We&apos;d use your account email. Optional.</p>
+                </div>
+              )}
               {!user && (
                 <div className="survey-modal__question">
                   <label className="survey-modal__legend" htmlFor="survey-email">
