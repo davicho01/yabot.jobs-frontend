@@ -212,11 +212,14 @@ function ImportProgress({
   done,
   onDone,
   notifyBody,
+  children,
 }: {
   done: boolean;
   onDone: () => void;
   // What the desktop notification says once the import completes.
   notifyBody: string;
+  // Extra controls shown to the right of the notify button.
+  children?: ReactNode;
 }) {
   const [seconds, setSeconds] = useState(0);
   const notifySupported = typeof Notification !== "undefined";
@@ -298,17 +301,19 @@ function ImportProgress({
           </li>
         ))}
       </ol>
-      {notifySupported && !done && (
-        <div className="apply2-import__notify">
-          {notifyOn ? (
-            <span>We'll send a notification when it's ready.</span>
-          ) : notifyDenied ? (
-            <span>Notifications are blocked in your browser settings.</span>
-          ) : (
-            <button type="button" className="rescan-button" onClick={() => void enableNotify()}>
-              Notify me when it's ready
-            </button>
-          )}
+      {!done && (
+        <div className="apply2-import__actions">
+          {notifySupported &&
+            (notifyOn ? (
+              <span className="apply2-import__notify">We'll send a notification when it's ready.</span>
+            ) : notifyDenied ? (
+              <span className="apply2-import__notify">Notifications are blocked in your browser settings.</span>
+            ) : (
+              <button type="button" className="apply2-btn apply2-btn--ink apply2-btn--sm" onClick={() => void enableNotify()}>
+                Notify me when it's ready
+              </button>
+            ))}
+          {children}
         </div>
       )}
     </section>
@@ -434,7 +439,9 @@ function ApplyPage2Content({
     queryFn: () => jobsApi.get(urlId!),
     enabled: !!urlId,
     // A just-added job is still being imported: keep checking so the
-    // dashboard appears on its own once the scan finishes.
+    // dashboard appears on its own once the scan finishes — including while
+    // the tab is in the background, which is when the notification matters.
+    refetchIntervalInBackground: true,
     refetchInterval: (query) => {
       const data = query.state.data;
       if (!data) return false;
@@ -966,12 +973,11 @@ function ApplyPage2Content({
               ? `${posting.title}${posting.company_name ? ` at ${posting.company_name}` : ""} is ready.`
               : "Your job is ready."
           }
-        />
-        {!posting && (
+        >
           <button type="button" className="rescan-button" disabled={isFetching} onClick={() => void refetch()}>
             {isFetching ? "Refreshing…" : "Refresh job content ↻"}
           </button>
-        )}
+        </ImportProgress>
         {isRefetchError && <p className="job-dashboard__error">Couldn't refresh this posting. Try again.</p>}
       </main>
     );
