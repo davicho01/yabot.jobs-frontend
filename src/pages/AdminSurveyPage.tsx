@@ -13,7 +13,10 @@ const QUESTIONS: { key: string; label: string }[] = [
   { key: "search_duration", label: "How long job hunting" },
   { key: "industries", label: "Industries" },
   { key: "work_arrangement", label: "Work arrangement" },
-  { key: "verification_dates_rating", label: "Job dates (posted, first found, verified)" },
+  { key: "current_tools", label: "Sites they use today" },
+  { key: "posted_date_rating", label: "Posted date" },
+  { key: "first_found_date_rating", label: "First found date" },
+  { key: "verified_date_rating", label: "Verified date" },
   { key: "dedup_rating", label: "Duplicate removal" },
   { key: "liked", label: "Likes" },
   { key: "wanted", label: "Wants added" },
@@ -107,7 +110,7 @@ function ResponseItem({ item }: { item: AdminSurveyResponse }) {
     <li className="admin-section">
       <p className="admin-survey__meta">
         <span className={item.completed ? "stamp stamp--positive" : "stamp stamp--neutral"}>
-          {item.completed ? "finished" : "page 1 only"}
+          {item.completed ? "finished" : "partial"}
         </span>{" "}
         {formatDate(item.created_at)} ·{" "}
         {who ? <a href={`mailto:${who}`}>{who}</a> : "anonymous"}
@@ -119,20 +122,32 @@ function ResponseItem({ item }: { item: AdminSurveyResponse }) {
         ) : null}
       </p>
       <p>
-        <strong>Role:</strong> {item.role_name ?? "—"} · <strong>Industries:</strong> {list(item.industries)} ·{" "}
-        <strong>Arrangement:</strong> {list(item.work_arrangement)}
+        <strong>Role:</strong> {item.role_name ?? "—"} · <strong>Industries:</strong> {list(item.industries)}
+        {item.industry_other ? ` (${item.industry_other})` : ""} · <strong>Arrangement:</strong>{" "}
+        {list(item.work_arrangement)}
       </p>
       <p>
-        <strong>Found us:</strong> {item.source ?? "—"} · <strong>Searching:</strong> {item.search_duration ?? "—"}
+        <strong>Found us:</strong> {item.source ?? "—"} · <strong>Searching:</strong> {item.search_duration ?? "—"} ·{" "}
+        <strong>Uses today:</strong> {list(item.current_tools)}
       </p>
       <p>
-        <strong>Job dates:</strong> {item.verification_dates_rating ?? "—"} · <strong>Dedup:</strong>{" "}
+        <strong>Dates (posted / first found / verified):</strong> {item.posted_date_rating ?? "—"} /{" "}
+        {item.first_found_date_rating ?? "—"} / {item.verified_date_rating ?? "—"} · <strong>Dedup:</strong>{" "}
         {item.dedup_rating ?? "—"}
       </p>
       <p>
         <strong>Likes:</strong> {list(item.liked)} · <strong>Wants:</strong> {list(item.wanted)}
       </p>
-      {item.comments && <p>{item.comments}</p>}
+      {item.frustration && (
+        <p>
+          <strong>Biggest frustration:</strong> {item.frustration}
+        </p>
+      )}
+      {item.comments && (
+        <p>
+          <strong>Would make it easier:</strong> {item.comments}
+        </p>
+      )}
     </li>
   );
 }

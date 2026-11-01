@@ -19,6 +19,15 @@ export type SurveyIndustry =
   | "other";
 export type SurveyArrangement = "remote" | "hybrid" | "on_site";
 export type SurveyRating = "very_useful" | "somewhat_useful" | "dont_care" | "confusing" | "didnt_notice";
+export type SurveyDateRating = "useful" | "not_useful" | "didnt_notice";
+export type SurveyTool =
+  | "linkedin"
+  | "indeed"
+  | "google_jobs"
+  | "glassdoor"
+  | "ziprecruiter"
+  | "company_sites"
+  | "other";
 export type SurveyLiked = "fresh_jobs" | "company_sites" | "search_filters" | "alerts" | "clean_site" | "no_ads";
 export type SurveyWanted =
   | "better_search"
@@ -37,7 +46,12 @@ export interface SurveySubmitPayload {
   industries?: SurveyIndustry[];
   role_name?: string;
   work_arrangement?: SurveyArrangement[];
-  verification_dates_rating?: SurveyRating;
+  industry_other?: string;
+  current_tools?: SurveyTool[];
+  frustration?: string;
+  posted_date_rating?: SurveyDateRating;
+  first_found_date_rating?: SurveyDateRating;
+  verified_date_rating?: SurveyDateRating;
   dedup_rating?: SurveyRating;
   liked?: SurveyLiked[];
   wanted?: SurveyWanted[];
@@ -61,7 +75,12 @@ export interface AdminSurveyResponse {
   industries: string[] | null;
   role_name: string | null;
   work_arrangement: string[] | null;
-  verification_dates_rating: string | null;
+  industry_other: string | null;
+  current_tools: string[] | null;
+  frustration: string | null;
+  posted_date_rating: string | null;
+  first_found_date_rating: string | null;
+  verified_date_rating: string | null;
   dedup_rating: string | null;
   liked: string[] | null;
   wanted: string[] | null;

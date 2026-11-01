@@ -4,12 +4,14 @@ import { ApiError } from "../api/client";
 import {
   surveyApi,
   type SurveyArrangement,
+  type SurveyDateRating,
   type SurveyDuration,
   type SurveyIndustry,
   type SurveyLiked,
   type SurveyRating,
   type SurveySource,
   type SurveySubmitPayload,
+  type SurveyTool,
   type SurveyWanted,
 } from "../api/survey";
 import { useAuth } from "../auth/AuthContext";
@@ -59,6 +61,23 @@ const ARRANGEMENTS: Option<SurveyArrangement>[] = [
   { value: "on_site", label: "On-site" },
 ];
 
+const TOOLS: Option<SurveyTool>[] = [
+  { value: "linkedin", label: "LinkedIn" },
+  { value: "indeed", label: "Indeed" },
+  { value: "google_jobs", label: "Google Jobs" },
+  { value: "glassdoor", label: "Glassdoor" },
+  { value: "ziprecruiter", label: "ZipRecruiter" },
+  { value: "company_sites", label: "Company career pages" },
+  { value: "other", label: "Other" },
+];
+
+// One rating per date shown on a job (the Posted / First found / Verified row).
+const DATE_RATINGS: Option<SurveyDateRating>[] = [
+  { value: "useful", label: "Useful" },
+  { value: "not_useful", label: "Not useful" },
+  { value: "didnt_notice", label: "Didn't notice" },
+];
+
 const RATINGS: Option<SurveyRating>[] = [
   { value: "very_useful", label: "Very useful" },
   { value: "somewhat_useful", label: "Somewhat useful" },
@@ -89,63 +108,78 @@ function toggle<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 }
 
-// One question: radio buttons when only one answer fits, checkboxes when
-// several do (`max` caps how many can be ticked). Options sit in a grid so
-// short answers share a row instead of making the page long.
-function Question<T extends string>({
-  legend,
-  hint,
-  type,
-  options,
-  selected,
-  onChange,
-  max,
-  columns = 2,
-}: {
-  legend: string;
-  hint?: string;
+// A grid of radio buttons (one answer) or checkboxes (several; `max` caps how
+// many can be ticked). Short answers share a row instead of making the page long.
+type OptionsProps<T extends string> = {
   type: "radio" | "checkbox";
   options: Option<T>[];
   selected: T[];
   onChange: (next: T[]) => void;
   max?: number;
   columns?: 1 | 2 | 3 | 4 | 5;
-}) {
+};
+
+function Options<T extends string>({
+  name,
+  type,
+  options,
+  selected,
+  onChange,
+  max,
+  columns = 2,
+}: OptionsProps<T> & { name: string }) {
   const full = max !== undefined && selected.length >= max;
+  return (
+    <div className={`survey-modal__options survey-modal__options--${columns}`}>
+      {options.map((option) => {
+        const checked = selected.includes(option.value);
+        const disabled = !checked && full && type === "checkbox";
+        return (
+          <label
+            key={option.value}
+            className={`survey-modal__option${checked ? " is-checked" : ""}${disabled ? " is-disabled" : ""}`}
+          >
+            <input
+              type={type}
+              name={name}
+              checked={checked}
+              disabled={disabled}
+              onChange={() => onChange(type === "radio" ? [option.value] : toggle(selected, option.value))}
+            />
+            <span>{option.label}</span>
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
+// One numbered question: a legend over its options.
+function Question<T extends string>({
+  legend,
+  hint,
+  ...options
+}: OptionsProps<T> & { legend: string; hint?: string }) {
   return (
     <fieldset className="survey-modal__question">
       <legend className="survey-modal__legend">
         {legend}
         {hint && <span className="survey-modal__hint">{hint}</span>}
       </legend>
-      <div className={`survey-modal__options survey-modal__options--${columns}`}>
-        {options.map((option) => {
-          const checked = selected.includes(option.value);
-          return (
-            <label
-              key={option.value}
-              className={`survey-modal__option${checked ? " is-checked" : ""}${
-                !checked && full && type === "checkbox" ? " is-disabled" : ""
-              }`}
-            >
-              <input
-                type={type}
-                name={legend}
-                checked={checked}
-                disabled={!checked && full && type === "checkbox"}
-                onChange={() => onChange(type === "radio" ? [option.value] : toggle(selected, option.value))}
-              />
-              <span>{option.label}</span>
-            </label>
-          );
-        })}
-      </div>
+      <Options name={legend} {...options} />
     </fieldset>
   );
 }
 
-// Two pages. Page 1 is saved when "Next" is pressed, so a visitor who stops
-// there still counts; page 2 sends the rest with completed=true. Every
+type Page = 1 | 2 | 3;
+const PAGE_TITLES: Record<Page, string> = {
+  1: "About your search",
+  2: "Your job search today",
+  3: "About yabot.jobs",
+};
+
+// Three short pages. Each is saved when "Next" is pressed, so a visitor who
+// stops partway still counts; the last page sends completed=true. Every
 // question is optional. Backend: POST /survey (app.services.survey).
 export function SurveyModal({
   visitorId,
@@ -153,24 +187,33 @@ export function SurveyModal({
   onClose,
 }: {
   visitorId: string;
-  // Called once page 2 is submitted (the survey won't be offered again).
+  // Called once the last page is submitted (the survey won't be offered again).
   onDone: () => void;
   onClose: () => void;
 }) {
   const { user } = useAuth();
-  const [page, setPage] = useState<1 | 2>(1);
+  const [page, setPage] = useState<Page>(1);
 
+  // Page 1: about the search.
   const [source, setSource] = useState<SurveySource[]>([]);
   const [duration, setDuration] = useState<SurveyDuration[]>([]);
   const [industries, setIndustries] = useState<SurveyIndustry[]>([]);
+  const [industryOther, setIndustryOther] = useState("");
   const [roleName, setRoleName] = useState("");
   const [arrangement, setArrangement] = useState<SurveyArrangement[]>([]);
 
-  const [verification, setVerification] = useState<SurveyRating[]>([]);
+  // Page 2: the job search today.
+  const [tools, setTools] = useState<SurveyTool[]>([]);
+  const [frustration, setFrustration] = useState("");
+  const [comments, setComments] = useState("");
+
+  // Page 3: about yabot.jobs.
+  const [posted, setPosted] = useState<SurveyDateRating[]>([]);
+  const [firstFound, setFirstFound] = useState<SurveyDateRating[]>([]);
+  const [verified, setVerified] = useState<SurveyDateRating[]>([]);
   const [dedup, setDedup] = useState<SurveyRating[]>([]);
   const [liked, setLiked] = useState<SurveyLiked[]>([]);
   const [wanted, setWanted] = useState<SurveyWanted[]>([]);
-  const [comments, setComments] = useState("");
   const [email, setEmail] = useState("");
   const [contactOk, setContactOk] = useState(false);
 
@@ -199,53 +242,58 @@ export function SurveyModal({
     return () => observer.disconnect();
   }, [page, done, checkMoreBelow]);
 
-  function showPage(target: 1 | 2) {
+  function showPage(target: Page) {
     setPage(target);
     bodyRef.current?.scrollTo({ top: 0 });
   }
 
   // Only what was answered is sent, so skipping a question saves nothing.
-  function page1Payload(): SurveySubmitPayload {
-    return {
-      visitor_id: visitorId,
-      ...(source[0] && { source: source[0] }),
-      ...(duration[0] && { search_duration: duration[0] }),
-      ...(industries.length > 0 && { industries }),
-      ...(roleName.trim() && { role_name: roleName.trim() }),
-      ...(arrangement.length > 0 && { work_arrangement: arrangement }),
-    };
-  }
-
-  function page2Payload(): SurveySubmitPayload {
+  function payloadFor(target: Page): SurveySubmitPayload {
+    if (target === 1) {
+      return {
+        visitor_id: visitorId,
+        ...(source[0] && { source: source[0] }),
+        ...(duration[0] && { search_duration: duration[0] }),
+        ...(industries.length > 0 && { industries }),
+        ...(industries.includes("other") && industryOther.trim() && { industry_other: industryOther.trim() }),
+        ...(roleName.trim() && { role_name: roleName.trim() }),
+        ...(arrangement.length > 0 && { work_arrangement: arrangement }),
+      };
+    }
+    if (target === 2) {
+      return {
+        visitor_id: visitorId,
+        ...(tools.length > 0 && { current_tools: tools }),
+        ...(frustration.trim() && { frustration: frustration.trim() }),
+        ...(comments.trim() && { comments: comments.trim() }),
+      };
+    }
     return {
       visitor_id: visitorId,
       completed: true,
-      ...(verification[0] && { verification_dates_rating: verification[0] }),
+      ...(posted[0] && { posted_date_rating: posted[0] }),
+      ...(firstFound[0] && { first_found_date_rating: firstFound[0] }),
+      ...(verified[0] && { verified_date_rating: verified[0] }),
       ...(dedup[0] && { dedup_rating: dedup[0] }),
       ...(liked.length > 0 && { liked }),
       ...(wanted.length > 0 && { wanted }),
-      ...(comments.trim() && { comments: comments.trim() }),
-      // Signed-in visitors are identified by their account instead.
+      // Signed-out visitors leave an email; signed-in ones tick a box instead
+      // (we already have their account email).
       ...(!user && email.trim() && { contact_email: email.trim() }),
-      // Signed-in visitors say yes or no with a checkbox instead.
       ...(user && { contact_ok: contactOk }),
     };
   }
 
   function next() {
-    submitMutation.mutate(page1Payload(), {
+    submitMutation.mutate(payloadFor(page), {
       onSuccess: () => {
-        trackEvent("survey_page1");
-        showPage(2);
-      },
-    });
-  }
-
-  function finish() {
-    submitMutation.mutate(page2Payload(), {
-      onSuccess: () => {
-        trackEvent("survey_submit");
-        onDone();
+        if (page === 3) {
+          trackEvent("survey_submit");
+          onDone();
+        } else {
+          trackEvent(`survey_page${page}`);
+          showPage((page + 1) as Page);
+        }
       },
     });
   }
@@ -256,19 +304,21 @@ export function SurveyModal({
       : "Something went wrong."
     : null;
 
+  const dateRows = [
+    { key: "posted", label: "Posted", selected: posted, onChange: setPosted },
+    { key: "first-found", label: "First found", selected: firstFound, onChange: setFirstFound },
+    { key: "verified", label: "Verified", selected: verified, onChange: setVerified },
+  ];
+
   return (
-    <div className="survey-modal__overlay" onClick={onClose}>
-      <div
-        className="survey-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Quick survey"
-        onClick={(e) => e.stopPropagation()}
-      >
+    // Not closed by clicking outside: a stray click would throw away what
+    // they've typed. The × button (and Done) close it.
+    <div className="survey-modal__overlay">
+      <div className="survey-modal" role="dialog" aria-modal="true" aria-label="Quick survey">
         {/* Header and footer stay put; only the questions scroll. */}
         <div className="survey-modal__header">
           <div>
-            <h2>{done ? "Thank you!" : page === 1 ? "About your search" : "About yabot.jobs"}</h2>
+            <h2>{done ? "Thank you!" : PAGE_TITLES[page]}</h2>
             {!done && <p className="survey-modal__sub">Quick survey · every question is optional</p>}
           </div>
           <button type="button" className="survey-modal__close" onClick={onClose} aria-label="Close">
@@ -276,167 +326,220 @@ export function SurveyModal({
           </button>
         </div>
         {!done && (
-          <div className="survey-modal__progress" aria-label={`Page ${page} of 2`}>
-            <span style={{ width: page === 1 ? "50%" : "100%" }} />
+          <div className="survey-modal__progress" aria-label={`Page ${page} of 3`}>
+            <span style={{ width: `${(page / 3) * 100}%` }} />
           </div>
         )}
 
         <div className="survey-modal__scroller">
-        <div className="survey-modal__body" ref={bodyRef} onScroll={checkMoreBelow}>
-          {done ? (
-            <p className="survey-modal__thanks">
-              Your answers help decide what we build and fix next. We read every one.
-            </p>
-          ) : page === 1 ? (
-            <>
-              <Question
-                legend="How did you find us?"
-                type="radio"
-                options={SOURCES}
-                selected={source}
-                onChange={setSource}
-                columns={3}
-              />
-              <Question
-                legend="How long have you been looking for work?"
-                type="radio"
-                options={DURATIONS}
-                selected={duration}
-                onChange={setDuration}
-                columns={3}
-              />
-              <Question
-                legend="Which industries?"
-                hint={`Pick up to ${MAX_INDUSTRIES}`}
-                type="checkbox"
-                options={INDUSTRIES}
-                selected={industries}
-                onChange={setIndustries}
-                max={MAX_INDUSTRIES}
-                columns={4}
-              />
-              <div className="survey-modal__question">
-                <label className="survey-modal__legend" htmlFor="survey-role">
-                  What role are you looking for?
-                </label>
-                <input
-                  id="survey-role"
-                  className="survey-modal__input"
-                  type="text"
-                  value={roleName}
-                  maxLength={120}
-                  placeholder="e.g. ICU nurse, project manager"
-                  onChange={(e) => setRoleName(e.target.value)}
+          <div className="survey-modal__body" ref={bodyRef} onScroll={checkMoreBelow}>
+            {done ? (
+              <p className="survey-modal__thanks">
+                Your answers help decide what we build and fix next. We read every one.
+              </p>
+            ) : page === 1 ? (
+              <>
+                <Question
+                  legend="How did you find us?"
+                  type="radio"
+                  options={SOURCES}
+                  selected={source}
+                  onChange={setSource}
+                  columns={3}
                 />
-              </div>
-              <Question
-                legend="Where do you want to work?"
-                hint="Pick all that apply"
-                type="checkbox"
-                options={ARRANGEMENTS}
-                selected={arrangement}
-                onChange={setArrangement}
-                columns={3}
-              />
-            </>
-          ) : (
-            <>
-              <Question
-                legend="How useful are the Posted, First found and Verified dates shown on each job?"
-                type="radio"
-                options={RATINGS}
-                selected={verification}
-                onChange={setVerification}
-                columns={5}
-              />
-              <Question
-                legend="How useful is showing duplicate jobs from different sources only once?"
-                type="radio"
-                options={RATINGS}
-                selected={dedup}
-                onChange={setDedup}
-                columns={5}
-              />
-              <Question
-                legend="What do you like about yabot.jobs?"
-                hint="Pick all that apply"
-                type="checkbox"
-                options={LIKED}
-                selected={liked}
-                onChange={setLiked}
-                columns={3}
-              />
-              <Question
-                legend="What should we add?"
-                hint="Pick all that apply"
-                type="checkbox"
-                options={WANTED}
-                selected={wanted}
-                onChange={setWanted}
-                columns={3}
-              />
-              <div className="survey-modal__question">
-                <label className="survey-modal__legend" htmlFor="survey-comments">
-                  What else would make your job search easier?
-                  <span className="survey-modal__hint">
-                    Any features or ideas we haven&apos;t mentioned in this survey
-                  </span>
-                </label>
-                <textarea
-                  id="survey-comments"
-                  className="survey-modal__input survey-modal__textarea"
-                  value={comments}
-                  maxLength={5000}
-                  placeholder="e.g. a feature you wish existed, something that frustrates you, anything at all"
-                  onChange={(e) => setComments(e.target.value)}
+                <Question
+                  legend="How long have you been looking for work?"
+                  type="radio"
+                  options={DURATIONS}
+                  selected={duration}
+                  onChange={setDuration}
+                  columns={3}
                 />
-              </div>
-              {user && (
+                <fieldset className="survey-modal__question">
+                  <legend className="survey-modal__legend">
+                    Which industries?
+                    <span className="survey-modal__hint">{`Pick up to ${MAX_INDUSTRIES}`}</span>
+                  </legend>
+                  <Options
+                    name="industries"
+                    type="checkbox"
+                    options={INDUSTRIES}
+                    selected={industries}
+                    onChange={setIndustries}
+                    max={MAX_INDUSTRIES}
+                    columns={4}
+                  />
+                  {industries.includes("other") && (
+                    <input
+                      className="survey-modal__input"
+                      type="text"
+                      aria-label="Which other industry?"
+                      value={industryOther}
+                      maxLength={120}
+                      placeholder="Which industry?"
+                      onChange={(e) => setIndustryOther(e.target.value)}
+                    />
+                  )}
+                </fieldset>
                 <div className="survey-modal__question">
-                  <span className="survey-modal__legend">Want to help more?</span>
-                  <label className={`survey-modal__option${contactOk ? " is-checked" : ""}`}>
-                    <input type="checkbox" checked={contactOk} onChange={(e) => setContactOk(e.target.checked)} />
-                    <span>It&apos;s OK to email me for a short chat about this survey</span>
-                  </label>
-                  <p className="survey-modal__note">We&apos;d use your account email. Optional.</p>
-                </div>
-              )}
-              {!user && (
-                <div className="survey-modal__question">
-                  <label className="survey-modal__legend" htmlFor="survey-email">
-                    Want to help more?
-                    <span className="survey-modal__hint">Leave your email for a short chat (optional)</span>
+                  <label className="survey-modal__legend" htmlFor="survey-role">
+                    What role are you looking for?
                   </label>
                   <input
-                    id="survey-email"
+                    id="survey-role"
                     className="survey-modal__input"
-                    type="email"
-                    value={email}
-                    maxLength={320}
-                    placeholder="you@example.com"
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="text"
+                    value={roleName}
+                    maxLength={120}
+                    placeholder="e.g. ICU nurse, project manager"
+                    onChange={(e) => setRoleName(e.target.value)}
                   />
-                  <p className="survey-modal__note">Only used to contact you about this survey.</p>
                 </div>
-              )}
-            </>
-          )}
-          {error && <p className="survey-modal__error">{error}</p>}
-        </div>
-        {/* A fade over the bottom edge plus a pill, while more questions are
-            below; tapping it scrolls down. Gone once they reach the end. */}
-        {moreBelow && (
-          <div className="survey-modal__more">
-            <button
-              type="button"
-              onClick={() =>
-                bodyRef.current?.scrollBy({ top: bodyRef.current.clientHeight * 0.8, behavior: "smooth" })
-              }
-            >
-              More questions ↓
-            </button>
+                <Question
+                  legend="Where do you want to work?"
+                  hint="Pick all that apply"
+                  type="checkbox"
+                  options={ARRANGEMENTS}
+                  selected={arrangement}
+                  onChange={setArrangement}
+                  columns={3}
+                />
+              </>
+            ) : page === 2 ? (
+              <>
+                <Question
+                  legend="Which sites do you use to look for jobs today?"
+                  hint="Pick all that apply"
+                  type="checkbox"
+                  options={TOOLS}
+                  selected={tools}
+                  onChange={setTools}
+                  columns={4}
+                />
+                <div className="survey-modal__question">
+                  <label className="survey-modal__legend" htmlFor="survey-frustration">
+                    What&apos;s your biggest frustration with job searching?
+                  </label>
+                  <textarea
+                    id="survey-frustration"
+                    className="survey-modal__input survey-modal__textarea"
+                    value={frustration}
+                    maxLength={5000}
+                    placeholder="e.g. fake or expired listings, no replies, too many clicks to apply"
+                    onChange={(e) => setFrustration(e.target.value)}
+                  />
+                </div>
+                <div className="survey-modal__question">
+                  <label className="survey-modal__legend" htmlFor="survey-comments">
+                    What would make your job search easier?
+                    <span className="survey-modal__hint">
+                      Any feature or idea, even one we haven&apos;t mentioned in this survey
+                    </span>
+                  </label>
+                  <textarea
+                    id="survey-comments"
+                    className="survey-modal__input survey-modal__textarea"
+                    value={comments}
+                    maxLength={5000}
+                    placeholder="e.g. a feature you wish existed, something that frustrates you, anything at all"
+                    onChange={(e) => setComments(e.target.value)}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <fieldset className="survey-modal__question">
+                  <legend className="survey-modal__legend">
+                    How useful is each date shown on a job?
+                  </legend>
+                  <div className="survey-modal__rows">
+                    {dateRows.map((row) => (
+                      <div key={row.key} className="survey-modal__row">
+                        <span className="survey-modal__row-label">{row.label}</span>
+                        <Options
+                          name={`date-${row.key}`}
+                          type="radio"
+                          options={DATE_RATINGS}
+                          selected={row.selected}
+                          onChange={row.onChange}
+                          columns={3}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </fieldset>
+                <Question
+                  legend="How useful is showing duplicate jobs from different sources only once?"
+                  type="radio"
+                  options={RATINGS}
+                  selected={dedup}
+                  onChange={setDedup}
+                  columns={5}
+                />
+                <Question
+                  legend="What do you like about yabot.jobs?"
+                  hint="Pick all that apply"
+                  type="checkbox"
+                  options={LIKED}
+                  selected={liked}
+                  onChange={setLiked}
+                  columns={3}
+                />
+                <Question
+                  legend="What should we add?"
+                  hint="Pick all that apply"
+                  type="checkbox"
+                  options={WANTED}
+                  selected={wanted}
+                  onChange={setWanted}
+                  columns={3}
+                />
+                {user && (
+                  <div className="survey-modal__question">
+                    <span className="survey-modal__legend">Want to help more?</span>
+                    <label className={`survey-modal__option${contactOk ? " is-checked" : ""}`}>
+                      <input type="checkbox" checked={contactOk} onChange={(e) => setContactOk(e.target.checked)} />
+                      <span>It&apos;s OK to email me for a short chat about this survey</span>
+                    </label>
+                    <p className="survey-modal__note">We&apos;d use your account email. Optional.</p>
+                  </div>
+                )}
+                {!user && (
+                  <div className="survey-modal__question">
+                    <label className="survey-modal__legend" htmlFor="survey-email">
+                      Want to help more?
+                      <span className="survey-modal__hint">Leave your email for a short chat (optional)</span>
+                    </label>
+                    <input
+                      id="survey-email"
+                      className="survey-modal__input"
+                      type="email"
+                      value={email}
+                      maxLength={320}
+                      placeholder="you@example.com"
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                    <p className="survey-modal__note">Only used to contact you about this survey.</p>
+                  </div>
+                )}
+              </>
+            )}
+            {error && <p className="survey-modal__error">{error}</p>}
           </div>
-        )}
+          {/* A fade over the bottom edge plus a pill, while more questions are
+              below; tapping it scrolls down. Gone once they reach the end. */}
+          {moreBelow && (
+            <div className="survey-modal__more">
+              <button
+                type="button"
+                onClick={() =>
+                  bodyRef.current?.scrollBy({ top: bodyRef.current.clientHeight * 0.8, behavior: "smooth" })
+                }
+              >
+                More questions ↓
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="survey-modal__footer">
@@ -446,8 +549,12 @@ export function SurveyModal({
             </button>
           ) : (
             <>
-              {page === 2 && (
-                <button type="button" className="survey-modal__secondary" onClick={() => showPage(1)}>
+              {page > 1 && (
+                <button
+                  type="button"
+                  className="survey-modal__secondary"
+                  onClick={() => showPage((page - 1) as Page)}
+                >
                   Back
                 </button>
               )}
@@ -455,9 +562,9 @@ export function SurveyModal({
                 type="button"
                 className="survey-modal__primary"
                 disabled={submitMutation.isPending}
-                onClick={page === 1 ? next : finish}
+                onClick={next}
               >
-                {submitMutation.isPending ? "Saving…" : page === 1 ? "Next" : "Submit"}
+                {submitMutation.isPending ? "Saving…" : page === 3 ? "Submit" : "Next"}
               </button>
             </>
           )}

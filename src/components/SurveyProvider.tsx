@@ -14,13 +14,13 @@ import "./SurveyModal.css";
 
 // How long a page is open before the invite appears, so it never greets
 // someone the moment they land.
-const INVITE_DELAY_MS = 15_000;
+const INVITE_DELAY_MS = 60_000;
 
 // Pages where an invite would get in the way of signing in.
 const QUIET_PATHS = ["/login", "/auth", "/oauth"];
 
 // The in-site survey (POST /survey): a small invite — Take it now / Remind me
-// later (asks again in 3 days) / No thanks — shown from a visitor's 2nd visit,
+// later (asks again in 3 days) / No thanks — shown after a minute on the page, even on a first visit,
 // plus a corner badge that opens the survey any time until it's finished.
 export function SurveyProvider({ children }: { children: ReactNode }) {
   const location = useLocation();

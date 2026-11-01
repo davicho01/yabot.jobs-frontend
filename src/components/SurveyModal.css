@@ -342,6 +342,33 @@ fieldset.survey-modal__question > .survey-modal__legend {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent);
 }
 
+/* The Posted / First found / Verified ratings: a label, then its three options. */
+.survey-modal__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.survey-modal__row {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.survey-modal__row-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+@media (max-width: 640px) {
+  .survey-modal__row {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+}
+
 .survey-modal__input {
   width: 100%;
   padding: 0.8rem 1rem;
