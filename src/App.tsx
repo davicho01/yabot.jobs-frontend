@@ -27,6 +27,8 @@ import { Footer } from "./components/Footer";
 import { PageShell } from "./components/PageShell";
 import { FeedbackProvider } from "./components/FeedbackModal";
 import { SignInPromptProvider } from "./components/SignInModal";
+import { SurveyProvider } from "./components/SurveyProvider";
+import { AdminSurveyPage } from "./pages/AdminSurveyPage";
 import { GettingStartedBanner } from "./components/GettingStarted";
 import { GETTING_STARTED_PATH } from "./utils/onboarding";
 import { GettingStartedPage } from "./pages/GettingStartedPage";
@@ -42,10 +44,12 @@ function RootLayout() {
     <PageShell>
       <FeedbackProvider>
         <SignInPromptProvider>
-          <Header />
-          <GettingStartedBanner />
-          <Outlet />
-          <Footer />
+          <SurveyProvider>
+            <Header />
+            <GettingStartedBanner />
+            <Outlet />
+            <Footer />
+          </SurveyProvider>
         </SignInPromptProvider>
       </FeedbackProvider>
     </PageShell>
@@ -207,6 +211,14 @@ export default function App() {
           element={
             <AdminRoute>
               <AdminFeedbackPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/survey"
+          element={
+            <AdminRoute>
+              <AdminSurveyPage />
             </AdminRoute>
           }
         />
