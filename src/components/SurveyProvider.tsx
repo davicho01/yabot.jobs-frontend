@@ -21,12 +21,17 @@ const QUIET_PATHS = ["/login", "/auth", "/oauth"];
 
 // The in-site survey (POST /survey): a small invite — Take it now / Remind me
 // later (asks again in 3 days) / No thanks — shown after a minute on the page, from a
-// visitor's second visit on, plus a corner badge that opens the survey any time until it's finished.
+// visitor's second visit on, together with a corner badge that opens the survey. The badge
+// goes away on "No thanks", "Remind me later" / its "×" (until the reminder is due) and
+// once the survey is finished.
 export function SurveyProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [state, setState] = useState<SurveyState>(() => countVisit(loadSurveyState()));
   const [inviteOpen, setInviteOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
+  // The badge first appears together with the invite, then stays (while
+  // shouldInvite holds) even if the invite card itself is closed.
+  const [badgeReady, setBadgeReady] = useState(false);
 
   const update = useCallback((patch: Partial<SurveyState>) => {
     setState((current) => {
@@ -42,6 +47,7 @@ export function SurveyProvider({ children }: { children: ReactNode }) {
     if (quietPage || formOpen || !shouldInvite(state)) return;
     const timer = window.setTimeout(() => {
       setInviteOpen(true);
+      setBadgeReady(true);
       trackEvent("survey_invite_shown");
     }, INVITE_DELAY_MS);
     return () => window.clearTimeout(timer);
@@ -57,6 +63,14 @@ export function SurveyProvider({ children }: { children: ReactNode }) {
     setInviteOpen(false);
     update({ status: "later", remindAt: Date.now() + REMIND_LATER_MS });
     trackEvent("survey_invite_later");
+  }
+
+  // The "×" on the badge: same as "Remind me later" (button back in 3 days,
+  // until they explicitly say "No thanks" on the invite).
+  function closeBadge() {
+    setInviteOpen(false);
+    update({ status: "later", remindAt: Date.now() + REMIND_LATER_MS });
+    trackEvent("survey_badge_closed");
   }
 
   function noThanks() {
@@ -87,10 +101,20 @@ export function SurveyProvider({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      {!formOpen && state.status !== "done" && !quietPage && (
-        <button type="button" className="survey-badge" onClick={openSurvey}>
-          Quick survey
-        </button>
+      {!formOpen && badgeReady && shouldInvite(state) && !quietPage && (
+        <div className="survey-badge-wrap">
+          <button type="button" className="survey-badge" onClick={openSurvey}>
+            Quick survey
+          </button>
+          <button
+            type="button"
+            className="survey-badge__close"
+            aria-label="Hide the survey button for now"
+            onClick={closeBadge}
+          >
+            ×
+          </button>
+        </div>
       )}
 
       {formOpen && (
