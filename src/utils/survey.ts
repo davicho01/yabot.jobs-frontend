@@ -17,9 +17,9 @@ const VISIT_COUNTED_KEY = "yabot.survey.visitCounted";
 
 // "Remind me later" asks again after this long.
 export const REMIND_LATER_MS = 3 * 24 * 60 * 60 * 1000;
-// The invite waits for a returning visitor (second visit onward), so cold
-// first-time traffic isn't interrupted; the corner badge still lets a first
-// visit opt in. Lower to 1 to invite on the first visit too.
+// The invite and the corner badge wait for a returning visitor (second visit
+// onward), so cold first-time traffic isn't interrupted. Lower to 1 to show
+// them on the first visit too.
 const MIN_VISITS_FOR_INVITE = 2;
 
 function newVisitorId(): string {
@@ -78,6 +78,9 @@ export function countVisit(state: SurveyState): SurveyState {
   return next;
 }
 
+// Whether the invite (and the corner badge, which follows it) may show: not
+// after "No thanks" or a finished survey, not during a "Remind me later"
+// snooze, and not before a first-time visitor's second visit.
 export function shouldInvite(state: SurveyState, now: number = Date.now()): boolean {
   if (state.status === "later") return state.remindAt !== null && now >= state.remindAt;
   return state.status === "none" && state.visits >= MIN_VISITS_FOR_INVITE;

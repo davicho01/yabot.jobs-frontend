@@ -491,11 +491,35 @@ fieldset.survey-modal__question > .survey-modal__legend {
 }
 
 /* The corner badge that opens the survey any time. */
-.survey-badge {
+.survey-badge-wrap {
   position: fixed;
   right: 1rem;
   bottom: 1rem;
   z-index: 900;
+}
+
+/* The small "×" on the badge's corner: hides the button for a few days. */
+.survey-badge__close {
+  position: absolute;
+  top: -0.45rem;
+  right: -0.45rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  border: 1px solid #ec008c;
+  border-radius: 50%;
+  background: var(--paper);
+  color: #ec008c;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.survey-badge__close:hover {
+  filter: brightness(0.92);
+}
+
+.survey-badge {
   padding: 0.65rem 1.2rem;
   border: none;
   border-radius: var(--radius-pill);
